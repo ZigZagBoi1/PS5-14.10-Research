@@ -31,14 +31,23 @@ below are computed from the committed beacon log.
 |---------|---------------|--------------------|-------------|
 | VP-s0   | 0x171_0B78    | 0x170_0B78         | -0x10000    |
 | VP-s1   | 0x171_0B48    | (not published)    | --          |
-| VP-s2   | 0x2CE_C3D8    | 0x2CE_C3D8         | matches     |
+| VP-s2   | 0x324_C3D8    | 0x324_C3D8         | matches     |
 | VP-s3   | 0x171_0478    | 0x170_0478         | -0x10000    |
-| VP-s6   | 0x14B_A728    | (check)            | (check)     |
+| VP-s6   | 0x1AB_A728    | (not published)    | --          |
 | VP-s7   | 0x171_0318    | 0x170_0318         | -0x10000    |
 
 **NOTE:** The `0x10000` slip pattern suggests a systematic carry error in the
-original subtraction. The deltas marked "check" need verification against the
-committed PR text.
+original subtraction. s2 and s6 were corrected a second time on 2026-11-10:
+this doc previously carried VP-s2 = `0x2CE_C3D8` ("matches") and VP-s6 =
+`0x14B_A728` ("check"), both wrong against this doc's own slot table
+(s2 = `0x80c26d750`, s6 = `0x80d9ff400`, VP = `0x80f4b9b28`). The canonical
+six, one frame, buffer-absolute from VP `0x80f4b9b28`:
+s0 `0x1710B78` · s1 `0x1710B48` · s2 `0x324C3D8` · s3 `0x1710478` ·
+s6 `0x1ABA728` · s7 `0x1710318` — identical to the p804 expected-value
+header, so boots may spend against either source. A bench anchoring through
+the stale `0x2CEC3D8` lands `0x560000` low and reads its own mapping slip as
+a structural negative. (Second-pass correction: cobrajet302gt post-merge
+audit, PR #240 comment, 2026-11-10.)
 
 ## s2=s4=s5 anomaly
 

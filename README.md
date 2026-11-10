@@ -2,7 +2,7 @@
 
 Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 3301 probe scripts (2930 Lua, 66 JS, 305 HTML), 3468 result captures, 264 technical documents, 235+ merged PRs, 180+ documented dead ends, 58 research phases.
 
-> **Goal:** Userland code execution → kernel R/W → hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated**. The Lua loader kernel attack surface is **exhausted** — zero kernel pointers across ~400 syscalls, ~32M ioctl calls, and every known info-leak technique. **WebKit FontFaceSet UAF (CVE-2026-43715 variant) is the only live kernel path**: heap pointer leak confirmed on 14.10, three upstream fixes absent from WebKit 605.1.15.
+> **Goal:** Userland code execution → kernel R/W → hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated**. The Lua loader kernel attack surface is **exhausted** — zero kernel pointers across ~400 syscalls, ~32M ioctl calls, and every known info-leak technique. **WebKit FontFaceSet UAF (CVE-2026-43715 variant) is the only live kernel path**: heap pointer leak confirmed on 14.10, three upstream fixes absent from the fork's WebKit tree (internally 616.1.27 per `Configurations/Version.xcconfig`; `605.1.15` is only the frozen UA token).
 
 ---
 
@@ -56,7 +56,7 @@ The game **Hamidashi Creative** (Artemis/Lua engine) loads a modified save file 
 
 ### Entry Vector 2: WebKit / JSC (Browser Engine) — PRIMARY
 
-The PS5's built-in browser runs **WebKit 605.1.15 / Safari 17.0** (confirmed p573, JIT disabled, LLInt only). This is the **only remaining path to kernel access**. This project maintains:
+The PS5's built-in browser runs a WebKit fork reporting **605.1.15 / Safari 17.0 in its UA token** (confirmed p573, JIT disabled, LLInt only); internally the tree is WebKit **616.1.27** (`Configurations/Version.xcconfig:24-28`), so source-level claims target the 616-era fork, not Apple's 605.1.15 tag. This is the **only remaining path to kernel access**. This project maintains:
 
 - **FontFaceSet UAF heap leak** (CVE-2026-43715 variant): 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script. Cross-firmware confirmed on 14.00 and 14.10 (probes p563-html/p564-html; measured values in docs/FONTFACE_RECLAIM_LEAK_14_10.md; issue #155)
 - **Canvas same-type alias** (CVE-2026-43720): bidirectional R/W via same-type reclaim confirmed on 14.10 (p553)
@@ -66,7 +66,7 @@ The PS5's built-in browser runs **WebKit 605.1.15 / Safari 17.0** (confirmed p57
 - **WebKit canary battery** (11 probes testing Relapse scope-leak, popup isolation, etc.)
 - Cross-reference with [pastawithpesto/PS5-14.10-Jailbreak-Research](https://github.com/pastawithpesto/PS5-14.10-Jailbreak-Research) for MetadataTable overflow (CVE-2026-64784) and Canvas UAF chain
 
-**Upstream analysis (2026-10-31):** All three FontFace UAF fixes (WebKit bugs 312202, 313577, 322233) committed in 2026 — 3 years AFTER the 17.0 branch point. The vulnerable pattern (std::reference_wrapper + post-notify m_status assignment) is still present in 605.1.15.
+**Upstream analysis (2026-10-31):** All three FontFace UAF fixes (WebKit bugs 312202, 313577, 322233) committed in 2026 — 3 years AFTER the 17.0 branch point. The vulnerable pattern (std::reference_wrapper + post-notify m_status assignment) is still present in the 616-era fork tree.
 
 **Upstream convergence (2026-11-01):** RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch. V88 self-referential forge designed (single 192B lane). 100% reclaim recipe works on 14.10. WeakPtrImpl layout settled in `docs/V88_FORGE_GEOMETRY_RECONCILIATION.md` §C4 and `docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md` §1: `{+0x00: m_refCount, +0x04: m_ownerThread, +0x08: m_areThreadChecks, +0x10: m_ptr, +0x18: m_thread}` — no vtable in the impl (CRTP ref/deref, non-virtual dtor, WeakPtr.h:47,51), so a fake impl carries the client pointer at `+0x10`. fontStateChanged slot is era-dual: vtable+0x28 upstream-header (source-derived) / vtable+0x18 PS5-14.00-fork (device bisect on this board). Remaining absolute-VA blocker: text base / landing mechanism — Lane_VA closed same-cycle by the corrected V102 run (#168 comment 6557880955). 10 physics laws established across 4 ARMs of the exploit chain.
 

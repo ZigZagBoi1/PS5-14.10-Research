@@ -1,0 +1,344 @@
+<!--
+  p717: Event dispatch + EventTarget internal timing oracle
+
+  Event dispatch in WebKit traverses the event path (capture phase,
+  target phase, bubble phase) using C++ EventPath objects. The path
+  construction depends on DOM tree structure AND shadow DOM boundaries.
+
+  Observable timing differences in event dispatch reveal:
+  - Internal EventTarget list traversal order (heap-dependent)
+  - Shadow DOM slot assignment (C++ object allocation)
+  - Event listener invocation order across multiple listeners
+  - stopPropagation/stopImmediatePropagation timing delta
+
+  Attack angles:
+  A) Event dispatch timing vs DOM depth -- deeper DOM trees have
+     longer event paths. Timing reveals path construction cost.
+  B) Multiple listeners per target -- adding N listeners to one
+     element. Invocation timing reveals internal list layout.
+  C) Custom event creation + dispatch timing -- new CustomEvent
+     allocates C++ wrapper. Batch timing reveals allocator state.
+  D) Event.composedPath() timing -- returns the event path as
+     an array. Construction timing depends on path length.
+  E) AbortController/AbortSignal timing -- signal listener list
+     management reveals internal WeakRef/strong-ref patterns.
+  F) PointerEvent/TouchEvent detail fields -- these events carry
+     extra coordinate data. Checking field precision and timing.
+
+  CRASH_CLASS: LOW (event API, read-only observation)
+  prior art: p713 (MutationObserver), p714 (Selection/Range)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p717</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P717-START:EVENT-TIMING-LEAK');
+  var results = [];
+
+  // === SECTION A: Event dispatch timing vs DOM depth ===
+  b('A:DISPATCH-DEPTH-TIMING');
+  try {
+    var depths = [1, 5, 10, 20, 50, 100];
+    var dispatchTimes = [];
+
+    for (var d = 0; d < depths.length; d++) {
+      var root = document.createElement('div');
+      root.style.cssText = 'position:absolute;left:-9999px;';
+      document.body.appendChild(root);
+
+      var current = root;
+      for (var i = 0; i < depths[d]; i++) {
+        var child = document.createElement('div');
+        current.appendChild(child);
+        current = child;
+      }
+
+      var target = current;
+      var captureCount = 0;
+      var bubbleCount = 0;
+
+      root.addEventListener('testevent', function(){bubbleCount++;}, false);
+      root.addEventListener('testevent', function(){captureCount++;}, true);
+
+      var evt = new CustomEvent('testevent', {bubbles: true, composed: true});
+
+      var t0 = performance.now();
+      for (var i = 0; i < 5000; i++) {
+        target.dispatchEvent(new CustomEvent('testevent', {bubbles: true}));
+      }
+      var dt = performance.now() - t0;
+      dispatchTimes.push(depths[d] + ':' + dt.toFixed(2));
+
+      document.body.removeChild(root);
+    }
+    b('A:DISPATCH-TIMES:' + dispatchTimes.join(','));
+
+    // Check scaling
+    var times = dispatchTimes.map(function(t){return parseFloat(t.split(':')[1]);});
+    if (times.length >= 2) {
+      var ratio = times[times.length-1] / times[0];
+      b('A:DEPTH-RATIO=' + ratio.toFixed(2));
+      if (ratio > 5) results.push('A:depth-scaling');
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Multiple listeners per target ===
+  b('B:MULTI-LISTENER-TIMING');
+  try {
+    var el = document.createElement('div');
+    document.body.appendChild(el);
+
+    var listenerCounts = [1, 5, 10, 25, 50, 100];
+    var multiTimes = [];
+
+    for (var lc = 0; lc < listenerCounts.length; lc++) {
+      var count = listenerCounts[lc];
+      var order = [];
+
+      // Remove old element, make new one
+      document.body.removeChild(el);
+      el = document.createElement('div');
+      document.body.appendChild(el);
+
+      for (var i = 0; i < count; i++) {
+        (function(idx) {
+          el.addEventListener('multi', function() { order.push(idx); });
+        })(i);
+      }
+
+      var t0 = performance.now();
+      for (var iter = 0; iter < 2000; iter++) {
+        order = [];
+        el.dispatchEvent(new CustomEvent('multi'));
+      }
+      var dt = performance.now() - t0;
+      multiTimes.push(count + ':' + dt.toFixed(2));
+
+      // Check last ordering
+      var sequential = true;
+      for (var i = 1; i < order.length; i++) {
+        if (order[i] <= order[i-1]) { sequential = false; break; }
+      }
+      if (!sequential && count > 1) {
+        b('B:NON-SEQUENTIAL-AT=' + count);
+        results.push('B:non-sequential-' + count);
+      }
+    }
+    b('B:MULTI-TIMES:' + multiTimes.join(','));
+    document.body.removeChild(el);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: CustomEvent creation timing ===
+  b('C:CUSTOMEVENT-CREATION');
+  try {
+    var batchTimes = [];
+    for (var batch = 0; batch < 20; batch++) {
+      var events = [];
+      var t0 = performance.now();
+      for (var i = 0; i < 5000; i++) {
+        events.push(new CustomEvent('bench', {
+          detail: {index: i, data: 'payload-' + i},
+          bubbles: true,
+          cancelable: true
+        }));
+      }
+      var dt = performance.now() - t0;
+      batchTimes.push(dt.toFixed(2));
+    }
+    b('C:BATCH-TIMES:' + batchTimes.join(','));
+
+    // Look for allocation steps
+    for (var i = 1; i < batchTimes.length; i++) {
+      var ratio = parseFloat(batchTimes[i]) / parseFloat(batchTimes[i-1]);
+      if (ratio > 1.5) {
+        results.push('C:alloc-step-batch=' + i);
+        b('C:STEP-AT=' + i + ',RATIO=' + ratio.toFixed(2));
+      }
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Event.composedPath() timing ===
+  b('D:COMPOSEDPATH-TIMING');
+  try {
+    var depths2 = [5, 10, 25, 50, 100];
+    var pathTimes = [];
+
+    for (var d = 0; d < depths2.length; d++) {
+      var root = document.createElement('div');
+      root.style.cssText = 'position:absolute;left:-9999px;';
+      document.body.appendChild(root);
+
+      var current = root;
+      for (var i = 0; i < depths2[d]; i++) {
+        var child = document.createElement('div');
+        current.appendChild(child);
+        current = child;
+      }
+
+      var capturedPath = null;
+      current.addEventListener('pathtest', function(e) {
+        capturedPath = e.composedPath();
+      });
+
+      // Measure composedPath call timing
+      var pathLengths = [];
+      var t0 = performance.now();
+      for (var iter = 0; iter < 5000; iter++) {
+        current.addEventListener('pathbench', function(e) {
+          var p = e.composedPath();
+          if (iter === 0) pathLengths.push(p.length);
+        });
+        current.dispatchEvent(new CustomEvent('pathbench'));
+      }
+      var dt = performance.now() - t0;
+      pathTimes.push(depths2[d] + ':' + dt.toFixed(2));
+
+      // Get actual path length
+      current.dispatchEvent(new CustomEvent('pathtest', {bubbles: true, composed: true}));
+      b('D:DEPTH=' + depths2[d] + ',PATH-LEN=' + (capturedPath ? capturedPath.length : 'null'));
+
+      document.body.removeChild(root);
+    }
+    b('D:PATH-TIMES:' + pathTimes.join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: AbortController/AbortSignal timing ===
+  b('E:ABORT-SIGNAL-TIMING');
+  try {
+    // AbortController creation timing
+    var createTimes = [];
+    for (var batch = 0; batch < 10; batch++) {
+      var controllers = [];
+      var t0 = performance.now();
+      for (var i = 0; i < 5000; i++) {
+        controllers.push(new AbortController());
+      }
+      var dt = performance.now() - t0;
+      createTimes.push(dt.toFixed(2));
+    }
+    b('E:CREATE-TIMES:' + createTimes.join(','));
+
+    // Signal listener addition timing
+    var ac = new AbortController();
+    var sigTimes = [];
+    for (var count = 1; count <= 50; count += 5) {
+      var t0 = performance.now();
+      for (var iter = 0; iter < 1000; iter++) {
+        ac.signal.addEventListener('abort', function(){});
+      }
+      var dt = performance.now() - t0;
+      sigTimes.push(count + ':' + dt.toFixed(3));
+    }
+    b('E:SIGNAL-TIMES:' + sigTimes.join(','));
+
+    // Abort timing with different listener counts
+    var abortTimes = [];
+    var listenerCounts = [0, 1, 10, 50, 100];
+    for (var lc = 0; lc < listenerCounts.length; lc++) {
+      var ac2 = new AbortController();
+      for (var i = 0; i < listenerCounts[lc]; i++) {
+        ac2.signal.addEventListener('abort', function(){});
+      }
+      var t0 = performance.now();
+      ac2.abort();
+      var dt = performance.now() - t0;
+      abortTimes.push(listenerCounts[lc] + ':' + dt.toFixed(4));
+    }
+    b('E:ABORT-TIMES:' + abortTimes.join(','));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Event coordinate precision ===
+  b('F:EVENT-COORDINATES');
+  try {
+    var el = document.createElement('div');
+    el.style.cssText = 'position:absolute;left:100px;top:100px;width:200px;height:200px;background:#eee;';
+    document.body.appendChild(el);
+
+    // Check MouseEvent coordinate precision
+    var evt = new MouseEvent('click', {
+      clientX: 150.123456789,
+      clientY: 150.987654321,
+      screenX: 250.111222333,
+      screenY: 250.444555666,
+      bubbles: true
+    });
+
+    var capturedEvt = null;
+    el.addEventListener('click', function(e) { capturedEvt = e; });
+    el.dispatchEvent(evt);
+
+    if (capturedEvt) {
+      b('F:CLIENT-X=' + capturedEvt.clientX);
+      b('F:CLIENT-Y=' + capturedEvt.clientY);
+      b('F:SCREEN-X=' + capturedEvt.screenX);
+      b('F:SCREEN-Y=' + capturedEvt.screenY);
+      b('F:OFFSET-X=' + capturedEvt.offsetX);
+      b('F:OFFSET-Y=' + capturedEvt.offsetY);
+      b('F:PAGE-X=' + capturedEvt.pageX);
+      b('F:PAGE-Y=' + capturedEvt.pageY);
+
+      // Check if sub-pixel precision is preserved
+      if (capturedEvt.clientX !== Math.round(capturedEvt.clientX)) {
+        b('F:SUBPIXEL-PRECISION');
+        results.push('F:subpixel');
+      }
+    }
+
+    // PointerEvent if available
+    if (typeof PointerEvent !== 'undefined') {
+      b('F:POINTER-EVENT-AVAILABLE');
+      var pe = new PointerEvent('pointerdown', {
+        clientX: 155.5,
+        clientY: 155.5,
+        pressure: 0.75,
+        tiltX: 30,
+        tiltY: -15,
+        width: 1.5,
+        height: 1.5,
+        bubbles: true
+      });
+      var capturedPE = null;
+      el.addEventListener('pointerdown', function(e) { capturedPE = e; });
+      el.dispatchEvent(pe);
+      if (capturedPE) {
+        b('F:PE-PRESSURE=' + capturedPE.pressure);
+        b('F:PE-TILT=' + capturedPE.tiltX + ',' + capturedPE.tiltY);
+        b('F:PE-SIZE=' + capturedPE.width + 'x' + capturedPE.height);
+        b('F:PE-TYPE=' + capturedPE.pointerType);
+        b('F:PE-ID=' + capturedPE.pointerId);
+      }
+    } else {
+      b('F:NO-POINTER-EVENT');
+    }
+
+    // TouchEvent if available
+    b('F:TOUCH-CTOR=' + (typeof TouchEvent !== 'undefined'));
+
+    document.body.removeChild(el);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P717-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P717-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P717-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p717: Event dispatch + EventTarget internal timing oracle</pre></body></html>

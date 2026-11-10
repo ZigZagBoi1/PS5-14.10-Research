@@ -1,0 +1,418 @@
+<!--
+  p762: CSS Animation / Transition event timing oracle
+
+  CSS Animations and Transitions fire events (animationstart,
+  animationend, animationiteration, transitionend, transitionrun,
+  transitionstart, transitioncancel) that cross the C++/JS boundary.
+  The Animation API (element.animate(), getAnimations()) exercises
+  the Web Animations engine.
+
+  Key insight: animation event delivery timing depends on the
+  compositor's frame scheduling. getAnimations() returns live
+  Animation objects backed by C++ KeyframeEffect instances.
+  The Animation constructor and timeline access exercise the
+  internal DocumentTimeline allocation path.
+
+  On PS5 WebKit 605.1.15, CSS animations/transitions are standard.
+  Web Animations API (element.animate) may be available.
+
+  Attack angles:
+  A) CSS Animation event timing.
+  B) CSS Transition event timing.
+  C) Web Animations API (element.animate).
+  D) getAnimations() enumeration.
+  E) Animation timeline and playback control.
+  F) Computed style during animation.
+
+  CRASH_CLASS: LOW (CSS animation/transition APIs, no side effects)
+  prior art: p759 (CSS computed style timing), p752 (CSS @supports)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p762</title>
+<style>
+@keyframes slide { from { transform: translateX(0); } to { transform: translateX(100px); } }
+@keyframes fade { from { opacity: 1; } to { opacity: 0; } }
+@keyframes grow { 0% { width: 10px; } 50% { width: 50px; } 100% { width: 10px; } }
+.anim-test { animation: slide 0.01s linear forwards; width: 10px; height: 10px; background: red; position: absolute; left: -9999px; }
+.trans-test { transition: width 0.01s linear; width: 10px; height: 10px; background: blue; position: absolute; left: -9999px; }
+</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P762-START:CSS-ANIMATION-TRANSITION-TIMING');
+
+  // === SECTION A: CSS Animation events ===
+  b('A:ANIM-EVENTS');
+  try {
+    // Create and trigger animations via class
+    var container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    document.body.appendChild(container);
+
+    var animEvents = {start: 0, end: 0, iteration: 0};
+    var div = document.createElement('div');
+    div.addEventListener('animationstart', function() { animEvents.start++; });
+    div.addEventListener('animationend', function() { animEvents.end++; });
+    div.addEventListener('animationiteration', function() { animEvents.iteration++; });
+    container.appendChild(div);
+
+    // Trigger animation
+    div.style.animation = 'slide 0.001s linear 1 forwards';
+
+    // Force layout
+    void div.offsetWidth;
+
+    b('A:EVENTS-SETUP=ok');
+
+    // Animation shorthand parsing timing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      var el = document.createElement('div');
+      el.style.animation = 'slide 0.1s ease-in-out 0.05s 3 alternate forwards running';
+    }
+    b('A:PARSE-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Animation name timing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      var el = document.createElement('div');
+      el.style.animationName = 'slide';
+      el.style.animationDuration = '0.1s';
+    }
+    b('A:NAME-DUR-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Multiple animations
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      var el = document.createElement('div');
+      el.style.animation = 'slide 0.1s, fade 0.2s, grow 0.3s';
+    }
+    b('A:MULTI-ANIM-2K=' + (performance.now() - t0).toFixed(2));
+
+    // animation-play-state
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      div.style.animationPlayState = j % 2 === 0 ? 'paused' : 'running';
+    }
+    b('A:PLAY-STATE-10K=' + (performance.now() - t0).toFixed(2));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: CSS Transition events ===
+  b('B:TRANS-EVENTS');
+  try {
+    var container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    document.body.appendChild(container);
+
+    // Transition property parsing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      var el = document.createElement('div');
+      el.style.transition = 'width 0.1s ease-in-out 0.05s';
+    }
+    b('B:PARSE-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Multiple transitions
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      var el = document.createElement('div');
+      el.style.transition = 'width 0.1s, height 0.2s, opacity 0.3s, transform 0.4s, color 0.5s';
+    }
+    b('B:MULTI-TRANS-2K=' + (performance.now() - t0).toFixed(2));
+
+    // transition: all
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      var el = document.createElement('div');
+      el.style.transition = 'all 0.1s';
+    }
+    b('B:ALL-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Trigger transitions and measure
+    var div = document.createElement('div');
+    div.style.width = '10px';
+    div.style.height = '10px';
+    div.style.transition = 'width 0.001s linear';
+    container.appendChild(div);
+    void div.offsetWidth;
+
+    var transCount = 0;
+    div.addEventListener('transitionend', function() { transCount++; });
+
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      div.style.width = (10 + (j % 10)) + 'px';
+      void div.offsetWidth;
+    }
+    b('B:TRIGGER-1K=' + (performance.now() - t0).toFixed(2));
+
+    // Transition timing functions
+    var timingFns = ['linear', 'ease', 'ease-in', 'ease-out', 'ease-in-out',
+                     'cubic-bezier(0.1, 0.7, 1.0, 0.1)', 'steps(4, end)'];
+    var fnTimes = [];
+    for (var f = 0; f < timingFns.length; f++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        var el = document.createElement('div');
+        el.style.transitionTimingFunction = timingFns[f];
+      }
+      fnTimes.push(timingFns[f].substring(0, 10) + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('B:TIMING-FNS:' + fnTimes.join(','));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Web Animations API ===
+  b('C:WEB-ANIM');
+  try {
+    b('C:ANIMATE=' + (typeof document.createElement('div').animate));
+
+    var container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    document.body.appendChild(container);
+
+    if (typeof document.createElement('div').animate === 'function') {
+      var div = document.createElement('div');
+      div.style.width = '10px';
+      div.style.height = '10px';
+      container.appendChild(div);
+
+      // element.animate() timing
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        var anim = div.animate([
+          {transform: 'translateX(0)'},
+          {transform: 'translateX(100px)'}
+        ], {duration: 100, fill: 'forwards'});
+        anim.cancel();
+      }
+      b('C:ANIMATE-2K=' + (performance.now() - t0).toFixed(2));
+
+      // Keyframe complexity scaling
+      var keyCounts = [2, 5, 10, 20, 50];
+      var keyTimes = [];
+      for (var kc = 0; kc < keyCounts.length; kc++) {
+        var keyframes = [];
+        for (var i = 0; i < keyCounts[kc]; i++) {
+          keyframes.push({transform: 'translateX(' + (i * 10) + 'px)', offset: i / (keyCounts[kc] - 1)});
+        }
+        var t0 = performance.now();
+        for (var j = 0; j < 1000; j++) {
+          var a = div.animate(keyframes, {duration: 100});
+          a.cancel();
+        }
+        keyTimes.push(keyCounts[kc] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('C:KEY-SCALE:' + keyTimes.join(','));
+
+      // Animation properties
+      var anim = div.animate([{opacity: 1}, {opacity: 0}], {duration: 1000, fill: 'forwards'});
+      b('C:PROPS:playState=' + anim.playState + ',ready=' + (typeof anim.ready) +
+        ',finished=' + (typeof anim.finished) + ',id=' + (typeof anim.id) +
+        ',effect=' + (typeof anim.effect) + ',timeline=' + (typeof anim.timeline));
+      anim.cancel();
+
+      // Multiple properties animation
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        var a = div.animate([
+          {transform: 'translateX(0) rotate(0deg)', opacity: 1, width: '10px', backgroundColor: 'red'},
+          {transform: 'translateX(100px) rotate(360deg)', opacity: 0, width: '50px', backgroundColor: 'blue'}
+        ], {duration: 100});
+        a.cancel();
+      }
+      b('C:MULTI-PROP-1K=' + (performance.now() - t0).toFixed(2));
+    } else {
+      b('C:NOT-AVAILABLE');
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: getAnimations() ===
+  b('D:GET-ANIM');
+  try {
+    var container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    document.body.appendChild(container);
+
+    if (typeof document.createElement('div').animate === 'function') {
+      var div = document.createElement('div');
+      container.appendChild(div);
+
+      // getAnimations with varying count
+      var anims = [];
+      for (var i = 0; i < 50; i++) {
+        anims.push(div.animate([{opacity: 1}, {opacity: 0}], {duration: 10000}));
+      }
+
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        div.getAnimations();
+      }
+      b('D:GET-50-5K=' + (performance.now() - t0).toFixed(2));
+
+      // Document-level getAnimations
+      if (typeof document.getAnimations === 'function') {
+        var t0 = performance.now();
+        for (var j = 0; j < 5000; j++) {
+          document.getAnimations();
+        }
+        b('D:DOC-GET-5K=' + (performance.now() - t0).toFixed(2));
+      } else {
+        b('D:DOC-GET=unsupported');
+      }
+
+      // Cancel all
+      for (var i = 0; i < anims.length; i++) anims[i].cancel();
+
+      // Empty getAnimations
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        div.getAnimations();
+      }
+      b('D:GET-EMPTY-10K=' + (performance.now() - t0).toFixed(2));
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Timeline and playback ===
+  b('E:TIMELINE');
+  try {
+    var container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    document.body.appendChild(container);
+
+    if (typeof document.createElement('div').animate === 'function') {
+      var div = document.createElement('div');
+      container.appendChild(div);
+
+      var anim = div.animate([{transform: 'translateX(0)'}, {transform: 'translateX(100px)'}],
+        {duration: 10000, iterations: Infinity});
+
+      // Timeline
+      b('E:TIMELINE:type=' + (anim.timeline ? anim.timeline.constructor.name : 'null'));
+      if (anim.timeline) {
+        b('E:TIMELINE:currentTime=' + anim.timeline.currentTime);
+      }
+
+      // Playback control timing
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        anim.pause();
+        anim.play();
+      }
+      b('E:PLAY-PAUSE-10K=' + (performance.now() - t0).toFixed(2));
+
+      // currentTime read/write
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        var ct = anim.currentTime;
+      }
+      b('E:READ-TIME-10K=' + (performance.now() - t0).toFixed(2));
+
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        anim.currentTime = j % 10000;
+      }
+      b('E:WRITE-TIME-10K=' + (performance.now() - t0).toFixed(2));
+
+      // playbackRate
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        anim.playbackRate = (j % 10) * 0.5;
+      }
+      b('E:RATE-10K=' + (performance.now() - t0).toFixed(2));
+
+      // reverse
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        anim.reverse();
+      }
+      b('E:REVERSE-5K=' + (performance.now() - t0).toFixed(2));
+
+      anim.cancel();
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Computed style during animation ===
+  b('F:COMPUTED');
+  try {
+    var container = document.createElement('div');
+    container.style.position = 'absolute';
+    container.style.left = '-9999px';
+    document.body.appendChild(container);
+
+    var div = document.createElement('div');
+    div.style.width = '10px';
+    div.style.height = '10px';
+    container.appendChild(div);
+
+    if (typeof div.animate === 'function') {
+      // Read computed style while animated
+      var anim = div.animate([{width: '10px'}, {width: '200px'}], {duration: 10000, fill: 'forwards'});
+      anim.currentTime = 5000;
+
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        getComputedStyle(div).width;
+      }
+      b('F:ANIMATED-READ-5K=' + (performance.now() - t0).toFixed(2));
+
+      var midVal = getComputedStyle(div).width;
+      b('F:MID-VALUE=' + midVal);
+
+      anim.cancel();
+
+      // Compare: non-animated read
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        getComputedStyle(div).width;
+      }
+      b('F:STATIC-READ-5K=' + (performance.now() - t0).toFixed(2));
+
+      // Rapid currentTime changes + reads
+      var anim2 = div.animate([{opacity: 1}, {opacity: 0}], {duration: 10000, fill: 'forwards'});
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        anim2.currentTime = j * 5;
+        getComputedStyle(div).opacity;
+      }
+      b('F:SEEK-READ-2K=' + (performance.now() - t0).toFixed(2));
+
+      anim2.cancel();
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P762-RESULT:TIMING-DATA-COLLECTED');
+  b('P762-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p762: CSS Animation / Transition / Web Animations timing oracle</pre></body></html>

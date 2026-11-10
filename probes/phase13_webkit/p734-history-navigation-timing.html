@@ -1,0 +1,257 @@
+<!--
+  p734: History API + Navigation timing oracle
+
+  The History API (pushState/replaceState/popstate) modifies the
+  browser's session history without navigation. Internally, WebKit
+  maintains a BackForwardList of HistoryItem objects, each containing
+  a serialized state object, URL, and scroll position.
+
+  Key insight: pushState serializes the state object using
+  StructuredSerializeForStorage, which allocates from the C++ heap.
+  The serialization size depends on the state object complexity.
+  replaceState overwrites the current entry, freeing the old
+  serialized data.
+
+  Attack angles:
+  A) pushState timing with varying state sizes -- serialization
+     allocates differently for objects, arrays, and typed arrays.
+  B) replaceState timing -- replacing the current state frees
+     the old serialization and allocates the new one.
+  C) history.length growth -- PS5 may have a different max length
+     than standard browsers (usually 50).
+  D) popstate event timing -- restoring state deserializes.
+  E) location property access timing -- href, pathname, hash etc.
+     may trigger lazy URL parsing.
+  F) hashchange event timing -- hash-only navigation is lighter
+     than full pushState.
+
+  CRASH_CLASS: LOW (History API, no navigation)
+  prior art: p730 (URL parsing), p727 (Performance API)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p734</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P734-START:HISTORY-NAVIGATION-TIMING');
+  var results = [];
+
+  // === SECTION A: pushState timing ===
+  b('A:PUSHSTATE-TIMING');
+  try {
+    var states = [
+      {name: 'null', state: null},
+      {name: 'empty-obj', state: {}},
+      {name: 'small-obj', state: {a: 1, b: 'hello'}},
+      {name: 'medium-obj', state: {data: 'x'.repeat(1000), arr: [1,2,3,4,5]}},
+      {name: 'large-str', state: {payload: 'x'.repeat(10000)}},
+      {name: 'deep-obj', state: (function() {
+        var o = {level: 0};
+        var cur = o;
+        for (var i = 1; i < 20; i++) {
+          cur.child = {level: i};
+          cur = cur.child;
+        }
+        return o;
+      })()},
+      {name: 'array-100', state: Array.from({length: 100}, function(_, i) { return {id: i, val: 'item' + i}; })},
+    ];
+
+    var pushTimes = [];
+    for (var s = 0; s < states.length; s++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 500; j++) {
+        history.pushState(states[s].state, '', '#push-' + s + '-' + j);
+      }
+      var dt = performance.now() - t0;
+      pushTimes.push(states[s].name + ':' + dt.toFixed(2));
+    }
+    b('A:PUSH-TIMES:' + pushTimes.join(','));
+
+    b('A:HISTORY-LEN=' + history.length);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: replaceState timing ===
+  b('B:REPLACESTATE-TIMING');
+  try {
+    // First set a state
+    history.replaceState({initial: true}, '', '#replace-base');
+
+    var replaceTimes = [];
+    var sizes = [0, 100, 1000, 5000, 10000];
+    for (var s = 0; s < sizes.length; s++) {
+      var state = sizes[s] > 0 ? {data: 'y'.repeat(sizes[s])} : null;
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        history.replaceState(state, '', '#replace-' + s);
+      }
+      var dt = performance.now() - t0;
+      replaceTimes.push(sizes[s] + ':' + dt.toFixed(2));
+    }
+    b('B:REPLACE-TIMES:' + replaceTimes.join(','));
+
+    // Replace with growing then shrinking state
+    var growShrinkTimes = [];
+    for (var phase = 0; phase < 2; phase++) {
+      var phaseSizes = phase === 0 ? [100, 500, 1000, 5000, 10000] : [10000, 5000, 1000, 500, 100];
+      for (var s = 0; s < phaseSizes.length; s++) {
+        var state = {data: 'z'.repeat(phaseSizes[s])};
+        var t0 = performance.now();
+        for (var j = 0; j < 500; j++) {
+          history.replaceState(state, '', '#gs-' + phase + '-' + s);
+        }
+        var dt = performance.now() - t0;
+        growShrinkTimes.push((phase === 0 ? 'grow' : 'shrink') + '-' + phaseSizes[s] + ':' + dt.toFixed(2));
+      }
+    }
+    b('B:GROW-SHRINK:' + growShrinkTimes.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: history.length behavior ===
+  b('C:HISTORY-LENGTH');
+  try {
+    var startLen = history.length;
+    b('C:START-LEN=' + startLen);
+
+    // Push many states and observe max
+    var maxReached = startLen;
+    for (var i = 0; i < 100; i++) {
+      history.pushState({idx: i}, '', '#len-' + i);
+      if (history.length > maxReached) maxReached = history.length;
+    }
+    b('C:AFTER-100-PUSH=' + history.length + ',MAX-REACHED=' + maxReached);
+
+    // Check if capped
+    if (history.length < startLen + 100) {
+      b('C:CAPPED-AT=' + history.length);
+      results.push('C:history-capped-' + history.length);
+    } else {
+      b('C:NO-CAP-AT-100');
+    }
+
+    // State object in current entry
+    var currentState = history.state;
+    b('C:CURRENT-STATE=' + JSON.stringify(currentState));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: popstate event timing ===
+  b('D:POPSTATE');
+  try {
+    // Set up states to pop
+    history.replaceState({base: true}, '', '#pop-base');
+    for (var i = 0; i < 10; i++) {
+      history.pushState({pop: i, data: 'x'.repeat(i * 100)}, '', '#pop-' + i);
+    }
+
+    var popEvents = [];
+    var popHandler = function(e) {
+      popEvents.push({
+        state: e.state ? JSON.stringify(e.state).length : 0,
+        time: performance.now()
+      });
+    };
+    window.addEventListener('popstate', popHandler);
+
+    // Go back
+    var t0 = performance.now();
+    history.go(-5);
+
+    // popstate is async, wait a bit
+    await new Promise(function(r) { setTimeout(r, 100); });
+
+    b('D:POP-EVENTS=' + popEvents.length);
+    if (popEvents.length > 0) {
+      b('D:FIRST-POP-DELAY=' + (popEvents[0].time - t0).toFixed(3));
+      b('D:FIRST-POP-STATE-LEN=' + popEvents[0].state);
+    }
+
+    window.removeEventListener('popstate', popHandler);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: location property timing ===
+  b('E:LOCATION-PROPS');
+  try {
+    var props = ['href', 'protocol', 'host', 'hostname', 'port',
+                 'pathname', 'search', 'hash', 'origin'];
+
+    var propTimes = [];
+    for (var p = 0; p < props.length; p++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 100000; j++) {
+        var v = location[props[p]];
+      }
+      var dt = performance.now() - t0;
+      propTimes.push(props[p] + ':' + dt.toFixed(2));
+    }
+    b('E:PROP-TIMES:' + propTimes.join(','));
+
+    // location.toString timing
+    var t0 = performance.now();
+    for (var j = 0; j < 100000; j++) {
+      location.toString();
+    }
+    b('E:TOSTRING=' + (performance.now() - t0).toFixed(2));
+
+    // Current values
+    b('E:HREF-LEN=' + location.href.length);
+    b('E:PROTOCOL=' + location.protocol);
+    b('E:HOSTNAME=' + location.hostname);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: hashchange timing ===
+  b('F:HASHCHANGE');
+  try {
+    var hashEvents = [];
+    var hashHandler = function(e) {
+      hashEvents.push({
+        oldURL: e.oldURL ? e.oldURL.length : -1,
+        newURL: e.newURL ? e.newURL.length : -1,
+        time: performance.now()
+      });
+    };
+    window.addEventListener('hashchange', hashHandler);
+
+    // Set hashes of varying length
+    var hashLengths = [1, 10, 50, 200, 1000];
+    var hashTimes = [];
+    for (var hl = 0; hl < hashLengths.length; hl++) {
+      var hash = '#' + 'h'.repeat(hashLengths[hl]);
+      var t0 = performance.now();
+      for (var j = 0; j < 500; j++) {
+        location.hash = hash + j;
+      }
+      var dt = performance.now() - t0;
+      hashTimes.push(hashLengths[hl] + ':' + dt.toFixed(2));
+    }
+    b('F:HASH-TIMES:' + hashTimes.join(','));
+
+    // Wait for events
+    await new Promise(function(r) { setTimeout(r, 50); });
+    b('F:HASH-EVENTS=' + hashEvents.length);
+
+    window.removeEventListener('hashchange', hashHandler);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  if (results.length > 0) {
+    b('P734-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P734-RESULT:TIMING-DATA-COLLECTED');
+  }
+  b('P734-DONE');
+}
+
+setTimeout(function() { main(); }, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p734: History API + Navigation timing oracle</pre></body></html>

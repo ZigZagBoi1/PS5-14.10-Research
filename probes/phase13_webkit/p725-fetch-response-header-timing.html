@@ -1,0 +1,319 @@
+<!--
+  p725: Fetch/XHR response header + network timing oracle
+
+  Fetch API and XMLHttpRequest expose response metadata (headers,
+  status, timing) that depends on internal C++ object allocation.
+  The Response object wraps a FetchResponse which holds a
+  ResourceResponse. Header parsing allocates HTTPHeaderMap entries.
+
+  Key insight: Response.headers.entries() iterates an internal
+  C++ HTTPHeaderMap. The iteration timing depends on hash table
+  layout, which depends on header insertion order and table size.
+  Headers object creation allocates from the general heap.
+
+  Attack angles:
+  A) Response.clone() timing -- cloning copies headers internally.
+     Clone timing reveals header count and internal map layout.
+  B) Headers iteration timing -- iterating response headers of
+     different sizes. Map traversal cost varies with bucket count.
+  C) Request/Response construction timing -- new Request/Response
+     with varying header counts. Object allocation timing.
+  D) ReadableStream timing -- Response.body as ReadableStream.
+     Reader creation and chunk timing reveal buffer management.
+  E) Blob/text/json body conversion timing -- different conversion
+     paths allocate differently. arrayBuffer vs text vs json.
+  F) AbortController + fetch race -- aborting at precise moments
+     during fetch reveals internal state machine transitions.
+
+  CRASH_CLASS: LOW (Fetch API, local requests only)
+  prior art: p705 (IDB/Storage), p717 (Event timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p725</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P725-START:FETCH-RESPONSE-TIMING');
+  var results = [];
+
+  // === SECTION A: Response.clone() timing ===
+  b('A:RESPONSE-CLONE');
+  try {
+    // Create responses with varying header counts
+    var headerCounts = [0, 5, 10, 25, 50];
+    var cloneTimes = [];
+
+    for (var hc = 0; hc < headerCounts.length; hc++) {
+      var n = headerCounts[hc];
+      var headers = new Headers();
+      for (var i = 0; i < n; i++) {
+        headers.set('X-Test-' + i, 'value-' + i + '-' + 'x'.repeat(50));
+      }
+      var resp = new Response('body content', {status: 200, headers: headers});
+
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        var c = resp.clone();
+      }
+      var dt = performance.now() - t0;
+      cloneTimes.push(n + ':' + dt.toFixed(2));
+    }
+    b('A:CLONE-TIMES:' + cloneTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Headers iteration timing ===
+  b('B:HEADERS-ITERATION');
+  try {
+    var sizes = [1, 5, 10, 25, 50, 100];
+    var iterTimes = [];
+
+    for (var s = 0; s < sizes.length; s++) {
+      var h = new Headers();
+      for (var i = 0; i < sizes[s]; i++) {
+        h.set('X-H-' + i, 'val' + i);
+      }
+
+      // Iteration timing
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        var count = 0;
+        h.forEach(function(v, k) { count++; });
+      }
+      var dt = performance.now() - t0;
+      iterTimes.push(sizes[s] + ':' + dt.toFixed(2));
+
+      // entries() timing
+      var t1 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        var entries = Array.from(h.entries());
+      }
+      var dt2 = performance.now() - t1;
+      iterTimes[iterTimes.length - 1] += ':entries=' + dt2.toFixed(2);
+    }
+    b('B:ITER-TIMES:' + iterTimes.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Request/Response construction timing ===
+  b('C:CONSTRUCTION-TIMING');
+  try {
+    // Response construction with body types
+    var bodyTypes = [
+      {name: 'null', body: null},
+      {name: 'empty', body: ''},
+      {name: '1K', body: 'x'.repeat(1024)},
+      {name: '64K', body: 'x'.repeat(65536)},
+      {name: 'blob', body: new Blob(['hello world'])},
+      {name: 'ab', body: new ArrayBuffer(1024)},
+    ];
+
+    var constrTimes = [];
+    for (var bt = 0; bt < bodyTypes.length; bt++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        new Response(bodyTypes[bt].body);
+      }
+      var dt = performance.now() - t0;
+      constrTimes.push(bodyTypes[bt].name + ':' + dt.toFixed(2));
+    }
+    b('C:RESPONSE-TIMES:' + constrTimes.join(','));
+
+    // Request construction
+    var reqTimes = [];
+    var methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH'];
+    for (var m = 0; m < methods.length; m++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        new Request('/test', {method: methods[m]});
+      }
+      var dt = performance.now() - t0;
+      reqTimes.push(methods[m] + ':' + dt.toFixed(2));
+    }
+    b('C:REQUEST-TIMES:' + reqTimes.join(','));
+
+    // Request with headers
+    var headerReqTimes = [];
+    var hCounts = [0, 5, 10, 25];
+    for (var hc = 0; hc < hCounts.length; hc++) {
+      var hdrs = {};
+      for (var i = 0; i < hCounts[hc]; i++) hdrs['X-R-' + i] = 'val' + i;
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        new Request('/test', {headers: hdrs});
+      }
+      var dt = performance.now() - t0;
+      headerReqTimes.push(hCounts[hc] + ':' + dt.toFixed(2));
+    }
+    b('C:REQ-HEADER-TIMES:' + headerReqTimes.join(','));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: ReadableStream reader timing ===
+  b('D:READABLESTREAM-TIMING');
+  try {
+    var streamSizes = [256, 1024, 4096, 16384];
+    var streamTimes = [];
+
+    for (var ss = 0; ss < streamSizes.length; ss++) {
+      var data = 'x'.repeat(streamSizes[ss]);
+      var resp = new Response(data);
+
+      var t0 = performance.now();
+      var reader = resp.body.getReader();
+      var chunks = [];
+      while (true) {
+        var result = await reader.read();
+        if (result.done) break;
+        chunks.push(result.value.length);
+      }
+      var dt = performance.now() - t0;
+      streamTimes.push(streamSizes[ss] + ':' + dt.toFixed(3) + ':chunks=' + chunks.length);
+    }
+    b('D:STREAM-TIMES:' + streamTimes.join(','));
+
+    // Multiple reader creation timing
+    var readerTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        var r = new Response('test').body.getReader();
+        r.cancel();
+      }
+      var dt = performance.now() - t0;
+      readerTimes.push(dt.toFixed(2));
+    }
+    b('D:READER-CREATE-TIMES:' + readerTimes.join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Body conversion timing ===
+  b('E:BODY-CONVERSION');
+  try {
+    var sizes = [256, 1024, 4096, 16384, 65536];
+    var convTimes = {};
+
+    for (var s = 0; s < sizes.length; s++) {
+      var data = 'x'.repeat(sizes[s]);
+
+      // text()
+      var t0 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        await new Response(data).text();
+      }
+      var textDt = performance.now() - t0;
+
+      // arrayBuffer()
+      var t1 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        await new Response(data).arrayBuffer();
+      }
+      var abDt = performance.now() - t1;
+
+      // blob()
+      var t2 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        await new Response(data).blob();
+      }
+      var blobDt = performance.now() - t2;
+
+      b('E:SIZE=' + sizes[s] + ':text=' + textDt.toFixed(2) + ',ab=' + abDt.toFixed(2) + ',blob=' + blobDt.toFixed(2));
+    }
+
+    // JSON parsing timing
+    var jsonSizes = [10, 100, 500];
+    for (var js = 0; js < jsonSizes.length; js++) {
+      var arr = [];
+      for (var i = 0; i < jsonSizes[js]; i++) arr.push({id: i, name: 'item' + i});
+      var jsonStr = JSON.stringify(arr);
+
+      var t0 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        await new Response(jsonStr).json();
+      }
+      var dt = performance.now() - t0;
+      b('E:JSON-' + jsonSizes[js] + '=' + dt.toFixed(2) + ',bytes=' + jsonStr.length);
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: AbortController race timing ===
+  b('F:ABORT-RACE');
+  try {
+    // Abort at different stages of response construction
+    var abortTimes = [];
+
+    // Pre-abort (signal already aborted before fetch)
+    var ac = new AbortController();
+    ac.abort();
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      try {
+        await fetch('/beacon/noop', {signal: ac.signal});
+      } catch(e2) {}
+    }
+    var dt = performance.now() - t0;
+    abortTimes.push('pre-abort:' + dt.toFixed(2));
+    b('F:PRE-ABORT=' + dt.toFixed(2));
+
+    // AbortController creation batch timing
+    var acTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      var acs = [];
+      for (var j = 0; j < 5000; j++) {
+        acs.push(new AbortController());
+      }
+      var dt = performance.now() - t0;
+      acTimes.push(dt.toFixed(2));
+    }
+    b('F:AC-CREATE-TIMES:' + acTimes.join(','));
+
+    // Signal.any if available
+    if (typeof AbortSignal.any === 'function') {
+      b('F:SIGNAL-ANY-AVAILABLE');
+      var signals = [];
+      for (var i = 0; i < 10; i++) signals.push(new AbortController().signal);
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        AbortSignal.any(signals);
+      }
+      var dt = performance.now() - t0;
+      b('F:SIGNAL-ANY-TIME=' + dt.toFixed(2));
+    } else {
+      b('F:SIGNAL-ANY-NOT-AVAILABLE');
+    }
+
+    // AbortSignal.timeout if available
+    if (typeof AbortSignal.timeout === 'function') {
+      b('F:SIGNAL-TIMEOUT-AVAILABLE');
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        AbortSignal.timeout(60000);
+      }
+      var dt = performance.now() - t0;
+      b('F:SIGNAL-TIMEOUT-TIME=' + dt.toFixed(2));
+    } else {
+      b('F:SIGNAL-TIMEOUT-NOT-AVAILABLE');
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P725-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P725-RESULT:TIMING-DATA-COLLECTED');
+  }
+  b('P725-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p725: Fetch/XHR response header + network timing oracle</pre></body></html>

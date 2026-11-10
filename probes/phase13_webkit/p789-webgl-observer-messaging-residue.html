@@ -1,0 +1,477 @@
+<!--
+  p789: WebGL context / IntersectionObserver / ResizeObserver / MessageChannel / URL API residue
+
+  WebGL: canvas.getContext('webgl') creates a C++ WebGLRenderingContext
+  with GPU state, shader compiler objects, buffer/texture/framebuffer
+  registries, and extension objects. Even without rendering, creating
+  contexts and allocating GL objects (buffers, textures, shaders,
+  programs) exercises the WebGL allocator. loseContext/restoreContext
+  frees and reallocates internal state. The shader compiler (ANGLE)
+  allocates AST nodes and IR objects from its own pool.
+
+  IntersectionObserver: creates C++ IntersectionObserver with root,
+  rootMargin, threshold state. Each observed element creates a C++
+  IntersectionObserverEntry. Rapid observe/unobserve cycles exercise
+  the entry allocator and the intersection computation state.
+
+  ResizeObserver: creates C++ ResizeObserver with observation targets.
+  Each observed element creates C++ ResizeObserverEntry with
+  contentRect/borderBoxSize/contentBoxSize. Rapid observe/unobserve
+  exercises the entry pool.
+
+  MessageChannel: creates a C++ MessagePort pair with internal
+  message queues. postMessage serializes data through the structured
+  clone algorithm, creating C++ SerializedScriptValue objects.
+  Transferable objects (ArrayBuffer) exercise the transfer path.
+
+  URL/URLSearchParams: URL constructor parses into C++ URLComponents
+  with scheme/host/port/path/query/fragment. URLSearchParams maintains
+  a C++ vector of key-value pairs. Rapid create/modify/serialize
+  exercises the URL parser allocator.
+
+  DOMRect/DOMMatrix: getBoundingClientRect creates C++ DOMRect.
+  DOMMatrix operations allocate C++ transformation state.
+
+  Attack angles:
+  A) WebGL context create/loseContext + shader compile churn.
+  B) IntersectionObserver observe/unobserve entry churn.
+  C) ResizeObserver observe/unobserve entry churn.
+  D) MessageChannel postMessage structured clone churn.
+  E) URL/URLSearchParams parse/modify/serialize churn.
+  F) DOMRect/DOMMatrix bulk creation + transform churn.
+
+  CRASH_CLASS: LOW (WebGL/observer/messaging APIs, no side effects)
+  prior art: p777 (Observer APIs), p771 (ImageBitmap)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p789</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p789-START');
+
+// === Section A: WebGL context create/loseContext + shader compile ===
+try{
+  b('A-webgl');
+  var aHits=0;
+
+  for(var round=0;round<3;round++){
+    (function(){
+      var contexts=[];
+
+      for(var i=0;i<10;i++){
+        var c=document.createElement('canvas');
+        c.width=64;c.height=64;
+        var gl=null;
+        try{gl=c.getContext('webgl');}catch(e){}
+        if(!gl)try{gl=c.getContext('experimental-webgl');}catch(e){}
+
+        if(!gl){
+          if(i===0&&round===0)b('A-SKIP no WebGL');
+          break;
+        }
+
+        // Create GL objects to exercise allocator
+        try{
+          // Buffers
+          for(var j=0;j<5;j++){
+            var buf=gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER,buf);
+            gl.bufferData(gl.ARRAY_BUFFER,new Float32Array([0,0,1,0,0,1,1,1]),gl.STATIC_DRAW);
+            gl.deleteBuffer(buf);
+          }
+
+          // Textures
+          for(var j=0;j<5;j++){
+            var tex=gl.createTexture();
+            gl.bindTexture(gl.TEXTURE_2D,tex);
+            gl.texImage2D(gl.TEXTURE_2D,0,gl.RGBA,4,4,0,gl.RGBA,gl.UNSIGNED_BYTE,
+              new Uint8Array(4*4*4));
+            gl.deleteTexture(tex);
+          }
+
+          // Shaders
+          var vs=gl.createShader(gl.VERTEX_SHADER);
+          gl.shaderSource(vs,'attribute vec4 a;void main(){gl_Position=a;}');
+          gl.compileShader(vs);
+
+          var fs=gl.createShader(gl.FRAGMENT_SHADER);
+          gl.shaderSource(fs,'precision mediump float;void main(){gl_FragColor=vec4(1,0,0,1);}');
+          gl.compileShader(fs);
+
+          var prog=gl.createProgram();
+          gl.attachShader(prog,vs);
+          gl.attachShader(prog,fs);
+          gl.linkProgram(prog);
+
+          if(round===0&&i===0){
+            b('A vs_compiled='+gl.getShaderParameter(vs,gl.COMPILE_STATUS));
+            b('A fs_compiled='+gl.getShaderParameter(fs,gl.COMPILE_STATUS));
+            b('A prog_linked='+gl.getProgramParameter(prog,gl.LINK_STATUS));
+          }
+
+          gl.deleteProgram(prog);
+          gl.deleteShader(vs);
+          gl.deleteShader(fs);
+
+          // Framebuffer + renderbuffer
+          var fb=gl.createFramebuffer();
+          var rb=gl.createRenderbuffer();
+          gl.bindRenderbuffer(gl.RENDERBUFFER,rb);
+          gl.renderbufferStorage(gl.RENDERBUFFER,gl.RGBA4,32,32);
+          gl.bindFramebuffer(gl.FRAMEBUFFER,fb);
+          gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.COLOR_ATTACHMENT0,gl.RENDERBUFFER,rb);
+          gl.deleteFramebuffer(fb);
+          gl.deleteRenderbuffer(rb);
+
+        }catch(e){
+          if(i===0&&round===0)b('A gl_err='+e.message);
+        }
+
+        // Lose context to free internal state
+        try{
+          var ext=gl.getExtension('WEBGL_lose_context');
+          if(ext)ext.loseContext();
+        }catch(e){}
+
+        contexts.push(gl);
+      }
+
+      if(round===0)b('A created '+contexts.length+' WebGL contexts with GL objects');
+      contexts=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[48,64,96,128,192]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: IntersectionObserver observe/unobserve entry churn ===
+try{
+  b('B-intersection');
+  var bHits=0;
+
+  var ioSupported=typeof IntersectionObserver!=='undefined';
+  if(!ioSupported){
+    b('B-SKIP no IntersectionObserver');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var elements=[];
+        for(var i=0;i<60;i++){
+          var el=document.createElement('div');
+          el.style.cssText='width:10px;height:10px;position:absolute;top:'+(i*15)+'px;left:'+(i*5)+'px;background:blue;';
+          document.body.appendChild(el);
+          elements.push(el);
+        }
+
+        var entryCount=0;
+        var observers=[];
+
+        for(var t=0;t<5;t++){
+          var threshold=[0,0.25,0.5,0.75,1.0][t];
+          var obs=new IntersectionObserver(function(entries){
+            entryCount+=entries.length;
+          },{threshold:threshold,rootMargin:(t*10)+'px'});
+
+          for(var i=0;i<elements.length;i++){
+            obs.observe(elements[i]);
+          }
+          observers.push(obs);
+        }
+
+        if(round===0)b('B observing '+elements.length+' elements with '+observers.length+' observers');
+
+        // Unobserve all
+        for(var oi=0;oi<observers.length;oi++){
+          for(var i=0;i<elements.length;i++){
+            observers[oi].unobserve(elements[i]);
+          }
+          observers[oi].disconnect();
+        }
+
+        for(var i=0;i<elements.length;i++){
+          document.body.removeChild(elements[i]);
+        }
+        elements=null;observers=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      bHits+=sprayAndScan('B',round,[32,48,64,96]);
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: ResizeObserver observe/unobserve entry churn ===
+try{
+  b('C-resize');
+  var cHits=0;
+
+  var roSupported=typeof ResizeObserver!=='undefined';
+  if(!roSupported){
+    b('C-SKIP no ResizeObserver');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var elements=[];
+        for(var i=0;i<60;i++){
+          var el=document.createElement('div');
+          el.style.cssText='width:'+(20+i*3)+'px;height:'+(10+i*2)+'px;display:inline-block;';
+          document.body.appendChild(el);
+          elements.push(el);
+        }
+
+        var entryCount=0;
+        var obs=new ResizeObserver(function(entries){
+          entryCount+=entries.length;
+        });
+
+        for(var i=0;i<elements.length;i++){
+          obs.observe(elements[i]);
+        }
+
+        if(round===0)b('C observing '+elements.length+' elements');
+
+        // Trigger resizes
+        for(var i=0;i<elements.length;i++){
+          elements[i].style.width=(50+i*2)+'px';
+          elements[i].style.height=(30+i)+'px';
+        }
+
+        // Unobserve all
+        for(var i=0;i<elements.length;i++){
+          obs.unobserve(elements[i]);
+        }
+        obs.disconnect();
+
+        for(var i=0;i<elements.length;i++){
+          document.body.removeChild(elements[i]);
+        }
+        elements=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      cHits+=sprayAndScan('C',round,[32,48,64,96]);
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: MessageChannel postMessage structured clone churn ===
+try{
+  b('D-messagechannel');
+  var dHits=0;
+
+  var mcSupported=typeof MessageChannel!=='undefined';
+  if(!mcSupported){
+    b('D-SKIP no MessageChannel');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var channels=[];
+
+        for(var i=0;i<30;i++){
+          var mc=new MessageChannel();
+          var received=0;
+          mc.port2.onmessage=function(e){received++;};
+          mc.port2.start();
+
+          // Post various data types exercising structured clone
+          mc.port1.postMessage('string_data_'+round+'_'+i+'_'+'s'.repeat(40));
+          mc.port1.postMessage({key:'obj_'+i,nested:{a:1,b:[2,3,4]},round:round});
+          mc.port1.postMessage([1,2,3,'array_'+i,{x:round}]);
+
+          // Transfer ArrayBuffers
+          for(var j=0;j<3;j++){
+            var ab=new ArrayBuffer(64);
+            var dv=new DataView(ab);
+            dv.setUint32(0,round);
+            dv.setUint32(4,i);
+            dv.setUint32(8,j);
+            mc.port1.postMessage(ab,[ab]);
+          }
+
+          channels.push(mc);
+        }
+
+        if(round===0)b('D created '+channels.length+' MessageChannels, posted 6 messages each');
+
+        // Close all ports
+        for(var i=0;i<channels.length;i++){
+          channels[i].port1.close();
+          channels[i].port2.close();
+        }
+        channels=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      dHits+=sprayAndScan('D',round,[32,48,64,96,128]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: URL/URLSearchParams parse/modify/serialize churn ===
+try{
+  b('E-url');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var urls=[];
+
+      for(var i=0;i<200;i++){
+        try{
+          var u=new URL('https://example.com:8080/path/to/resource_'+round+'_'+i+'?key1=val1&key2=val2&arr[]='+i+'#frag_'+i);
+
+          // Access all components
+          var h=u.hostname;
+          var p=u.pathname;
+          var s=u.search;
+          var f=u.hash;
+          var o=u.origin;
+          var hr=u.href;
+
+          // Modify URLSearchParams
+          var sp=u.searchParams;
+          sp.append('extra_'+round,'value_'+i);
+          sp.set('key1','modified_'+round);
+          sp.delete('key2');
+          sp.sort();
+
+          // Iterate params
+          var count=0;
+          sp.forEach(function(v,k){count++;});
+
+          // Serialize back
+          var final_href=u.href;
+
+          urls.push(u);
+        }catch(e){
+          if(i===0&&round===0)b('E url_err='+e.message);
+        }
+      }
+
+      if(round===0)b('E created/modified '+urls.length+' URL objects');
+
+      // Also exercise createObjectURL/revokeObjectURL
+      for(var i=0;i<20;i++){
+        try{
+          var blob=new Blob(['data_'+round+'_'+i],{type:'text/plain'});
+          var objUrl=URL.createObjectURL(blob);
+          URL.revokeObjectURL(objUrl);
+        }catch(e){
+          if(i===0&&round===0)b('E objurl_err='+e.message);
+        }
+      }
+
+      urls=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: DOMRect/DOMMatrix bulk creation + transform churn ===
+try{
+  b('F-domrect-matrix');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var rects=[];
+      var matrices=[];
+
+      // DOMRect from getBoundingClientRect
+      var elements=[];
+      for(var i=0;i<50;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:'+(20+i*3)+'px;height:'+(10+i*2)+'px;display:inline-block;margin:2px;';
+        el.textContent='rect_'+round+'_'+i;
+        document.body.appendChild(el);
+        elements.push(el);
+      }
+
+      for(var i=0;i<elements.length;i++){
+        var rect=elements[i].getBoundingClientRect();
+        rects.push(rect);
+      }
+
+      // Also getClientRects (may return multiple rects for inline elements)
+      for(var i=0;i<Math.min(20,elements.length);i++){
+        var rectList=elements[i].getClientRects();
+        for(var j=0;j<rectList.length;j++){
+          rects.push(rectList[j]);
+        }
+      }
+
+      if(round===0)b('F collected '+rects.length+' DOMRects from '+elements.length+' elements');
+
+      // DOMMatrix operations
+      if(typeof DOMMatrix!=='undefined'){
+        for(var i=0;i<50;i++){
+          try{
+            var m=new DOMMatrix();
+            m=m.translate(i*10,round*5,0);
+            m=m.rotate(i*5);
+            m=m.scale(1+i*0.1,1+round*0.05);
+            m=m.skewX(i%10);
+            m=m.invertSelf();
+            matrices.push(m);
+          }catch(e){
+            if(i===0&&round===0)b('F matrix_err='+e.message);
+          }
+        }
+        if(round===0)b('F created '+matrices.length+' DOMMatrix objects with transforms');
+      }else{
+        if(round===0)b('F-SKIP no DOMMatrix');
+      }
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      rects=null;matrices=null;elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p789-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

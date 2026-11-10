@@ -1,0 +1,344 @@
+<!--
+  p750: ImageBitmap / createImageBitmap timing oracle
+
+  createImageBitmap() decodes image data into a GPU-ready bitmap.
+  It accepts HTMLImageElement, HTMLCanvasElement, HTMLVideoElement,
+  Blob, ImageData, and other ImageBitmap sources. The decode path
+  exercises platform-specific image codecs and GPU upload.
+
+  Key insight: createImageBitmap timing varies with source type,
+  image dimensions, and resize options. The close() method releases
+  the backing store. transferToImageBitmap() on OffscreenCanvas
+  transfers ownership. These operations reveal internal bitmap
+  management and memory pool behavior.
+
+  On PS5 WebKit 605.1.15, createImageBitmap is available (confirmed
+  p741 OffscreenCanvas section). The bitmap pool timing is
+  platform-specific.
+
+  Attack angles:
+  A) createImageBitmap from canvas with varying sizes.
+  B) createImageBitmap from ImageData.
+  C) createImageBitmap with resize options.
+  D) ImageBitmap.close() and reuse timing.
+  E) Multiple concurrent createImageBitmap.
+  F) OffscreenCanvas transferToImageBitmap.
+
+  CRASH_CLASS: LOW (ImageBitmap API, no side effects)
+  prior art: p741 (Canvas/WebGL), p748 (Fetch timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p750</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P750-START:IMAGEBITMAP-TIMING');
+
+  // === SECTION A: createImageBitmap from canvas ===
+  b('A:FROM-CANVAS');
+  try {
+    b('A:CREATE-IB=' + (typeof createImageBitmap));
+
+    if (typeof createImageBitmap === 'function') {
+      var sizes = [16, 32, 64, 128, 256, 512];
+      var canvasTimes = [];
+
+      for (var s = 0; s < sizes.length; s++) {
+        var canvas = document.createElement('canvas');
+        canvas.width = sizes[s];
+        canvas.height = sizes[s];
+        var ctx = canvas.getContext('2d');
+        ctx.fillStyle = 'red';
+        ctx.fillRect(0, 0, sizes[s], sizes[s]);
+
+        var t0 = performance.now();
+        for (var j = 0; j < 100; j++) {
+          var bmp = await createImageBitmap(canvas);
+          bmp.close();
+        }
+        canvasTimes.push(sizes[s] + 'x' + sizes[s] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('A:CANVAS-TIMES:' + canvasTimes.join(','));
+
+      // Verify bitmap properties
+      var canvas = document.createElement('canvas');
+      canvas.width = 100;
+      canvas.height = 50;
+      var bmp = await createImageBitmap(canvas);
+      b('A:BMP-PROPS:w=' + bmp.width + ',h=' + bmp.height);
+      bmp.close();
+    } else {
+      b('A:NOT-AVAILABLE');
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: createImageBitmap from ImageData ===
+  b('B:FROM-IMAGEDATA');
+  try {
+    if (typeof createImageBitmap === 'function') {
+      var sizes = [16, 64, 128, 256];
+      var idTimes = [];
+
+      for (var s = 0; s < sizes.length; s++) {
+        var id = new ImageData(sizes[s], sizes[s]);
+        for (var i = 0; i < id.data.length; i += 4) {
+          id.data[i] = 255; id.data[i+1] = 0; id.data[i+2] = 0; id.data[i+3] = 255;
+        }
+
+        var t0 = performance.now();
+        for (var j = 0; j < 100; j++) {
+          var bmp = await createImageBitmap(id);
+          bmp.close();
+        }
+        idTimes.push(sizes[s] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('B:IMAGEDATA-TIMES:' + idTimes.join(','));
+
+      // ImageData constructor timing
+      var idSizes = [32, 128, 256, 512];
+      var ctorTimes = [];
+      for (var s = 0; s < idSizes.length; s++) {
+        var t0 = performance.now();
+        for (var j = 0; j < 500; j++) {
+          new ImageData(idSizes[s], idSizes[s]);
+        }
+        ctorTimes.push(idSizes[s] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('B:IMAGEDATA-CTOR:' + ctorTimes.join(','));
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: createImageBitmap with resize options ===
+  b('C:RESIZE');
+  try {
+    if (typeof createImageBitmap === 'function') {
+      var canvas = document.createElement('canvas');
+      canvas.width = 256;
+      canvas.height = 256;
+      var ctx = canvas.getContext('2d');
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(0, 0, 256, 256);
+
+      // Crop region
+      var cropTimes = [];
+      var crops = [
+        {sx: 0, sy: 0, sw: 64, sh: 64},
+        {sx: 0, sy: 0, sw: 128, sh: 128},
+        {sx: 64, sy: 64, sw: 128, sh: 128},
+        {sx: 0, sy: 0, sw: 256, sh: 256},
+      ];
+      for (var c = 0; c < crops.length; c++) {
+        var cr = crops[c];
+        var t0 = performance.now();
+        for (var j = 0; j < 100; j++) {
+          var bmp = await createImageBitmap(canvas, cr.sx, cr.sy, cr.sw, cr.sh);
+          bmp.close();
+        }
+        cropTimes.push(cr.sw + 'x' + cr.sh + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('C:CROP-TIMES:' + cropTimes.join(','));
+
+      // Resize options (if supported)
+      try {
+        var bmp = await createImageBitmap(canvas, {resizeWidth: 64, resizeHeight: 64});
+        b('C:RESIZE-OPTION=supported:w=' + bmp.width + ',h=' + bmp.height);
+        bmp.close();
+
+        // Resize quality options
+        var qualities = ['pixelated', 'low', 'medium', 'high'];
+        var qualTimes = [];
+        for (var q = 0; q < qualities.length; q++) {
+          try {
+            var t0 = performance.now();
+            for (var j = 0; j < 50; j++) {
+              var bmp = await createImageBitmap(canvas, {
+                resizeWidth: 64, resizeHeight: 64,
+                resizeQuality: qualities[q]
+              });
+              bmp.close();
+            }
+            qualTimes.push(qualities[q] + ':' + (performance.now() - t0).toFixed(2));
+          } catch(e) {
+            qualTimes.push(qualities[q] + ':ERR');
+          }
+        }
+        b('C:QUALITY-TIMES:' + qualTimes.join(','));
+      } catch(e) {
+        b('C:RESIZE-OPTION=unsupported:' + e.message.substring(0, 30));
+      }
+
+      // imageOrientation option
+      try {
+        var bmp = await createImageBitmap(canvas, {imageOrientation: 'flipY'});
+        b('C:FLIP-Y=supported');
+        bmp.close();
+      } catch(e) {
+        b('C:FLIP-Y=unsupported');
+      }
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: close() and reuse ===
+  b('D:CLOSE');
+  try {
+    if (typeof createImageBitmap === 'function') {
+      var canvas = document.createElement('canvas');
+      canvas.width = 128;
+      canvas.height = 128;
+
+      // close() timing
+      var bmps = [];
+      for (var i = 0; i < 200; i++) {
+        bmps.push(await createImageBitmap(canvas));
+      }
+
+      var t0 = performance.now();
+      for (var i = 0; i < bmps.length; i++) {
+        bmps[i].close();
+      }
+      b('D:CLOSE-200=' + (performance.now() - t0).toFixed(2));
+
+      // Verify closed bitmap
+      var bmp = await createImageBitmap(canvas);
+      b('D:BEFORE-CLOSE:w=' + bmp.width + ',h=' + bmp.height);
+      bmp.close();
+      b('D:AFTER-CLOSE:w=' + bmp.width + ',h=' + bmp.height);
+
+      // Double close
+      try {
+        bmp.close();
+        b('D:DOUBLE-CLOSE=ok');
+      } catch(e) {
+        b('D:DOUBLE-CLOSE=err:' + e.message.substring(0, 30));
+      }
+
+      // Create-close cycle timing
+      var t0 = performance.now();
+      for (var j = 0; j < 500; j++) {
+        var bmp = await createImageBitmap(canvas);
+        bmp.close();
+      }
+      b('D:CREATE-CLOSE-500=' + (performance.now() - t0).toFixed(2));
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Concurrent createImageBitmap ===
+  b('E:CONCURRENT');
+  try {
+    if (typeof createImageBitmap === 'function') {
+      var canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 64;
+
+      // Sequential vs parallel
+      var t0 = performance.now();
+      for (var j = 0; j < 50; j++) {
+        var bmp = await createImageBitmap(canvas);
+        bmp.close();
+      }
+      var seqTime = performance.now() - t0;
+
+      var t0 = performance.now();
+      var promises = [];
+      for (var j = 0; j < 50; j++) {
+        promises.push(createImageBitmap(canvas));
+      }
+      var bmps = await Promise.all(promises);
+      for (var i = 0; i < bmps.length; i++) bmps[i].close();
+      var parTime = performance.now() - t0;
+
+      b('E:SEQ-50=' + seqTime.toFixed(2) + ',PAR-50=' + parTime.toFixed(2));
+
+      // Scaling parallel count
+      var counts = [1, 10, 25, 50, 100];
+      var parTimes = [];
+      for (var c = 0; c < counts.length; c++) {
+        var t0 = performance.now();
+        var promises = [];
+        for (var j = 0; j < counts[c]; j++) {
+          promises.push(createImageBitmap(canvas));
+        }
+        var bmps = await Promise.all(promises);
+        for (var i = 0; i < bmps.length; i++) bmps[i].close();
+        parTimes.push(counts[c] + ':' + (performance.now() - t0).toFixed(2));
+      }
+      b('E:PARALLEL-SCALE:' + parTimes.join(','));
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: OffscreenCanvas ===
+  b('F:OFFSCREEN');
+  try {
+    b('F:OFFSCREEN-CANVAS=' + (typeof OffscreenCanvas));
+
+    if (typeof OffscreenCanvas !== 'undefined') {
+      // Constructor timing
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        new OffscreenCanvas(64, 64);
+      }
+      b('F:CTOR-2K=' + (performance.now() - t0).toFixed(2));
+
+      // getContext
+      var oc = new OffscreenCanvas(128, 128);
+      var ctx = oc.getContext('2d');
+      b('F:2D-CTX=' + (ctx ? 'ok' : 'null'));
+
+      if (ctx) {
+        ctx.fillStyle = 'green';
+        ctx.fillRect(0, 0, 128, 128);
+
+        // transferToImageBitmap
+        b('F:TRANSFER=' + (typeof oc.transferToImageBitmap));
+        if (typeof oc.transferToImageBitmap === 'function') {
+          var t0 = performance.now();
+          for (var j = 0; j < 200; j++) {
+            ctx.fillRect(0, 0, 1, 1);
+            var bmp = oc.transferToImageBitmap();
+            bmp.close();
+          }
+          b('F:TRANSFER-200=' + (performance.now() - t0).toFixed(2));
+        }
+
+        // convertToBlob
+        b('F:CONVERT-BLOB=' + (typeof oc.convertToBlob));
+        if (typeof oc.convertToBlob === 'function') {
+          ctx.fillRect(0, 0, 128, 128);
+          var t0 = performance.now();
+          for (var j = 0; j < 50; j++) {
+            await oc.convertToBlob();
+          }
+          b('F:CONVERT-50=' + (performance.now() - t0).toFixed(2));
+
+          // With type
+          var blob = await oc.convertToBlob({type: 'image/png'});
+          b('F:BLOB-TYPE=' + blob.type + ',size=' + blob.size);
+        }
+      }
+
+      // WebGL on OffscreenCanvas
+      var ocgl = new OffscreenCanvas(64, 64);
+      var gl = ocgl.getContext('webgl');
+      b('F:WEBGL-CTX=' + (gl ? 'ok' : 'null'));
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P750-RESULT:TIMING-DATA-COLLECTED');
+  b('P750-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p750: ImageBitmap / createImageBitmap / OffscreenCanvas timing oracle</pre></body></html>

@@ -86,12 +86,13 @@ class implementation (likely CSSFontFace::Client pure virtuals that
 CSSFontFaceSet doesn't override, or a common no-op stub).
 
 Inter-slot deltas (from VP):
-  s0: VP - s0 = 0x170_0B78
-  s1: VP - s1 = 0x170_0B48  (s1 = s0 + 0x30)
-  s2: VP - s2 = 0x2CE_C3D8
-  s3: VP - s3 = 0x170_0478
-  s6: VP - s6 = 0x14B_A728
-  s7: VP - s7 = 0x170_0318
+  s0: VP - s0 = 0x171_0B78  (23.07 MB)
+  s1: VP - s1 = 0x171_0B48  (s1 = s0 + 0x30)
+  s2: VP - s2 = 0x324_C3D8  (50.30 MB)
+  s3: VP - s3 = 0x171_0478
+  s6: VP - s6 = 0x1AB_A728  (26.73 MB)
+  s7: VP - s7 = 0x171_0318
+  (corrected 2026-11-10: original deltas had computation error)
 
 == VP ACROSS 5 BOOTS ==
 

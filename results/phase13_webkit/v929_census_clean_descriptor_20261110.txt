@@ -1,0 +1,52 @@
+V929 — pre-forge census run: the style-decode lane on 14.22 reads the CLEAN
+DESCRIPTOR ("normal"), winner==pristine, zero chunk-byte transport — the
+p691 readStyle lane does not carry chunk bytes on this build
+================================================================================
+Probe:    probes/phase13_webkit/v929_preforge_census.html (shadowing fixed:
+          dec() preserved, decStr for the readback)
+Target:   PS5 14.22 retail
+Date:     2026-11-10 22:56Z
+Source:   tools/browser_runner/beacon_logs/ (22:56:48 session)
+
+=== RESULTS ===
+
+CENSUS-WIN:     idx=0 (control status readback — the p640 lane works: the
+                write-after-free landed on the FIRST sprayed carrier this boot)
+CENSUS-DATA:    len=12 | 6e6f726d616c = ASCII "normal"
+PRISTINE-DATA:  len=12 | 6e6f726d616c — IDENTICAL to the winner
+CENSUS-ROW:     +0x00:6e6f726d616c (the only row — 6 bytes decoded)
+BRANCH beacon:  "(2) nonzero bytes retained (6/6)" — GRADING CORRECTED
+                below: the 6 bytes are the style DESCRIPTOR serialization,
+                not chunk bytes.
+
+=== DECODE ===
+
+1. face.style on 14.22 returns the CLEAN style descriptor ("normal") for
+   BOTH the winning carrier and the pristine twin — zero delta. The
+   style-decode lane does not transport chunk bytes at 0x00..0xA8 on this
+   build: it carries the serialized descriptor value only.
+2. The p691 14.10 readStyle lane (which leaked T1/W1-class bytes through
+   the same getter) does not port as a byte-window: on 14.22 the readback
+   is the clean descriptor, winner==pristine.
+3. Measured conclusion of the census: the only chunk-state observable
+   through the FontFace surface on 14.22 is the p640 status byte (+0x82,
+   system-written, JS-readable). No byte window, no corruption delta, no
+   pointer content at the readback.
+4. Run-1's branch-(2) readout (THROW artifact graded as "bytes retained")
+   is retracted; this run's corrected grade is: the readback lane is
+   CLEAN-DESCRIPTOR-ONLY — a fourth measured producer for the NOLEAK
+   verdict (after reclaim-miss, content-scrub, band-miss): the readback
+   channel itself does not expose the chunk on this build.
+
+=== ERA CLOSE (escalation lanes, final) ===
+
+Every escalation lane attempted across v919-v929 is closed with device
+rows: bitfit-192 foreign reclaim (14/14 zeroed-chunk deaths), walk-forge
+(executes, zeroed slots), 24213 patterns (clean after grading), style-
+decode byte window (this row: clean descriptor only), DFG candidates
+(retired, LLInt-only), AB forge (no consumption), error-history mint
+(generic). The 14.22 scoreboard's only live observables: the canvas alias
+(control-channel), the p640 status write-back (one byte), the APNG
+no-IDAT WebProcess killer (DoS, system-level, ours), and the glyph-cache
+side channel (10.93x). The address source remains the blocker with no
+remaining lane on this board.

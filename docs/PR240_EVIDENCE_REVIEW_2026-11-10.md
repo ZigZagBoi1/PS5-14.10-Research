@@ -1,10 +1,39 @@
 # PR #240 (p691/p710 vtable-pointer leak) — independent evidence review
 
-Date: 2026-11-10. Reviewer lane: offline desk review (beacon logs + committed sources + arithmetic only;
-no console). Method matches the PR #236 receipt-checks: every claimed number re-derived from the
-committed artifacts, and claims separated into beacon-observed vs self-reported.
+Date: 2026-11-10 (pre-merge desk review written 2026-11-10 morning UTC; post-merge state note
+appended the same day). Reviewer lane: offline desk review — beacon logs, committed sources, and
+arithmetic only; no console. Method matches the PR #236 receipt-checks: every claimed number
+re-derived from the committed artifacts, claims separated into beacon-observed vs self-reported.
 
-## Verdict summary
+## Post-merge state (a36d2aea, merged 2026-11-10)
+
+The PR merged with maintainer-side conflict resolution. Checking the pre-merge blocker list
+against the merged tree:
+
+1. **Mass file deletions — resolved by the merge.** Master's p704-p802 probe queue,
+   tools/jailbreak-host/, docs/DEBUG_SETTINGS_CHAIN_14_10.md,
+   docs/WEBKIT_CVE_POSTCHERRY_INFOLEAKS_2026-11-10.md and the other deleted master files are all
+   present at a36d2aea. The 122-deletion shape below describes the pre-merge branch only.
+2. **CLAUDE.md regressions — resolved by the merge** (62a756a8): the merged CLAUDE.md keeps
+   upstream's "LLInt + baseline only (DFG OFF)" row and the issue #178 rc=2/destructor
+   corrections, and carries the p691 row with the accurate "1 boot confirmed in committed beacon
+   data" grading.
+3. **Claim downgrades — partially landed pre-merge** (f770d9fd): PROBE_INDEX says "1 boot
+   confirmed"; results/INDEX.md still reads "0xB28 across 5 boots" in the p691 result column.
+4. **New findings post-merge:** cobrajet302gt's post-merge audit (PR #240 comments) flags that
+   p807's "RVA 0x724DB28 confirmed / text base SOLVED" banner bypasses the probe's own ELF-magic
+   discriminator in both terminal branches, carries no committed BASE=/RVA= beacon capture, and
+   that replay boots echo server state (SCAN-ALREADY-DONE) rather than re-measuring — the RVA is
+   [I] pending their pre-registered A1-A4 runs. Same audit caught two stale rows in
+   docs/VP_SLOT_DELTAS_CORRECTED.md (VP-s2 0x2CEC3D8, VP-s6 0x14BA728), fixed in PR #243.
+5. **One CI regression introduced by the merge:** the p807 serve.py rewrite made /beaconish
+   return 204 (route-prefix lookalike); fixed in PR #243.
+
+The pre-merge review below is kept as the record of the evidence state at that time.
+
+---
+
+## Verdict summary (pre-merge)
 
 The core result — a 4-read FontFace UAF walk chain leaking a CSSFontFaceSet vtable pointer (VP)
 and 9 vtable slots from the WebProcess code segment — is **supported by the committed beacon log

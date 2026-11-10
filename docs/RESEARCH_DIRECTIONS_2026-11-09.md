@@ -19,6 +19,11 @@ forgery and completes the chain from browser UAF to kernel R/W.
 
 ### 1. JIT CodeBlock Heap Residue (NEW -- Highest Priority)
 
+[ERRATUM 2026-11-10: the premise below is retracted — DFG JIT is NOT active on
+PS5 14.10. `ENABLE_JIT` is PRIVATE OFF (`OptionsPlayStation.cmake:206`) and
+baseline codegen is gated by `ENABLE(JIT)` itself, so the engine is LLInt-only;
+the p602 49ms timing does not discriminate tiers. With no JIT there are no JIT
+CodeBlock allocations, no IC stubs, and this angle is config-silent.]
 DFG JIT is confirmed active on PS5 14.10 (p602: 5M loop in 49ms). The DFG
 compiler allocates CodeBlock objects on the regular heap, and these contain
 code pointers (instruction start, slow path entries, inline cache stubs).

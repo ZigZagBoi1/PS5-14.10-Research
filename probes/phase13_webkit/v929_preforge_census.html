@@ -126,9 +126,9 @@ if(!target){ bk('NOFACE',''); } else {
   bk('CENSUS-WIN','idx='+win+' (control readback, p640 lane)');
   if(win>=0){
     /* the winning carrier's style-decode: bytes 0x00-0xA8 (p691 dec lane) */
-    var dec='';
-    try{ dec=dec(String(spray[win].style),0xA8); }catch(e){ dec='THROW:'+e.name; }
-    bk('CENSUS-DATA','len='+dec.length+'|'+dec.slice(0,400));
+    var decStr='';
+    try{ decStr=dec(String(spray[win].style),0xA8); }catch(e){ decStr='THROW:'+e.name; }
+    bk('CENSUS-DATA','len='+decStr.length+'|'+decStr.slice(0,400));
     /* diff against a pristine twin (same construction, never near the free) */
     try{
       var tw=new FontFace(spray[win].family, "local('ZZ9_PRISTINE')");
@@ -137,7 +137,7 @@ if(!target){ bk('NOFACE',''); } else {
     }catch(e){}
     /* hexDump window rows */
     var by=[];
-    for(var h2=0;h2<dec.length;h2+=2){ var v=parseInt(dec.substr(h2,2),16); if(!isNaN(v)) by.push(v); }
+    for(var h2=0;h2<decStr.length;h2+=2){ var v=parseInt(decStr.substr(h2,2),16); if(!isNaN(v)) by.push(v); }
     hexDump(by,0,0xA8).forEach(function(l){ bk('CENSUS-ROW',l); });
     /* branch readout per cobrajet pre-registration */
     var nonzero=0; for(var z=0;z<by.length;z++){ if(by[z]!==0) nonzero++; }

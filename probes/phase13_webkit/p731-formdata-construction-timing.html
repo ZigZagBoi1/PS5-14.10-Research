@@ -1,0 +1,334 @@
+<!--
+  p731: FormData construction + Blob/File API timing oracle
+
+  FormData is backed by a C++ vector of FormDataEntry objects.
+  Each entry holds either a string value or a File/Blob reference.
+  The internal representation differs: string entries are inline,
+  while Blob entries store a BlobURL reference.
+
+  Key insight: FormData.append() with a Blob triggers a different
+  code path than append() with a string -- the Blob path creates
+  a BlobDataHandle and registers it. The timing difference reveals
+  internal heap state.
+
+  Additionally, the File constructor and Blob constructor allocate
+  differently: File carries a name string and last-modified
+  timestamp. Blob.slice() creates a new BlobURL that references
+  a range of the original.
+
+  Attack angles:
+  A) FormData append timing -- string vs Blob vs File entries.
+     Different allocation paths for each type.
+  B) FormData iteration timing -- entries(), keys(), values()
+     with varying entry counts and types.
+  C) Blob construction timing -- different source types and sizes.
+     ArrayBuffer vs string vs Blob array sources.
+  D) Blob.slice timing -- slicing creates internal range refs.
+     Slice chains reveal BlobURL registry growth.
+  E) File construction timing -- name length, lastModified,
+     content type. Each adds to the internal struct.
+  F) FileReader timing -- readAsText, readAsArrayBuffer,
+     readAsDataURL. Different conversion paths.
+
+  CRASH_CLASS: LOW (FormData/Blob/File API, no network)
+  prior art: p725 (Fetch response), p730 (URL/SearchParams)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p731</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P731-START:FORMDATA-BLOB-FILE-TIMING');
+  var results = [];
+
+  // === SECTION A: FormData append timing ===
+  b('A:FORMDATA-APPEND');
+  try {
+    // String append timing
+    var strCounts = [10, 50, 100, 500];
+    var strTimes = [];
+    for (var sc = 0; sc < strCounts.length; sc++) {
+      var fd = new FormData();
+      var t0 = performance.now();
+      for (var i = 0; i < strCounts[sc]; i++) {
+        fd.append('field' + i, 'value-' + i + '-' + 'x'.repeat(50));
+      }
+      var dt = performance.now() - t0;
+      strTimes.push(strCounts[sc] + ':' + dt.toFixed(2));
+    }
+    b('A:STRING-TIMES:' + strTimes.join(','));
+
+    // Blob append timing
+    var blobTimes = [];
+    for (var sc = 0; sc < strCounts.length; sc++) {
+      var fd = new FormData();
+      var t0 = performance.now();
+      for (var i = 0; i < strCounts[sc]; i++) {
+        fd.append('file' + i, new Blob(['content-' + i]), 'file' + i + '.txt');
+      }
+      var dt = performance.now() - t0;
+      blobTimes.push(strCounts[sc] + ':' + dt.toFixed(2));
+    }
+    b('A:BLOB-TIMES:' + blobTimes.join(','));
+
+    // File append timing
+    var fileTimes = [];
+    for (var sc = 0; sc < strCounts.length; sc++) {
+      var fd = new FormData();
+      var t0 = performance.now();
+      for (var i = 0; i < strCounts[sc]; i++) {
+        var f = new File(['content-' + i], 'file' + i + '.dat', {type: 'application/octet-stream'});
+        fd.append('upload' + i, f);
+      }
+      var dt = performance.now() - t0;
+      fileTimes.push(strCounts[sc] + ':' + dt.toFixed(2));
+    }
+    b('A:FILE-TIMES:' + fileTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: FormData iteration timing ===
+  b('B:FORMDATA-ITER');
+  try {
+    var counts = [10, 50, 100, 250];
+    var iterTimes = [];
+
+    for (var c = 0; c < counts.length; c++) {
+      var fd = new FormData();
+      for (var i = 0; i < counts[c]; i++) {
+        fd.append('k' + i, 'v' + i);
+      }
+
+      // entries()
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        var entries = Array.from(fd.entries());
+      }
+      var entriesDt = performance.now() - t0;
+
+      // keys()
+      var t1 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        var keys = Array.from(fd.keys());
+      }
+      var keysDt = performance.now() - t1;
+
+      // values()
+      var t2 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        var vals = Array.from(fd.values());
+      }
+      var valsDt = performance.now() - t2;
+
+      // has + get
+      var t3 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        fd.has('k' + (counts[c] - 1));
+        fd.get('k0');
+      }
+      var hasDt = performance.now() - t3;
+
+      iterTimes.push(counts[c] + ':entries=' + entriesDt.toFixed(2) +
+        ',keys=' + keysDt.toFixed(2) + ',vals=' + valsDt.toFixed(2) +
+        ',hasget=' + hasDt.toFixed(2));
+    }
+    b('B:ITER-TIMES:' + iterTimes.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Blob construction timing ===
+  b('C:BLOB-CONSTRUCT');
+  try {
+    var sources = [
+      {name: 'empty', fn: function() { return new Blob([]); }},
+      {name: 'str-1K', fn: function() { return new Blob(['x'.repeat(1024)]); }},
+      {name: 'str-64K', fn: function() { return new Blob(['x'.repeat(65536)]); }},
+      {name: 'ab-1K', fn: function() { return new Blob([new ArrayBuffer(1024)]); }},
+      {name: 'ab-64K', fn: function() { return new Blob([new ArrayBuffer(65536)]); }},
+      {name: 'multi', fn: function() { return new Blob(['hello', new ArrayBuffer(100), 'world']); }},
+      {name: 'typed', fn: function() { return new Blob([new Uint8Array(1024)]); }},
+      {name: 'blob-chain', fn: function() { var b1 = new Blob(['inner']); return new Blob([b1, b1, b1]); }},
+    ];
+
+    var constructTimes = [];
+    for (var i = 0; i < sources.length; i++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        sources[i].fn();
+      }
+      var dt = performance.now() - t0;
+      var blob = sources[i].fn();
+      constructTimes.push(sources[i].name + ':' + dt.toFixed(2) + ':size=' + blob.size);
+    }
+    b('C:CONSTRUCT-TIMES:' + constructTimes.join(','));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Blob.slice timing ===
+  b('D:BLOB-SLICE');
+  try {
+    var blob = new Blob([new ArrayBuffer(65536)]);
+
+    // Single slice timing at different offsets
+    var sliceTimes = [];
+    var offsets = [0, 1024, 32768, 65000];
+    for (var o = 0; o < offsets.length; o++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        blob.slice(offsets[o], offsets[o] + 1024);
+      }
+      var dt = performance.now() - t0;
+      sliceTimes.push(offsets[o] + ':' + dt.toFixed(2));
+    }
+    b('D:SLICE-OFFSET-TIMES:' + sliceTimes.join(','));
+
+    // Slice chain depth
+    var chainTimes = [];
+    var current = blob;
+    for (var depth = 0; depth < 10; depth++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        current.slice(0, current.size);
+      }
+      var dt = performance.now() - t0;
+      chainTimes.push(depth + ':' + dt.toFixed(2) + ':size=' + current.size);
+      current = current.slice(0, current.size);
+    }
+    b('D:CHAIN-TIMES:' + chainTimes.join(','));
+
+    // Slice size variation
+    var sizeTimes = [];
+    var sizes = [1, 64, 1024, 16384, 65536];
+    for (var s = 0; s < sizes.length; s++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        blob.slice(0, sizes[s]);
+      }
+      var dt = performance.now() - t0;
+      sizeTimes.push(sizes[s] + ':' + dt.toFixed(2));
+    }
+    b('D:SIZE-TIMES:' + sizeTimes.join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: File construction timing ===
+  b('E:FILE-CONSTRUCT');
+  try {
+    // Name length variation
+    var nameLens = [1, 10, 50, 200, 1000];
+    var nameTimes = [];
+    for (var nl = 0; nl < nameLens.length; nl++) {
+      var name = 'f'.repeat(nameLens[nl]) + '.txt';
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        new File(['content'], name);
+      }
+      var dt = performance.now() - t0;
+      nameTimes.push(nameLens[nl] + ':' + dt.toFixed(2));
+    }
+    b('E:NAME-TIMES:' + nameTimes.join(','));
+
+    // With options
+    var optTimes = [];
+    var opts = [
+      {name: 'none', opt: undefined},
+      {name: 'type', opt: {type: 'text/plain'}},
+      {name: 'modified', opt: {lastModified: Date.now()}},
+      {name: 'both', opt: {type: 'application/pdf', lastModified: 1000000}},
+    ];
+    for (var o = 0; o < opts.length; o++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        new File(['data'], 'test.bin', opts[o].opt);
+      }
+      var dt = performance.now() - t0;
+      optTimes.push(opts[o].name + ':' + dt.toFixed(2));
+    }
+    b('E:OPT-TIMES:' + optTimes.join(','));
+
+    // File properties
+    var file = new File(['test content here'], 'example.txt', {
+      type: 'text/plain', lastModified: 1609459200000
+    });
+    b('E:FILE-NAME=' + file.name);
+    b('E:FILE-SIZE=' + file.size);
+    b('E:FILE-TYPE=' + file.type);
+    b('E:FILE-MODIFIED=' + file.lastModified);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: FileReader timing ===
+  b('F:FILEREADER');
+  try {
+    var sizes = [256, 1024, 4096, 16384];
+    var readerResults = [];
+
+    for (var s = 0; s < sizes.length; s++) {
+      var blob = new Blob([new ArrayBuffer(sizes[s])]);
+
+      // readAsArrayBuffer timing
+      var abTime = await new Promise(function(resolve) {
+        var t0 = performance.now();
+        var reader = new FileReader();
+        reader.onload = function() {
+          resolve((performance.now() - t0).toFixed(3));
+        };
+        reader.readAsArrayBuffer(blob);
+      });
+
+      // readAsText timing
+      var textTime = await new Promise(function(resolve) {
+        var t0 = performance.now();
+        var reader = new FileReader();
+        reader.onload = function() {
+          resolve((performance.now() - t0).toFixed(3));
+        };
+        reader.readAsText(blob);
+      });
+
+      // readAsDataURL timing
+      var dataTime = await new Promise(function(resolve) {
+        var t0 = performance.now();
+        var reader = new FileReader();
+        reader.onload = function() {
+          resolve((performance.now() - t0).toFixed(3));
+        };
+        reader.readAsDataURL(blob);
+      });
+
+      readerResults.push(sizes[s] + ':ab=' + abTime + ',text=' + textTime + ',dataurl=' + dataTime);
+    }
+    b('F:READER-TIMES:' + readerResults.join(','));
+
+    // FileReader creation batch
+    var createTimes = [];
+    for (var round = 0; round < 5; round++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        new FileReader();
+      }
+      var dt = performance.now() - t0;
+      createTimes.push(dt.toFixed(2));
+    }
+    b('F:CREATE-TIMES:' + createTimes.join(','));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P731-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P731-RESULT:TIMING-DATA-COLLECTED');
+  }
+  b('P731-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p731: FormData + Blob/File API timing oracle</pre></body></html>

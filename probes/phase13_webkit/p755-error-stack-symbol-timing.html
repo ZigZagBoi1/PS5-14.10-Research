@@ -1,0 +1,397 @@
+<!--
+  p755: Error.stack / Symbol / Reflect / Proxy timing oracle
+
+  Error objects carry stack traces. Symbol() creates unique
+  identifiers with internal C++ backing. Reflect provides
+  meta-programming. Proxy intercepts operations on objects.
+  Each exercises distinct JSC internals.
+
+  Key insight: Error.stack format reveals the JS engine's stack
+  trace implementation. Symbol creation timing may reveal internal
+  symbol table behavior. Proxy handler traps exercise the
+  full property-access pipeline. Reflect operations provide
+  timing baselines for each meta-operation.
+
+  On PS5 WebKit 605.1.15, all these APIs are available (confirmed
+  p601/p630). Error.stack confirmed to have url:line:col only,
+  no native addresses (p630).
+
+  Attack angles:
+  A) Error construction and stack trace timing.
+  B) Symbol creation and well-known symbols.
+  C) Reflect operations timing.
+  D) Proxy handler trap timing.
+  E) Proxy revocation and membrane pattern.
+  F) Error types and prototype chain.
+
+  CRASH_CLASS: LOW (JS meta-programming APIs, no side effects)
+  prior art: p630 (JS features), p746 (Promise timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p755</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P755-START:ERROR-SYMBOL-REFLECT-PROXY-TIMING');
+
+  // === SECTION A: Error construction and stack ===
+  b('A:ERROR');
+  try {
+    // Error construction timing
+    var t0 = performance.now();
+    for (var j = 0; j < 20000; j++) {
+      new Error('test');
+    }
+    b('A:ERROR-20K=' + (performance.now() - t0).toFixed(2));
+
+    // Error types
+    var types = [Error, TypeError, RangeError, ReferenceError, SyntaxError, URIError, EvalError];
+    var typeNames = ['Error', 'TypeError', 'RangeError', 'ReferenceError', 'SyntaxError', 'URIError', 'EvalError'];
+    var typeTimes = [];
+    for (var t = 0; t < types.length; t++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        new types[t]('msg');
+      }
+      typeTimes.push(typeNames[t] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('A:TYPE-TIMES:' + typeTimes.join(','));
+
+    // Stack trace content
+    function inner() { return new Error('trace'); }
+    function outer() { return inner(); }
+    var err = outer();
+    b('A:STACK=' + (err.stack ? err.stack.substring(0, 200).replace(/\n/g, '|') : 'null'));
+
+    // Stack depth timing
+    function makeDeep(depth) {
+      if (depth <= 0) return new Error('deep');
+      return makeDeep(depth - 1);
+    }
+    var depths = [1, 10, 50, 100];
+    var depthTimes = [];
+    for (var d = 0; d < depths.length; d++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        makeDeep(depths[d]);
+      }
+      depthTimes.push(depths[d] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('A:DEPTH-TIMES:' + depthTimes.join(','));
+
+    // Error.captureStackTrace (V8-specific, likely absent)
+    b('A:CAPTURE-STACK=' + (typeof Error.captureStackTrace));
+
+    // Error.stackTraceLimit
+    b('A:STACK-LIMIT=' + (Error.stackTraceLimit !== undefined ? Error.stackTraceLimit : 'N/A'));
+
+    // Stack with eval
+    try {
+      var evalErr = eval('new Error("from eval")');
+      b('A:EVAL-STACK=' + (evalErr.stack ? evalErr.stack.substring(0, 100).replace(/\n/g, '|') : 'null'));
+    } catch(e) {
+      b('A:EVAL-ERR=' + e.message.substring(0, 30));
+    }
+
+    // new Function stack
+    var fn = new Function('return new Error("from new Function")');
+    var fnErr = fn();
+    b('A:FUNC-STACK=' + (fnErr.stack ? fnErr.stack.substring(0, 100).replace(/\n/g, '|') : 'null'));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Symbol ===
+  b('B:SYMBOL');
+  try {
+    // Symbol creation timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      Symbol();
+    }
+    b('B:CREATE-50K=' + (performance.now() - t0).toFixed(2));
+
+    // With description
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      Symbol('desc-' + j);
+    }
+    b('B:WITH-DESC-50K=' + (performance.now() - t0).toFixed(2));
+
+    // Symbol.for (global registry)
+    var t0 = performance.now();
+    for (var j = 0; j < 20000; j++) {
+      Symbol.for('key-' + j);
+    }
+    b('B:FOR-20K=' + (performance.now() - t0).toFixed(2));
+
+    // Symbol.keyFor
+    var sym = Symbol.for('test-key');
+    b('B:KEY-FOR=' + Symbol.keyFor(sym));
+
+    var localSym = Symbol('local');
+    b('B:KEY-FOR-LOCAL=' + String(Symbol.keyFor(localSym)));
+
+    // Well-known symbols
+    var wellKnown = [
+      'iterator', 'asyncIterator', 'hasInstance', 'isConcatSpreadable',
+      'match', 'matchAll', 'replace', 'search', 'species', 'split',
+      'toPrimitive', 'toStringTag', 'unscopables'
+    ];
+    var wkResults = [];
+    for (var i = 0; i < wellKnown.length; i++) {
+      wkResults.push(wellKnown[i] + ':' + (Symbol[wellKnown[i]] !== undefined));
+    }
+    b('B:WELL-KNOWN:' + wkResults.join(','));
+
+    // Symbol as property key
+    var obj = {};
+    var symKey = Symbol('key');
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      obj[symKey] = j;
+    }
+    b('B:PROP-SET-50K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      var v = obj[symKey];
+    }
+    b('B:PROP-GET-50K=' + (performance.now() - t0).toFixed(2));
+
+    // Object.getOwnPropertySymbols
+    var symObj = {};
+    for (var i = 0; i < 100; i++) symObj[Symbol('s' + i)] = i;
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      Object.getOwnPropertySymbols(symObj);
+    }
+    b('B:GET-SYMBOLS-10K=' + (performance.now() - t0).toFixed(2) + ':count=' + Object.getOwnPropertySymbols(symObj).length);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Reflect ===
+  b('C:REFLECT');
+  try {
+    var obj = {a: 1, b: 2, c: 3};
+
+    // Reflect.get timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      Reflect.get(obj, 'a');
+    }
+    b('C:GET-50K=' + (performance.now() - t0).toFixed(2));
+
+    // Reflect.set timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      Reflect.set(obj, 'a', j);
+    }
+    b('C:SET-50K=' + (performance.now() - t0).toFixed(2));
+
+    // Reflect.has
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      Reflect.has(obj, 'a');
+    }
+    b('C:HAS-50K=' + (performance.now() - t0).toFixed(2));
+
+    // Reflect.ownKeys
+    var bigObj = {};
+    for (var i = 0; i < 100; i++) bigObj['key' + i] = i;
+    var t0 = performance.now();
+    for (var j = 0; j < 20000; j++) {
+      Reflect.ownKeys(bigObj);
+    }
+    b('C:OWN-KEYS-20K=' + (performance.now() - t0).toFixed(2));
+
+    // Reflect.construct
+    function Foo(x) { this.x = x; }
+    var t0 = performance.now();
+    for (var j = 0; j < 20000; j++) {
+      Reflect.construct(Foo, [j]);
+    }
+    b('C:CONSTRUCT-20K=' + (performance.now() - t0).toFixed(2));
+
+    // Reflect.apply
+    function add(a, b) { return a + b; }
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      Reflect.apply(add, null, [1, 2]);
+    }
+    b('C:APPLY-50K=' + (performance.now() - t0).toFixed(2));
+
+    // All Reflect methods
+    var methods = Object.getOwnPropertyNames(Reflect).filter(function(k) {
+      return typeof Reflect[k] === 'function';
+    });
+    b('C:METHODS=' + methods.join(','));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Proxy handler traps ===
+  b('D:PROXY');
+  try {
+    // Basic Proxy timing
+    var handler = {
+      get: function(target, prop) { return target[prop]; },
+      set: function(target, prop, val) { target[prop] = val; return true; }
+    };
+
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      new Proxy({}, handler);
+    }
+    b('D:CREATE-10K=' + (performance.now() - t0).toFixed(2));
+
+    // Trap invocation timing
+    var proxy = new Proxy({x: 1}, handler);
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      var v = proxy.x;
+    }
+    b('D:GET-TRAP-50K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      proxy.x = j;
+    }
+    b('D:SET-TRAP-50K=' + (performance.now() - t0).toFixed(2));
+
+    // Proxy vs direct access
+    var direct = {x: 1};
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      var v = direct.x;
+    }
+    var directTime = performance.now() - t0;
+    b('D:DIRECT-VS-PROXY:direct=' + directTime.toFixed(2));
+
+    // has trap
+    var hasProxy = new Proxy({a: 1, b: 2}, {
+      has: function(target, prop) { return prop in target; }
+    });
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      'a' in hasProxy;
+    }
+    b('D:HAS-TRAP-50K=' + (performance.now() - t0).toFixed(2));
+
+    // apply trap (function proxy)
+    var fnProxy = new Proxy(function(x) { return x * 2; }, {
+      apply: function(target, thisArg, args) { return target.apply(thisArg, args); }
+    });
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      fnProxy(j);
+    }
+    b('D:APPLY-TRAP-50K=' + (performance.now() - t0).toFixed(2));
+
+    // construct trap
+    var ctorProxy = new Proxy(function(x) { this.x = x; }, {
+      construct: function(target, args) { return new target(args[0]); }
+    });
+    var t0 = performance.now();
+    for (var j = 0; j < 20000; j++) {
+      new ctorProxy(j);
+    }
+    b('D:CONSTRUCT-TRAP-20K=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Proxy.revocable ===
+  b('E:REVOCABLE');
+  try {
+    // Revocable creation timing
+    var t0 = performance.now();
+    var revocables = [];
+    for (var j = 0; j < 5000; j++) {
+      revocables.push(Proxy.revocable({}, {}));
+    }
+    b('E:CREATE-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Revoke timing
+    var t0 = performance.now();
+    for (var j = 0; j < revocables.length; j++) {
+      revocables[j].revoke();
+    }
+    b('E:REVOKE-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Access after revoke
+    var rev = Proxy.revocable({x: 1}, {});
+    rev.revoke();
+    try {
+      var v = rev.proxy.x;
+      b('E:AFTER-REVOKE=ok:' + v);
+    } catch(e) {
+      b('E:AFTER-REVOKE=throws:' + e.constructor.name);
+    }
+
+    // Double revoke
+    var rev2 = Proxy.revocable({}, {});
+    rev2.revoke();
+    rev2.revoke(); // should be no-op
+    b('E:DOUBLE-REVOKE=ok');
+
+    // Membrane pattern (nested proxies)
+    var inner = {data: 42};
+    var outerP = new Proxy(new Proxy(inner, {}), {});
+    b('E:NESTED-PROXY=' + outerP.data);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Error prototype chain ===
+  b('F:ERROR-CHAIN');
+  try {
+    // Custom error
+    function CustomError(msg) {
+      Error.call(this, msg);
+      this.message = msg;
+      this.name = 'CustomError';
+    }
+    CustomError.prototype = Object.create(Error.prototype);
+
+    var ce = new CustomError('test');
+    b('F:CUSTOM:instanceof=' + (ce instanceof Error) + ',name=' + ce.name + ',stack=' + (!!ce.stack));
+
+    // Error properties
+    var err = new Error('props test');
+    var errProps = Object.getOwnPropertyNames(err);
+    b('F:ERROR-PROPS=' + errProps.join(','));
+
+    // Error.prototype properties
+    var protoProps = Object.getOwnPropertyNames(Error.prototype);
+    b('F:PROTO-PROPS=' + protoProps.join(','));
+
+    // toString
+    b('F:TOSTRING=' + new TypeError('test').toString());
+
+    // AggregateError (if available)
+    b('F:AGGREGATE=' + (typeof AggregateError));
+    if (typeof AggregateError !== 'undefined') {
+      var ae = new AggregateError([new Error('a'), new Error('b')], 'multi');
+      b('F:AGGREGATE-ERRORS=' + ae.errors.length + ',msg=' + ae.message);
+    }
+
+    // Error cause (if available)
+    try {
+      var caused = new Error('effect', {cause: new Error('root')});
+      b('F:CAUSE=' + (caused.cause ? caused.cause.message : 'N/A'));
+    } catch(e) {
+      b('F:CAUSE=unsupported');
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P755-RESULT:TIMING-DATA-COLLECTED');
+  b('P755-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p755: Error.stack / Symbol / Reflect / Proxy timing oracle</pre></body></html>

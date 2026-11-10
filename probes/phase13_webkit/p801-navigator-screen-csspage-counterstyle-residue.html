@@ -1,0 +1,513 @@
+<!--
+  p801: Navigator property enumeration / Screen API / ScreenOrientation /
+        CSS @page rule / CSS @counter-style / NavigatorPlugins residue
+
+  Navigator: navigator object properties (userAgent, platform, language,
+  languages, hardwareConcurrency, maxTouchPoints, connection, etc.)
+  create C++ string allocations. Repeated reads exercise the string
+  cache. navigator.plugins and navigator.mimeTypes enumerate C++
+  PluginData and MimeType objects from a shared plugin registry.
+
+  Screen/ScreenOrientation: screen.width/height/colorDepth/pixelDepth
+  read C++ ScreenProperties. screen.orientation creates a C++
+  ScreenOrientation object with type/angle. orientation.lock()/unlock()
+  exercise the orientation controller allocator.
+
+  CSS @page: CSSPageRule allocates C++ page descriptors with margin
+  boxes (@top-left, @bottom-center, etc.). CSSOM manipulation of
+  page rules exercises the page rule allocator.
+
+  CSS @counter-style: CSSCounterStyleRule allocates C++ counter
+  descriptors (system, symbols, prefix, suffix, range, pad, fallback,
+  speak-as). Programmatic insertion/deletion exercises the counter
+  style registry.
+
+  NavigatorPlugins: navigator.plugins is a PluginArray backed by C++
+  Plugin objects. Each Plugin has MimeType children. Even on modern
+  browsers with reduced plugin enumeration, the C++ backing objects
+  are allocated.
+
+  Attack angles:
+  A) Navigator property enumeration and string churn.
+  B) Screen/ScreenOrientation lock/unlock lifecycle.
+  C) CSS @page rule CSSOM manipulation.
+  D) CSS @counter-style rule manipulation.
+  E) navigator.plugins/mimeTypes enumeration.
+  F) Navigator.sendBeacon / Navigator.vibrate / connection churn.
+
+  CRASH_CLASS: LOW (read-only APIs, CSS rules, no side effects)
+  prior art: p799 (CSS Typed OM), p800 (XML/XSLT)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p801</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p801-START');
+
+// === Section A: Navigator property enumeration and string churn ===
+try{
+  b('A-navigator');
+  var aHits=0;
+
+  var navProps=['userAgent','platform','language','appVersion','appName',
+    'appCodeName','product','productSub','vendor','vendorSub'];
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var strings=[];
+
+      // Read all navigator string properties many times
+      for(var rep=0;rep<30;rep++){
+        for(var pi=0;pi<navProps.length;pi++){
+          try{
+            var val=navigator[navProps[pi]];
+            if(typeof val==='string')strings.push(val);
+          }catch(e){}
+        }
+
+        // Also read array/object properties
+        try{
+          var langs=navigator.languages;
+          if(langs)for(var i=0;i<langs.length;i++)strings.push(langs[i]);
+        }catch(e){}
+
+        try{strings.push(String(navigator.hardwareConcurrency));}catch(e){}
+        try{strings.push(String(navigator.maxTouchPoints));}catch(e){}
+        try{strings.push(String(navigator.cookieEnabled));}catch(e){}
+        try{strings.push(String(navigator.onLine));}catch(e){}
+        try{strings.push(String(navigator.doNotTrack));}catch(e){}
+        try{strings.push(String(navigator.javaEnabled()));}catch(e){}
+      }
+
+      if(round===0){
+        b('A navigator.userAgent='+navigator.userAgent.substring(0,80));
+        b('A navigator.platform='+navigator.platform);
+        b('A strings collected='+strings.length);
+        b('A hardwareConcurrency='+navigator.hardwareConcurrency);
+        b('A maxTouchPoints='+navigator.maxTouchPoints);
+      }
+
+      // Force string deallocation
+      strings=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[32,48,64,96,128]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: Screen/ScreenOrientation lock/unlock lifecycle ===
+try{
+  b('B-screen');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var reads=0;
+
+      // Read screen properties repeatedly
+      for(var rep=0;rep<40;rep++){
+        try{
+          var w=screen.width;
+          var h=screen.height;
+          var cw=screen.availWidth;
+          var ch=screen.availHeight;
+          var cd=screen.colorDepth;
+          var pd=screen.pixelDepth;
+          var l=screen.availLeft;
+          var t=screen.availTop;
+          reads++;
+        }catch(e){}
+
+        // ScreenOrientation
+        try{
+          var orient=screen.orientation;
+          if(orient){
+            var type=orient.type;
+            var angle=orient.angle;
+
+            if(round===0&&rep===0){
+              b('B orientation.type='+type+' angle='+angle);
+            }
+
+            // Try lock/unlock (will likely fail but allocates C++ objects)
+            try{
+              orient.lock('portrait-primary').catch(function(){});
+            }catch(e){
+              if(round===0&&rep===0)b('B lock_err='+e.message);
+            }
+            try{
+              orient.unlock();
+            }catch(e){
+              if(round===0&&rep===0)b('B unlock_err='+e.message);
+            }
+          }
+        }catch(e){
+          if(round===0&&rep===0)b('B orient_err='+e.message);
+        }
+
+        // matchMedia with screen-specific queries
+        try{
+          var mql=window.matchMedia('(width: '+screen.width+'px)');
+          var mql2=window.matchMedia('(device-pixel-ratio: '+window.devicePixelRatio+')');
+          var fn=function(){};
+          mql.addListener(fn);
+          mql2.addListener(fn);
+          mql.removeListener(fn);
+          mql2.removeListener(fn);
+        }catch(e){}
+      }
+
+      if(round===0){
+        b('B screen '+screen.width+'x'+screen.height+' color='+screen.colorDepth+' reads='+reads);
+        b('B devicePixelRatio='+window.devicePixelRatio);
+      }
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[32,48,64,96]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: CSS @page rule CSSOM manipulation ===
+try{
+  b('C-pagerule');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var ruleCount=0;
+
+      for(var s=0;s<12;s++){
+        try{
+          var style=document.createElement('style');
+          document.head.appendChild(style);
+          var sheet=style.sheet;
+
+          // Insert @page rules with various selectors and margin boxes
+          var pageSelectors=['','first','left','right',':blank'];
+          for(var pi=0;pi<pageSelectors.length;pi++){
+            var sel=pageSelectors[pi];
+            var pageSel=sel?(':'+sel):'';
+
+            try{
+              sheet.insertRule('@page '+pageSel+' { margin: '+(10+s*5)+'mm '+(15+pi*3)+'mm; size: '+(['A4','letter','A3','legal','A5'])[pi]+'; orphans: '+(2+pi)+'; widows: '+(2+pi)+'; }',sheet.cssRules.length);
+              ruleCount++;
+            }catch(e){}
+          }
+
+          // Also @page with named pages
+          for(var n=0;n<5;n++){
+            try{
+              sheet.insertRule('@page customPage'+s+'_'+n+' { margin: '+(20+n*10)+'px; size: '+(200+n*50)+'mm '+(300+n*30)+'mm; }',sheet.cssRules.length);
+              ruleCount++;
+            }catch(e){}
+          }
+
+          if(round===0&&s===0){
+            b('C sheet rules='+sheet.cssRules.length);
+            for(var r=0;r<Math.min(3,sheet.cssRules.length);r++){
+              b('C rule['+r+'] type='+sheet.cssRules[r].type+' cssText='+sheet.cssRules[r].cssText.substring(0,80));
+            }
+          }
+
+          // Delete all rules
+          while(sheet.cssRules.length>0){
+            try{sheet.deleteRule(0);}catch(e){break;}
+          }
+
+          document.head.removeChild(style);
+        }catch(e){
+          if(s===0&&round===0)b('C page_err='+e.message);
+        }
+      }
+
+      if(round===0)b('C inserted/deleted '+ruleCount+' @page rules across 12 sheets');
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    cHits+=sprayAndScan('C',round,[32,48,64,96,128]);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: CSS @counter-style rule manipulation ===
+try{
+  b('D-counterstyle');
+  var dHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var ruleCount=0;
+
+      for(var s=0;s<10;s++){
+        try{
+          var style=document.createElement('style');
+          document.head.appendChild(style);
+          var sheet=style.sheet;
+
+          // Insert @counter-style rules
+          var systems=['cyclic','numeric','alphabetic','symbolic','additive','fixed'];
+          for(var ci=0;ci<systems.length;ci++){
+            try{
+              var rule='@counter-style cs_'+s+'_'+ci+' { system: '+systems[ci]+'; ';
+              if(systems[ci]==='cyclic'||systems[ci]==='symbolic'){
+                rule+='symbols: "\\2605" "\\2606" "\\2764" "\\2661"; ';
+              }else if(systems[ci]==='alphabetic'||systems[ci]==='numeric'){
+                rule+='symbols: "0" "1" "2" "3" "4" "5" "6" "7" "8" "9"; ';
+              }else if(systems[ci]==='additive'){
+                rule+='additive-symbols: 1000 M, 500 D, 100 C, 50 L, 10 X, 5 V, 1 I; ';
+              }else{
+                rule+='symbols: "A" "B" "C" "D" "E"; ';
+              }
+              rule+='prefix: "("; suffix: ") "; ';
+              rule+='range: 1 99; ';
+              rule+='pad: 3 "0"; ';
+              rule+='fallback: decimal; ';
+              rule+='speak-as: numbers; }';
+              sheet.insertRule(rule,sheet.cssRules.length);
+              ruleCount++;
+            }catch(e){
+              if(ci===0&&s===0&&round===0)b('D cs_insert_err='+e.message);
+            }
+          }
+
+          if(round===0&&s===0){
+            b('D sheet rules='+sheet.cssRules.length);
+            if(sheet.cssRules.length>0){
+              b('D rule[0] cssText='+sheet.cssRules[0].cssText.substring(0,100));
+            }
+          }
+
+          // Use the counter styles in list-style
+          for(var li=0;li<6;li++){
+            var el=document.createElement('ol');
+            el.style.listStyleType='cs_'+s+'_'+li;
+            for(var item=0;item<5;item++){
+              var liEl=document.createElement('li');
+              liEl.textContent='Item '+item;
+              el.appendChild(liEl);
+            }
+            document.body.appendChild(el);
+            var h=el.offsetHeight;
+            document.body.removeChild(el);
+          }
+
+          // Delete all rules
+          while(sheet.cssRules.length>0){
+            try{sheet.deleteRule(0);}catch(e){break;}
+          }
+
+          document.head.removeChild(style);
+        }catch(e){
+          if(s===0&&round===0)b('D cs_err='+e.message);
+        }
+      }
+
+      if(round===0)b('D inserted/deleted '+ruleCount+' @counter-style rules across 10 sheets');
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    dHits+=sprayAndScan('D',round,[32,48,64,96,128]);
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: navigator.plugins/mimeTypes enumeration ===
+try{
+  b('E-plugins');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var pluginCount=0;
+      var mimeCount=0;
+
+      for(var rep=0;rep<30;rep++){
+        // Enumerate plugins
+        try{
+          var plugins=navigator.plugins;
+          if(plugins){
+            pluginCount=plugins.length;
+            for(var i=0;i<plugins.length;i++){
+              var p=plugins[i];
+              var name=p.name;
+              var desc=p.description;
+              var fn=p.filename;
+
+              // Enumerate MimeTypes for each plugin
+              for(var m=0;m<p.length;m++){
+                var mt=p[m];
+                var type=mt.type;
+                var suffix=mt.suffixes;
+                mimeCount++;
+              }
+
+              // Named access
+              try{var byName=plugins.namedItem(name);}catch(e){}
+            }
+          }
+        }catch(e){
+          if(rep===0&&round===0)b('E plugin_err='+e.message);
+        }
+
+        // Enumerate mimeTypes directly
+        try{
+          var mimes=navigator.mimeTypes;
+          if(mimes){
+            for(var i=0;i<mimes.length;i++){
+              var mt=mimes[i];
+              var type=mt.type;
+              var desc=mt.description;
+              var suffix=mt.suffixes;
+              var plugin=mt.enabledPlugin;
+            }
+          }
+        }catch(e){}
+
+        // navigator.mediaDevices enumeration
+        try{
+          if(navigator.mediaDevices&&navigator.mediaDevices.enumerateDevices){
+            navigator.mediaDevices.enumerateDevices().then(function(devices){
+              if(round===0&&rep===0)b('E mediaDevices='+devices.length);
+            }).catch(function(){});
+          }
+        }catch(e){}
+      }
+
+      if(round===0){
+        b('E plugins='+pluginCount+' mimeTypes enumerated='+mimeCount+' (30 reps)');
+      }
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: sendBeacon / vibrate / connection churn ===
+try{
+  b('F-navapis');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var apiCount=0;
+
+      // sendBeacon attempts (will fail without server but allocates)
+      for(var i=0;i<30;i++){
+        try{
+          var data=new Blob(['beacon data '+round+'_'+i+' padding: '+'x'.repeat(50+i*5)],{type:'text/plain'});
+          navigator.sendBeacon('/beacon/test_'+i,data);
+          apiCount++;
+        }catch(e){
+          if(i===0&&round===0)b('F sendBeacon_err='+e.message);
+        }
+      }
+
+      // vibrate attempts
+      for(var i=0;i<20;i++){
+        try{
+          navigator.vibrate([100,50,100,50,200]);
+          apiCount++;
+        }catch(e){
+          if(i===0&&round===0)b('F vibrate_err='+e.message);
+        }
+      }
+
+      // NetworkInformation API
+      try{
+        var conn=navigator.connection||navigator.mozConnection||navigator.webkitConnection;
+        if(conn){
+          if(round===0){
+            b('F connection type='+conn.type+' effectiveType='+conn.effectiveType);
+            b('F downlink='+conn.downlink+' rtt='+conn.rtt+' saveData='+conn.saveData);
+          }
+          // Add/remove change listeners
+          for(var i=0;i<20;i++){
+            var fn=function(){};
+            conn.addEventListener('change',fn);
+            conn.removeEventListener('change',fn);
+            apiCount++;
+          }
+        }else{
+          if(round===0)b('F no NetworkInformation API');
+        }
+      }catch(e){
+        if(round===0)b('F conn_err='+e.message);
+      }
+
+      // Permissions API
+      try{
+        var permNames=['geolocation','notifications','camera','microphone',
+          'accelerometer','gyroscope','magnetometer','clipboard-read','clipboard-write'];
+        for(var i=0;i<permNames.length;i++){
+          try{
+            navigator.permissions.query({name:permNames[i]}).then(function(result){
+              if(round===0&&i<3)b('F perm '+permNames[i]+'='+result.state);
+              var fn=function(){};
+              result.addEventListener('change',fn);
+              result.removeEventListener('change',fn);
+            }).catch(function(){});
+            apiCount++;
+          }catch(e){}
+        }
+      }catch(e){
+        if(round===0)b('F perm_err='+e.message);
+      }
+
+      // Storage estimation
+      try{
+        if(navigator.storage&&navigator.storage.estimate){
+          navigator.storage.estimate().then(function(est){
+            if(round===0)b('F storage quota='+est.quota+' usage='+est.usage);
+          }).catch(function(){});
+          apiCount++;
+        }
+      }catch(e){}
+
+      if(round===0)b('F exercised '+apiCount+' navigator API calls');
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p801-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

@@ -1,0 +1,336 @@
+<!--
+  p713: MutationObserver + DOM internals leak
+
+  MutationObserver callbacks fire synchronously during DOM mutation.
+  The callback ordering and timing depend on internal observer list
+  traversal, which is memory-layout dependent.
+
+  Additionally, DOM node identity (node === node) uses pointer
+  comparison internally. Observable differences in node creation
+  timing and garbage collection behavior can reveal heap layout.
+
+  Attack angles:
+  A) MutationObserver callback ordering -- register multiple observers
+     on the same node. The callback order depends on internal list
+     traversal which may be address-ordered.
+  B) DOM node creation timing -- createElement allocates from the
+     DOM node pool. Timing steps reveal pool page boundaries.
+  C) TreeWalker/NodeIterator traversal timing -- walking a large DOM
+     tree; traversal speed depends on node memory layout (cache effects).
+  D) Range/Selection object timing -- createRange + selectNode on
+     deeply nested DOM. The Range internal representation allocates
+     boundary point objects.
+  E) DOMParser timing for different XML complexities -- parsing XML
+     allocates nodes from the same pool as createElement.
+  F) Node.isEqualNode vs === timing -- comparing deep DOM trees
+     with isEqualNode; the comparison walks both trees, timing
+     depends on tree layout in memory.
+
+  CRASH_CLASS: LOW (DOM API, read-only observation)
+  prior art: p706 (CSS animation), p633 (DOM stale pointers)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p713</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P713-START:MUTATION-OBSERVER-LEAK');
+  var results = [];
+
+  // === SECTION A: MutationObserver callback ordering ===
+  b('A:OBSERVER-ORDER');
+  try {
+    var target = document.createElement('div');
+    document.body.appendChild(target);
+
+    var order = [];
+    var observers = [];
+
+    for (var i = 0; i < 10; i++) {
+      (function(idx) {
+        var obs = new MutationObserver(function(mutations) {
+          order.push(idx);
+        });
+        obs.observe(target, {childList: true});
+        observers.push(obs);
+      })(i);
+    }
+
+    // Trigger mutation
+    target.appendChild(document.createElement('span'));
+
+    // Check ordering
+    b('A:ORDER:' + order.join(','));
+    b('A:ORDER-LEN=' + order.length);
+
+    // Is it sequential (creation order)?
+    var sequential = true;
+    for (var i = 1; i < order.length; i++) {
+      if (order[i] < order[i-1]) { sequential = false; break; }
+    }
+    b('A:SEQUENTIAL=' + sequential);
+    if (!sequential) {
+      results.push('A:non-sequential-observers');
+    }
+
+    // Repeat to check determinism
+    order = [];
+    target.appendChild(document.createElement('span'));
+    b('A:ORDER2:' + order.join(','));
+
+    // Disconnect all
+    for (var i = 0; i < observers.length; i++) observers[i].disconnect();
+    document.body.removeChild(target);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: DOM node creation timing ===
+  b('B:NODE-CREATION-TIMING');
+  try {
+    var batchTimes = [];
+    var allNodes = [];
+
+    for (var batch = 0; batch < 20; batch++) {
+      var nodes = [];
+      var t0 = performance.now();
+      for (var i = 0; i < 500; i++) {
+        nodes.push(document.createElement('div'));
+      }
+      var dt = performance.now() - t0;
+      batchTimes.push(dt.toFixed(3));
+      allNodes.push(nodes);
+    }
+    b('B:CREATE-TIMES:' + batchTimes.join(','));
+
+    // Look for timing steps
+    for (var i = 1; i < batchTimes.length; i++) {
+      var ratio = parseFloat(batchTimes[i]) / parseFloat(batchTimes[i-1]);
+      if (ratio > 1.5) {
+        b('B:STEP-AT-BATCH=' + i + ',RATIO=' + ratio.toFixed(2));
+        results.push('B:node-alloc-step=' + i);
+      }
+    }
+
+    // Also test text node and comment node creation
+    var textTimes = [];
+    for (var batch = 0; batch < 10; batch++) {
+      var t0 = performance.now();
+      for (var i = 0; i < 500; i++) {
+        document.createTextNode('text ' + i);
+      }
+      textTimes.push((performance.now() - t0).toFixed(3));
+    }
+    b('B:TEXT-TIMES:' + textTimes.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: TreeWalker traversal timing ===
+  b('C:TREEWALKER-TIMING');
+  try {
+    // Build a deep DOM tree
+    var root = document.createElement('div');
+    var current = root;
+    for (var depth = 0; depth < 100; depth++) {
+      var child = document.createElement('div');
+      child.textContent = 'Level ' + depth;
+      current.appendChild(child);
+      // Add siblings too
+      for (var s = 0; s < 5; s++) {
+        var sib = document.createElement('span');
+        sib.textContent = 'Sib ' + s;
+        current.appendChild(sib);
+      }
+      current = child;
+    }
+
+    document.body.appendChild(root);
+
+    // Measure TreeWalker traversal
+    var tw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    var walkCount = 0;
+    var t0 = performance.now();
+    while (tw.nextNode()) walkCount++;
+    var walkTime = performance.now() - t0;
+    b('C:WALK-COUNT=' + walkCount + ',TIME=' + walkTime.toFixed(3));
+
+    // Reset and walk again (should be cached now)
+    tw = document.createTreeWalker(root, NodeFilter.SHOW_ELEMENT);
+    var walkCount2 = 0;
+    var t1 = performance.now();
+    while (tw.nextNode()) walkCount2++;
+    var walkTime2 = performance.now() - t1;
+    b('C:WALK2-COUNT=' + walkCount2 + ',TIME=' + walkTime2.toFixed(3));
+    b('C:RATIO=' + (walkTime / walkTime2).toFixed(2));
+
+    // NodeIterator comparison
+    var ni = document.createNodeIterator(root, NodeFilter.SHOW_ALL);
+    var niCount = 0;
+    var t2 = performance.now();
+    while (ni.nextNode()) niCount++;
+    var niTime = performance.now() - t2;
+    b('C:NI-COUNT=' + niCount + ',TIME=' + niTime.toFixed(3));
+
+    document.body.removeChild(root);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Range object creation timing ===
+  b('D:RANGE-TIMING');
+  try {
+    var container = document.createElement('div');
+    container.innerHTML = '<p>Hello <b>bold <i>italic</i></b> world</p>'.repeat(50);
+    document.body.appendChild(container);
+
+    var rangeTimes = [];
+    for (var batch = 0; batch < 20; batch++) {
+      var ranges = [];
+      var t0 = performance.now();
+      for (var i = 0; i < 200; i++) {
+        var r = document.createRange();
+        r.selectNodeContents(container.children[i % container.children.length]);
+        ranges.push(r);
+      }
+      var dt = performance.now() - t0;
+      rangeTimes.push(dt.toFixed(3));
+    }
+    b('D:RANGE-TIMES:' + rangeTimes.join(','));
+
+    // Test Range cloneContents timing (deep copy)
+    var r = document.createRange();
+    r.selectNodeContents(container);
+    var t0 = performance.now();
+    for (var i = 0; i < 50; i++) {
+      var frag = r.cloneContents();
+    }
+    var cloneTime = performance.now() - t0;
+    b('D:CLONE-TIME=' + cloneTime.toFixed(2));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: DOMParser timing ===
+  b('E:DOMPARSER-TIMING');
+  try {
+    var parser = new DOMParser();
+
+    // Parse XML of increasing complexity
+    var parseTimes = [];
+    for (var depth = 1; depth <= 10; depth++) {
+      var xml = '<root>';
+      for (var d = 0; d < depth; d++) {
+        xml += '<level' + d + '>';
+        for (var s = 0; s < 10; s++) {
+          xml += '<item' + s + ' attr="val' + s + '">text</item' + s + '>';
+        }
+      }
+      for (var d = depth - 1; d >= 0; d--) {
+        xml += '</level' + d + '>';
+      }
+      xml += '</root>';
+
+      var t0 = performance.now();
+      for (var iter = 0; iter < 100; iter++) {
+        parser.parseFromString(xml, 'text/xml');
+      }
+      var dt = performance.now() - t0;
+      parseTimes.push(depth + ':' + dt.toFixed(2) + ':' + xml.length + 'B');
+    }
+    b('E:PARSE-TIMES:' + parseTimes.join(','));
+
+    // HTML parser timing
+    var htmlTimes = [];
+    for (var size = 100; size <= 10000; size *= 2) {
+      var html = '<div>' + '<span>text</span>'.repeat(size / 18) + '</div>';
+      var t0 = performance.now();
+      for (var iter = 0; iter < 20; iter++) {
+        parser.parseFromString(html, 'text/html');
+      }
+      var dt = performance.now() - t0;
+      htmlTimes.push(size + ':' + dt.toFixed(2));
+    }
+    b('E:HTML-TIMES:' + htmlTimes.join(','));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Node comparison timing ===
+  b('F:NODE-COMPARISON');
+  try {
+    // Build two identical deep trees
+    function buildTree(depth) {
+      var root = document.createElement('div');
+      root.setAttribute('class', 'level-' + depth);
+      if (depth > 0) {
+        for (var i = 0; i < 3; i++) {
+          root.appendChild(buildTree(depth - 1));
+        }
+      } else {
+        root.textContent = 'leaf';
+      }
+      return root;
+    }
+
+    var tree1 = buildTree(6);
+    var tree2 = buildTree(6);
+
+    // isEqualNode should walk both trees
+    var eqTimes = [];
+    for (var round = 0; round < 20; round++) {
+      var t0 = performance.now();
+      for (var i = 0; i < 100; i++) {
+        tree1.isEqualNode(tree2);
+      }
+      var dt = performance.now() - t0;
+      eqTimes.push(dt.toFixed(3));
+    }
+    b('F:EQUAL-TIMES:' + eqTimes.join(','));
+
+    // Make trees unequal at different depths and check timing
+    var depths = [0, 2, 4, 6];
+    var uneqTimes = [];
+    for (var d = 0; d < depths.length; d++) {
+      var tree3 = buildTree(6);
+      // Modify at target depth
+      var node = tree3;
+      for (var i = 0; i < depths[d] && node.firstChild; i++) {
+        node = node.firstChild;
+      }
+      node.textContent = 'DIFFERENT';
+
+      var t0 = performance.now();
+      for (var i = 0; i < 100; i++) {
+        tree1.isEqualNode(tree3);
+      }
+      var dt = performance.now() - t0;
+      uneqTimes.push('d' + depths[d] + ':' + dt.toFixed(3));
+    }
+    b('F:UNEQUAL-TIMES:' + uneqTimes.join(','));
+
+    // Early mismatch should be faster -- check
+    var earlyMismatch = parseFloat(uneqTimes[0].split(':')[1]);
+    var lateMismatch = parseFloat(uneqTimes[uneqTimes.length-1].split(':')[1]);
+    if (lateMismatch / earlyMismatch > 1.5) {
+      b('F:DEPTH-DEPENDENT-COMPARISON');
+      results.push('F:depth-timing');
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P713-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P713-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P713-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p713: MutationObserver + DOM internals leak</pre></body></html>

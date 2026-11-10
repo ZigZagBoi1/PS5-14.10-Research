@@ -1,0 +1,351 @@
+<!--
+  p746: Promise / microtask scheduling internal timing oracle
+
+  Promise resolution and microtask scheduling reveal the JS engine's
+  internal task queue. JSC uses a microtask queue (drainMicrotasks)
+  that runs after each macrotask. Promise.resolve/reject/all/race
+  allocate JSPromise objects backed by C++ PromiseTimer or
+  DeferredPromise.
+
+  Key insight: The microtask drain timing depends on queue depth.
+  Promise.all/race with many promises exercises the internal
+  PromiseReaction chain. async/await compiles to promise state
+  machines in DFG. The scheduling order (microtask vs macrotask)
+  fingerprints the event loop implementation.
+
+  On PS5 WebKit 605.1.15, the microtask checkpoint runs after
+  script execution and before rendering. This is the standard
+  behavior but the timing characteristics are platform-specific.
+
+  Attack angles:
+  A) Promise.resolve/reject allocation timing.
+  B) Promise.all/race with varying input counts.
+  C) Microtask vs macrotask scheduling order.
+  D) async/await compilation and execution timing.
+  E) Promise chain depth scaling.
+  F) Unhandled rejection detection.
+
+  CRASH_CLASS: LOW (Promise API, no side effects)
+  prior art: p740 (MessagePort), p732 (Observer timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p746</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P746-START:PROMISE-MICROTASK-SCHEDULING');
+
+  // === SECTION A: Promise allocation timing ===
+  b('A:PROMISE-ALLOC');
+  try {
+    // Promise.resolve timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      Promise.resolve(j);
+    }
+    b('A:RESOLVE-50K=' + (performance.now() - t0).toFixed(2));
+
+    // Promise.reject timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      Promise.reject(j).catch(function() {});
+    }
+    b('A:REJECT-50K=' + (performance.now() - t0).toFixed(2));
+
+    // new Promise constructor timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      new Promise(function(resolve) { resolve(j); });
+    }
+    b('A:CONSTRUCTOR-50K=' + (performance.now() - t0).toFixed(2));
+
+    // Promise with executor that doesn't resolve
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      new Promise(function() {});
+    }
+    b('A:PENDING-50K=' + (performance.now() - t0).toFixed(2));
+
+    // .then() chain creation (no resolution)
+    var base = Promise.resolve(1);
+    var t0 = performance.now();
+    var chain = base;
+    for (var j = 0; j < 10000; j++) {
+      chain = chain.then(function(v) { return v; });
+    }
+    b('A:THEN-CHAIN-10K=' + (performance.now() - t0).toFixed(2));
+
+    // Wait for chain to drain
+    await chain;
+    b('A:CHAIN-DRAINED');
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Promise.all / Promise.race ===
+  b('B:ALL-RACE');
+  try {
+    var counts = [1, 10, 50, 100, 500, 1000];
+
+    // Promise.all timing
+    var allTimes = [];
+    for (var c = 0; c < counts.length; c++) {
+      var promises = [];
+      for (var i = 0; i < counts[c]; i++) {
+        promises.push(Promise.resolve(i));
+      }
+      var t0 = performance.now();
+      await Promise.all(promises);
+      var dt = performance.now() - t0;
+      allTimes.push(counts[c] + ':' + dt.toFixed(3));
+    }
+    b('B:ALL-TIMES:' + allTimes.join(','));
+
+    // Promise.race timing
+    var raceTimes = [];
+    for (var c = 0; c < counts.length; c++) {
+      var promises = [];
+      for (var i = 0; i < counts[c]; i++) {
+        promises.push(Promise.resolve(i));
+      }
+      var t0 = performance.now();
+      await Promise.race(promises);
+      var dt = performance.now() - t0;
+      raceTimes.push(counts[c] + ':' + dt.toFixed(3));
+    }
+    b('B:RACE-TIMES:' + raceTimes.join(','));
+
+    // Promise.allSettled
+    b('B:ALL-SETTLED=' + (typeof Promise.allSettled));
+    if (Promise.allSettled) {
+      var mixed = [];
+      for (var i = 0; i < 100; i++) {
+        mixed.push(i % 3 === 0 ? Promise.reject(i) : Promise.resolve(i));
+      }
+      var t0 = performance.now();
+      var results = await Promise.allSettled(mixed);
+      b('B:ALL-SETTLED-100:time=' + (performance.now() - t0).toFixed(3) + ',fulfilled=' + results.filter(function(r) { return r.status === 'fulfilled'; }).length);
+    }
+
+    // Promise.any
+    b('B:ANY=' + (typeof Promise.any));
+    if (Promise.any) {
+      var t0 = performance.now();
+      await Promise.any([Promise.reject(1), Promise.resolve(2), Promise.resolve(3)]);
+      b('B:ANY-TIME=' + (performance.now() - t0).toFixed(3));
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Microtask vs macrotask ordering ===
+  b('C:SCHEDULING');
+  try {
+    var order = [];
+
+    await new Promise(function(resolve) {
+      // Schedule various task types
+      setTimeout(function() { order.push('timeout-0'); }, 0);
+      setTimeout(function() { order.push('timeout-1'); resolve(); }, 1);
+
+      Promise.resolve().then(function() { order.push('micro-1'); })
+        .then(function() { order.push('micro-2'); });
+
+      Promise.resolve().then(function() { order.push('micro-3'); });
+
+      if (typeof queueMicrotask === 'function') {
+        queueMicrotask(function() { order.push('queueMicro'); });
+      }
+
+      order.push('sync');
+    });
+
+    b('C:ORDER=' + order.join('>'));
+    b('C:QUEUE-MICROTASK=' + (typeof queueMicrotask));
+
+    // queueMicrotask timing
+    if (typeof queueMicrotask === 'function') {
+      var t0 = performance.now();
+      var count = 0;
+      await new Promise(function(resolve) {
+        for (var i = 0; i < 1000; i++) {
+          queueMicrotask(function() {
+            count++;
+            if (count === 1000) resolve();
+          });
+        }
+      });
+      b('C:QUEUE-1K=' + (performance.now() - t0).toFixed(2));
+    }
+
+    // MessageChannel macrotask timing comparison
+    var mcLatency = await new Promise(function(resolve) {
+      var ch = new MessageChannel();
+      var t0 = performance.now();
+      ch.port1.onmessage = function() { resolve(performance.now() - t0); };
+      ch.port2.postMessage(null);
+    });
+    b('C:MC-LATENCY=' + mcLatency.toFixed(3));
+
+    // setTimeout(0) actual delay
+    var stLatency = await new Promise(function(resolve) {
+      var t0 = performance.now();
+      setTimeout(function() { resolve(performance.now() - t0); }, 0);
+    });
+    b('C:ST0-LATENCY=' + stLatency.toFixed(3));
+
+    // requestAnimationFrame timing
+    if (typeof requestAnimationFrame === 'function') {
+      var rafLatency = await new Promise(function(resolve) {
+        var t0 = performance.now();
+        requestAnimationFrame(function(ts) {
+          resolve({latency: performance.now() - t0, timestamp: ts});
+        });
+      });
+      b('C:RAF-LATENCY=' + rafLatency.latency.toFixed(3) + ',ts=' + rafLatency.timestamp.toFixed(2));
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: async/await timing ===
+  b('D:ASYNC-AWAIT');
+  try {
+    // Simple async function call overhead
+    async function asyncNoop() { return 42; }
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      await asyncNoop();
+    }
+    b('D:ASYNC-NOOP-10K=' + (performance.now() - t0).toFixed(2));
+
+    // Async with actual await
+    async function asyncDelay() {
+      await Promise.resolve();
+      return 1;
+    }
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      await asyncDelay();
+    }
+    b('D:ASYNC-AWAIT-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Nested async
+    async function asyncNested(depth) {
+      if (depth <= 0) return depth;
+      return await asyncNested(depth - 1);
+    }
+    var depths = [1, 5, 10, 50, 100];
+    var nestTimes = [];
+    for (var d = 0; d < depths.length; d++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        await asyncNested(depths[d]);
+      }
+      nestTimes.push(depths[d] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('D:NESTED-TIMES:' + nestTimes.join(','));
+
+    // async generator
+    b('D:ASYNC-GEN=' + (typeof async function*() {}).constructor.name);
+    try {
+      var gen = (async function*() {
+        for (var i = 0; i < 10; i++) yield i;
+      })();
+      var vals = [];
+      for await (var v of gen) vals.push(v);
+      b('D:ASYNC-GEN-VALUES=' + vals.join(','));
+    } catch(e) {
+      b('D:ASYNC-GEN-ERR=' + e.message.substring(0, 30));
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Promise chain depth ===
+  b('E:CHAIN-DEPTH');
+  try {
+    var depths = [10, 100, 500, 1000, 5000];
+    var chainTimes = [];
+
+    for (var d = 0; d < depths.length; d++) {
+      var t0 = performance.now();
+      var p = Promise.resolve(0);
+      for (var i = 0; i < depths[d]; i++) {
+        p = p.then(function(v) { return v + 1; });
+      }
+      var result = await p;
+      var dt = performance.now() - t0;
+      chainTimes.push(depths[d] + ':' + dt.toFixed(2) + ':result=' + result);
+    }
+    b('E:CHAIN-TIMES:' + chainTimes.join(','));
+
+    // .catch chain
+    var t0 = performance.now();
+    var p = Promise.reject(0);
+    for (var i = 0; i < 1000; i++) {
+      p = p.catch(function(v) { return v + 1; }).then(function(v) { throw v; });
+    }
+    p = p.catch(function(v) { return v; });
+    var catchResult = await p;
+    b('E:CATCH-CHAIN-1K:time=' + (performance.now() - t0).toFixed(2) + ',result=' + catchResult);
+
+    // .finally
+    b('E:FINALLY=' + (typeof Promise.prototype.finally));
+    if (Promise.prototype.finally) {
+      var finallyCount = 0;
+      var t0 = performance.now();
+      var p = Promise.resolve(1);
+      for (var i = 0; i < 500; i++) {
+        p = p.finally(function() { finallyCount++; });
+      }
+      await p;
+      b('E:FINALLY-500:time=' + (performance.now() - t0).toFixed(2) + ',count=' + finallyCount);
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Unhandled rejection ===
+  b('F:UNHANDLED');
+  try {
+    // unhandledrejection event
+    var unhandledFired = false;
+    var handler = function(e) {
+      unhandledFired = true;
+      e.preventDefault();
+    };
+    window.addEventListener('unhandledrejection', handler);
+
+    Promise.reject('test-unhandled');
+    await new Promise(function(r) { setTimeout(r, 50); });
+    b('F:UNHANDLED-EVENT=' + unhandledFired);
+    window.removeEventListener('unhandledrejection', handler);
+
+    // rejectionhandled event
+    b('F:REJECTION-HANDLED-EVENT=' + (typeof window.onrejectionhandled !== 'undefined' || 'onrejectionhandled' in window));
+
+    // Promise.resolve with thenable
+    var thenableTime = [];
+    var thenables = [
+      {name: 'simple', obj: {then: function(r) { r(1); }}},
+      {name: 'async', obj: {then: function(r) { setTimeout(function() { r(2); }, 0); }}},
+      {name: 'nested', obj: {then: function(r) { r({then: function(r2) { r2(3); }}); }}},
+    ];
+    for (var th = 0; th < thenables.length; th++) {
+      var t0 = performance.now();
+      var val = await Promise.resolve(thenables[th].obj);
+      thenableTime.push(thenables[th].name + ':' + (performance.now() - t0).toFixed(3) + ':val=' + val);
+    }
+    b('F:THENABLE-TIMES:' + thenableTime.join(','));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P746-RESULT:TIMING-DATA-COLLECTED');
+  b('P746-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p746: Promise / microtask scheduling timing oracle</pre></body></html>

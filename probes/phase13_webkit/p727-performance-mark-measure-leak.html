@@ -1,0 +1,346 @@
+<!--
+  p727: Performance.mark/measure + PerformanceObserver internal leak
+
+  The Performance API (performance.mark, performance.measure,
+  PerformanceObserver) maintains an internal timeline buffer.
+  The buffer is a C++ vector of PerformanceEntry objects.
+
+  Key insight: performance.mark() creates a PerformanceMark entry
+  that stores a DOMHighResTimeStamp. The entry is allocated from
+  the general C++ heap. Creating many entries fills the buffer,
+  and clearMarks()/clearMeasures() frees them. The allocation
+  and deallocation patterns reveal heap layout.
+
+  Attack angles:
+  A) Mark/measure creation timing -- batch creation of marks
+     with varying detail payloads. Allocation timing.
+  B) clearMarks batch timing -- clearing N marks at once.
+     Deallocation timing reveals heap fragmentation.
+  C) PerformanceObserver callback timing -- observer notifications
+     for mark/measure entries. Callback timing varies with
+     entry buffer state.
+  D) getEntries/getEntriesByType timing -- iterating the buffer.
+     Traversal cost depends on buffer layout.
+  E) Resource timing entries -- navigation and resource entries
+     contain timing fields. Some may leak process info.
+  F) performance.now() precision and jitter -- measure the
+     timer resolution. Sub-microsecond deltas reveal timer
+     implementation details.
+
+  CRASH_CLASS: LOW (Performance API, read-only)
+  prior art: p702 (Performance API), p706 (CSS animation)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p727</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P727-START:PERFORMANCE-MARK-MEASURE-LEAK');
+  var results = [];
+
+  // === SECTION A: Mark creation timing ===
+  b('A:MARK-CREATION');
+  try {
+    performance.clearMarks();
+    performance.clearMeasures();
+
+    // Batch creation timing
+    var batchSizes = [100, 500, 1000, 5000];
+    var createTimes = [];
+
+    for (var bs = 0; bs < batchSizes.length; bs++) {
+      performance.clearMarks();
+      var n = batchSizes[bs];
+
+      var t0 = performance.now();
+      for (var i = 0; i < n; i++) {
+        performance.mark('m' + i);
+      }
+      var dt = performance.now() - t0;
+      createTimes.push(n + ':' + dt.toFixed(2));
+    }
+    b('A:CREATE-TIMES:' + createTimes.join(','));
+
+    // With detail payload
+    performance.clearMarks();
+    var detailSizes = [0, 10, 100, 1000];
+    var detailTimes = [];
+
+    for (var ds = 0; ds < detailSizes.length; ds++) {
+      performance.clearMarks();
+      var payload = detailSizes[ds] > 0 ? {data: 'x'.repeat(detailSizes[ds])} : undefined;
+
+      var t0 = performance.now();
+      for (var i = 0; i < 1000; i++) {
+        performance.mark('d' + i, payload ? {detail: payload} : undefined);
+      }
+      var dt = performance.now() - t0;
+      detailTimes.push(detailSizes[ds] + ':' + dt.toFixed(2));
+    }
+    b('A:DETAIL-TIMES:' + detailTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: clearMarks timing ===
+  b('B:CLEAR-TIMING');
+  try {
+    var clearSizes = [100, 500, 1000, 5000];
+    var clearTimes = [];
+
+    for (var cs = 0; cs < clearSizes.length; cs++) {
+      // Create marks
+      for (var i = 0; i < clearSizes[cs]; i++) {
+        performance.mark('c' + i);
+      }
+
+      // Clear all at once
+      var t0 = performance.now();
+      performance.clearMarks();
+      var dt = performance.now() - t0;
+      clearTimes.push(clearSizes[cs] + ':' + dt.toFixed(3));
+    }
+    b('B:CLEAR-TIMES:' + clearTimes.join(','));
+
+    // Clear by name timing
+    for (var i = 0; i < 1000; i++) {
+      performance.mark('named-' + i);
+    }
+    var nameTimes = [];
+    for (var round = 0; round < 5; round++) {
+      var t0 = performance.now();
+      for (var i = round * 200; i < (round + 1) * 200; i++) {
+        performance.clearMarks('named-' + i);
+      }
+      var dt = performance.now() - t0;
+      nameTimes.push(round + ':' + dt.toFixed(3));
+    }
+    b('B:NAME-CLEAR-TIMES:' + nameTimes.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: PerformanceObserver callback timing ===
+  b('C:OBSERVER-TIMING');
+  try {
+    if (typeof PerformanceObserver !== 'undefined') {
+      b('C:OBSERVER-AVAILABLE');
+
+      var observedEntries = [];
+      var observerFired = 0;
+
+      var observer = new PerformanceObserver(function(list) {
+        observerFired++;
+        var entries = list.getEntries();
+        for (var i = 0; i < entries.length; i++) {
+          observedEntries.push({
+            name: entries[i].name,
+            start: entries[i].startTime,
+            dur: entries[i].duration
+          });
+        }
+      });
+
+      observer.observe({entryTypes: ['mark', 'measure']});
+
+      performance.clearMarks();
+      performance.clearMeasures();
+
+      // Create marks and measures
+      var t0 = performance.now();
+      for (var i = 0; i < 100; i++) {
+        performance.mark('obs-start-' + i);
+        performance.mark('obs-end-' + i);
+        performance.measure('obs-measure-' + i, 'obs-start-' + i, 'obs-end-' + i);
+      }
+      var dt = performance.now() - t0;
+      b('C:CREATE-TIME=' + dt.toFixed(2));
+
+      // Check observer results synchronously
+      b('C:OBSERVER-FIRED=' + observerFired + ',ENTRIES=' + observedEntries.length);
+
+      // Supported entry types
+      var supportedTypes = PerformanceObserver.supportedEntryTypes;
+      if (supportedTypes) {
+        b('C:SUPPORTED-TYPES:' + Array.from(supportedTypes).join(','));
+      }
+
+      observer.disconnect();
+    } else {
+      b('C:OBSERVER-NOT-AVAILABLE');
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: getEntries timing ===
+  b('D:GETENTRIES-TIMING');
+  try {
+    performance.clearMarks();
+    performance.clearMeasures();
+
+    // Fill with marks
+    for (var i = 0; i < 2000; i++) {
+      performance.mark('get-' + i);
+    }
+
+    // getEntries() timing
+    var getTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      var entries = performance.getEntries();
+      var dt = performance.now() - t0;
+      getTimes.push(dt.toFixed(3) + ':n=' + entries.length);
+    }
+    b('D:GET-TIMES:' + getTimes.join(','));
+
+    // getEntriesByType timing
+    var typeTimes = [];
+    var types = ['mark', 'measure', 'navigation', 'resource', 'paint'];
+    for (var t = 0; t < types.length; t++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        performance.getEntriesByType(types[t]);
+      }
+      var dt = performance.now() - t0;
+      var count = performance.getEntriesByType(types[t]).length;
+      typeTimes.push(types[t] + ':' + dt.toFixed(2) + ':n=' + count);
+    }
+    b('D:TYPE-TIMES:' + typeTimes.join(','));
+
+    // getEntriesByName timing
+    var nameLookupTimes = [];
+    var lookups = ['get-0', 'get-500', 'get-999', 'get-1999', 'nonexistent'];
+    for (var l = 0; l < lookups.length; l++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        performance.getEntriesByName(lookups[l]);
+      }
+      var dt = performance.now() - t0;
+      nameLookupTimes.push(lookups[l] + ':' + dt.toFixed(2));
+    }
+    b('D:NAME-LOOKUP:' + nameLookupTimes.join(','));
+
+    performance.clearMarks();
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Resource timing entries ===
+  b('E:RESOURCE-TIMING');
+  try {
+    var navEntries = performance.getEntriesByType('navigation');
+    if (navEntries.length > 0) {
+      var nav = navEntries[0];
+      b('E:NAV-TYPE=' + nav.type);
+      b('E:NAV-REDIRECT=' + nav.redirectCount);
+      b('E:NAV-DNS=' + nav.domainLookupEnd + '-' + nav.domainLookupStart);
+      b('E:NAV-CONNECT=' + nav.connectEnd + '-' + nav.connectStart);
+      b('E:NAV-RESPONSE=' + nav.responseEnd + '-' + nav.responseStart);
+      b('E:NAV-DOM-COMPLETE=' + nav.domComplete);
+      b('E:NAV-LOAD=' + nav.loadEventEnd);
+      b('E:NAV-TRANSFER=' + nav.transferSize);
+      b('E:NAV-ENCODED=' + nav.encodedBodySize);
+      b('E:NAV-DECODED=' + nav.decodedBodySize);
+    } else {
+      b('E:NO-NAV-ENTRIES');
+    }
+
+    var resEntries = performance.getEntriesByType('resource');
+    b('E:RESOURCE-COUNT=' + resEntries.length);
+    if (resEntries.length > 0) {
+      for (var i = 0; i < Math.min(3, resEntries.length); i++) {
+        var r = resEntries[i];
+        b('E:RES-' + i + ':name=' + r.name.substring(0, 50) + ',type=' + r.initiatorType +
+          ',dur=' + r.duration.toFixed(2) + ',size=' + r.transferSize);
+      }
+    }
+
+    var paintEntries = performance.getEntriesByType('paint');
+    b('E:PAINT-COUNT=' + paintEntries.length);
+    for (var i = 0; i < paintEntries.length; i++) {
+      b('E:PAINT-' + i + ':' + paintEntries[i].name + '=' + paintEntries[i].startTime.toFixed(2));
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: performance.now() precision ===
+  b('F:TIMER-PRECISION');
+  try {
+    // Measure minimum delta
+    var deltas = [];
+    var prev = performance.now();
+    for (var i = 0; i < 1000; i++) {
+      var now = performance.now();
+      if (now > prev) {
+        deltas.push(now - prev);
+      }
+      prev = now;
+    }
+
+    if (deltas.length > 0) {
+      deltas.sort(function(a, b) { return a - b; });
+      b('F:MIN-DELTA=' + deltas[0]);
+      b('F:MEDIAN-DELTA=' + deltas[Math.floor(deltas.length / 2)]);
+      b('F:MAX-DELTA=' + deltas[deltas.length - 1]);
+      b('F:DELTA-COUNT=' + deltas.length);
+
+      // Check if quantized
+      var unique = {};
+      for (var i = 0; i < Math.min(100, deltas.length); i++) {
+        unique[deltas[i].toFixed(6)] = true;
+      }
+      var uniqueCount = Object.keys(unique).length;
+      b('F:UNIQUE-DELTAS=' + uniqueCount);
+      b('F:FIRST-5-UNIQUE:' + Object.keys(unique).slice(0, 5).join(','));
+
+      if (deltas[0] >= 0.1) {
+        b('F:QUANTIZED-100us+');
+      } else if (deltas[0] >= 0.001) {
+        b('F:QUANTIZED-1us+');
+      } else {
+        b('F:SUB-MICROSECOND');
+        results.push('F:high-precision-timer');
+      }
+    }
+
+    // Date.now() vs performance.now() comparison
+    var dateDeltas = [];
+    var prevDate = Date.now();
+    for (var i = 0; i < 1000; i++) {
+      var nowDate = Date.now();
+      if (nowDate > prevDate) {
+        dateDeltas.push(nowDate - prevDate);
+      }
+      prevDate = nowDate;
+    }
+    if (dateDeltas.length > 0) {
+      b('F:DATE-MIN-DELTA=' + dateDeltas[0] + 'ms');
+    }
+
+    // Monotonicity check
+    var monotonic = true;
+    var prev = performance.now();
+    for (var i = 0; i < 10000; i++) {
+      var now = performance.now();
+      if (now < prev) { monotonic = false; break; }
+      prev = now;
+    }
+    b('F:MONOTONIC=' + monotonic);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P727-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P727-RESULT:TIMING-DATA-COLLECTED');
+  }
+  b('P727-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p727: Performance.mark/measure + PerformanceObserver internal leak</pre></body></html>

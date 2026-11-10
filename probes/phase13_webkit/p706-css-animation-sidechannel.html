@@ -1,0 +1,361 @@
+<!--
+  p706: CSS animation compositor timing side channel
+
+  CSS animations and transitions are composited on a separate thread.
+  The compositor's behavior depends on memory layout of the layer tree.
+  Observable timing differences in animation callbacks (rAF) and
+  getComputedStyle during animation can reveal compositor state.
+
+  Additionally, CSS containment and will-change create compositing
+  layers whose allocation pattern is heap-dependent.
+
+  Attack angles:
+  A) requestAnimationFrame jitter during heavy compositing --
+     create many animated layers and measure rAF callback jitter.
+     Layer tree traversal order depends on memory layout.
+  B) getComputedStyle during CSS transition -- reading computed style
+     mid-transition forces style resolution. The timing depends on
+     which compositor thread holds the lock.
+  C) will-change layer allocation timing -- will-change: transform
+     creates a compositing layer. Measuring creation time reveals
+     GPU memory allocator state.
+  D) CSS containment + layout timing -- contain: strict creates an
+     independent formatting context. Layout timing for contained
+     elements reveals memory layout of the layout tree.
+  E) Animation frame correlation -- two independent animations on
+     different elements. If they share a compositor layer, their
+     frame updates are correlated.
+  F) CSS custom property (variable) resolution timing -- deeply
+     nested custom properties force chain resolution.
+
+  CRASH_CLASS: LOW (CSS animation, read-only observation)
+  prior art: p703 (CSS font timing), p633 (CSS side channels)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p706</title>
+<style>
+.anim-target {
+  position: absolute; width: 50px; height: 50px;
+  background: red; left: -200px; top: -200px;
+}
+@keyframes slide {
+  from { transform: translateX(0); }
+  to { transform: translateX(100px); }
+}
+</style>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P706-START:CSS-ANIMATION-SIDECHANNEL');
+  var results = [];
+
+  // === SECTION A: rAF jitter with compositing layers ===
+  b('A:RAF-JITTER');
+  try {
+    // Create many compositing layers
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(container);
+
+    var layers = [];
+    for (var i = 0; i < 50; i++) {
+      var el = document.createElement('div');
+      el.className = 'anim-target';
+      el.style.animation = 'slide 0.1s linear infinite';
+      el.style.animationDelay = (i * 2) + 'ms';
+      container.appendChild(el);
+      layers.push(el);
+    }
+
+    // Measure rAF timing with heavy compositing
+    var rafTimes = [];
+    var rafCount = 0;
+    var rafStart = performance.now();
+
+    // Synchronous approximation: measure layout/paint cost
+    var layoutTimes = [];
+    for (var round = 0; round < 20; round++) {
+      var t0 = performance.now();
+      // Force layout
+      for (var i = 0; i < layers.length; i++) {
+        var rect = layers[i].getBoundingClientRect();
+      }
+      var dt = performance.now() - t0;
+      layoutTimes.push(dt.toFixed(3));
+    }
+    b('A:LAYOUT-TIMES:' + layoutTimes.join(','));
+
+    // Now without layers
+    for (var i = 0; i < layers.length; i++) {
+      layers[i].style.animation = 'none';
+      layers[i].style.willChange = 'auto';
+    }
+
+    var quietTimes = [];
+    for (var round = 0; round < 20; round++) {
+      var t0 = performance.now();
+      for (var i = 0; i < layers.length; i++) {
+        var rect = layers[i].getBoundingClientRect();
+      }
+      var dt = performance.now() - t0;
+      quietTimes.push(dt.toFixed(3));
+    }
+    b('A:QUIET-TIMES:' + quietTimes.join(','));
+
+    var avgLayout = layoutTimes.reduce(function(a,b){return a+parseFloat(b)},0) / layoutTimes.length;
+    var avgQuiet = quietTimes.reduce(function(a,b){return a+parseFloat(b)},0) / quietTimes.length;
+    b('A:AVG-LAYOUT=' + avgLayout.toFixed(3) + ',AVG-QUIET=' + avgQuiet.toFixed(3));
+    if (avgLayout / avgQuiet > 1.5) {
+      results.push('A:compositor-overhead');
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: getComputedStyle during transition ===
+  b('B:TRANSITION-COMPUTED-STYLE');
+  try {
+    var el = document.createElement('div');
+    el.style.cssText = 'position:absolute;left:-9999px;width:100px;height:100px;' +
+      'transition:transform 0.5s linear,opacity 0.5s linear;' +
+      'transform:translateX(0);opacity:1;';
+    document.body.appendChild(el);
+
+    // Force layout
+    el.getBoundingClientRect();
+
+    // Start transition
+    el.style.transform = 'translateX(200px)';
+    el.style.opacity = '0.5';
+
+    // Sample getComputedStyle during transition
+    var samples = [];
+    for (var i = 0; i < 50; i++) {
+      var t0 = performance.now();
+      var cs = getComputedStyle(el);
+      var transform = cs.transform;
+      var opacity = cs.opacity;
+      var dt = performance.now() - t0;
+      samples.push({t: dt, transform: transform, opacity: opacity});
+
+      // Small busy loop
+      var waste = 0;
+      for (var j = 0; j < 10000; j++) waste += j;
+    }
+
+    b('B:SAMPLES=' + samples.length);
+    // Log first few samples
+    for (var i = 0; i < Math.min(5, samples.length); i++) {
+      b('B:S' + i + ':t=' + samples[i].t.toFixed(4) +
+        ',op=' + samples[i].opacity +
+        ',tf=' + (samples[i].transform || 'none').substring(0, 30));
+    }
+
+    // Check if transform values change (transition is running)
+    var transformChanges = 0;
+    for (var i = 1; i < samples.length; i++) {
+      if (samples[i].transform !== samples[i-1].transform) transformChanges++;
+    }
+    b('B:TRANSFORM-CHANGES=' + transformChanges);
+
+    document.body.removeChild(el);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: will-change layer creation timing ===
+  b('C:WILL-CHANGE-TIMING');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    var batchTimes = [];
+    for (var batch = 0; batch < 10; batch++) {
+      var els = [];
+      var t0 = performance.now();
+      for (var i = 0; i < 100; i++) {
+        var el = document.createElement('div');
+        el.style.cssText = 'width:100px;height:100px;will-change:transform;';
+        el.textContent = 'Layer ' + (batch*100+i);
+        container.appendChild(el);
+        els.push(el);
+      }
+      // Force layer creation
+      for (var i = 0; i < els.length; i++) els[i].getBoundingClientRect();
+      var dt = performance.now() - t0;
+      batchTimes.push(dt.toFixed(2));
+    }
+    b('C:BATCH-TIMES:' + batchTimes.join(','));
+
+    // Look for steps
+    var steps = [];
+    for (var i = 1; i < batchTimes.length; i++) {
+      var ratio = parseFloat(batchTimes[i]) / parseFloat(batchTimes[i-1]);
+      if (ratio > 1.5) steps.push(i + ':' + ratio.toFixed(2));
+    }
+    if (steps.length > 0) {
+      b('C:ALLOC-STEPS:' + steps.join(','));
+      results.push('C:layer-alloc-step');
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: CSS containment layout timing ===
+  b('D:CONTAINMENT-LAYOUT');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    // Create elements with and without containment
+    var contained = document.createElement('div');
+    contained.style.cssText = 'contain:strict;width:500px;height:500px;';
+    var uncontained = document.createElement('div');
+    uncontained.style.cssText = 'width:500px;height:500px;';
+
+    // Fill both with children
+    for (var i = 0; i < 200; i++) {
+      var child1 = document.createElement('span');
+      child1.textContent = 'Word ' + i + ' ';
+      contained.appendChild(child1);
+      var child2 = document.createElement('span');
+      child2.textContent = 'Word ' + i + ' ';
+      uncontained.appendChild(child2);
+    }
+
+    container.appendChild(contained);
+    container.appendChild(uncontained);
+
+    // Measure layout time for contained vs uncontained
+    var containedTimes = [];
+    var uncontainedTimes = [];
+
+    for (var round = 0; round < 20; round++) {
+      // Dirty contained layout
+      contained.style.fontSize = (14 + round % 2) + 'px';
+      var t0 = performance.now();
+      contained.getBoundingClientRect();
+      containedTimes.push((performance.now() - t0).toFixed(4));
+
+      // Dirty uncontained layout
+      uncontained.style.fontSize = (14 + round % 2) + 'px';
+      var t1 = performance.now();
+      uncontained.getBoundingClientRect();
+      uncontainedTimes.push((performance.now() - t1).toFixed(4));
+    }
+
+    b('D:CONTAINED:' + containedTimes.slice(0, 10).join(','));
+    b('D:UNCONTAINED:' + uncontainedTimes.slice(0, 10).join(','));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Animation frame correlation ===
+  b('E:FRAME-CORRELATION');
+  try {
+    var el1 = document.createElement('div');
+    el1.style.cssText = 'position:absolute;left:-9999px;width:50px;height:50px;' +
+      'transition:transform 1s linear;transform:translateX(0);';
+    var el2 = document.createElement('div');
+    el2.style.cssText = 'position:absolute;left:-9999px;width:50px;height:50px;' +
+      'transition:opacity 1s linear;opacity:1;';
+    document.body.appendChild(el1);
+    document.body.appendChild(el2);
+    el1.getBoundingClientRect();
+    el2.getBoundingClientRect();
+
+    // Start both transitions
+    el1.style.transform = 'translateX(300px)';
+    el2.style.opacity = '0';
+
+    // Sample both during transition
+    var pairs = [];
+    for (var i = 0; i < 30; i++) {
+      var cs1 = getComputedStyle(el1).transform;
+      var cs2 = getComputedStyle(el2).opacity;
+      pairs.push(cs1.substring(0, 20) + '|' + cs2);
+      // Brief busy wait
+      var waste = 0;
+      for (var j = 0; j < 5000; j++) waste += j;
+    }
+
+    // Check how many pairs show both changed
+    var bothChanged = 0;
+    for (var i = 1; i < pairs.length; i++) {
+      var prev = pairs[i-1].split('|');
+      var curr = pairs[i].split('|');
+      if (curr[0] !== prev[0] && curr[1] !== prev[1]) bothChanged++;
+    }
+    b('E:BOTH-CHANGED=' + bothChanged + '/' + (pairs.length-1));
+
+    document.body.removeChild(el1);
+    document.body.removeChild(el2);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: CSS custom property resolution depth ===
+  b('F:CUSTOM-PROP-DEPTH');
+  try {
+    var el = document.createElement('div');
+    document.body.appendChild(el);
+
+    // Create deeply chained custom properties
+    var styleStr = '';
+    for (var i = 0; i < 50; i++) {
+      if (i === 0) {
+        styleStr += '--v0: 42px; ';
+      } else {
+        styleStr += '--v' + i + ': var(--v' + (i-1) + '); ';
+      }
+    }
+    el.style.cssText = styleStr + 'width: var(--v49);';
+
+    // Measure resolution time for different chain depths
+    var depthTimes = [];
+    for (var d = 0; d < 50; d += 5) {
+      el.style.width = 'var(--v' + d + ')';
+      var t0 = performance.now();
+      for (var i = 0; i < 5000; i++) {
+        var cs = getComputedStyle(el).width;
+      }
+      var dt = performance.now() - t0;
+      depthTimes.push(d + ':' + dt.toFixed(2));
+    }
+    b('F:DEPTH-TIMES:' + depthTimes.join(','));
+
+    // Check linearity (deeper chain = longer resolution = address-dependent traversal)
+    var times = depthTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    if (times.length >= 2) {
+      var ratio = times[times.length - 1] / times[0];
+      b('F:DEPTH-RATIO=' + ratio.toFixed(2));
+      if (ratio > 2) {
+        results.push('F:custom-prop-scaling');
+      }
+    }
+
+    document.body.removeChild(el);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P706-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P706-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P706-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p706: CSS animation compositor timing side channel</pre></body></html>

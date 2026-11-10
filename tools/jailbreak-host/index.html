@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>PS5 Jailbreak - 13.60</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a0f;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .container {
+      max-width: 600px;
+      width: 100%;
+      text-align: center;
+    }
+    h1 {
+      font-size: 2em;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #00d4ff, #7b2fef);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      color: #888;
+      margin-bottom: 30px;
+      font-size: 0.95em;
+    }
+    .fw-badge {
+      display: inline-block;
+      padding: 4px 14px;
+      border-radius: 20px;
+      font-size: 0.85em;
+      font-weight: 600;
+      margin-bottom: 24px;
+    }
+    .fw-ok { background: #0d3320; color: #4ade80; border: 1px solid #166534; }
+    .fw-bad { background: #3b1111; color: #f87171; border: 1px solid #7f1d1d; }
+    .fw-unknown { background: #2a2000; color: #facc15; border: 1px solid #713f12; }
+
+    #jailbreak-btn {
+      display: block;
+      width: 100%;
+      padding: 20px;
+      font-size: 1.4em;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      background: linear-gradient(135deg, #7b2fef, #00d4ff);
+      color: white;
+      transition: all 0.3s;
+      margin-bottom: 16px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    #jailbreak-btn:hover:not(:disabled) {
+      transform: scale(1.02);
+      box-shadow: 0 0 30px rgba(123, 47, 239, 0.4);
+    }
+    #jailbreak-btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    #jailbreak-btn.running {
+      background: linear-gradient(135deg, #d97706, #f59e0b);
+      animation: pulse 1.5s infinite;
+    }
+    #jailbreak-btn.success {
+      background: linear-gradient(135deg, #059669, #34d399);
+      animation: none;
+    }
+    #jailbreak-btn.error {
+      background: linear-gradient(135deg, #dc2626, #f87171);
+      animation: none;
+    }
+    @keyframes pulse {
+      0%, 100% { box-shadow: 0 0 10px rgba(217, 119, 6, 0.3); }
+      50% { box-shadow: 0 0 25px rgba(217, 119, 6, 0.6); }
+    }
+
+    .status {
+      background: #111118;
+      border: 1px solid #222;
+      border-radius: 10px;
+      padding: 16px;
+      margin-bottom: 16px;
+      text-align: left;
+      min-height: 60px;
+    }
+    .status-line {
+      padding: 3px 0;
+      font-size: 0.9em;
+      font-family: 'Courier New', monospace;
+    }
+    .status-line.ok { color: #4ade80; }
+    .status-line.info { color: #60a5fa; }
+    .status-line.warn { color: #facc15; }
+    .status-line.err { color: #f87171; }
+
+    .log-panel {
+      background: #050508;
+      border: 1px solid #1a1a2e;
+      border-radius: 8px;
+      padding: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      text-align: left;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75em;
+      color: #666;
+      margin-top: 20px;
+    }
+
+    .links {
+      margin-top: 20px;
+      font-size: 0.8em;
+      color: #555;
+    }
+    .links a { color: #7b8fff; text-decoration: none; }
+    .links a:hover { text-decoration: underline; }
+
+    .research-link {
+      display: inline-block;
+      margin-top: 16px;
+      padding: 10px 24px;
+      background: #1a1a2e;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #7b8fff;
+      text-decoration: none;
+      font-size: 0.9em;
+    }
+    .research-link:hover { background: #222240; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>PS5 Jailbreak</h1>
+    <p class="subtitle">Firmware 13.60 -- Relapse + etaHEN</p>
+    <div id="fw-status" class="fw-badge fw-unknown">Checking firmware...</div>
+    <br>
+    <button id="jailbreak-btn" disabled>Jailbreak</button>
+
+    <div class="status" id="status">
+      <div class="status-line info">Waiting to start...</div>
+    </div>
+
+    <a href="/research" class="research-link">Research Tools</a>
+
+    <div class="log-panel" id="log"></div>
+
+    <div class="links">
+      <p>Relapse by <a href="https://github.com/ntfargo/Relapse-Exploit" target="_blank">ntfargo</a>
+       | etaHEN by <a href="https://github.com/LightningMods/etaHEN" target="_blank">LightningMods</a></p>
+    </div>
+  </div>
+
+<script>
+// Firmware detection
+var fwMatch = navigator.userAgent.match(/PlayStation 5\/(\d+\.\d+)/);
+var fwStr = fwMatch ? fwMatch[1] : null;
+var fwBadge = document.getElementById('fw-status');
+var btn = document.getElementById('jailbreak-btn');
+var statusDiv = document.getElementById('status');
+var logDiv = document.getElementById('log');
+
+function addStatus(msg, cls) {
+  var line = document.createElement('div');
+  line.className = 'status-line ' + (cls || 'info');
+  line.textContent = msg;
+  statusDiv.appendChild(line);
+  statusDiv.scrollTop = statusDiv.scrollHeight;
+}
+
+function clearStatus() {
+  statusDiv.innerHTML = '';
+}
+
+function addLog(msg) {
+  var line = document.createElement('div');
+  line.textContent = '[' + new Date().toLocaleTimeString() + '] ' + msg;
+  logDiv.appendChild(line);
+  logDiv.scrollTop = logDiv.scrollHeight;
+}
+
+if (fwStr === '13.60') {
+  fwBadge.textContent = 'Firmware 13.60 -- Compatible';
+  fwBadge.className = 'fw-badge fw-ok';
+  btn.disabled = false;
+} else if (fwStr) {
+  fwBadge.textContent = 'Firmware ' + fwStr + ' -- Not supported';
+  fwBadge.className = 'fw-badge fw-bad';
+  addStatus('This jailbreak requires firmware 13.60. Your console reports ' + fwStr + '.', 'err');
+} else {
+  fwBadge.textContent = 'Not a PS5 browser';
+  fwBadge.className = 'fw-badge fw-bad';
+  // Allow anyway for testing
+  btn.disabled = false;
+  addStatus('Not detected as PS5 browser. Button enabled for testing.', 'warn');
+}
+
+// The main jailbreak chain
+btn.addEventListener('click', async function() {
+  if (btn.disabled) return;
+  btn.disabled = true;
+  btn.className = 'running';
+  btn.textContent = 'Running...';
+  clearStatus();
+
+  try {
+    // Stage 1: Relapse exploit
+    addStatus('Stage 1: Loading Relapse exploit...', 'info');
+    addLog('Loading Relapse modules');
+    btn.textContent = 'Stage 1: Relapse...';
+
+    // Load the Relapse exploit
+    // The exploit needs firmware.js for offsets, then main.js + rop.js for the exploit chain
+    try {
+      // Import Relapse -- it exposes runRelapse() when loaded as a module
+      var relapseScript = document.createElement('script');
+      relapseScript.src = '/relapse/src/firmware.js';
+      document.head.appendChild(relapseScript);
+      await new Promise(function(resolve, reject) {
+        relapseScript.onload = resolve;
+        relapseScript.onerror = function() { reject(new Error('Could not load firmware offsets')); };
+      });
+      addLog('Firmware offsets loaded');
+
+      // Wait for offsets to be ready
+      if (window.__relapseOffsetsReady) {
+        addStatus('Waiting for firmware offsets...', 'info');
+        await window.__relapseOffsetsReady;
+      }
+
+      // Load main exploit scripts
+      var scripts = ['/relapse/src/main.js', '/relapse/src/rop.js', '/relapse/src/utils/syscalls.js'];
+      for (var i = 0; i < scripts.length; i++) {
+        var s = document.createElement('script');
+        s.src = scripts[i];
+        document.head.appendChild(s);
+        await new Promise(function(resolve, reject) {
+          s.onload = resolve;
+          s.onerror = function() { reject(new Error('Could not load ' + scripts[i])); };
+        });
+      }
+      addLog('Relapse scripts loaded');
+
+      // Run the exploit
+      addStatus('Running Relapse exploit -- do NOT close this page', 'warn');
+      if (typeof window.runRelapse === 'function') {
+        var result = await window.runRelapse();
+        if (!result || !result.done) {
+          throw new Error('Relapse did not complete successfully');
+        }
+        addStatus('Relapse complete!', 'ok');
+        addLog('Relapse exploit succeeded');
+      } else if (typeof window.run === 'function') {
+        await window.run();
+        addStatus('Relapse complete!', 'ok');
+        addLog('Relapse exploit succeeded');
+      } else {
+        // Try the site.js module approach
+        try {
+          var siteModule = await import('/relapse/src/site.js');
+          if (siteModule.runRelapse) {
+            var result = await siteModule.runRelapse();
+            if (!result || !result.done) {
+              throw new Error('Relapse did not complete');
+            }
+            addStatus('Relapse complete!', 'ok');
+          }
+        } catch (moduleErr) {
+          throw new Error('Relapse entry point not found. Check that Relapse files are installed correctly. (' + moduleErr.message + ')');
+        }
+      }
+    } catch (relapseErr) {
+      throw new Error('Relapse failed: ' + relapseErr.message);
+    }
+
+    // Stage 2: Send etaHEN
+    addStatus('Stage 2: Loading etaHEN...', 'info');
+    btn.textContent = 'Stage 2: etaHEN...';
+    addLog('Sending etaHEN payload');
+
+    try {
+      var etaResp = await fetch('/api/etahen/send', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({firmware: fwStr || '13.60'})
+      });
+      var etaResult = await etaResp.json();
+      if (!etaResp.ok || !etaResult.sent) {
+        throw new Error(etaResult.error || 'etaHEN delivery failed');
+      }
+      addStatus('etaHEN sent successfully!', 'ok');
+      addLog('etaHEN payload delivered');
+    } catch (etaErr) {
+      // If the server-side send fails, try direct payload loading
+      addStatus('Server send failed, trying direct load...', 'warn');
+      addLog('etaHEN server error: ' + etaErr.message);
+      throw new Error('etaHEN failed: ' + etaErr.message);
+    }
+
+    // Stage 3: Done!
+    addStatus('', 'ok');
+    addStatus('JAILBREAK COMPLETE', 'ok');
+    addStatus('', 'ok');
+    addStatus('Wait for TWO notifications on screen:', 'info');
+    addStatus('  1. "etaHEN loaded"', 'info');
+    addStatus('  2. "ShadowMount loaded"', 'info');
+    addStatus('', 'ok');
+    addStatus('After both appear, your apps will work.', 'ok');
+    addStatus('Do NOT put the console in rest mode.', 'warn');
+
+    btn.textContent = 'JAILBROKEN';
+    btn.className = 'success';
+    addLog('All stages complete');
+
+  } catch (error) {
+    var msg = error instanceof Error ? error.message : String(error);
+    addStatus('ERROR: ' + msg, 'err');
+    addStatus('Restart your PS5 and try again.', 'warn');
+    btn.textContent = 'Failed -- Restart PS5';
+    btn.className = 'error';
+    addLog('FAILED: ' + msg);
+
+    // Re-enable after 5s so they can retry without reloading
+    setTimeout(function() {
+      btn.disabled = false;
+      btn.textContent = 'Retry Jailbreak';
+      btn.className = '';
+    }, 5000);
+  }
+});
+</script>
+</body>
+</html>

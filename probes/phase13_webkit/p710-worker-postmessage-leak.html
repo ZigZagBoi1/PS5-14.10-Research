@@ -1,0 +1,369 @@
+<!--
+  p710: Web Worker postMessage heap oracle
+
+  Web Workers run in the SAME WebProcess on PS5 WebKit 605.1.15.
+  postMessage serialization (structured clone) between main thread
+  and worker allocates from the shared heap. Observable side effects:
+
+  A) Worker creation timing -- creating a Worker allocates a thread
+     stack and TLS. The allocation time reveals heap/stack region state.
+  B) postMessage round-trip timing -- serialization and deserialization
+     allocate temporary buffers. Timing for different payload sizes
+     reveals allocator page boundaries.
+  C) Worker GC behavior -- FinalizationRegistry callbacks inside a
+     worker fire on the worker's GC cycle. Correlation with main
+     thread GC reveals shared heap pressure.
+  D) SharedArrayBuffer absence confirmation -- if SAB is absent,
+     the only cross-thread data path is structured clone, which
+     copies. Confirm this constraint.
+  E) Worker error event stack traces -- unhandled errors in workers
+     produce stack traces. Check if these contain hex addresses or
+     native frame markers.
+  F) Blob URL worker creation timing -- Workers created from Blob
+     URLs force synchronous script parsing. Parse timing for
+     different script sizes reveals code allocation patterns.
+
+  CRASH_CLASS: LOW (Worker API usage, no corruption)
+  prior art: p702 (structured clone timing), p705 (MessageChannel)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p710</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P710-START:WORKER-POSTMESSAGE-LEAK');
+  var results = [];
+
+  // === SECTION A: Worker creation timing ===
+  b('A:WORKER-CREATE-TIMING');
+  try {
+    if (typeof Worker === 'undefined') {
+      b('A:NO-WORKER-SUPPORT');
+      b('P710-RESULT:NO-WORKERS');
+      b('P710-DONE');
+      return;
+    }
+
+    var createTimes = [];
+    var workers = [];
+
+    for (var i = 0; i < 10; i++) {
+      var code = 'self.onmessage = function(e) { self.postMessage("pong"); };';
+      var blob = new Blob([code], {type: 'application/javascript'});
+      var url = URL.createObjectURL(blob);
+
+      var t0 = performance.now();
+      var w = new Worker(url);
+      var dt = performance.now() - t0;
+      createTimes.push(dt.toFixed(4));
+      workers.push(w);
+      URL.revokeObjectURL(url);
+    }
+    b('A:CREATE-TIMES:' + createTimes.join(','));
+
+    // Check for steps (stack allocation page boundaries)
+    var times = createTimes.map(parseFloat);
+    var steps = [];
+    for (var i = 1; i < times.length; i++) {
+      if (times[i] > times[0] * 3) {
+        steps.push(i + ':' + (times[i] / times[0]).toFixed(2) + 'x');
+      }
+    }
+    if (steps.length > 0) {
+      b('A:CREATE-STEPS:' + steps.join(','));
+      results.push('A:create-step');
+    }
+
+    // Terminate all
+    for (var i = 0; i < workers.length; i++) workers[i].terminate();
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: postMessage round-trip timing ===
+  b('B:POSTMESSAGE-TIMING');
+  try {
+    var workerCode = [
+      'self.onmessage = function(e) {',
+      '  self.postMessage(e.data);',
+      '};'
+    ].join('\n');
+    var blob = new Blob([workerCode], {type: 'application/javascript'});
+    var url = URL.createObjectURL(blob);
+    var w = new Worker(url);
+    URL.revokeObjectURL(url);
+
+    // Wait briefly for worker to initialize
+    var deadline = Date.now() + 500;
+    while (Date.now() < deadline) {
+      try { var x = new XMLHttpRequest(); x.open('GET','/pump-worker-init',false); x.send(); } catch(e2){}
+    }
+
+    // Measure round-trip for different payload sizes
+    var payloadSizes = [1, 10, 100, 1000, 10000, 100000];
+    var rtTimes = [];
+
+    for (var ps = 0; ps < payloadSizes.length; ps++) {
+      var size = payloadSizes[ps];
+      var payload = new ArrayBuffer(size);
+      var view = new Uint8Array(payload);
+      for (var i = 0; i < size; i++) view[i] = i & 0xFF;
+
+      var sendCount = 0;
+      var recvCount = 0;
+      var sendStart = 0;
+      var totalRT = 0;
+
+      w.onmessage = function() { recvCount++; };
+
+      var t0 = performance.now();
+      for (var i = 0; i < 50; i++) {
+        w.postMessage(payload.slice(0));
+        sendCount++;
+      }
+
+      // Pump to receive replies
+      var pumpDeadline = Date.now() + 500;
+      while (Date.now() < pumpDeadline) {
+        try { var x = new XMLHttpRequest(); x.open('GET','/pump-rt/' + recvCount,false); x.send(); } catch(e2){}
+        if (recvCount >= sendCount) break;
+      }
+      var dt = performance.now() - t0;
+      rtTimes.push(size + ':' + dt.toFixed(2) + ':recv=' + recvCount);
+    }
+    b('B:RT-TIMES:' + rtTimes.join(','));
+
+    // Check if timing scales linearly with size
+    var parsed = rtTimes.map(function(r) { return parseFloat(r.split(':')[1]); });
+    if (parsed.length >= 2 && parsed[0] > 0) {
+      var sizeRatio = payloadSizes[payloadSizes.length-1] / payloadSizes[0];
+      var timeRatio = parsed[parsed.length-1] / parsed[0];
+      b('B:SIZE-RATIO=' + sizeRatio + ',TIME-RATIO=' + timeRatio.toFixed(2));
+    }
+
+    w.terminate();
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Worker GC correlation ===
+  b('C:WORKER-GC');
+  try {
+    var gcWorkerCode = [
+      'var collected = 0;',
+      'if (typeof FinalizationRegistry !== "undefined") {',
+      '  var fr = new FinalizationRegistry(function() { collected++; });',
+      '  for (var i = 0; i < 500; i++) {',
+      '    var obj = { data: new ArrayBuffer(1024) };',
+      '    fr.register(obj, i);',
+      '  }',
+      '}',
+      'self.onmessage = function(e) {',
+      '  if (e.data === "gc-status") {',
+      '    self.postMessage({ collected: collected, hasFR: typeof FinalizationRegistry !== "undefined" });',
+      '  } else if (e.data === "pressure") {',
+      '    var garbage = [];',
+      '    for (var i = 0; i < 10000; i++) garbage.push(new ArrayBuffer(1024));',
+      '    garbage = null;',
+      '    self.postMessage({ collected: collected, pressured: true });',
+      '  }',
+      '};'
+    ].join('\n');
+
+    var blob = new Blob([gcWorkerCode], {type: 'application/javascript'});
+    var url = URL.createObjectURL(blob);
+    var w = new Worker(url);
+    URL.revokeObjectURL(url);
+
+    var workerResult = null;
+    w.onmessage = function(e) { workerResult = e.data; };
+
+    // Wait for init
+    var deadline = Date.now() + 500;
+    while (Date.now() < deadline) {
+      try { var x = new XMLHttpRequest(); x.open('GET','/pump-gc-init',false); x.send(); } catch(e2){}
+    }
+
+    // Check initial GC state
+    w.postMessage('gc-status');
+    deadline = Date.now() + 1000;
+    while (!workerResult && Date.now() < deadline) {
+      try { var x = new XMLHttpRequest(); x.open('GET','/pump-gc-check',false); x.send(); } catch(e2){}
+    }
+    b('C:INITIAL:' + JSON.stringify(workerResult));
+
+    // Create main-thread GC pressure
+    var mainGarbage = [];
+    for (var i = 0; i < 20000; i++) mainGarbage.push(new ArrayBuffer(1024));
+    mainGarbage = null;
+
+    // Check if worker GC was triggered by main-thread pressure
+    workerResult = null;
+    w.postMessage('gc-status');
+    deadline = Date.now() + 1000;
+    while (!workerResult && Date.now() < deadline) {
+      try { var x = new XMLHttpRequest(); x.open('GET','/pump-gc-after',false); x.send(); } catch(e2){}
+    }
+    b('C:AFTER-MAIN-PRESSURE:' + JSON.stringify(workerResult));
+
+    // Now trigger worker-side pressure
+    workerResult = null;
+    w.postMessage('pressure');
+    deadline = Date.now() + 1000;
+    while (!workerResult && Date.now() < deadline) {
+      try { var x = new XMLHttpRequest(); x.open('GET','/pump-gc-pressure',false); x.send(); } catch(e2){}
+    }
+    b('C:AFTER-WORKER-PRESSURE:' + JSON.stringify(workerResult));
+
+    if (workerResult && workerResult.collected > 0) {
+      results.push('C:worker-gc-collected=' + workerResult.collected);
+    }
+
+    w.terminate();
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: SharedArrayBuffer absence confirmation ===
+  b('D:SAB-CHECK');
+  try {
+    b('D:SAB-TYPE=' + typeof SharedArrayBuffer);
+    if (typeof SharedArrayBuffer !== 'undefined') {
+      try {
+        var sab = new SharedArrayBuffer(1024);
+        b('D:SAB-CREATED:size=' + sab.byteLength);
+        results.push('D:sab-available');
+      } catch(e2) {
+        b('D:SAB-BLOCKED:' + e2.message);
+      }
+    } else {
+      b('D:SAB-ABSENT');
+    }
+
+    // Also check Atomics
+    b('D:ATOMICS-TYPE=' + typeof Atomics);
+    if (typeof Atomics !== 'undefined') {
+      b('D:ATOMICS-METHODS:' + Object.getOwnPropertyNames(Atomics).join(','));
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Worker error stack traces ===
+  b('E:WORKER-ERROR-TRACES');
+  try {
+    var errorCases = [
+      'throw new Error("test-error");',
+      'null.property;',
+      '(function deep(n) { if (n<=0) throw new Error("deep"); return deep(n-1); })(20);',
+      'var x = new ArrayBuffer(999999999999);',
+      'eval("invalid $$$ syntax");',
+    ];
+
+    for (var ec = 0; ec < errorCases.length; ec++) {
+      var errBlob = new Blob([errorCases[ec]], {type: 'application/javascript'});
+      var errUrl = URL.createObjectURL(errBlob);
+      var errWorker = new Worker(errUrl);
+      URL.revokeObjectURL(errUrl);
+
+      var errCaptured = null;
+      errWorker.onerror = function(ev) {
+        errCaptured = {
+          message: ev.message,
+          filename: ev.filename,
+          lineno: ev.lineno,
+          colno: ev.colno
+        };
+        ev.preventDefault();
+      };
+
+      var deadline = Date.now() + 500;
+      while (!errCaptured && Date.now() < deadline) {
+        try { var x = new XMLHttpRequest(); x.open('GET','/pump-err/' + ec,false); x.send(); } catch(e2){}
+      }
+
+      if (errCaptured) {
+        b('E:ERR' + ec + ':msg=' + (errCaptured.message || '').substring(0, 100));
+        b('E:ERR' + ec + ':file=' + (errCaptured.filename || '').substring(0, 80));
+        b('E:ERR' + ec + ':line=' + errCaptured.lineno + ',col=' + errCaptured.colno);
+
+        // Check for hex addresses in the message
+        var hexMatch = (errCaptured.message || '').match(/0x[0-9a-f]{4,}/gi);
+        if (hexMatch) {
+          b('E:HEX-IN-ERROR:' + hexMatch.join(','));
+          results.push('E:worker-error-hex');
+        }
+
+        // Check filename -- Blob URLs contain a UUID
+        var uuidMatch = (errCaptured.filename || '').match(/[0-9a-f]{8}-[0-9a-f]{4}/i);
+        if (uuidMatch) {
+          b('E:BLOB-UUID:' + uuidMatch[0]);
+        }
+      } else {
+        b('E:ERR' + ec + ':NO-ERROR-CAPTURED');
+      }
+
+      errWorker.terminate();
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Blob URL worker script parse timing ===
+  b('F:BLOB-PARSE-TIMING');
+  try {
+    var scriptSizes = [100, 500, 2000, 10000, 50000];
+    var parseTimes = [];
+
+    for (var ss = 0; ss < scriptSizes.length; ss++) {
+      var size = scriptSizes[ss];
+      // Generate a script of approximately the given size
+      var lines = ['self.onmessage = function(e) { self.postMessage("ok"); };'];
+      while (lines.join('\n').length < size) {
+        lines.push('var _v' + lines.length + ' = ' + lines.length + ';');
+      }
+      var script = lines.join('\n');
+
+      var t0 = performance.now();
+      var blob = new Blob([script], {type: 'application/javascript'});
+      var url = URL.createObjectURL(blob);
+      var w = new Worker(url);
+      var dt = performance.now() - t0;
+      parseTimes.push(size + ':' + dt.toFixed(3));
+
+      URL.revokeObjectURL(url);
+
+      // Wait briefly for worker to parse and respond
+      var ready = false;
+      w.onmessage = function() { ready = true; };
+      w.postMessage('ping');
+      var deadline = Date.now() + 300;
+      while (!ready && Date.now() < deadline) {
+        try { var x = new XMLHttpRequest(); x.open('GET','/pump-parse',false); x.send(); } catch(e2){}
+      }
+      w.terminate();
+    }
+    b('F:PARSE-TIMES:' + parseTimes.join(','));
+
+    // Check scaling
+    var parsed = parseTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    if (parsed.length >= 2 && parsed[0] > 0) {
+      var ratio = parsed[parsed.length-1] / parsed[0];
+      b('F:PARSE-SCALE-RATIO=' + ratio.toFixed(2));
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P710-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P710-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P710-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p710: Web Worker postMessage heap oracle</pre></body></html>

@@ -1,0 +1,410 @@
+<!--
+  p737: SVG DOM + filter chain timing oracle
+
+  SVG filters (feGaussianBlur, feConvolution, feDisplacement, etc.)
+  are backed by platform-specific graphics filters that allocate
+  intermediate pixel buffers. The filter chain is compiled into a
+  DAG of filter operations, each with its own buffer.
+
+  Key insight: SVG filter application triggers FilterEffect allocation
+  in WebCore. Each filter primitive allocates an ImageBuffer for its
+  output. Complex filter chains (blur + displacement + composite)
+  create deep allocation trees. The timing of filter application
+  reveals the graphics backend (CoreGraphics vs Cairo vs Skia).
+
+  Additionally, SVG DOM manipulation (creating/modifying SVG elements)
+  goes through a different code path than HTML DOM, using
+  SVGAnimatedLength, SVGMatrix, etc. which are specialized C++ types.
+
+  Attack angles:
+  A) SVG element creation timing -- rect/circle/path/text/g/use
+     each have different C++ backing classes.
+  B) SVG attribute access timing -- SVGAnimatedLength, SVGMatrix,
+     SVGPoint, SVGRect are C++ wrapper objects.
+  C) SVG filter primitive creation -- each type allocates
+     different FilterEffect subclass.
+  D) Filter application timing -- applying filters with varying
+     complexity to rendered elements.
+  E) SVG transform timing -- matrix operations, translate, rotate.
+  F) SVG path data parsing -- d attribute with varying complexity.
+
+  CRASH_CLASS: LOW (SVG DOM manipulation, no crashes)
+  prior art: p729 (DOM TreeWalker), p633 (DOM stale pointers)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p737</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P737-START:SVG-FILTER-TIMING');
+  var results = [];
+  var svgNS = 'http://www.w3.org/2000/svg';
+
+  // === SECTION A: SVG element creation timing ===
+  b('A:SVG-CREATE');
+  try {
+    var types = ['svg', 'rect', 'circle', 'ellipse', 'line', 'polyline',
+                 'polygon', 'path', 'text', 'g', 'use', 'defs',
+                 'clipPath', 'mask', 'pattern', 'image', 'foreignObject'];
+
+    var createTimes = [];
+    for (var t = 0; t < types.length; t++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        document.createElementNS(svgNS, types[t]);
+      }
+      var dt = performance.now() - t0;
+      createTimes.push(types[t] + ':' + dt.toFixed(2));
+    }
+    b('A:CREATE-TIMES:' + createTimes.join(','));
+
+    // SVG vs HTML element creation comparison
+    var htmlTypes = ['div', 'span', 'p', 'canvas', 'img'];
+    var htmlTimes = [];
+    for (var t = 0; t < htmlTypes.length; t++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        document.createElement(htmlTypes[t]);
+      }
+      var dt = performance.now() - t0;
+      htmlTimes.push(htmlTypes[t] + ':' + dt.toFixed(2));
+    }
+    b('A:HTML-COMPARE:' + htmlTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: SVG attribute access timing ===
+  b('B:SVG-ATTRS');
+  try {
+    var svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('width', '100');
+    svg.setAttribute('height', '100');
+    document.body.appendChild(svg);
+
+    var rect = document.createElementNS(svgNS, 'rect');
+    rect.setAttribute('x', '10');
+    rect.setAttribute('y', '20');
+    rect.setAttribute('width', '50');
+    rect.setAttribute('height', '30');
+    svg.appendChild(rect);
+
+    // SVGAnimatedLength access
+    var animLenTimes = [];
+    var lenProps = ['x', 'y', 'width', 'height'];
+    for (var p = 0; p < lenProps.length; p++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        var val = rect[lenProps[p]].baseVal.value;
+      }
+      var dt = performance.now() - t0;
+      animLenTimes.push(lenProps[p] + ':' + dt.toFixed(2) + ':val=' + rect[lenProps[p]].baseVal.value);
+    }
+    b('B:ANIM-LEN:' + animLenTimes.join(','));
+
+    // getBBox timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      rect.getBBox();
+    }
+    b('B:GETBBOX=' + (performance.now() - t0).toFixed(2));
+
+    var bbox = rect.getBBox();
+    b('B:BBOX:x=' + bbox.x + ',y=' + bbox.y + ',w=' + bbox.width + ',h=' + bbox.height);
+
+    // getCTM timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      rect.getCTM();
+    }
+    b('B:GETCTM=' + (performance.now() - t0).toFixed(2));
+
+    var ctm = rect.getCTM();
+    if (ctm) {
+      b('B:CTM:a=' + ctm.a + ',b=' + ctm.b + ',c=' + ctm.c + ',d=' + ctm.d + ',e=' + ctm.e + ',f=' + ctm.f);
+    }
+
+    // getScreenCTM timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      rect.getScreenCTM();
+    }
+    b('B:SCREENCTM=' + (performance.now() - t0).toFixed(2));
+
+    document.body.removeChild(svg);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: SVG filter primitive creation ===
+  b('C:FILTER-PRIMITIVES');
+  try {
+    var filterTypes = [
+      'feGaussianBlur', 'feOffset', 'feMerge', 'feMergeNode',
+      'feColorMatrix', 'feComponentTransfer', 'feComposite',
+      'feConvolveMatrix', 'feDiffuseLighting', 'feDisplacementMap',
+      'feFlood', 'feImage', 'feMorphology', 'feSpecularLighting',
+      'feTile', 'feTurbulence', 'feBlend', 'feDropShadow'
+    ];
+
+    var filterTimes = [];
+    for (var f = 0; f < filterTypes.length; f++) {
+      var t0 = performance.now();
+      var created = 0;
+      for (var j = 0; j < 2000; j++) {
+        try {
+          document.createElementNS(svgNS, filterTypes[f]);
+          created++;
+        } catch(e) {}
+      }
+      var dt = performance.now() - t0;
+      filterTimes.push(filterTypes[f] + ':' + dt.toFixed(2) + ':n=' + created);
+    }
+    b('C:FILTER-CREATE:' + filterTimes.join(','));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Filter application timing ===
+  b('D:FILTER-APPLY');
+  try {
+    var svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('width', '200');
+    svg.setAttribute('height', '200');
+    document.body.appendChild(svg);
+
+    var defs = document.createElementNS(svgNS, 'defs');
+    svg.appendChild(defs);
+
+    // Simple blur filter
+    var filter1 = document.createElementNS(svgNS, 'filter');
+    filter1.setAttribute('id', 'blur1');
+    var blur = document.createElementNS(svgNS, 'feGaussianBlur');
+    blur.setAttribute('stdDeviation', '2');
+    filter1.appendChild(blur);
+    defs.appendChild(filter1);
+
+    // Complex filter chain
+    var filter2 = document.createElementNS(svgNS, 'filter');
+    filter2.setAttribute('id', 'complex');
+    var blur2 = document.createElementNS(svgNS, 'feGaussianBlur');
+    blur2.setAttribute('in', 'SourceGraphic');
+    blur2.setAttribute('stdDeviation', '3');
+    blur2.setAttribute('result', 'blurred');
+    filter2.appendChild(blur2);
+    var offset = document.createElementNS(svgNS, 'feOffset');
+    offset.setAttribute('in', 'blurred');
+    offset.setAttribute('dx', '5');
+    offset.setAttribute('dy', '5');
+    offset.setAttribute('result', 'offset');
+    filter2.appendChild(offset);
+    var merge = document.createElementNS(svgNS, 'feMerge');
+    var mn1 = document.createElementNS(svgNS, 'feMergeNode');
+    mn1.setAttribute('in', 'offset');
+    merge.appendChild(mn1);
+    var mn2 = document.createElementNS(svgNS, 'feMergeNode');
+    mn2.setAttribute('in', 'SourceGraphic');
+    merge.appendChild(mn2);
+    filter2.appendChild(merge);
+    defs.appendChild(filter2);
+
+    // Apply filters and measure
+    var rect = document.createElementNS(svgNS, 'rect');
+    rect.setAttribute('width', '100');
+    rect.setAttribute('height', '100');
+    rect.setAttribute('fill', 'blue');
+    svg.appendChild(rect);
+
+    // No filter baseline
+    var t0 = performance.now();
+    for (var j = 0; j < 500; j++) {
+      rect.setAttribute('x', '' + (j % 10));
+    }
+    b('D:NO-FILTER=' + (performance.now() - t0).toFixed(2));
+
+    // Simple blur
+    rect.setAttribute('filter', 'url(#blur1)');
+    var t0 = performance.now();
+    for (var j = 0; j < 500; j++) {
+      rect.setAttribute('x', '' + (j % 10));
+    }
+    b('D:SIMPLE-BLUR=' + (performance.now() - t0).toFixed(2));
+
+    // Complex chain
+    rect.setAttribute('filter', 'url(#complex)');
+    var t0 = performance.now();
+    for (var j = 0; j < 500; j++) {
+      rect.setAttribute('x', '' + (j % 10));
+    }
+    b('D:COMPLEX-CHAIN=' + (performance.now() - t0).toFixed(2));
+
+    // stdDeviation variation
+    rect.setAttribute('filter', 'url(#blur1)');
+    var stdDevs = [0.5, 1, 2, 5, 10, 20];
+    var blurTimes = [];
+    for (var sd = 0; sd < stdDevs.length; sd++) {
+      blur.setAttribute('stdDeviation', '' + stdDevs[sd]);
+      var t0 = performance.now();
+      for (var j = 0; j < 200; j++) {
+        rect.setAttribute('x', '' + (j % 10));
+      }
+      var dt = performance.now() - t0;
+      blurTimes.push(stdDevs[sd] + ':' + dt.toFixed(2));
+    }
+    b('D:BLUR-STDDEV:' + blurTimes.join(','));
+
+    document.body.removeChild(svg);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: SVG transform timing ===
+  b('E:TRANSFORMS');
+  try {
+    var svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('width', '200');
+    svg.setAttribute('height', '200');
+    document.body.appendChild(svg);
+
+    var g = document.createElementNS(svgNS, 'g');
+    svg.appendChild(g);
+    var rect = document.createElementNS(svgNS, 'rect');
+    rect.setAttribute('width', '50');
+    rect.setAttribute('height', '50');
+    g.appendChild(rect);
+
+    // setAttribute transform
+    var transforms = [
+      'translate(10,20)',
+      'rotate(45)',
+      'scale(2)',
+      'skewX(30)',
+      'matrix(1,0,0,1,50,50)',
+      'translate(10,20) rotate(45) scale(1.5)',
+    ];
+    var xfTimes = [];
+    for (var t = 0; t < transforms.length; t++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        g.setAttribute('transform', transforms[t]);
+      }
+      var dt = performance.now() - t0;
+      xfTimes.push(transforms[t].substring(0, 15) + ':' + dt.toFixed(2));
+    }
+    b('E:TRANSFORM-TIMES:' + xfTimes.join(','));
+
+    // SVGMatrix creation via createSVGMatrix
+    if (svg.createSVGMatrix) {
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        svg.createSVGMatrix();
+      }
+      b('E:CREATE-MATRIX=' + (performance.now() - t0).toFixed(2));
+
+      // Matrix operations
+      var m = svg.createSVGMatrix();
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        m.translate(10, 20);
+      }
+      b('E:MATRIX-TRANSLATE=' + (performance.now() - t0).toFixed(2));
+
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        m.multiply(m);
+      }
+      b('E:MATRIX-MULTIPLY=' + (performance.now() - t0).toFixed(2));
+    } else {
+      b('E:NO-CREATE-SVG-MATRIX');
+    }
+
+    // SVGPoint
+    if (svg.createSVGPoint) {
+      var t0 = performance.now();
+      for (var j = 0; j < 50000; j++) {
+        svg.createSVGPoint();
+      }
+      b('E:CREATE-POINT=' + (performance.now() - t0).toFixed(2));
+    }
+
+    document.body.removeChild(svg);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: SVG path data parsing ===
+  b('F:PATH-DATA');
+  try {
+    var svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('width', '200');
+    svg.setAttribute('height', '200');
+    document.body.appendChild(svg);
+
+    var path = document.createElementNS(svgNS, 'path');
+    svg.appendChild(path);
+
+    // Path complexity levels
+    var paths = [
+      {name: 'simple-line', d: 'M 0 0 L 100 100'},
+      {name: 'quadratic', d: 'M 0 0 Q 50 50 100 0'},
+      {name: 'cubic', d: 'M 0 0 C 25 50 75 50 100 0'},
+      {name: 'arc', d: 'M 0 0 A 50 50 0 0 1 100 0'},
+      {name: 'complex-10', d: (function() {
+        var d = 'M 0 0';
+        for (var i = 0; i < 10; i++) d += ' L ' + (i*10) + ' ' + (i*5);
+        return d;
+      })()},
+      {name: 'complex-100', d: (function() {
+        var d = 'M 0 0';
+        for (var i = 0; i < 100; i++) d += ' L ' + (i*2) + ' ' + ((i*3)%100);
+        return d;
+      })()},
+      {name: 'mixed-50', d: (function() {
+        var d = 'M 0 0';
+        for (var i = 0; i < 50; i++) {
+          if (i % 3 === 0) d += ' L ' + (i*2) + ' ' + (i*3);
+          else if (i % 3 === 1) d += ' Q ' + (i*2) + ' ' + (i*3) + ' ' + (i*4) + ' ' + (i);
+          else d += ' C ' + (i) + ' ' + (i*2) + ' ' + (i*3) + ' ' + (i) + ' ' + (i*4) + ' ' + (i*2);
+        }
+        return d;
+      })()},
+    ];
+
+    var pathTimes = [];
+    for (var p = 0; p < paths.length; p++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        path.setAttribute('d', paths[p].d);
+      }
+      var dt = performance.now() - t0;
+      pathTimes.push(paths[p].name + ':' + dt.toFixed(2) + ':dlen=' + paths[p].d.length);
+    }
+    b('F:PATH-TIMES:' + pathTimes.join(','));
+
+    // getTotalLength timing
+    path.setAttribute('d', 'M 0 0 L 100 100');
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      path.getTotalLength();
+    }
+    b('F:TOTAL-LEN=' + (performance.now() - t0).toFixed(2) + ':val=' + path.getTotalLength().toFixed(2));
+
+    // getPointAtLength timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      path.getPointAtLength(j % 142);
+    }
+    b('F:POINT-AT-LEN=' + (performance.now() - t0).toFixed(2));
+
+    document.body.removeChild(svg);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P737-RESULT:TIMING-DATA-COLLECTED');
+  b('P737-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p737: SVG DOM + filter chain timing oracle</pre></body></html>

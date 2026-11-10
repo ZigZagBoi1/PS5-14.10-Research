@@ -15,18 +15,16 @@ import argparse
 from contextlib import contextmanager
 import datetime
 import http.server
-import json
 import os
 import pathlib
 import shutil
 import ssl
 import subprocess
 import sys
-import tempfile
 import threading
 import time
 import re
-from urllib.parse import parse_qs, urlsplit
+from urllib.parse import urlsplit
 
 try:
     from .capture import CaptureWriter, MAX_BODY_BYTES, decode_request
@@ -37,22 +35,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': ROOT / 'redirect.html',
-    '/p804': PROJECT / 'probes' / 'phase13_webkit' / 'p804-vtable-verify.html',
-    '/p807': PROJECT / 'probes' / 'phase13_webkit' / 'p807-base-discovery.html',
-    '/p691': PROJECT / 'probes' / 'phase13_webkit' / 'p691-walk-forge-fixed.html',
-    '/p690': PROJECT / 'probes' / 'phase13_webkit' / 'p690-walk-forge-oracle.html',
-    '/p689': PROJECT / 'probes' / 'phase13_webkit' / 'p689-walk-trigger-oracle.html',
-    '/p688-full': PROJECT / 'probes' / 'phase13_webkit' / 'p688-freelist-exhaustion.html',
-    '/p686': PROJECT / 'probes' / 'phase13_webkit' / 'p686-fontface-impl-bisect.html',
-    '/p688': PROJECT / 'probes' / 'phase13_webkit' / 'p688-freelist-exhaustion.html',
-    '/p688b': PROJECT / 'probes' / 'phase13_webkit' / 'p688b-freelist-exhaust-leak.html',
-    '/p685': PROJECT / 'probes' / 'phase13_webkit' / 'p685-fontface-walk-dispatch.html',
-    '/p684': PROJECT / 'probes' / 'phase13_webkit' / 'p684-canvas-ab-identify-reclaimer.html',
-    '/p683': PROJECT / 'probes' / 'phase13_webkit' / 'p683-canvas-ab-property-sweep.html',
-    '/p687': PROJECT / 'probes' / 'phase13_webkit' / 'p687-canvas-ab-safe-access.html',
-    '/p681': PROJECT / 'probes' / 'phase13_webkit' / 'p681-canvas-ab-reclaim-arbread.html',
-    '/p680': PROJECT / 'probes' / 'phase13_webkit' / 'p680-fontface-leak-canvas-read.html',
+    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p679-double-uaf-cross-type.html',
     '/p679': PROJECT / 'probes' / 'phase13_webkit' / 'p679-double-uaf-cross-type.html',
     '/p678': PROJECT / 'probes' / 'phase13_webkit' / 'p678-canvas-uaf-pattern-leak.html',
     '/p677': PROJECT / 'probes' / 'phase13_webkit' / 'p677-canvas-uaf-getimagedata-leak.html',
@@ -115,54 +98,6 @@ MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css
 
 LOG_DIR = ROOT / 'beacon_logs'
 
-# p686 census state: tracked server-side because a crash restart invalidates
-# the stored T/impl (they are heap addresses of the dead process). The page
-# polls /p686state BEFORE beaoning its own START; a pending START with no
-# ALIVE since means the previous load died -> that load must re-prime.
-P686_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
-                'mode': None}
-# START records the arm and clears alive; ALIVE sets it. A query that finds a
-# pending arm with alive still False is reporting that arm's load died.
-# The page never advances the arm from the death report: an arm load stores
-# its successor before it runs, and a dead prime is retried at the same label.
-# Only the operator (GET /p686reset=1) clears the state.
-
-# p688 freelist exhaustion state: simpler than p686 — no death detection
-# needed for the base probe, but the page can request mode=reclaim via
-# /p688reset=1&mode=reclaim to isolate freelist behavior.
-P688_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
-                'mode': None}
-
-# p689 walk-trigger oracle state: same shape as p686. A crash restart
-# invalidates the leaked T/W pair (heap addresses of the dead process), so
-# the page polls /p689state before beaconing its own START; a pending arm
-# with alive still False means that arm's load died and the next load must
-# re-prime.
-P689_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
-                'mode': None}
-
-P690_STATE = {'pendingArm': None, 'alive': False, 'armFrom': None,
-                'mode': None}
-
-P807_STATE = {
-    'phase': 'idle',      # idle | coarse | fine | header | base-coarse | base-fine | base-scan | done
-    'scanAddr': None,     # current scan address (int)
-    'lastOk': None,       # last address that returned data (int)
-    'lastCrash': None,    # last address that crashed (int)
-    'vp': None,           # VP from walk chain (int)
-    's2': None,           # s2 (lowest code addr) from walk chain (int)
-    'base': None,         # discovered base address (int)
-    'rva': None,          # VP - base once found (int)
-    'step': 0x400000,     # current step size
-    'done': False,
-    'armed': None,        # address armed for current read
-    'armDelta': None,     # VP - armed address (survives ASLR re-randomization)
-    'okDelta': None,      # VP - lastOk (VP-relative, survives reboot)
-    'crashDelta': None,   # VP - lastCrash (VP-relative)
-    'boundary': None,     # VP - .text/.rodata boundary (VP-relative delta, set after header phase)
-    'alive': False,       # reset on ARM, set on ALIVE
-}
-
 
 _LOG_ESCAPES = str.maketrans({
     '\r': '\\r',
@@ -190,13 +125,6 @@ def _safe_file(base, relative):
     if candidate != base and base not in candidate.parents:
         return None
     return candidate if candidate.is_file() else None
-
-
-def _reset_requested(parsed, name):
-    """Accept the documented path form and the operator query form exactly."""
-    if parsed.path == "/" + name + "=1":
-        return True
-    return parse_qs(parsed.query).get(name) == ["1"]
 
 
 def generate_self_signed(certfile, keyfile):
@@ -445,221 +373,6 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             suffix = path.split('/ps5/', 1)[1]
             path = '/' + suffix
 
-        if path == '/p686state':
-            died = (not P686_STATE['alive']) and P686_STATE['pendingArm'] is not None
-            body = json.dumps({'died': died, 'deadArm': P686_STATE['pendingArm'],
-                               'armFrom': P686_STATE['armFrom'],
-                               'mode': P686_STATE['mode']}).encode()
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Content-Length', str(len(body)))
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(body)
-            return
-
-        # p686 operator reset: GET /p686reset=1 clears the census state, so a
-        # new campaign can start without touching the console. The page calls
-        # it once at its load cap, together with its own localStorage reset.
-        if _reset_requested(parsed, 'p686reset'):
-            qs = parse_qs(parsed.query)
-            P686_STATE['pendingArm'] = None
-            P686_STATE['alive'] = False
-            # Operator rewind: `&arm=N` forces the next page load to restart
-            # the arm series at index N; `&arm=clear` drops the override. The
-            # page consumes it once and then clears it itself.
-            if 'arm' in qs:
-                raw = qs['arm'][0]
-                if raw == 'clear':
-                    P686_STATE['armFrom'] = None
-                else:
-                    try:
-                        P686_STATE['armFrom'] = int(raw, 0)
-                    except ValueError:
-                        pass
-            if 'mode' in qs:
-                P686_STATE['mode'] = qs['mode'][0]
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/plain')
-            self.send_header('Content-Length', 2)
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(b'OK')
-            return
-
-        # p688 freelist exhaustion state: GET /p688state
-        if path == '/p688state':
-            died = (not P688_STATE['alive']) and P688_STATE['pendingArm'] is not None
-            body = json.dumps({'died': died, 'deadArm': P688_STATE['pendingArm'],
-                               'armFrom': P688_STATE['armFrom'],
-                               'mode': P688_STATE['mode']}).encode()
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Content-Length', str(len(body)))
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(body)
-            return
-
-        # p688 operator reset: GET /p688reset=1
-        if _reset_requested(parsed, 'p688reset'):
-            qs = parse_qs(parsed.query)
-            P688_STATE['pendingArm'] = None
-            P688_STATE['alive'] = False
-            if 'arm' in qs:
-                raw = qs['arm'][0]
-                if raw == 'clear':
-                    P688_STATE['armFrom'] = None
-                else:
-                    try:
-                        P688_STATE['armFrom'] = int(raw, 0)
-                    except ValueError:
-                        pass
-            if 'mode' in qs:
-                P688_STATE['mode'] = qs['mode'][0]
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/plain')
-            self.send_header('Content-Length', 2)
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(b'OK')
-            return
-
-        # p689 walk-trigger oracle state: GET /p689state
-        if path == '/p689state':
-            died = (not P689_STATE['alive']) and P689_STATE['pendingArm'] is not None
-            body = json.dumps({'died': died, 'deadArm': P689_STATE['pendingArm'],
-                               'armFrom': P689_STATE['armFrom'],
-                               'mode': P689_STATE['mode']}).encode()
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Content-Length', str(len(body)))
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(body)
-            return
-
-        # p689 operator reset / rewind: GET /p689reset=1[&arm=N|&arm=clear]
-        if _reset_requested(parsed, 'p689reset'):
-            qs = parse_qs(parsed.query)
-            P689_STATE['pendingArm'] = None
-            P689_STATE['alive'] = False
-            if 'arm' in qs:
-                raw = qs['arm'][0]
-                if raw == 'clear':
-                    P689_STATE['armFrom'] = None
-                else:
-                    try:
-                        P689_STATE['armFrom'] = int(raw, 0)
-                    except ValueError:
-                        pass
-            if 'mode' in qs:
-                P689_STATE['mode'] = qs['mode'][0]
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/plain')
-            self.send_header('Content-Length', 2)
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(b'OK')
-            return
-
-        # p690 walk-forge-oracle state: GET /p690state
-        if path == '/p690state':
-            died = (not P690_STATE['alive']) and P690_STATE['pendingArm'] is not None
-            body = json.dumps({'died': died, 'deadArm': P690_STATE['pendingArm'],
-                               'armFrom': P690_STATE['armFrom'],
-                               'mode': P690_STATE['mode']}).encode()
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Content-Length', str(len(body)))
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(body)
-            return
-
-        # p690 operator reset: GET /p690reset=1
-        if _reset_requested(parsed, 'p690reset'):
-            qs = parse_qs(parsed.query)
-            P690_STATE['pendingArm'] = None
-            P690_STATE['alive'] = False
-            if 'arm' in qs:
-                raw = qs['arm'][0]
-                if raw == 'clear':
-                    P690_STATE['armFrom'] = None
-                else:
-                    try:
-                        P690_STATE['armFrom'] = int(raw, 0)
-                    except ValueError:
-                        pass
-            if 'mode' in qs:
-                P690_STATE['mode'] = qs['mode'][0]
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/plain')
-            self.send_header('Content-Length', 2)
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(b'OK')
-            return
-
-        # p807 base discovery state: GET /p807state (also /p710state for compat)
-        if path in ('/p807state', '/p710state'):
-            died = (P807_STATE['armed'] is not None and not P807_STATE['alive']
-                    and P807_STATE['phase'] != 'idle')
-            body = json.dumps({
-                'phase': P807_STATE['phase'],
-                'scanAddr': hex(P807_STATE['scanAddr']) if P807_STATE['scanAddr'] is not None else None,
-                'lastOk': hex(P807_STATE['lastOk']) if P807_STATE['lastOk'] is not None else None,
-                'lastCrash': hex(P807_STATE['lastCrash']) if P807_STATE['lastCrash'] is not None else None,
-                'vp': hex(P807_STATE['vp']) if P807_STATE['vp'] is not None else None,
-                's2': hex(P807_STATE['s2']) if P807_STATE['s2'] is not None else None,
-                'base': hex(P807_STATE['base']) if P807_STATE['base'] is not None else None,
-                'rva': hex(P807_STATE['rva']) if P807_STATE['rva'] is not None else None,
-                'step': P807_STATE['step'],
-                'done': P807_STATE['done'],
-                'died': died,
-                'deadArm': hex(P807_STATE['armed']) if died and P807_STATE['armed'] is not None else None,
-                'armDelta': P807_STATE['armDelta'],
-                'okDelta': P807_STATE['okDelta'],
-                'crashDelta': P807_STATE['crashDelta'],
-                'boundary': P807_STATE['boundary'],
-            }).encode()
-            self.send_response(200)
-            self.send_header('Content-Type', 'application/json')
-            self.send_header('Content-Length', str(len(body)))
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(body)
-            return
-
-        # p807 reset: GET /p807reset (also /p710reset for compat)
-        if path in ('/p807reset', '/p710reset'):
-            P807_STATE.update({'phase': 'idle', 'scanAddr': None, 'lastOk': None,
-                'lastCrash': None, 'vp': None, 's2': None, 'base': None,
-                'rva': None, 'step': 0x400000, 'done': False, 'armed': None,
-                'armDelta': None, 'okDelta': None, 'crashDelta': None,
-                'boundary': None, 'alive': False})
-            self.send_response(200)
-            self.send_header('Content-Type', 'text/plain')
-            self.send_header('Content-Length', 2)
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            self.wfile.write(b'OK')
-            return
-
-        if path == '/beacon' or path.startswith('/beacon/'):
-            if path == '/beacon':
-                qs = parse_qs(parsed.query)
-                msg = qs.get('m', [''])[0]
-            else:
-                from urllib.parse import unquote
-                msg = unquote(path[len('/beacon/'):])
-            self._log_beacon(msg)
-            self.send_response(204)
-            self.send_header('Content-Length', '0')
-            self.send_header('Cache-Control', 'no-store')
-            self.end_headers()
-            return
-
         target = STATIC.get(path)
         if target and target.is_file():
             data = target.read_bytes()
@@ -734,94 +447,6 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             self._reply(404)
 
     def _log_beacon(self, msg):
-        try:
-            if msg.startswith('P686-START'):
-                m = re.search(r'arm=(-?\d+)', msg)
-                P686_STATE['pendingArm'] = int(m.group(1)) if m else None
-                P686_STATE['alive'] = False
-            elif msg.startswith('P686-ALIVE'):
-                P686_STATE['alive'] = True
-            elif msg.startswith('P688-START'):
-                m = re.search(r'arm=(-?\d+)', msg)
-                P688_STATE['pendingArm'] = int(m.group(1)) if m else None
-                P688_STATE['alive'] = False
-            elif msg.startswith('P688-ALIVE'):
-                P688_STATE['alive'] = True
-            elif msg.startswith('P689-START'):
-                m = re.search(r'arm=(-?\d+)', msg)
-                P689_STATE['pendingArm'] = int(m.group(1)) if m else None
-                P689_STATE['alive'] = False
-            elif msg.startswith('P689-ALIVE'):
-                P689_STATE['alive'] = True
-            elif msg.startswith('P690-START'):
-                m = re.search(r'arm=(-?\d+)', msg)
-                P690_STATE['pendingArm'] = int(m.group(1)) if m else None
-                P690_STATE['alive'] = False
-            elif msg.startswith('P690-ALIVE'):
-                P690_STATE['alive'] = True
-            elif msg.startswith('P807-ARM-'):
-                if P807_STATE['armed'] is not None and not P807_STATE['alive']:
-                    P807_STATE['lastCrash'] = P807_STATE['armed']
-                m = re.search(r'addr=(0x[0-9a-fA-F]+)', msg)
-                if m:
-                    P807_STATE['armed'] = int(m.group(1), 16)
-                    P807_STATE['alive'] = False
-            elif msg.startswith('P807-ALIVE'):
-                P807_STATE['alive'] = True
-            elif msg.startswith('P807-READ-'):
-                m = re.search(r'addr=(0x[0-9a-fA-F]+)', msg)
-                if m:
-                    P807_STATE['lastOk'] = int(m.group(1), 16)
-                    P807_STATE['alive'] = True
-            elif msg.startswith('P807-VP-'):
-                m = re.search(r'VP=(0x[0-9a-fA-F]+),s2=(0x[0-9a-fA-F]+)', msg)
-                if m:
-                    P807_STATE['vp'] = int(m.group(1), 16)
-                    P807_STATE['s2'] = int(m.group(2), 16)
-            elif msg.startswith('P807-PHASE-'):
-                m = re.search(r'PHASE-([\w-]+)', msg)
-                if m:
-                    P807_STATE['phase'] = m.group(1)
-            elif msg.startswith('P807-BASE-'):
-                m = re.search(r'BASE-(0x[0-9a-fA-F]+)', msg)
-                if m:
-                    P807_STATE['base'] = int(m.group(1), 16)
-                    P807_STATE['done'] = True
-                    P807_STATE['phase'] = 'done'
-            elif msg.startswith('P807-STEP-'):
-                m = re.search(r'STEP-(\d+)', msg)
-                if m:
-                    P807_STATE['step'] = int(m.group(1))
-            elif msg.startswith('P807-SCAN-'):
-                m = re.search(r'SCAN-(0x[0-9a-fA-F]+)', msg)
-                if m:
-                    P807_STATE['scanAddr'] = int(m.group(1), 16)
-            elif msg.startswith('P807-LASTCRASH-'):
-                m = re.search(r'LASTCRASH-(0x[0-9a-fA-F]+)', msg)
-                if m:
-                    P807_STATE['lastCrash'] = int(m.group(1), 16)
-            elif msg.startswith('P807-OKDELTA-'):
-                m = re.search(r'OKDELTA-(0x[0-9a-fA-F]+)', msg)
-                if m:
-                    P807_STATE['okDelta'] = int(m.group(1), 16)
-            elif msg.startswith('P807-CRASHDELTA-'):
-                m = re.search(r'CRASHDELTA-(0x[0-9a-fA-F]+)', msg)
-                if m:
-                    P807_STATE['crashDelta'] = int(m.group(1), 16)
-            elif msg.startswith('P807-ARMDELTA-'):
-                m = re.search(r'ARMDELTA-(0x[0-9a-fA-F]+)', msg)
-                if m:
-                    P807_STATE['armDelta'] = int(m.group(1), 16)
-            elif msg.startswith('P807-BSAVE-'):
-                m = re.search(r'BSAVE-(0x[0-9a-fA-F]+)', msg)
-                if m:
-                    P807_STATE['boundary'] = int(m.group(1), 16)
-            elif msg.startswith('P807-RVA-'):
-                m = re.search(r'RVA-(0x[0-9a-fA-F]+)', msg)
-                if m:
-                    P807_STATE['rva'] = int(m.group(1), 16)
-        except Exception:
-            pass
         ts = datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
         line = f'[{ts}] BEACON {self.client_address[0]}: {_escape_log_value(msg)}'
         _safe_print(f'\033[33m{line}\033[0m')

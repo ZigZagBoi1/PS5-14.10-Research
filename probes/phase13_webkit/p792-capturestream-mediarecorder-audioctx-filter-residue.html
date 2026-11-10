@@ -1,0 +1,482 @@
+<!--
+  p792: HTMLCanvasElement captureStream / MediaRecorder / AudioContext
+        oscillator / CSS filter/backdrop-filter / Notification /
+        Permissions API residue
+
+  captureStream: canvas.captureStream() creates a C++ MediaStream
+  backed by a CanvasCaptureMediaStreamTrack that reads canvas pixels
+  each frame. The track object, its source, and the internal frame
+  grabber allocate from the media pipeline pool.
+
+  MediaRecorder: records a MediaStream into C++ encoded chunks.
+  start/stop/pause/resume exercise the encoder state machine.
+  ondataavailable delivers Blob chunks with encoded data. Even
+  without a real stream, the state transitions allocate C++
+  MediaRecorder internal objects.
+
+  AudioContext: createOscillator/createGain/createBiquadFilter
+  create C++ AudioNode subclasses. connect/disconnect exercises
+  the audio graph edge list. close() tears down the context.
+  The Web Audio allocator is separate from the DOM pool.
+
+  CSS filter/backdrop-filter: filter functions (blur, brightness,
+  contrast, saturate, hue-rotate, grayscale, sepia, invert,
+  drop-shadow) create C++ FilterOperation objects. backdrop-filter
+  creates compositing layer state. Rapid filter changes exercise
+  the filter operation allocator.
+
+  Notification: new Notification() creates C++ notification state
+  (may require permission; constructor still allocates even if
+  permission is denied). close() tears down.
+
+  Permissions: navigator.permissions.query() creates C++
+  PermissionStatus objects with change listeners.
+
+  Attack angles:
+  A) Canvas captureStream + track create/stop churn.
+  B) MediaRecorder state machine exercise.
+  C) AudioContext node graph create/connect/disconnect/close.
+  D) CSS filter property rapid value churn.
+  E) Notification constructor/close cycles.
+  F) Permissions query for multiple permission names.
+
+  CRASH_CLASS: LOW (media/CSS/notification APIs, no side effects)
+  prior art: p772 (Web Audio), p787 (canvas encoding)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p792</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p792-START');
+
+// === Section A: Canvas captureStream + track churn ===
+try{
+  b('A-capturestream');
+  var aHits=0;
+
+  var csSupported=false;
+  try{
+    var tc=document.createElement('canvas');
+    csSupported=typeof tc.captureStream==='function';
+  }catch(e){}
+
+  if(!csSupported){
+    b('A-SKIP no captureStream');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var streams=[];
+
+        for(var i=0;i<20;i++){
+          var c=document.createElement('canvas');
+          c.width=64;c.height=64;
+          var ctx=c.getContext('2d');
+          ctx.fillStyle='rgb('+(i*12)+','+(round*40)+',128)';
+          ctx.fillRect(0,0,64,64);
+
+          try{
+            var stream=c.captureStream(0);
+            if(round===0&&i===0){
+              b('A stream tracks='+stream.getTracks().length);
+              var track=stream.getTracks()[0];
+              if(track)b('A track kind='+track.kind+' readyState='+track.readyState);
+            }
+
+            // Request frames
+            var track=stream.getTracks()[0];
+            if(track&&track.requestFrame){
+              for(var f=0;f<5;f++){
+                ctx.fillStyle='rgb('+(f*50)+',0,'+(255-f*50)+')';
+                ctx.fillRect(0,0,64,64);
+                try{track.requestFrame();}catch(e){}
+              }
+            }
+
+            streams.push(stream);
+          }catch(e){
+            if(i===0&&round===0)b('A cs_err='+e.message);
+          }
+        }
+
+        if(round===0)b('A created '+streams.length+' captureStreams');
+
+        // Stop all tracks
+        for(var i=0;i<streams.length;i++){
+          var tracks=streams[i].getTracks();
+          for(var t=0;t<tracks.length;t++){
+            tracks[t].stop();
+          }
+        }
+        streams=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      aHits+=sprayAndScan('A',round,[48,64,96,128,192]);
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: MediaRecorder state machine ===
+try{
+  b('B-mediarecorder');
+  var bHits=0;
+
+  var mrSupported=typeof MediaRecorder!=='undefined';
+  if(!mrSupported){
+    b('B-SKIP no MediaRecorder');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var recorders=[];
+
+        for(var i=0;i<15;i++){
+          try{
+            // Create a stream from a canvas
+            var c=document.createElement('canvas');
+            c.width=32;c.height=32;
+            var ctx=c.getContext('2d');
+            ctx.fillStyle='rgb('+(i*16)+',0,0)';
+            ctx.fillRect(0,0,32,32);
+            var stream=c.captureStream(0);
+
+            var chunks=[];
+            var mr=new MediaRecorder(stream);
+            mr.ondataavailable=function(e){
+              if(e.data&&e.data.size>0)chunks.push(e.data);
+            };
+
+            if(round===0&&i===0){
+              b('B MR state='+mr.state+' mimeType='+mr.mimeType);
+            }
+
+            // Start/stop cycles
+            for(var cyc=0;cyc<3;cyc++){
+              try{
+                mr.start();
+                // Draw a frame
+                ctx.fillStyle='rgb(0,'+(cyc*80)+',0)';
+                ctx.fillRect(0,0,32,32);
+                if(stream.getTracks()[0]&&stream.getTracks()[0].requestFrame){
+                  stream.getTracks()[0].requestFrame();
+                }
+                mr.stop();
+              }catch(e){}
+            }
+
+            // Pause/resume cycle
+            try{
+              mr.start();
+              mr.pause();
+              mr.resume();
+              mr.stop();
+            }catch(e){}
+
+            recorders.push(mr);
+
+            // Stop stream tracks
+            var tracks=stream.getTracks();
+            for(var t=0;t<tracks.length;t++)tracks[t].stop();
+          }catch(e){
+            if(i===0&&round===0)b('B mr_err='+e.message);
+          }
+        }
+
+        if(round===0)b('B created '+recorders.length+' MediaRecorders, 4 start/stop each');
+        recorders=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      bHits+=sprayAndScan('B',round,[48,64,96,128]);
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: AudioContext node graph churn ===
+try{
+  b('C-audiocontext');
+  var cHits=0;
+
+  var acSupported=typeof AudioContext!=='undefined'||typeof webkitAudioContext!=='undefined';
+  if(!acSupported){
+    b('C-SKIP no AudioContext');
+  }else{
+    var AC=typeof AudioContext!=='undefined'?AudioContext:webkitAudioContext;
+
+    for(var round=0;round<5;round++){
+      (function(){
+        var contexts=[];
+
+        for(var i=0;i<5;i++){
+          try{
+            var ctx=new AC();
+
+            // Build a complex audio graph
+            var nodes=[];
+            for(var n=0;n<10;n++){
+              var osc=ctx.createOscillator();
+              osc.type=['sine','square','sawtooth','triangle'][n%4];
+              osc.frequency.value=220+n*110;
+
+              var gain=ctx.createGain();
+              gain.gain.value=0;
+
+              var biquad=ctx.createBiquadFilter();
+              biquad.type='lowpass';
+              biquad.frequency.value=1000+n*200;
+
+              var delay=ctx.createDelay(1.0);
+              delay.delayTime.value=0.01*n;
+
+              // Connect chain: osc -> biquad -> gain -> delay -> dest
+              osc.connect(biquad);
+              biquad.connect(gain);
+              gain.connect(delay);
+              delay.connect(ctx.destination);
+
+              nodes.push(osc,gain,biquad,delay);
+            }
+
+            // Create additional node types
+            try{
+              var conv=ctx.createConvolver();
+              var buf=ctx.createBuffer(1,4096,ctx.sampleRate);
+              conv.buffer=buf;
+              nodes.push(conv);
+            }catch(e){}
+
+            try{
+              var comp=ctx.createDynamicsCompressor();
+              nodes.push(comp);
+            }catch(e){}
+
+            try{
+              var pan=ctx.createStereoPanner();
+              pan.pan.value=0.5;
+              nodes.push(pan);
+            }catch(e){}
+
+            try{
+              var analyser=ctx.createAnalyser();
+              analyser.fftSize=256;
+              var dataArr=new Float32Array(analyser.frequencyBinCount);
+              analyser.getFloatFrequencyData(dataArr);
+              nodes.push(analyser);
+            }catch(e){}
+
+            if(round===0&&i===0){
+              b('C built graph with '+nodes.length+' nodes, sampleRate='+ctx.sampleRate);
+            }
+
+            // Disconnect all
+            for(var n=0;n<nodes.length;n++){
+              try{nodes[n].disconnect();}catch(e){}
+            }
+
+            try{ctx.close();}catch(e){}
+            contexts.push(ctx);
+          }catch(e){
+            if(i===0&&round===0)b('C ac_err='+e.message);
+          }
+        }
+
+        if(round===0)b('C created '+contexts.length+' AudioContexts with complex graphs');
+        contexts=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      cHits+=sprayAndScan('C',round,[48,64,96,128,192]);
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: CSS filter property rapid value churn ===
+try{
+  b('D-css-filter');
+  var dHits=0;
+
+  var filterFunctions=[
+    'blur(2px)','brightness(1.5)','contrast(2)','saturate(3)',
+    'hue-rotate(90deg)','grayscale(1)','sepia(1)','invert(1)',
+    'drop-shadow(4px 4px 4px rgba(0,0,0,0.5))','opacity(0.5)',
+    'blur(1px) brightness(1.2) contrast(1.5)',
+    'hue-rotate(45deg) saturate(2) brightness(0.8)',
+    'drop-shadow(2px 2px 2px red) blur(1px)',
+    'grayscale(0.5) sepia(0.5) brightness(1.3)',
+    'invert(0.5) hue-rotate(180deg) contrast(1.5)'
+  ];
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var elements=[];
+
+      for(var i=0;i<40;i++){
+        var el=document.createElement('div');
+        el.style.cssText='width:50px;height:50px;display:inline-block;background:linear-gradient(red,blue);';
+        document.body.appendChild(el);
+
+        // Rapid filter changes
+        for(var f=0;f<filterFunctions.length;f++){
+          el.style.filter=filterFunctions[f];
+          // Force layout
+          var h=el.offsetHeight;
+        }
+
+        // backdrop-filter
+        for(var f=0;f<5;f++){
+          el.style.webkitBackdropFilter=filterFunctions[f];
+          el.style.backdropFilter=filterFunctions[f];
+          var h=el.offsetHeight;
+        }
+
+        // Clear
+        el.style.filter='none';
+        el.style.webkitBackdropFilter='none';
+        el.style.backdropFilter='none';
+        var h=el.offsetHeight;
+
+        elements.push(el);
+      }
+
+      if(round===0)b('D churned '+elements.length+' elements through '+filterFunctions.length+' filter values');
+
+      for(var i=0;i<elements.length;i++){
+        document.body.removeChild(elements[i]);
+      }
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    dHits+=sprayAndScan('D',round,[32,48,64,96,128]);
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: Notification constructor/close ===
+try{
+  b('E-notification');
+  var eHits=0;
+
+  var notifSupported=typeof Notification!=='undefined';
+  if(!notifSupported){
+    b('E-SKIP no Notification API');
+  }else{
+    b('E Notification.permission='+Notification.permission);
+
+    for(var round=0;round<5;round++){
+      (function(){
+        var notifs=[];
+
+        for(var i=0;i<30;i++){
+          try{
+            var n=new Notification('Test '+round+'_'+i,{
+              body:'Body text for notification '+i+' '+'n'.repeat(20),
+              tag:'tag_'+round+'_'+i,
+              silent:true
+            });
+            notifs.push(n);
+          }catch(e){
+            if(i===0&&round===0)b('E notif_err='+e.message);
+            break;
+          }
+        }
+
+        if(round===0)b('E created '+notifs.length+' Notifications');
+
+        // Close all
+        for(var i=0;i<notifs.length;i++){
+          try{notifs[i].close();}catch(e){}
+        }
+        notifs=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      eHits+=sprayAndScan('E',round,[32,48,64,96]);
+    }
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Permissions query ===
+try{
+  b('F-permissions');
+  var fHits=0;
+
+  var permSupported=navigator.permissions&&typeof navigator.permissions.query==='function';
+  if(!permSupported){
+    b('F-SKIP no Permissions API');
+  }else{
+    var permNames=['geolocation','notifications','camera','microphone',
+      'accelerometer','gyroscope','magnetometer','clipboard-read',
+      'clipboard-write','midi','background-sync','push'];
+
+    for(var round=0;round<3;round++){
+      (function(){
+        var queryCount=0;
+        var results=[];
+
+        for(var pi=0;pi<permNames.length;pi++){
+          for(var rep=0;rep<5;rep++){
+            try{
+              navigator.permissions.query({name:permNames[pi]}).then(function(status){
+                queryCount++;
+                if(queryCount<=3){
+                  b('F perm='+status.name+' state='+status.state);
+                }
+                // Add change listener
+                status.onchange=function(){};
+                results.push(status);
+              }).catch(function(e){});
+            }catch(e){
+              if(pi===0&&rep===0&&round===0)b('F perm_err='+e.message);
+            }
+          }
+        }
+      })();
+
+      // Allow promises to settle
+      for(var i=0;i<5000;i++){var tmp=new ArrayBuffer(64);}
+
+      fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+    }
+
+    if(round===0)b('F queried '+permNames.length+' permissions x 5 reps x 3 rounds');
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p792-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

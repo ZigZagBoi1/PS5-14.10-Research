@@ -1,0 +1,313 @@
+<!--
+  p712: CSS Paint API + Canvas pattern/gradient internal leak
+
+  CanvasPattern and CanvasGradient are thin wrappers around platform
+  graphics objects. The internal representation of gradients (color stop
+  arrays) and patterns (cached rasterization) may leak through timing
+  or behavioral side channels.
+
+  Additionally, canvas toDataURL/toBlob serialization allocates from
+  the image codec heap. The timing depends on image complexity and
+  codec state.
+
+  Attack angles:
+  A) CanvasGradient color stop timing -- addColorStop allocates
+     internal arrays. Timing of createLinearGradient/Radial + many
+     color stops reveals allocator behavior.
+  B) CanvasPattern from image timing -- createPattern with different
+     image sizes. The pattern's internal rasterization depends on
+     the image data layout.
+  C) toDataURL timing for different canvas sizes -- PNG/JPEG encoding
+     time depends on pixel data and encoder buffer allocation.
+  D) Canvas compositing timing -- globalCompositeOperation with
+     different blend modes. Some modes require temporary buffers.
+  E) ImageData constructor timing -- new ImageData(w, h) allocates
+     pixel backing store. Timing steps reveal page boundaries.
+  F) Canvas putImageData/getImageData round-trip integrity -- write
+     specific patterns and read back; check for uninitialized bytes
+     in padding.
+
+  CRASH_CLASS: LOW (canvas API, read-only)
+  prior art: p629 (Canvas2D UAF struct mapping), p635 (Canvas2D UAF)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p712</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P712-START:CSS-PAINT-LEAK');
+  var results = [];
+
+  // === SECTION A: CanvasGradient color stop timing ===
+  b('A:GRADIENT-TIMING');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 256;
+    var ctx = canvas.getContext('2d');
+
+    // Create gradients with increasing number of color stops
+    var gradTimes = [];
+    for (var stops = 2; stops <= 200; stops += 10) {
+      var t0 = performance.now();
+      for (var iter = 0; iter < 500; iter++) {
+        var grad = ctx.createLinearGradient(0, 0, 256, 256);
+        for (var s = 0; s < stops; s++) {
+          grad.addColorStop(s / (stops - 1), 'rgb(' + (s%256) + ',0,0)');
+        }
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 256, 256);
+      }
+      var dt = performance.now() - t0;
+      gradTimes.push(stops + ':' + dt.toFixed(1));
+    }
+    b('A:GRAD-TIMES:' + gradTimes.join(','));
+
+    // Radial gradient timing
+    var radialTimes = [];
+    for (var stops = 2; stops <= 100; stops += 10) {
+      var t0 = performance.now();
+      for (var iter = 0; iter < 500; iter++) {
+        var grad = ctx.createRadialGradient(128, 128, 0, 128, 128, 128);
+        for (var s = 0; s < stops; s++) {
+          grad.addColorStop(s / (stops - 1), 'hsl(' + (s*3.6) + ',100%,50%)');
+        }
+        ctx.fillStyle = grad;
+        ctx.fillRect(0, 0, 256, 256);
+      }
+      var dt = performance.now() - t0;
+      radialTimes.push(stops + ':' + dt.toFixed(1));
+    }
+    b('A:RADIAL-TIMES:' + radialTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: CanvasPattern timing ===
+  b('B:PATTERN-TIMING');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 256;
+    var ctx = canvas.getContext('2d');
+
+    // Create source images of different sizes
+    var patternSizes = [4, 8, 16, 32, 64, 128];
+    var patternTimes = [];
+
+    for (var ps = 0; ps < patternSizes.length; ps++) {
+      var src = document.createElement('canvas');
+      src.width = patternSizes[ps]; src.height = patternSizes[ps];
+      var srcCtx = src.getContext('2d');
+      srcCtx.fillStyle = 'red';
+      srcCtx.fillRect(0, 0, patternSizes[ps], patternSizes[ps]);
+
+      var t0 = performance.now();
+      for (var iter = 0; iter < 500; iter++) {
+        var pat = ctx.createPattern(src, 'repeat');
+        ctx.fillStyle = pat;
+        ctx.fillRect(0, 0, 256, 256);
+      }
+      var dt = performance.now() - t0;
+      patternTimes.push(patternSizes[ps] + ':' + dt.toFixed(1));
+    }
+    b('B:PATTERN-TIMES:' + patternTimes.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: toDataURL encoding timing ===
+  b('C:TODATAURL-TIMING');
+  try {
+    var sizes = [32, 64, 128, 256, 512];
+    var pngTimes = [];
+    var jpegTimes = [];
+
+    for (var s = 0; s < sizes.length; s++) {
+      var canvas = document.createElement('canvas');
+      canvas.width = sizes[s]; canvas.height = sizes[s];
+      var ctx = canvas.getContext('2d');
+
+      // Draw something non-trivial
+      for (var i = 0; i < 20; i++) {
+        ctx.fillStyle = 'rgb(' + (i*12) + ',' + (i*7) + ',' + (i*3) + ')';
+        ctx.fillRect(i * sizes[s]/20, 0, sizes[s]/20, sizes[s]);
+      }
+
+      // PNG timing
+      var t0 = performance.now();
+      for (var iter = 0; iter < 20; iter++) {
+        canvas.toDataURL('image/png');
+      }
+      var pngDt = performance.now() - t0;
+      pngTimes.push(sizes[s] + ':' + pngDt.toFixed(1));
+
+      // JPEG timing
+      var t1 = performance.now();
+      for (var iter = 0; iter < 20; iter++) {
+        canvas.toDataURL('image/jpeg', 0.8);
+      }
+      var jpegDt = performance.now() - t1;
+      jpegTimes.push(sizes[s] + ':' + jpegDt.toFixed(1));
+    }
+    b('C:PNG-TIMES:' + pngTimes.join(','));
+    b('C:JPEG-TIMES:' + jpegTimes.join(','));
+
+    // Check data URL format
+    var testCanvas = document.createElement('canvas');
+    testCanvas.width = 1; testCanvas.height = 1;
+    var testCtx = testCanvas.getContext('2d');
+    testCtx.fillStyle = 'red';
+    testCtx.fillRect(0, 0, 1, 1);
+    var dataUrl = testCanvas.toDataURL();
+    b('C:FORMAT=' + dataUrl.substring(0, 30) + '...');
+    b('C:URL-LEN=' + dataUrl.length);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Compositing mode timing ===
+  b('D:COMPOSITING');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 256;
+    var ctx = canvas.getContext('2d');
+
+    var modes = ['source-over', 'source-in', 'source-out', 'source-atop',
+      'destination-over', 'destination-in', 'destination-out', 'destination-atop',
+      'lighter', 'copy', 'xor', 'multiply', 'screen', 'overlay',
+      'darken', 'lighten', 'color-dodge', 'color-burn'];
+
+    var modeTimes = [];
+    for (var m = 0; m < modes.length; m++) {
+      ctx.globalCompositeOperation = 'source-over';
+      ctx.fillStyle = 'blue';
+      ctx.fillRect(0, 0, 256, 256);
+
+      try {
+        ctx.globalCompositeOperation = modes[m];
+        ctx.fillStyle = 'rgba(255, 0, 0, 0.5)';
+
+        var t0 = performance.now();
+        for (var iter = 0; iter < 1000; iter++) {
+          ctx.fillRect(0, 0, 256, 256);
+        }
+        var dt = performance.now() - t0;
+        modeTimes.push(modes[m].substring(0, 8) + ':' + dt.toFixed(1));
+      } catch(e2) {
+        modeTimes.push(modes[m].substring(0, 8) + ':ERR');
+      }
+    }
+    b('D:MODE-TIMES:' + modeTimes.slice(0, 9).join(','));
+    b('D:MODE-TIMES2:' + modeTimes.slice(9).join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: ImageData allocation timing ===
+  b('E:IMAGEDATA-ALLOC');
+  try {
+    var allocSizes = [16, 32, 64, 128, 256, 512, 1024];
+    var allocTimes = [];
+
+    for (var s = 0; s < allocSizes.length; s++) {
+      var t0 = performance.now();
+      var datas = [];
+      for (var iter = 0; iter < 100; iter++) {
+        datas.push(new ImageData(allocSizes[s], allocSizes[s]));
+      }
+      var dt = performance.now() - t0;
+      allocTimes.push(allocSizes[s] + ':' + dt.toFixed(2));
+
+      // Check the backing buffer
+      var id = datas[0];
+      b('E:SIZE=' + allocSizes[s] + ',BYTES=' + id.data.byteLength +
+        ',OFF=' + id.data.byteOffset);
+    }
+    b('E:ALLOC-TIMES:' + allocTimes.join(','));
+
+    // Look for allocation steps
+    var times = allocTimes.map(function(t) { return parseFloat(t.split(':')[1]); });
+    for (var i = 1; i < times.length; i++) {
+      var sizeRatio = (allocSizes[i] * allocSizes[i]) / (allocSizes[i-1] * allocSizes[i-1]);
+      var timeRatio = times[i] / times[i-1];
+      if (timeRatio > sizeRatio * 1.5) {
+        results.push('E:imagedata-step=' + allocSizes[i]);
+      }
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: putImageData/getImageData round-trip ===
+  b('F:IMAGEDATA-ROUNDTRIP');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 64; canvas.height = 64;
+    var ctx = canvas.getContext('2d');
+
+    // Write a known pattern
+    var writeData = ctx.createImageData(64, 64);
+    for (var i = 0; i < writeData.data.length; i++) {
+      writeData.data[i] = i & 0xFF;
+    }
+    ctx.putImageData(writeData, 0, 0);
+
+    // Read it back
+    var readData = ctx.getImageData(0, 0, 64, 64);
+
+    // Compare -- any mismatch could indicate uninitialized memory
+    var mismatches = 0;
+    var firstMismatch = -1;
+    for (var i = 0; i < writeData.data.length; i++) {
+      if (readData.data[i] !== writeData.data[i]) {
+        mismatches++;
+        if (firstMismatch < 0) firstMismatch = i;
+      }
+    }
+    b('F:MISMATCHES=' + mismatches + ',FIRST=' + firstMismatch);
+
+    if (mismatches > 0) {
+      // Log the mismatch area
+      var area = [];
+      for (var i = firstMismatch; i < Math.min(firstMismatch + 16, writeData.data.length); i++) {
+        area.push(i + ':w=' + writeData.data[i] + '/r=' + readData.data[i]);
+      }
+      b('F:MISMATCH-AREA:' + area.join(','));
+      results.push('F:roundtrip-mismatch=' + mismatches);
+    }
+
+    // Try reading from an area we never wrote to (may have uninitialized data)
+    var bigCanvas = document.createElement('canvas');
+    bigCanvas.width = 1024; bigCanvas.height = 1024;
+    var bigCtx = bigCanvas.getContext('2d');
+    // Don't draw anything -- read raw
+    var rawData = bigCtx.getImageData(0, 0, 64, 64);
+    var nonZero = 0;
+    for (var i = 0; i < rawData.data.length; i++) {
+      if (rawData.data[i] !== 0) nonZero++;
+    }
+    b('F:UNINIT-NONZERO=' + nonZero + '/' + rawData.data.length);
+    if (nonZero > 0) {
+      // Log first non-zero bytes
+      var nzBytes = [];
+      for (var i = 0; i < rawData.data.length && nzBytes.length < 20; i++) {
+        if (rawData.data[i] !== 0) nzBytes.push(i + ':' + rawData.data[i]);
+      }
+      b('F:UNINIT-BYTES:' + nzBytes.join(','));
+      results.push('F:uninit-canvas-data');
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P712-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P712-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P712-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p712: CSS Paint + Canvas pattern/gradient internal leak</pre></body></html>

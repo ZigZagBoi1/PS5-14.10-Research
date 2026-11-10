@@ -1,0 +1,289 @@
+<!--
+  p726: Canvas/WebGL fingerprint + GPU driver info leak
+
+  WebGL exposes GPU driver information through getParameter(),
+  getExtension(), and shader compilation. The renderer string,
+  vendor string, and supported extension list are GPU-specific.
+  On PS5, this reveals the AMD GPU driver version and capabilities.
+
+  More importantly, shader compilation timing depends on the GPU
+  driver's internal JIT compiler. Different shader complexity
+  triggers different compilation paths, and the timing reveals
+  driver-internal state.
+
+  Attack angles:
+  A) WebGL parameter enumeration -- RENDERER, VENDOR, VERSION,
+     SHADING_LANGUAGE_VERSION, MAX_* limits. GPU fingerprint.
+  B) Extension enumeration -- getSupportedExtensions() list.
+     Specific extensions reveal driver capabilities.
+  C) Shader compilation timing -- compile shaders of varying
+     complexity. Compilation time reveals JIT state.
+  D) WebGL2 availability + features -- WebGL2 context creation
+     and feature detection. Transform feedback, UBOs, etc.
+  E) Canvas 2D fingerprint -- toDataURL on rendered content.
+     Sub-pixel rendering and anti-aliasing are GPU-dependent.
+  F) readPixels timing -- reading back from GPU. The DMA
+     transfer timing depends on buffer alignment and size.
+
+  CRASH_CLASS: LOW (WebGL/Canvas API, read-only)
+  prior art: p707 (WebGL shaders), p712 (Canvas paint)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p726</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P726-START:CANVAS-WEBGL-FINGERPRINT');
+  var results = [];
+
+  // === SECTION A: WebGL parameter enumeration ===
+  b('A:WEBGL-PARAMS');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 256;
+    var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+    if (gl) {
+      b('A:WEBGL-AVAILABLE');
+      b('A:RENDERER=' + gl.getParameter(gl.RENDERER));
+      b('A:VENDOR=' + gl.getParameter(gl.VENDOR));
+      b('A:VERSION=' + gl.getParameter(gl.VERSION));
+      b('A:SHADING=' + gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
+      b('A:MAX-TEX=' + gl.getParameter(gl.MAX_TEXTURE_SIZE));
+      b('A:MAX-CUBE=' + gl.getParameter(gl.MAX_CUBE_MAP_TEXTURE_SIZE));
+      b('A:MAX-RB=' + gl.getParameter(gl.MAX_RENDERBUFFER_SIZE));
+      b('A:MAX-VARY=' + gl.getParameter(gl.MAX_VARYING_VECTORS));
+      b('A:MAX-VERT-ATTR=' + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
+      b('A:MAX-VERT-UNI=' + gl.getParameter(gl.MAX_VERTEX_UNIFORM_VECTORS));
+      b('A:MAX-FRAG-UNI=' + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
+      b('A:MAX-VP=' + JSON.stringify(Array.from(gl.getParameter(gl.MAX_VIEWPORT_DIMS))));
+      b('A:ALIASED-LINE=' + JSON.stringify(Array.from(gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE))));
+      b('A:ALIASED-PT=' + JSON.stringify(Array.from(gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE))));
+
+      // WEBGL_debug_renderer_info extension
+      var dbg = gl.getExtension('WEBGL_debug_renderer_info');
+      if (dbg) {
+        b('A:UNMASKED-RENDERER=' + gl.getParameter(dbg.UNMASKED_RENDERER_WEBGL));
+        b('A:UNMASKED-VENDOR=' + gl.getParameter(dbg.UNMASKED_VENDOR_WEBGL));
+        results.push('A:debug-renderer-info');
+      } else {
+        b('A:NO-DEBUG-RENDERER-INFO');
+      }
+
+      // Precision
+      var precs = ['LOW_FLOAT', 'MEDIUM_FLOAT', 'HIGH_FLOAT', 'LOW_INT', 'MEDIUM_INT', 'HIGH_INT'];
+      for (var i = 0; i < precs.length; i++) {
+        var p = gl.getShaderPrecisionFormat(gl.FRAGMENT_SHADER, gl[precs[i]]);
+        if (p) {
+          b('A:PREC-FRAG-' + precs[i] + ':min=' + p.rangeMin + ',max=' + p.rangeMax + ',prec=' + p.precision);
+        }
+      }
+    } else {
+      b('A:WEBGL-NOT-AVAILABLE');
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Extension enumeration ===
+  b('B:EXTENSIONS');
+  try {
+    var canvas = document.createElement('canvas');
+    var gl = canvas.getContext('webgl');
+    if (gl) {
+      var exts = gl.getSupportedExtensions() || [];
+      b('B:EXT-COUNT=' + exts.length);
+      b('B:EXTS:' + exts.join(','));
+
+      // Try to get each interesting extension
+      var interesting = [
+        'WEBGL_debug_renderer_info',
+        'WEBGL_lose_context',
+        'OES_texture_float',
+        'OES_texture_half_float',
+        'OES_element_index_uint',
+        'OES_standard_derivatives',
+        'WEBGL_depth_texture',
+        'WEBGL_draw_buffers',
+        'EXT_texture_filter_anisotropic',
+        'EXT_shader_texture_lod',
+        'WEBGL_compressed_texture_s3tc',
+        'WEBGL_compressed_texture_astc',
+        'ANGLE_instanced_arrays',
+        'OES_vertex_array_object',
+      ];
+      var extResults = [];
+      for (var i = 0; i < interesting.length; i++) {
+        var ext = gl.getExtension(interesting[i]);
+        extResults.push(interesting[i].replace('WEBGL_','W_').replace('OES_','O_').replace('EXT_','E_') + ':' + (ext ? 'Y' : 'N'));
+      }
+      b('B:INTERESTING:' + extResults.join(','));
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Shader compilation timing ===
+  b('C:SHADER-COMPILE');
+  try {
+    var canvas = document.createElement('canvas');
+    var gl = canvas.getContext('webgl');
+    if (gl) {
+      var shaders = [
+        {name: 'trivial', src: 'precision mediump float; void main() { gl_FragColor = vec4(1.0, 0.0, 0.0, 1.0); }'},
+        {name: 'math', src: 'precision mediump float; uniform float u; void main() { float v = sin(u) * cos(u) * tan(u); gl_FragColor = vec4(v, v, v, 1.0); }'},
+        {name: 'loop', src: 'precision mediump float; uniform float u; void main() { float s = 0.0; for(int i=0; i<100; i++) { s += sin(float(i)*u); } gl_FragColor = vec4(s, s, s, 1.0); }'},
+        {name: 'branch', src: 'precision mediump float; uniform float u; void main() { float v; if(u > 0.5) { v = sin(u); } else { v = cos(u); } gl_FragColor = vec4(v, v, v, 1.0); }'},
+        {name: 'texture', src: 'precision mediump float; uniform sampler2D tex; varying vec2 vUV; void main() { vec4 c = texture2D(tex, vUV); gl_FragColor = c * 2.0; }'},
+      ];
+
+      var compileTimes = [];
+      for (var i = 0; i < shaders.length; i++) {
+        var t0 = performance.now();
+        for (var j = 0; j < 50; j++) {
+          var s = gl.createShader(gl.FRAGMENT_SHADER);
+          gl.shaderSource(s, shaders[i].src);
+          gl.compileShader(s);
+          var ok = gl.getShaderParameter(s, gl.COMPILE_STATUS);
+          gl.deleteShader(s);
+        }
+        var dt = performance.now() - t0;
+        compileTimes.push(shaders[i].name + ':' + dt.toFixed(2) + ':' + (ok ? 'OK' : 'FAIL'));
+      }
+      b('C:COMPILE-TIMES:' + compileTimes.join(','));
+    }
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: WebGL2 availability ===
+  b('D:WEBGL2');
+  try {
+    var canvas = document.createElement('canvas');
+    var gl2 = canvas.getContext('webgl2');
+    if (gl2) {
+      b('D:WEBGL2-AVAILABLE');
+      b('D:GL2-VERSION=' + gl2.getParameter(gl2.VERSION));
+      b('D:GL2-SHADING=' + gl2.getParameter(gl2.SHADING_LANGUAGE_VERSION));
+      b('D:MAX-3D-TEX=' + gl2.getParameter(gl2.MAX_3D_TEXTURE_SIZE));
+      b('D:MAX-ARRAY-TEX=' + gl2.getParameter(gl2.MAX_ARRAY_TEXTURE_LAYERS));
+      b('D:MAX-UBO-SIZE=' + gl2.getParameter(gl2.MAX_UNIFORM_BLOCK_SIZE));
+      b('D:MAX-TF-VARY=' + gl2.getParameter(gl2.MAX_TRANSFORM_FEEDBACK_SEPARATE_ATTRIBS));
+      b('D:MAX-DRAW-BUF=' + gl2.getParameter(gl2.MAX_DRAW_BUFFERS));
+      b('D:MAX-COLOR-ATTACH=' + gl2.getParameter(gl2.MAX_COLOR_ATTACHMENTS));
+      b('D:MAX-SAMPLES=' + gl2.getParameter(gl2.MAX_SAMPLES));
+
+      var exts2 = gl2.getSupportedExtensions() || [];
+      b('D:GL2-EXT-COUNT=' + exts2.length);
+      b('D:GL2-EXTS:' + exts2.slice(0, 20).join(','));
+      results.push('D:webgl2-available');
+    } else {
+      b('D:WEBGL2-NOT-AVAILABLE');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Canvas 2D fingerprint ===
+  b('E:CANVAS-FINGERPRINT');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 256; canvas.height = 64;
+    var ctx = canvas.getContext('2d');
+
+    // Draw text with specific font
+    ctx.fillStyle = '#f00';
+    ctx.fillRect(0, 0, 256, 64);
+    ctx.fillStyle = '#069';
+    ctx.font = '14px Arial';
+    ctx.fillText('PS5 WebKit fingerprint test', 2, 15);
+    ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
+    ctx.font = 'italic 18px Georgia';
+    ctx.fillText('Canvas2D rendering', 4, 45);
+
+    // Draw shapes
+    ctx.beginPath();
+    ctx.arc(200, 32, 20, 0, Math.PI * 2);
+    ctx.fillStyle = '#ff0';
+    ctx.fill();
+    ctx.strokeStyle = '#00f';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    var dataUrl = canvas.toDataURL();
+    b('E:DATAURL-LEN=' + dataUrl.length);
+    b('E:DATAURL-PREFIX=' + dataUrl.substring(0, 40));
+
+    // Hash the data URL for fingerprint comparison
+    var hash = 0;
+    for (var i = 0; i < dataUrl.length; i++) {
+      hash = ((hash << 5) - hash) + dataUrl.charCodeAt(i);
+      hash |= 0;
+    }
+    b('E:CANVAS-HASH=' + hash);
+
+    // toDataURL timing
+    var t0 = performance.now();
+    for (var j = 0; j < 100; j++) {
+      canvas.toDataURL();
+    }
+    var dt = performance.now() - t0;
+    b('E:TODATAURL-TIME=' + dt.toFixed(2));
+
+    // toBlob timing
+    var t1 = performance.now();
+    var blobCount = 0;
+    for (var j = 0; j < 50; j++) {
+      canvas.toBlob(function() { blobCount++; });
+    }
+    var dt2 = performance.now() - t1;
+    b('E:TOBLOB-TIME=' + dt2.toFixed(2));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: readPixels timing ===
+  b('F:READPIXELS-TIMING');
+  try {
+    var sizes = [64, 128, 256, 512];
+    var readTimes = [];
+
+    for (var s = 0; s < sizes.length; s++) {
+      var canvas = document.createElement('canvas');
+      canvas.width = sizes[s]; canvas.height = sizes[s];
+      var gl = canvas.getContext('webgl');
+      if (!gl) break;
+
+      gl.clearColor(0.5, 0.3, 0.1, 1.0);
+      gl.clear(gl.COLOR_BUFFER_BIT);
+
+      var pixels = new Uint8Array(sizes[s] * sizes[s] * 4);
+      var t0 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        gl.readPixels(0, 0, sizes[s], sizes[s], gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+      }
+      var dt = performance.now() - t0;
+      readTimes.push(sizes[s] + ':' + dt.toFixed(2) + ':bytes=' + pixels.length);
+
+      // Verify read
+      if (j === 0) {
+        b('F:PIXEL-0=' + pixels[0] + ',' + pixels[1] + ',' + pixels[2] + ',' + pixels[3]);
+      }
+    }
+    b('F:READ-TIMES:' + readTimes.join(','));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P726-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P726-RESULT:FINGERPRINT-COLLECTED');
+  }
+  b('P726-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p726: Canvas/WebGL fingerprint + GPU driver info leak</pre></body></html>

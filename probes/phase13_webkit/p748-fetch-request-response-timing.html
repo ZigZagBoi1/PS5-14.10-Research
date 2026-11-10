@@ -1,0 +1,386 @@
+<!--
+  p748: Fetch API / Request / Response object internal timing oracle
+
+  The Fetch API (fetch(), Request, Response) allocates C++ FetchRequest
+  and FetchResponse objects backed by ResourceLoader. Even without
+  network access, constructing Request/Response objects with various
+  body types exercises the internal serialization and header parsing.
+
+  Key insight: Request/Response constructor timing varies with header
+  count, body type (string, Blob, ArrayBuffer, FormData, URLSearchParams),
+  and body size. The clone() operation exercises the internal tee-reading
+  mechanism. Headers iteration allocates the sorted header list.
+
+  On PS5 WebKit 605.1.15, fetch() is available (confirmed p630).
+  The internal object construction timing is independent of network.
+
+  Attack angles:
+  A) Request constructor timing with varying headers/bodies.
+  B) Response constructor timing with varying status/body.
+  C) Headers object manipulation timing.
+  D) Request/Response clone() timing.
+  E) Body consumption methods (text/json/arrayBuffer/blob).
+  F) URL / URLSearchParams timing.
+
+  CRASH_CLASS: LOW (Fetch API object construction, no network)
+  prior art: p740 (MessagePort), p746 (Promise timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p748</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P748-START:FETCH-REQUEST-RESPONSE-TIMING');
+
+  // === SECTION A: Request constructor ===
+  b('A:REQUEST');
+  try {
+    // Basic Request creation
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      new Request('/test');
+    }
+    b('A:BASIC-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Request with headers
+    var headerCounts = [1, 5, 10, 50];
+    var hdrTimes = [];
+    for (var hc = 0; hc < headerCounts.length; hc++) {
+      var hdrs = {};
+      for (var i = 0; i < headerCounts[hc]; i++) {
+        hdrs['X-Custom-' + i] = 'value-' + i;
+      }
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        new Request('/test', {headers: hdrs});
+      }
+      hdrTimes.push(headerCounts[hc] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('A:HEADER-TIMES:' + hdrTimes.join(','));
+
+    // Request with string body (POST)
+    var bodySizes = [0, 10, 100, 1000, 10000];
+    var bodyTimes = [];
+    for (var bs = 0; bs < bodySizes.length; bs++) {
+      var body = 'x'.repeat(bodySizes[bs]);
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        new Request('/test', {method: 'POST', body: body});
+      }
+      bodyTimes.push(bodySizes[bs] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('A:BODY-STRING-TIMES:' + bodyTimes.join(','));
+
+    // Request with ArrayBuffer body
+    var abSizes = [64, 256, 1024, 4096];
+    var abTimes = [];
+    for (var as = 0; as < abSizes.length; as++) {
+      var ab = new ArrayBuffer(abSizes[as]);
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        new Request('/test', {method: 'POST', body: ab.slice(0)});
+      }
+      abTimes.push(abSizes[as] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('A:BODY-AB-TIMES:' + abTimes.join(','));
+
+    // Request with Blob body
+    var blobSizes = [64, 256, 1024, 4096];
+    var blobTimes = [];
+    for (var bls = 0; bls < blobSizes.length; bls++) {
+      var blob = new Blob([new ArrayBuffer(blobSizes[bls])]);
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        new Request('/test', {method: 'POST', body: blob});
+      }
+      blobTimes.push(blobSizes[bls] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('A:BODY-BLOB-TIMES:' + blobTimes.join(','));
+
+    // Request methods
+    var methods = ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'HEAD', 'OPTIONS'];
+    var methTimes = [];
+    for (var m = 0; m < methods.length; m++) {
+      var opts = {method: methods[m]};
+      if (methods[m] !== 'GET' && methods[m] !== 'HEAD') opts.body = 'test';
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        new Request('/test', opts);
+      }
+      methTimes.push(methods[m] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('A:METHOD-TIMES:' + methTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Response constructor ===
+  b('B:RESPONSE');
+  try {
+    // Basic Response
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      new Response('ok');
+    }
+    b('B:BASIC-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Response with status codes
+    var statuses = [200, 201, 204, 301, 400, 403, 404, 500];
+    var statusTimes = [];
+    for (var s = 0; s < statuses.length; s++) {
+      var init = {status: statuses[s], statusText: 'X'};
+      if (statuses[s] === 204) init = {status: 204};
+      var t0 = performance.now();
+      for (var j = 0; j < 2000; j++) {
+        new Response(statuses[s] === 204 ? null : 'body', init);
+      }
+      statusTimes.push(statuses[s] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('B:STATUS-TIMES:' + statusTimes.join(','));
+
+    // Response.error() and Response.redirect()
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      Response.error();
+    }
+    b('B:ERROR-5K=' + (performance.now() - t0).toFixed(2));
+
+    try {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        Response.redirect('/dest', 302);
+      }
+      b('B:REDIRECT-5K=' + (performance.now() - t0).toFixed(2));
+    } catch(e) {
+      b('B:REDIRECT-ERR=' + e.message.substring(0, 30));
+    }
+
+    // Response with varying body sizes
+    var rBodySizes = [0, 100, 1000, 10000, 100000];
+    var rBodyTimes = [];
+    for (var rs = 0; rs < rBodySizes.length; rs++) {
+      var body = 'x'.repeat(rBodySizes[rs]);
+      var t0 = performance.now();
+      for (var j = 0; j < 500; j++) {
+        new Response(body);
+      }
+      rBodyTimes.push(rBodySizes[rs] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('B:BODY-SIZE-TIMES:' + rBodyTimes.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Headers object ===
+  b('C:HEADERS');
+  try {
+    // Constructor timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      new Headers();
+    }
+    b('C:EMPTY-10K=' + (performance.now() - t0).toFixed(2));
+
+    // With init object
+    var headerCounts = [1, 5, 10, 50, 100];
+    var initTimes = [];
+    for (var hc = 0; hc < headerCounts.length; hc++) {
+      var init = {};
+      for (var i = 0; i < headerCounts[hc]; i++) init['X-H-' + i] = 'v' + i;
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        new Headers(init);
+      }
+      initTimes.push(headerCounts[hc] + ':' + (performance.now() - t0).toFixed(2));
+    }
+    b('C:INIT-TIMES:' + initTimes.join(','));
+
+    // append/get/has/delete timing
+    var h = new Headers();
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      h.append('X-Test-' + (j % 100), 'val');
+    }
+    b('C:APPEND-10K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      h.get('X-Test-' + (j % 100));
+    }
+    b('C:GET-50K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      h.has('X-Test-' + (j % 100));
+    }
+    b('C:HAS-50K=' + (performance.now() - t0).toFixed(2));
+
+    // forEach / entries iteration
+    var h2 = new Headers();
+    for (var i = 0; i < 50; i++) h2.set('X-Header-' + i, 'value-' + i);
+
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      var count = 0;
+      h2.forEach(function() { count++; });
+    }
+    b('C:FOREACH-50x1K=' + (performance.now() - t0).toFixed(2) + ',count=' + count);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: clone() timing ===
+  b('D:CLONE');
+  try {
+    // Request clone
+    var req = new Request('/test', {method: 'POST', body: 'hello world', headers: {'X-A': '1', 'X-B': '2'}});
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      req.clone();
+    }
+    b('D:REQ-CLONE-2K=' + (performance.now() - t0).toFixed(2));
+
+    // Response clone
+    var resp = new Response('response body', {status: 200, headers: {'Content-Type': 'text/plain'}});
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      resp.clone();
+    }
+    b('D:RESP-CLONE-2K=' + (performance.now() - t0).toFixed(2));
+
+    // Clone with large body
+    var largeBody = 'x'.repeat(100000);
+    var largeResp = new Response(largeBody);
+    var t0 = performance.now();
+    for (var j = 0; j < 200; j++) {
+      largeResp.clone();
+    }
+    b('D:LARGE-CLONE-200=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Body consumption ===
+  b('E:BODY');
+  try {
+    // .text()
+    var t0 = performance.now();
+    for (var j = 0; j < 500; j++) {
+      await new Response('hello').text();
+    }
+    b('E:TEXT-500=' + (performance.now() - t0).toFixed(2));
+
+    // .json()
+    var t0 = performance.now();
+    for (var j = 0; j < 500; j++) {
+      await new Response('{"a":1}').json();
+    }
+    b('E:JSON-500=' + (performance.now() - t0).toFixed(2));
+
+    // .arrayBuffer()
+    var t0 = performance.now();
+    for (var j = 0; j < 500; j++) {
+      await new Response('buffer data').arrayBuffer();
+    }
+    b('E:ARRAYBUFFER-500=' + (performance.now() - t0).toFixed(2));
+
+    // .blob()
+    var t0 = performance.now();
+    for (var j = 0; j < 500; j++) {
+      await new Response('blob data').blob();
+    }
+    b('E:BLOB-500=' + (performance.now() - t0).toFixed(2));
+
+    // .formData() availability
+    b('E:FORMDATA=' + (typeof new Response('').formData));
+
+    // Body.bodyUsed
+    var r = new Response('test');
+    b('E:BODY-USED-BEFORE=' + r.bodyUsed);
+    await r.text();
+    b('E:BODY-USED-AFTER=' + r.bodyUsed);
+
+    // ReadableStream body
+    var r2 = new Response('stream test');
+    b('E:BODY-STREAM=' + (r2.body ? r2.body.constructor.name : 'null'));
+    if (r2.body && r2.body.getReader) {
+      var reader = r2.body.getReader();
+      var chunk = await reader.read();
+      b('E:READER-CHUNK:done=' + chunk.done + ',size=' + (chunk.value ? chunk.value.length : 0));
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: URL / URLSearchParams ===
+  b('F:URL');
+  try {
+    // URL constructor timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      new URL('https://example.com/path?q=test#hash');
+    }
+    b('F:URL-10K=' + (performance.now() - t0).toFixed(2));
+
+    // URL with varying complexity
+    var urls = [
+      'https://a.com',
+      'https://a.com/a/b/c/d/e',
+      'https://user:pass@a.com:8080/path?a=1&b=2&c=3#frag',
+      'https://a.com/?' + Array.from({length: 50}, function(_, i) { return 'k' + i + '=v' + i; }).join('&'),
+    ];
+    var urlTimes = [];
+    for (var u = 0; u < urls.length; u++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        new URL(urls[u]);
+      }
+      urlTimes.push(urls[u].length + 'ch:' + (performance.now() - t0).toFixed(2));
+    }
+    b('F:URL-COMPLEXITY:' + urlTimes.join(','));
+
+    // URLSearchParams
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      new URLSearchParams('a=1&b=2&c=3');
+    }
+    b('F:PARAMS-10K=' + (performance.now() - t0).toFixed(2));
+
+    // URLSearchParams methods
+    var params = new URLSearchParams();
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      params.append('key' + (j % 100), 'val');
+    }
+    b('F:PARAMS-APPEND-10K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      params.get('key' + (j % 100));
+    }
+    b('F:PARAMS-GET-50K=' + (performance.now() - t0).toFixed(2));
+
+    // toString (serialization) timing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      params.toString();
+    }
+    b('F:PARAMS-TOSTRING-5K=' + (performance.now() - t0).toFixed(2));
+
+    // sort
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      new URLSearchParams('z=1&a=2&m=3&b=4').sort();
+    }
+    b('F:PARAMS-SORT-5K=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P748-RESULT:TIMING-DATA-COLLECTED');
+  b('P748-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p748: Fetch API / Request / Response / URL timing oracle</pre></body></html>

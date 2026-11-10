@@ -1,0 +1,398 @@
+<!--
+  p741: Canvas 2D + WebGL fingerprinting and internal timing oracle
+
+  Canvas rendering paths differ between CPU (software) and GPU
+  (hardware accelerated). On PS5, the GPU is AMD RDNA2. Canvas
+  operations go through the graphics backend which may be
+  CoreGraphics-derived or a Sony-specific layer.
+
+  Key insight: Canvas operations that trigger GPU compositing have
+  measurably different timing than CPU-only paths. drawImage,
+  getImageData, and toDataURL involve pixel transfer between
+  GPU and CPU memory. The timing of these transfers reveals the
+  graphics pipeline architecture.
+
+  WebGL exposes the GPU renderer string which directly identifies
+  the hardware and driver version. Combined with extension
+  enumeration, this provides a precise hardware fingerprint.
+
+  Attack angles:
+  A) Canvas 2D rendering timing -- fillRect, arc, text with
+     varying complexity.
+  B) getImageData / putImageData timing -- pixel transfer between
+     GPU and CPU reveals bus architecture.
+  C) toDataURL / toBlob timing -- PNG/JPEG encoding performance.
+  D) WebGL renderer and extension enumeration -- GPU identity.
+  E) WebGL shader compilation timing -- reveals driver version.
+  F) OffscreenCanvas availability and timing.
+
+  CRASH_CLASS: LOW (Canvas/WebGL read-only)
+  prior art: p726 (WebGL fingerprint), p629 (Canvas2D UAF mapping)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p741</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P741-START:CANVAS-WEBGL-FINGERPRINT');
+  var results = [];
+
+  // === SECTION A: Canvas 2D rendering timing ===
+  b('A:CANVAS2D-RENDER');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    var ctx = canvas.getContext('2d');
+
+    // fillRect timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      ctx.fillStyle = 'rgb(' + (j%256) + ',0,0)';
+      ctx.fillRect(0, 0, 256, 256);
+    }
+    b('A:FILLRECT-10K=' + (performance.now() - t0).toFixed(2));
+
+    // Arc drawing timing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      ctx.beginPath();
+      ctx.arc(128, 128, 50, 0, Math.PI * 2);
+      ctx.fill();
+    }
+    b('A:ARC-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Text rendering timing
+    var fonts = ['10px sans-serif', '16px serif', '24px monospace', '32px Arial'];
+    var textTimes = [];
+    for (var f = 0; f < fonts.length; f++) {
+      ctx.font = fonts[f];
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        ctx.fillText('PS5 14.10 test string', 10, 128);
+      }
+      var dt = performance.now() - t0;
+      textTimes.push(fonts[f] + ':' + dt.toFixed(2));
+    }
+    b('A:TEXT-TIMES:' + textTimes.join(','));
+
+    // Gradient timing
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      var grad = ctx.createLinearGradient(0, 0, 256, 256);
+      grad.addColorStop(0, 'red');
+      grad.addColorStop(0.5, 'green');
+      grad.addColorStop(1, 'blue');
+      ctx.fillStyle = grad;
+      ctx.fillRect(0, 0, 256, 256);
+    }
+    b('A:GRADIENT-2K=' + (performance.now() - t0).toFixed(2));
+
+    // Path complexity
+    var pathCounts = [5, 25, 100, 500];
+    var pathTimes = [];
+    for (var pc = 0; pc < pathCounts.length; pc++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 500; j++) {
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        for (var k = 0; k < pathCounts[pc]; k++) {
+          ctx.lineTo(Math.random() * 256, Math.random() * 256);
+        }
+        ctx.stroke();
+      }
+      var dt = performance.now() - t0;
+      pathTimes.push(pathCounts[pc] + ':' + dt.toFixed(2));
+    }
+    b('A:PATH-TIMES:' + pathTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: getImageData / putImageData timing ===
+  b('B:IMAGEDATA');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(0, 0, 256, 256);
+
+    // getImageData varying sizes
+    var sizes = [[1,1], [16,16], [64,64], [128,128], [256,256]];
+    var getTimes = [];
+    for (var s = 0; s < sizes.length; s++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        ctx.getImageData(0, 0, sizes[s][0], sizes[s][1]);
+      }
+      var dt = performance.now() - t0;
+      getTimes.push(sizes[s][0] + 'x' + sizes[s][1] + ':' + dt.toFixed(2));
+    }
+    b('B:GET-TIMES:' + getTimes.join(','));
+
+    // putImageData timing
+    var imgData = ctx.getImageData(0, 0, 256, 256);
+    var putTimes = [];
+    var putSizes = [[16,16], [64,64], [256,256]];
+    for (var s = 0; s < putSizes.length; s++) {
+      var data = ctx.createImageData(putSizes[s][0], putSizes[s][1]);
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        ctx.putImageData(data, 0, 0);
+      }
+      var dt = performance.now() - t0;
+      putTimes.push(putSizes[s][0] + 'x' + putSizes[s][1] + ':' + dt.toFixed(2));
+    }
+    b('B:PUT-TIMES:' + putTimes.join(','));
+
+    // createImageData timing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      ctx.createImageData(64, 64);
+    }
+    b('B:CREATE-IMGDATA=' + (performance.now() - t0).toFixed(2));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: toDataURL / toBlob timing ===
+  b('C:EXPORT');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 128;
+    canvas.height = 128;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'red';
+    ctx.fillRect(0, 0, 128, 128);
+    ctx.fillStyle = 'white';
+    ctx.font = '20px sans-serif';
+    ctx.fillText('PS5', 40, 70);
+
+    // toDataURL PNG timing
+    var t0 = performance.now();
+    for (var j = 0; j < 200; j++) {
+      canvas.toDataURL('image/png');
+    }
+    b('C:PNG-200=' + (performance.now() - t0).toFixed(2));
+
+    // toDataURL JPEG timing
+    var t0 = performance.now();
+    for (var j = 0; j < 200; j++) {
+      canvas.toDataURL('image/jpeg', 0.8);
+    }
+    b('C:JPEG-200=' + (performance.now() - t0).toFixed(2));
+
+    // DataURL length
+    var pngUrl = canvas.toDataURL('image/png');
+    var jpegUrl = canvas.toDataURL('image/jpeg', 0.8);
+    b('C:PNG-LEN=' + pngUrl.length + ',JPEG-LEN=' + jpegUrl.length);
+
+    // toBlob timing
+    if (canvas.toBlob) {
+      var blobTime = await new Promise(function(resolve) {
+        var t0 = performance.now();
+        canvas.toBlob(function(blob) {
+          resolve({time: performance.now() - t0, size: blob ? blob.size : -1, type: blob ? blob.type : 'null'});
+        }, 'image/png');
+      });
+      b('C:TOBLOB-PNG:time=' + blobTime.time.toFixed(2) + ',size=' + blobTime.size + ',type=' + blobTime.type);
+    } else {
+      b('C:TOBLOB-NOT-AVAILABLE');
+    }
+
+    // Canvas size variation
+    var canvasSizes = [32, 64, 256, 512];
+    var sizeTimes = [];
+    for (var cs = 0; cs < canvasSizes.length; cs++) {
+      var c = document.createElement('canvas');
+      c.width = canvasSizes[cs];
+      c.height = canvasSizes[cs];
+      var cx = c.getContext('2d');
+      cx.fillRect(0, 0, c.width, c.height);
+
+      var t0 = performance.now();
+      for (var j = 0; j < 50; j++) {
+        c.toDataURL('image/png');
+      }
+      var dt = performance.now() - t0;
+      sizeTimes.push(canvasSizes[cs] + ':' + dt.toFixed(2));
+    }
+    b('C:SIZE-TIMES:' + sizeTimes.join(','));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: WebGL renderer and extensions ===
+  b('D:WEBGL');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 64;
+    canvas.height = 64;
+    var gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+
+    if (gl) {
+      b('D:WEBGL-AVAILABLE');
+
+      // Renderer info
+      var debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
+      if (debugInfo) {
+        b('D:VENDOR=' + gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL));
+        b('D:RENDERER=' + gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL));
+      } else {
+        b('D:NO-DEBUG-RENDERER-INFO');
+      }
+
+      b('D:GL-VENDOR=' + gl.getParameter(gl.VENDOR));
+      b('D:GL-RENDERER=' + gl.getParameter(gl.RENDERER));
+      b('D:GL-VERSION=' + gl.getParameter(gl.VERSION));
+      b('D:GLSL-VERSION=' + gl.getParameter(gl.SHADING_LANGUAGE_VERSION));
+
+      // Extensions
+      var exts = gl.getSupportedExtensions();
+      b('D:EXT-COUNT=' + (exts ? exts.length : 0));
+      if (exts) {
+        b('D:EXTS=' + exts.slice(0, 15).join(','));
+        if (exts.length > 15) b('D:EXTS-MORE=' + exts.slice(15).join(','));
+      }
+
+      // Max values
+      b('D:MAX-TEX=' + gl.getParameter(gl.MAX_TEXTURE_SIZE));
+      b('D:MAX-VIEWPORT=' + JSON.stringify(gl.getParameter(gl.MAX_VIEWPORT_DIMS)));
+      b('D:MAX-VARYINGS=' + gl.getParameter(gl.MAX_VARYING_VECTORS));
+      b('D:MAX-VERTEX-ATTRIBS=' + gl.getParameter(gl.MAX_VERTEX_ATTRIBS));
+      b('D:MAX-FRAG-UNIFORMS=' + gl.getParameter(gl.MAX_FRAGMENT_UNIFORM_VECTORS));
+      b('D:ALIASED-LINE=' + JSON.stringify(gl.getParameter(gl.ALIASED_LINE_WIDTH_RANGE)));
+      b('D:ALIASED-POINT=' + JSON.stringify(gl.getParameter(gl.ALIASED_POINT_SIZE_RANGE)));
+
+      // WebGL2
+      var gl2 = canvas.getContext('webgl2');
+      b('D:WEBGL2=' + (gl2 ? 'available' : 'not-available'));
+    } else {
+      b('D:WEBGL-NOT-AVAILABLE');
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: WebGL shader compilation ===
+  b('E:SHADER');
+  try {
+    var canvas = document.createElement('canvas');
+    var gl = canvas.getContext('webgl');
+    if (gl) {
+      // Vertex shader
+      var vsSrc = 'attribute vec4 a_pos; void main() { gl_Position = a_pos; }';
+      // Fragment shaders of varying complexity
+      var fsShaders = [
+        {name: 'simple', src: 'precision mediump float; void main() { gl_FragColor = vec4(1,0,0,1); }'},
+        {name: 'uniform', src: 'precision mediump float; uniform vec4 u_color; void main() { gl_FragColor = u_color; }'},
+        {name: 'math', src: 'precision mediump float; uniform float u_time; void main() { float r = sin(u_time)*0.5+0.5; gl_FragColor = vec4(r,1.0-r,0,1); }'},
+        {name: 'loop', src: 'precision mediump float; void main() { float sum = 0.0; for(int i=0;i<10;i++) sum += float(i)*0.1; gl_FragColor = vec4(sum,0,0,1); }'},
+      ];
+
+      var compTimes = [];
+      for (var fs = 0; fs < fsShaders.length; fs++) {
+        var t0 = performance.now();
+        for (var j = 0; j < 100; j++) {
+          var vs = gl.createShader(gl.VERTEX_SHADER);
+          gl.shaderSource(vs, vsSrc);
+          gl.compileShader(vs);
+
+          var frag = gl.createShader(gl.FRAGMENT_SHADER);
+          gl.shaderSource(frag, fsShaders[fs].src);
+          gl.compileShader(frag);
+
+          var prog = gl.createProgram();
+          gl.attachShader(prog, vs);
+          gl.attachShader(prog, frag);
+          gl.linkProgram(prog);
+
+          gl.deleteProgram(prog);
+          gl.deleteShader(vs);
+          gl.deleteShader(frag);
+        }
+        var dt = performance.now() - t0;
+        compTimes.push(fsShaders[fs].name + ':' + dt.toFixed(2));
+      }
+      b('E:COMPILE-TIMES:' + compTimes.join(','));
+
+      // Check compile status
+      var vs = gl.createShader(gl.VERTEX_SHADER);
+      gl.shaderSource(vs, vsSrc);
+      gl.compileShader(vs);
+      b('E:VS-STATUS=' + gl.getShaderParameter(vs, gl.COMPILE_STATUS));
+
+      var frag = gl.createShader(gl.FRAGMENT_SHADER);
+      gl.shaderSource(frag, fsShaders[0].src);
+      gl.compileShader(frag);
+      b('E:FS-STATUS=' + gl.getShaderParameter(frag, gl.COMPILE_STATUS));
+
+      gl.deleteShader(vs);
+      gl.deleteShader(frag);
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: OffscreenCanvas ===
+  b('F:OFFSCREEN');
+  try {
+    if (typeof OffscreenCanvas !== 'undefined') {
+      b('F:OFFSCREEN-AVAILABLE');
+
+      var t0 = performance.now();
+      for (var j = 0; j < 1000; j++) {
+        new OffscreenCanvas(64, 64);
+      }
+      b('F:CREATE-1K=' + (performance.now() - t0).toFixed(2));
+
+      var oc = new OffscreenCanvas(128, 128);
+      var ctx = oc.getContext('2d');
+      if (ctx) {
+        b('F:2D-CONTEXT=available');
+        ctx.fillStyle = 'blue';
+        ctx.fillRect(0, 0, 128, 128);
+
+        // transferToImageBitmap
+        if (oc.transferToImageBitmap) {
+          var t0 = performance.now();
+          for (var j = 0; j < 500; j++) {
+            oc.transferToImageBitmap();
+            ctx.fillRect(0, 0, 128, 128);
+          }
+          b('F:TRANSFER-BITMAP=' + (performance.now() - t0).toFixed(2));
+        }
+
+        // convertToBlob
+        if (oc.convertToBlob) {
+          var blob = await oc.convertToBlob({type: 'image/png'});
+          b('F:CONVERT-BLOB:size=' + blob.size + ',type=' + blob.type);
+        }
+      } else {
+        b('F:2D-CONTEXT=null');
+      }
+
+      // WebGL on OffscreenCanvas
+      var ocgl = new OffscreenCanvas(64, 64);
+      var glCtx = ocgl.getContext('webgl');
+      b('F:OFFSCREEN-WEBGL=' + (glCtx ? 'available' : 'not-available'));
+    } else {
+      b('F:OFFSCREEN-NOT-AVAILABLE');
+
+      // canvas.transferControlToOffscreen
+      var canvas = document.createElement('canvas');
+      b('F:TRANSFER-CONTROL=' + (typeof canvas.transferControlToOffscreen));
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P741-RESULT:TIMING-DATA-COLLECTED');
+  b('P741-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p741: Canvas 2D + WebGL fingerprint timing oracle</pre></body></html>

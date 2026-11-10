@@ -1,0 +1,301 @@
+<!--
+  p764: FinalizationRegistry / WeakRef GC collection oracle
+
+  FinalizationRegistry and WeakRef are confirmed available on PS5
+  14.10 (p630). When a registered object is GC-collected, the
+  FinalizationRegistry callback fires with the held value. WeakRef
+  deref() returns undefined once the target is collected.
+
+  Key insight: GC collection order and timing depend on the internal
+  heap layout. Objects at different addresses may be collected in
+  different orders or at different GC phases. By registering many
+  objects with FinalizationRegistry and observing which ones get
+  collected first (and in what order), we can infer information
+  about heap layout and potentially distinguish address ranges.
+
+  Additionally: if we create objects of specific sizes that share
+  bmalloc size classes with internal WebKit C++ objects, the GC's
+  conservative stack scanning might accidentally pin some allocations
+  based on stack residue -- which would correlate with address patterns.
+
+  Attack angles:
+  A) GC collection order as heap layout fingerprint.
+  B) WeakRef survival rate under allocation pressure by size class.
+  C) Conservative stack scanning pin detection.
+  D) FinalizationRegistry callback timing delta measurement.
+  E) GC phase detection (eden vs full) via collection patterns.
+  F) Cross-type collection interleaving (AB + object + string).
+
+  CRASH_CLASS: LOW (GC observation, no side effects)
+  prior art: p630 (FinalizationRegistry/WeakRef confirmed), p601
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p764</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex(n){return '0x'+n.toString(16);}
+
+window.onload=function(){
+b('p764-START');
+
+// === Section A: GC collection order fingerprint ===
+try{
+  b('A-collection-order');
+  var fr=new FinalizationRegistry(function(id){
+    aOrder.push(id);
+  });
+  var aOrder=[];
+  var N=100;
+  (function(){
+    for(var i=0;i<N;i++){
+      var obj={index:i, pad:new Array(10+i).join('x')};
+      fr.register(obj,i);
+    }
+  })();
+
+  var pressure=[];
+  for(var i=0;i<5000;i++){
+    pressure.push(new ArrayBuffer(1024));
+  }
+  pressure=null;
+
+  setTimeout(function(){
+    b('A order_len='+aOrder.length+'/'+N);
+    if(aOrder.length>0){
+      var first10=aOrder.slice(0,Math.min(10,aOrder.length));
+      b('A first10=['+first10.join(',')+']');
+      var last10=aOrder.slice(Math.max(0,aOrder.length-10));
+      b('A last10=['+last10.join(',')+']');
+      var monotonic=true;
+      for(var i=1;i<aOrder.length;i++){
+        if(aOrder[i]<aOrder[i-1]){monotonic=false;break;}
+      }
+      b('A monotonic='+monotonic);
+    }
+    b('A-DONE');
+  },2000);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: WeakRef survival by size class ===
+try{
+  b('B-weakref-survival');
+  var sizes=[32,64,128,192,256,384,512,768,1024];
+  var refs={};
+  (function(){
+    for(var si=0;si<sizes.length;si++){
+      var sz=sizes[si];
+      var arr=[];
+      for(var i=0;i<20;i++){
+        var obj={sz:sz,data:new ArrayBuffer(sz)};
+        arr.push(new WeakRef(obj));
+      }
+      refs[sz]=arr;
+    }
+  })();
+
+  var p2=[];
+  for(var i=0;i<10000;i++)p2.push(new ArrayBuffer(256));
+  p2=null;
+
+  setTimeout(function(){
+    for(var si=0;si<sizes.length;si++){
+      var sz=sizes[si];
+      var alive=0;
+      for(var i=0;i<refs[sz].length;i++){
+        if(refs[sz][i].deref()!==undefined)alive++;
+      }
+      b('B sz='+sz+' alive='+alive+'/20');
+    }
+    b('B-DONE');
+  },2000);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: Conservative stack scanning pin detection ===
+try{
+  b('C-stack-pin');
+  var cFr=new FinalizationRegistry(function(id){
+    cCollected.push(id);
+  });
+  var cCollected=[];
+
+  function deepStack(depth,targets){
+    if(depth<=0){
+      for(var i=0;i<2000;i++){
+        var tmp=new ArrayBuffer(512);
+      }
+      return;
+    }
+    var local1=targets[depth%targets.length];
+    var local2=targets[(depth+7)%targets.length];
+    deepStack(depth-1,targets);
+  }
+
+  (function(){
+    var objs=[];
+    for(var i=0;i<50;i++){
+      var o={id:i,payload:new ArrayBuffer(128)};
+      cFr.register(o,i);
+      objs.push(o);
+    }
+    deepStack(20,objs);
+    objs=null;
+  })();
+
+  var p3=[];
+  for(var i=0;i<5000;i++)p3.push(new ArrayBuffer(256));
+  p3=null;
+
+  setTimeout(function(){
+    b('C collected='+cCollected.length+'/50');
+    if(cCollected.length>0 && cCollected.length<50){
+      var pinned=[];
+      var collSet={};
+      for(var i=0;i<cCollected.length;i++)collSet[cCollected[i]]=true;
+      for(var i=0;i<50;i++){
+        if(!collSet[i])pinned.push(i);
+      }
+      b('C pinned=['+pinned.slice(0,10).join(',')+']'+(pinned.length>10?'...+'+pinned.length:''));
+    }
+    b('C-DONE');
+  },3000);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: FinalizationRegistry callback timing delta ===
+try{
+  b('D-timing');
+  var dFr=new FinalizationRegistry(function(data){
+    var now=Date.now();
+    dTimings.push({id:data.id,group:data.group,t:now});
+  });
+  var dTimings=[];
+
+  (function(){
+    for(var g=0;g<3;g++){
+      for(var i=0;i<30;i++){
+        var obj;
+        if(g===0) obj={g:0,d:new ArrayBuffer(64)};
+        else if(g===1) obj={g:1,d:new ArrayBuffer(192)};
+        else obj={g:2,d:'x'.repeat(500)};
+        dFr.register(obj,{id:i,group:g});
+      }
+    }
+  })();
+
+  for(var i=0;i<8000;i++){
+    var tmp=new ArrayBuffer(128);
+  }
+
+  setTimeout(function(){
+    var byGroup=[[],[],[]];
+    for(var i=0;i<dTimings.length;i++){
+      byGroup[dTimings[i].group].push(dTimings[i].t);
+    }
+    for(var g=0;g<3;g++){
+      var ts=byGroup[g];
+      if(ts.length>=2){
+        var mn=ts[0],mx=ts[0];
+        for(var i=1;i<ts.length;i++){
+          if(ts[i]<mn)mn=ts[i];
+          if(ts[i]>mx)mx=ts[i];
+        }
+        b('D group='+g+' collected='+ts.length+'/30 span='+(mx-mn)+'ms');
+      }else{
+        b('D group='+g+' collected='+ts.length+'/30');
+      }
+    }
+    b('D-DONE total='+dTimings.length);
+  },3000);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: Eden vs full GC detection ===
+try{
+  b('E-gc-phase');
+  var eFr=new FinalizationRegistry(function(wave){
+    eWaves.push(wave);
+  });
+  var eWaves=[];
+
+  function allocWave(waveId,count){
+    for(var i=0;i<count;i++){
+      var obj={w:waveId,i:i,pad:new ArrayBuffer(64)};
+      eFr.register(obj,{wave:waveId,idx:i});
+    }
+  }
+
+  (function(){
+    allocWave(0,20);
+    for(var i=0;i<1000;i++){var tmp=new ArrayBuffer(256);}
+    allocWave(1,20);
+    for(var i=0;i<1000;i++){var tmp=new ArrayBuffer(256);}
+    allocWave(2,20);
+  })();
+
+  for(var i=0;i<10000;i++){
+    var tmp=new ArrayBuffer(128);
+  }
+
+  setTimeout(function(){
+    var waveCounts=[0,0,0];
+    for(var i=0;i<eWaves.length;i++){
+      waveCounts[eWaves[i].wave]++;
+    }
+    b('E wave0='+waveCounts[0]+'/20 wave1='+waveCounts[1]+'/20 wave2='+waveCounts[2]+'/20');
+    if(eWaves.length>0){
+      var firstWave=eWaves[0].wave;
+      b('E first_collected_wave='+firstWave);
+    }
+    b('E-DONE total='+eWaves.length);
+  },3000);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Cross-type collection interleaving ===
+try{
+  b('F-crosstype');
+  var fFr=new FinalizationRegistry(function(info){
+    fOrder.push(info);
+  });
+  var fOrder=[];
+
+  (function(){
+    for(var i=0;i<15;i++){
+      var abObj={type:'ab',data:new ArrayBuffer(192)};
+      fFr.register(abObj,{type:'ab',idx:i});
+
+      var strObj={type:'str',data:'y'.repeat(200+i*10)};
+      fFr.register(strObj,{type:'str',idx:i});
+
+      var arrObj={type:'arr',data:new Array(30).fill(i)};
+      fFr.register(arrObj,{type:'arr',idx:i});
+    }
+  })();
+
+  for(var i=0;i<10000;i++){
+    var tmp=new ArrayBuffer(192);
+  }
+
+  setTimeout(function(){
+    var typeCounts={ab:0,str:0,arr:0};
+    for(var i=0;i<fOrder.length;i++){
+      typeCounts[fOrder[i].type]++;
+    }
+    b('F ab='+typeCounts.ab+'/15 str='+typeCounts.str+'/15 arr='+typeCounts.arr+'/15');
+    if(fOrder.length>=3){
+      var first5=[];
+      for(var i=0;i<Math.min(5,fOrder.length);i++){
+        first5.push(fOrder[i].type+fOrder[i].idx);
+      }
+      b('F first5=['+first5.join(',')+']');
+    }
+    var interleaved=false;
+    for(var i=1;i<fOrder.length;i++){
+      if(fOrder[i].type!==fOrder[i-1].type){interleaved=true;break;}
+    }
+    b('F interleaved='+interleaved);
+    b('F-DONE total='+fOrder.length);
+  },3000);
+}catch(e){b('F-ERR '+e.message);}
+
+setTimeout(function(){b('p764-COMPLETE');},5000);
+};
+</script>
+</head>
+<body></body></html>

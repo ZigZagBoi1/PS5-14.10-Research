@@ -1,0 +1,326 @@
+<!--
+  p751: Performance API (mark/measure/entries) timing oracle
+
+  The Performance API (performance.mark, performance.measure,
+  performance.getEntries) allocates PerformanceMark and
+  PerformanceMeasure objects in the performance timeline buffer.
+  Each entry is a C++ PerformanceEntry with name, startTime,
+  duration, and entryType.
+
+  Key insight: The timeline buffer has a fixed capacity per entry
+  type. Filling it triggers buffer-full events and internal cleanup.
+  getEntries/getEntriesByName/getEntriesByType exercise different
+  lookup paths. The navigation timing entries expose page load
+  internals.
+
+  On PS5 WebKit 605.1.15, performance.mark/measure are available
+  (confirmed p630). The performance timeline behavior is
+  platform-specific.
+
+  Attack angles:
+  A) performance.mark() creation timing.
+  B) performance.measure() timing.
+  C) getEntries/getEntriesByName/getEntriesByType timing.
+  D) Navigation timing entries.
+  E) Resource timing entries.
+  F) Buffer management and clearMarks/clearMeasures.
+
+  CRASH_CLASS: LOW (Performance API, no side effects)
+  prior art: p745 (Observer timing), p746 (Promise timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p751</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P751-START:PERFORMANCE-MARK-MEASURE-TIMING');
+
+  // === SECTION A: performance.mark() ===
+  b('A:MARK');
+  try {
+    // Clear any existing marks
+    performance.clearMarks();
+
+    // Mark creation timing
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      performance.mark('test-mark-' + j);
+    }
+    b('A:MARK-10K=' + (performance.now() - t0).toFixed(2));
+
+    // Verify marks
+    var marks = performance.getEntriesByType('mark');
+    b('A:MARK-COUNT=' + marks.length);
+    if (marks.length > 0) {
+      b('A:FIRST-MARK:name=' + marks[0].name + ',start=' + marks[0].startTime.toFixed(3) + ',type=' + marks[0].entryType);
+    }
+
+    // Mark with detail (if supported)
+    try {
+      performance.mark('detail-mark', {detail: {key: 'value'}});
+      var dm = performance.getEntriesByName('detail-mark')[0];
+      b('A:MARK-DETAIL=' + (dm.detail ? JSON.stringify(dm.detail) : 'null'));
+    } catch(e) {
+      b('A:MARK-DETAIL=unsupported');
+    }
+
+    // Mark with startTime option
+    try {
+      performance.mark('timed-mark', {startTime: 100.5});
+      var tm = performance.getEntriesByName('timed-mark')[0];
+      b('A:MARK-START-TIME=' + tm.startTime);
+    } catch(e) {
+      b('A:MARK-START-TIME=unsupported');
+    }
+
+    performance.clearMarks();
+
+    // Duplicate name marks
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      performance.mark('same-name');
+    }
+    b('A:SAME-NAME-5K=' + (performance.now() - t0).toFixed(2));
+    b('A:SAME-NAME-COUNT=' + performance.getEntriesByName('same-name').length);
+    performance.clearMarks();
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: performance.measure() ===
+  b('B:MEASURE');
+  try {
+    performance.clearMarks();
+    performance.clearMeasures();
+
+    // Create reference marks
+    performance.mark('start-ref');
+    // Small delay via busy loop
+    var x = 0;
+    for (var i = 0; i < 100000; i++) x += i;
+    performance.mark('end-ref');
+
+    // Measure between marks
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      performance.measure('test-measure-' + j, 'start-ref', 'end-ref');
+    }
+    b('B:MEASURE-5K=' + (performance.now() - t0).toFixed(2));
+
+    var measures = performance.getEntriesByType('measure');
+    b('B:MEASURE-COUNT=' + measures.length);
+    if (measures.length > 0) {
+      b('B:FIRST-MEASURE:name=' + measures[0].name + ',duration=' + measures[0].duration.toFixed(3) + ',start=' + measures[0].startTime.toFixed(3));
+    }
+
+    // Measure without marks (from navigation start)
+    performance.clearMeasures();
+    performance.measure('from-nav-start');
+    var navMeasure = performance.getEntriesByName('from-nav-start')[0];
+    b('B:NAV-START-MEASURE:duration=' + navMeasure.duration.toFixed(3));
+
+    // Measure with options object
+    try {
+      performance.measure('options-measure', {start: 'start-ref', end: 'end-ref', detail: {test: true}});
+      var om = performance.getEntriesByName('options-measure')[0];
+      b('B:OPTIONS-MEASURE:dur=' + om.duration.toFixed(3) + ',detail=' + (om.detail ? 'yes' : 'no'));
+    } catch(e) {
+      b('B:OPTIONS-MEASURE=unsupported');
+    }
+
+    performance.clearMarks();
+    performance.clearMeasures();
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: getEntries timing ===
+  b('C:GET-ENTRIES');
+  try {
+    // Populate with marks and measures
+    for (var j = 0; j < 1000; j++) {
+      performance.mark('m' + j);
+    }
+    for (var j = 0; j < 500; j++) {
+      performance.measure('ms' + j);
+    }
+
+    // getEntries() timing
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      performance.getEntries();
+    }
+    b('C:GET-ALL-1K=' + (performance.now() - t0).toFixed(2) + ':count=' + performance.getEntries().length);
+
+    // getEntriesByType timing
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      performance.getEntriesByType('mark');
+    }
+    b('C:BY-TYPE-MARK-2K=' + (performance.now() - t0).toFixed(2));
+
+    var t0 = performance.now();
+    for (var j = 0; j < 2000; j++) {
+      performance.getEntriesByType('measure');
+    }
+    b('C:BY-TYPE-MEASURE-2K=' + (performance.now() - t0).toFixed(2));
+
+    // getEntriesByName timing
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      performance.getEntriesByName('m' + (j % 1000));
+    }
+    b('C:BY-NAME-5K=' + (performance.now() - t0).toFixed(2));
+
+    // Non-existent name
+    var t0 = performance.now();
+    for (var j = 0; j < 5000; j++) {
+      performance.getEntriesByName('nonexistent');
+    }
+    b('C:MISS-NAME-5K=' + (performance.now() - t0).toFixed(2));
+
+    performance.clearMarks();
+    performance.clearMeasures();
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Navigation timing ===
+  b('D:NAVIGATION');
+  try {
+    // performance.timing (legacy)
+    var timing = performance.timing;
+    if (timing) {
+      b('D:TIMING:navStart=' + timing.navigationStart + ',domComplete=' + timing.domComplete + ',loadEnd=' + timing.loadEventEnd);
+      b('D:TIMING-DELTA:dom=' + (timing.domComplete - timing.navigationStart) + ',load=' + (timing.loadEventEnd - timing.navigationStart));
+    }
+
+    // Navigation timing entries
+    var navEntries = performance.getEntriesByType('navigation');
+    b('D:NAV-ENTRIES=' + navEntries.length);
+    if (navEntries.length > 0) {
+      var nav = navEntries[0];
+      b('D:NAV:type=' + nav.type + ',duration=' + nav.duration.toFixed(2));
+      b('D:NAV:redirect=' + nav.redirectStart + ',dns=' + nav.domainLookupStart + ',connect=' + nav.connectStart);
+      b('D:NAV:response=' + nav.responseStart + ',domInteractive=' + (nav.domInteractive || 'N/A'));
+      b('D:NAV:transferSize=' + (nav.transferSize || 'N/A') + ',encodedSize=' + (nav.encodedBodySize || 'N/A'));
+    }
+
+    // performance.timeOrigin
+    b('D:TIME-ORIGIN=' + (performance.timeOrigin ? performance.timeOrigin.toFixed(2) : 'N/A'));
+
+    // performance.now() precision
+    var samples = [];
+    var prev = performance.now();
+    for (var j = 0; j < 100; j++) {
+      var now = performance.now();
+      if (now !== prev) {
+        samples.push((now - prev).toFixed(6));
+        prev = now;
+      }
+    }
+    b('D:NOW-DELTAS=' + samples.slice(0, 10).join(','));
+    b('D:NOW-RESOLUTION=' + (samples.length > 0 ? 'min=' + Math.min.apply(null, samples.map(Number)).toFixed(6) : 'none'));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Resource timing ===
+  b('E:RESOURCE');
+  try {
+    var resEntries = performance.getEntriesByType('resource');
+    b('E:RESOURCE-COUNT=' + resEntries.length);
+
+    if (resEntries.length > 0) {
+      for (var i = 0; i < Math.min(resEntries.length, 5); i++) {
+        var r = resEntries[i];
+        b('E:RES-' + i + ':name=' + r.name.substring(0, 50) + ',type=' + r.initiatorType + ',dur=' + r.duration.toFixed(2) + ',size=' + (r.transferSize || 'N/A'));
+      }
+    }
+
+    // Resource timing buffer
+    b('E:SET-BUFFER=' + (typeof performance.setResourceTimingBufferSize));
+    if (typeof performance.setResourceTimingBufferSize === 'function') {
+      performance.setResourceTimingBufferSize(250);
+      b('E:BUFFER-SET=250');
+    }
+
+    // clearResourceTimings
+    b('E:CLEAR-RES=' + (typeof performance.clearResourceTimings));
+    if (typeof performance.clearResourceTimings === 'function') {
+      var before = performance.getEntriesByType('resource').length;
+      performance.clearResourceTimings();
+      var after = performance.getEntriesByType('resource').length;
+      b('E:CLEAR:before=' + before + ',after=' + after);
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Buffer management ===
+  b('F:BUFFER');
+  try {
+    performance.clearMarks();
+    performance.clearMeasures();
+
+    // clearMarks timing
+    for (var j = 0; j < 5000; j++) performance.mark('cm' + j);
+    var t0 = performance.now();
+    performance.clearMarks();
+    b('F:CLEAR-MARKS-5K=' + (performance.now() - t0).toFixed(2));
+
+    // clearMeasures timing
+    for (var j = 0; j < 5000; j++) performance.measure('ms' + j);
+    var t0 = performance.now();
+    performance.clearMeasures();
+    b('F:CLEAR-MEASURES-5K=' + (performance.now() - t0).toFixed(2));
+
+    // clearMarks with name
+    for (var j = 0; j < 1000; j++) performance.mark('named');
+    for (var j = 0; j < 1000; j++) performance.mark('other' + j);
+    var t0 = performance.now();
+    performance.clearMarks('named');
+    b('F:CLEAR-NAMED=' + (performance.now() - t0).toFixed(2) + ':remaining=' + performance.getEntriesByType('mark').length);
+    performance.clearMarks();
+
+    // Buffer overflow behavior
+    var overflowFired = false;
+    if (typeof PerformanceObserver !== 'undefined') {
+      try {
+        performance.addEventListener('resourcetimingbufferfull', function() {
+          overflowFired = true;
+        });
+      } catch(e) {}
+    }
+
+    // Fill marks to test limits
+    var maxMarks = 0;
+    try {
+      for (var j = 0; j < 50000; j++) {
+        performance.mark('limit' + j);
+        maxMarks = j + 1;
+      }
+    } catch(e) {
+      b('F:MARK-LIMIT-ERR=' + e.message.substring(0, 30) + ':at=' + maxMarks);
+    }
+    var actual = performance.getEntriesByType('mark').length;
+    b('F:MARK-LIMIT:attempted=' + maxMarks + ',stored=' + actual);
+    performance.clearMarks();
+
+    // performance.toJSON
+    b('F:TO-JSON=' + (typeof performance.toJSON));
+    if (typeof performance.toJSON === 'function') {
+      var json = performance.toJSON();
+      b('F:JSON-KEYS=' + Object.keys(json).join(','));
+    }
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P751-RESULT:TIMING-DATA-COLLECTED');
+  b('P751-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p751: Performance API mark/measure/entries timing oracle</pre></body></html>

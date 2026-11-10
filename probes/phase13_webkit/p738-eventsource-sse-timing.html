@@ -1,0 +1,300 @@
+<!--
+  p738: EventSource / Server-Sent Events internal timing oracle
+
+  EventSource (SSE) maintains a persistent HTTP connection and parses
+  a text/event-stream response. Internally, WebKit allocates an
+  EventSource C++ object with a ThreadableLoader, a response buffer,
+  and an event queue. Each parsed event creates a MessageEvent with
+  data, type, and lastEventId fields.
+
+  Key insight: EventSource construction allocates the C++ backing
+  object and registers it with the ScriptExecutionContext. The
+  constructor timing reveals the allocation cost. Since we cannot
+  connect to a real SSE server from the PS5 game browser, we test
+  construction, property access, error handling, and the readyState
+  machine.
+
+  Attack angles:
+  A) EventSource construction timing -- allocates C++ backing.
+  B) EventSource property access -- url, readyState, withCredentials.
+  C) EventSource error path -- connecting to invalid URLs triggers
+     internal error handling and cleanup.
+  D) Multiple EventSource creation -- concurrent instances reveal
+     connection pool behavior.
+  E) EventSource close + GC timing -- close() marks for cleanup,
+     GC frees the C++ object.
+  F) Custom event listener overhead -- addEventListener vs
+     onmessage/onerror/onopen.
+
+  CRASH_CLASS: LOW (EventSource API, no server needed for timing)
+  prior art: p725 (Fetch response), p734 (History API)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p738</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P738-START:EVENTSOURCE-SSE-TIMING');
+  var results = [];
+
+  // === SECTION A: EventSource construction timing ===
+  b('A:ES-CONSTRUCT');
+  try {
+    // Construction with data: URL (won't connect but constructor completes)
+    var createTimes = [];
+    var urls = [
+      {name: 'data-empty', url: 'data:text/event-stream,'},
+      {name: 'data-event', url: 'data:text/event-stream,data:hello%0A%0A'},
+      {name: 'data-multi', url: 'data:text/event-stream,data:a%0A%0Adata:b%0A%0Adata:c%0A%0A'},
+    ];
+
+    for (var u = 0; u < urls.length; u++) {
+      var sources = [];
+      var t0 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        try {
+          var es = new EventSource(urls[u].url);
+          sources.push(es);
+        } catch(e) {}
+      }
+      var dt = performance.now() - t0;
+      createTimes.push(urls[u].name + ':' + dt.toFixed(2) + ':created=' + sources.length);
+
+      // Clean up
+      for (var s = 0; s < sources.length; s++) {
+        sources[s].close();
+      }
+    }
+    b('A:CREATE-TIMES:' + createTimes.join(','));
+
+    // withCredentials option
+    try {
+      var es1 = new EventSource('data:text/event-stream,', {withCredentials: false});
+      var es2 = new EventSource('data:text/event-stream,', {withCredentials: true});
+      b('A:CRED-FALSE=' + es1.withCredentials + ',CRED-TRUE=' + es2.withCredentials);
+      es1.close();
+      es2.close();
+    } catch(e) {
+      b('A:CRED-ERR=' + e.message);
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: EventSource property access ===
+  b('B:ES-PROPS');
+  try {
+    var es = new EventSource('data:text/event-stream,data:test%0A%0A');
+
+    // readyState
+    b('B:INITIAL-STATE=' + es.readyState);
+    b('B:CONNECTING=' + EventSource.CONNECTING);
+    b('B:OPEN=' + EventSource.OPEN);
+    b('B:CLOSED=' + EventSource.CLOSED);
+
+    // url property timing
+    var t0 = performance.now();
+    for (var j = 0; j < 100000; j++) {
+      var v = es.url;
+    }
+    b('B:URL-ACCESS=' + (performance.now() - t0).toFixed(2));
+    b('B:URL-LEN=' + es.url.length);
+
+    // readyState timing
+    var t0 = performance.now();
+    for (var j = 0; j < 100000; j++) {
+      var v = es.readyState;
+    }
+    b('B:STATE-ACCESS=' + (performance.now() - t0).toFixed(2));
+
+    // withCredentials timing
+    var t0 = performance.now();
+    for (var j = 0; j < 100000; j++) {
+      var v = es.withCredentials;
+    }
+    b('B:CRED-ACCESS=' + (performance.now() - t0).toFixed(2));
+
+    es.close();
+    b('B:AFTER-CLOSE-STATE=' + es.readyState);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: EventSource error path ===
+  b('C:ES-ERROR');
+  try {
+    var errorTimes = [];
+    var errorUrls = [
+      {name: 'invalid-scheme', url: 'ftp://localhost/events'},
+      {name: 'empty', url: ''},
+      {name: 'blob-empty', url: URL.createObjectURL(new Blob([''], {type: 'text/event-stream'}))},
+    ];
+
+    for (var eu = 0; eu < errorUrls.length; eu++) {
+      var errorFired = false;
+      var t0 = performance.now();
+      try {
+        var es = new EventSource(errorUrls[eu].url);
+        es.onerror = function() { errorFired = true; };
+
+        // Wait briefly for error
+        await new Promise(function(r) { setTimeout(r, 50); });
+        var dt = performance.now() - t0;
+        errorTimes.push(errorUrls[eu].name + ':' + dt.toFixed(2) + ':error=' + errorFired + ':state=' + es.readyState);
+        es.close();
+      } catch(e) {
+        errorTimes.push(errorUrls[eu].name + ':THREW:' + e.message.substring(0, 30));
+      }
+    }
+    b('C:ERROR-TIMES:' + errorTimes.join(','));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: Multiple EventSource instances ===
+  b('D:MULTI-ES');
+  try {
+    var counts = [1, 5, 10, 25, 50];
+    var multiTimes = [];
+
+    for (var c = 0; c < counts.length; c++) {
+      var sources = [];
+      var t0 = performance.now();
+      for (var i = 0; i < counts[c]; i++) {
+        try {
+          sources.push(new EventSource('data:text/event-stream,data:item' + i + '%0A%0A'));
+        } catch(e) {}
+      }
+      var dt = performance.now() - t0;
+      multiTimes.push(counts[c] + ':' + dt.toFixed(2) + ':actual=' + sources.length);
+
+      // Close all
+      for (var s = 0; s < sources.length; s++) {
+        sources[s].close();
+      }
+    }
+    b('D:MULTI-TIMES:' + multiTimes.join(','));
+
+    // Create and immediately close timing
+    var closeTimes = [];
+    for (var round = 0; round < 5; round++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 100; j++) {
+        try {
+          var es = new EventSource('data:text/event-stream,');
+          es.close();
+        } catch(e) {}
+      }
+      var dt = performance.now() - t0;
+      closeTimes.push(dt.toFixed(2));
+    }
+    b('D:CREATE-CLOSE-100:' + closeTimes.join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: Close + GC timing ===
+  b('E:CLOSE-GC');
+  try {
+    // Create many, close, and observe GC pressure
+    var batchSize = 200;
+    var sources = [];
+    var t0 = performance.now();
+    for (var i = 0; i < batchSize; i++) {
+      try {
+        sources.push(new EventSource('data:text/event-stream,data:gc' + i + '%0A%0A'));
+      } catch(e) {}
+    }
+    var createDt = performance.now() - t0;
+    b('E:CREATE-' + batchSize + '=' + createDt.toFixed(2) + ':actual=' + sources.length);
+
+    // Close all
+    var t1 = performance.now();
+    for (var i = 0; i < sources.length; i++) {
+      sources[i].close();
+    }
+    var closeDt = performance.now() - t1;
+    b('E:CLOSE-ALL=' + closeDt.toFixed(2));
+
+    // Null refs and force GC pressure
+    sources = null;
+    var t2 = performance.now();
+    for (var i = 0; i < 10; i++) {
+      var garbage = [];
+      for (var j = 0; j < 10000; j++) {
+        garbage.push({data: new ArrayBuffer(256)});
+      }
+      garbage = null;
+    }
+    var gcDt = performance.now() - t2;
+    b('E:GC-PRESSURE=' + gcDt.toFixed(2));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Event listener overhead ===
+  b('F:LISTENERS');
+  try {
+    var es = new EventSource('data:text/event-stream,data:listen%0A%0A');
+
+    // onmessage assignment timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      es.onmessage = function() {};
+    }
+    b('F:ONMESSAGE-SET=' + (performance.now() - t0).toFixed(2));
+
+    // onerror assignment timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      es.onerror = function() {};
+    }
+    b('F:ONERROR-SET=' + (performance.now() - t0).toFixed(2));
+
+    // onopen assignment timing
+    var t0 = performance.now();
+    for (var j = 0; j < 50000; j++) {
+      es.onopen = function() {};
+    }
+    b('F:ONOPEN-SET=' + (performance.now() - t0).toFixed(2));
+
+    // addEventListener timing
+    var handler = function() {};
+    var t0 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      es.addEventListener('message', handler);
+    }
+    var addDt = performance.now() - t0;
+
+    var t1 = performance.now();
+    for (var j = 0; j < 10000; j++) {
+      es.removeEventListener('message', handler);
+    }
+    var removeDt = performance.now() - t1;
+    b('F:ADD-LISTENER=' + addDt.toFixed(2) + ',REMOVE=' + removeDt.toFixed(2));
+
+    // Custom event types
+    var customTypes = ['custom1', 'update', 'ping', 'status'];
+    var customTimes = [];
+    for (var ct = 0; ct < customTypes.length; ct++) {
+      var t0 = performance.now();
+      for (var j = 0; j < 10000; j++) {
+        es.addEventListener(customTypes[ct], handler);
+      }
+      var dt = performance.now() - t0;
+      customTimes.push(customTypes[ct] + ':' + dt.toFixed(2));
+    }
+    b('F:CUSTOM-TYPES:' + customTimes.join(','));
+
+    es.close();
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  b('P738-RESULT:TIMING-DATA-COLLECTED');
+  b('P738-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p738: EventSource / SSE internal timing oracle</pre></body></html>

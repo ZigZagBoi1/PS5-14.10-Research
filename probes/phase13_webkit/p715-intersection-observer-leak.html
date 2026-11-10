@@ -1,0 +1,524 @@
+<!--
+  p715: IntersectionObserver + ResizeObserver internal timing oracle
+
+  IntersectionObserver and ResizeObserver maintain internal lists of
+  observed elements. The callback invocation order, timing precision,
+  and allocation patterns during observe/unobserve cycles can reveal
+  heap layout information.
+
+  IntersectionObserver callbacks fire asynchronously when elements
+  cross visibility thresholds. The internal intersection computation
+  walks the containing block chain, whose traversal cost depends on
+  DOM node memory layout. ResizeObserver similarly tracks element
+  dimensions through internal observation records allocated per-element.
+
+  Attack angles:
+  A) IntersectionObserver callback ordering -- observe N elements,
+     check if callback entry order correlates with DOM order or
+     memory allocation order.
+  B) IntersectionObserver threshold precision -- sub-pixel thresholds
+     reveal internal float representation and comparison behavior.
+  C) ResizeObserver callback timing for batch resizes -- resize many
+     elements at once, measure callback delivery timing.
+  D) ResizeObserver contentBoxSize/borderBoxSize precision -- the
+     reported sizes use ResizeObserverSize objects allocated per
+     callback. Precision reveals float layout.
+  E) IntersectionObserver root margin interaction -- rootMargin
+     parsing and application allocates internal Lengths. Timing
+     of intersection checks with varying margins reveals allocator.
+  F) Observer disconnect/reconnect allocation pattern -- repeated
+     observe/disconnect cycles stress the internal observer list.
+     Timing steps reveal pool page boundaries.
+
+  CRASH_CLASS: LOW (Observer API, read-only observation)
+  prior art: p713 (MutationObserver + DOM internals), p706 (CSS animation)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p715</title>
+<script>
+function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
+
+function main(){
+  b('P715-START:INTERSECTION-RESIZE-OBSERVER-LEAK');
+  var results = [];
+
+  // === SECTION A: IntersectionObserver callback ordering ===
+  b('A:IO-CALLBACK-ORDER');
+  try {
+    var container = document.createElement('div');
+    container.style.cssText = 'position:relative;width:400px;height:400px;overflow:scroll;left:-9999px;';
+    document.body.appendChild(container);
+
+    // Create elements at known positions
+    var elements = [];
+    for (var i = 0; i < 30; i++) {
+      var el = document.createElement('div');
+      el.style.cssText = 'width:50px;height:50px;background:red;margin:10px;';
+      el.setAttribute('data-idx', i);
+      container.appendChild(el);
+      elements.push(el);
+    }
+
+    // Observe all elements and record callback order
+    var callbackOrder = [];
+    var callbackDone = false;
+
+    var io = new IntersectionObserver(function(entries) {
+      for (var e = 0; e < entries.length; e++) {
+        var idx = parseInt(entries[e].target.getAttribute('data-idx'));
+        callbackOrder.push(idx);
+      }
+      callbackDone = true;
+    }, {root: container, threshold: 0});
+
+    // Observe in reverse order to see if callback respects observe order or DOM order
+    for (var i = elements.length - 1; i >= 0; i--) {
+      io.observe(elements[i]);
+    }
+
+    // Wait for callback via polling
+    var waitStart = performance.now();
+    var checkInterval = setInterval(function() {
+      if (callbackDone || (performance.now() - waitStart > 2000)) {
+        clearInterval(checkInterval);
+
+        b('A:ORDER-LEN=' + callbackOrder.length);
+        b('A:ORDER:' + callbackOrder.slice(0, 20).join(','));
+
+        // Check if order matches DOM order (0,1,2,...) or reverse observe order (29,28,...)
+        var isDomOrder = true;
+        var isObserveOrder = true;
+        for (var i = 1; i < callbackOrder.length; i++) {
+          if (callbackOrder[i] < callbackOrder[i-1]) isDomOrder = false;
+          if (callbackOrder[i] > callbackOrder[i-1]) isObserveOrder = false;
+        }
+        b('A:DOM-ORDER=' + isDomOrder + ',OBSERVE-ORDER=' + isObserveOrder);
+
+        if (!isDomOrder && !isObserveOrder) {
+          b('A:NEITHER-ORDER');
+          results.push('A:non-deterministic-order');
+        }
+
+        // Second pass: observe in random order
+        callbackOrder = [];
+        callbackDone = false;
+        io.disconnect();
+
+        var indices = [];
+        for (var i = 0; i < elements.length; i++) indices.push(i);
+        // Simple shuffle
+        for (var i = indices.length - 1; i > 0; i--) {
+          var j = Math.floor(Math.random() * (i + 1));
+          var tmp = indices[i]; indices[i] = indices[j]; indices[j] = tmp;
+        }
+
+        var io2 = new IntersectionObserver(function(entries) {
+          for (var e = 0; e < entries.length; e++) {
+            callbackOrder.push(parseInt(entries[e].target.getAttribute('data-idx')));
+          }
+          callbackDone = true;
+        }, {root: container, threshold: 0});
+
+        for (var i = 0; i < indices.length; i++) {
+          io2.observe(elements[indices[i]]);
+        }
+
+        var waitStart2 = performance.now();
+        var check2 = setInterval(function() {
+          if (callbackDone || (performance.now() - waitStart2 > 2000)) {
+            clearInterval(check2);
+            b('A:RANDOM-ORDER:' + callbackOrder.slice(0, 20).join(','));
+            io2.disconnect();
+            runSectionB();
+          }
+        }, 50);
+      }
+    }, 50);
+
+    // Cleanup will happen after all sections
+  } catch(e) {
+    b('A:ERR:' + e.message);
+    runSectionB();
+  }
+
+  function runSectionB() {
+  // === SECTION B: IntersectionObserver threshold precision ===
+  b('B:IO-THRESHOLD-PRECISION');
+  try {
+    var wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:relative;width:200px;height:200px;overflow:hidden;left:-9999px;';
+    document.body.appendChild(wrapper);
+
+    var target = document.createElement('div');
+    target.style.cssText = 'width:100px;height:100px;background:blue;position:absolute;top:0;left:0;';
+    wrapper.appendChild(target);
+
+    // Test fine-grained thresholds
+    var thresholds = [];
+    for (var i = 0; i <= 100; i++) {
+      thresholds.push(i / 100);
+    }
+
+    var thresholdHits = [];
+    var bDone = false;
+
+    var ioB = new IntersectionObserver(function(entries) {
+      for (var e = 0; e < entries.length; e++) {
+        thresholdHits.push({
+          ratio: entries[e].intersectionRatio,
+          isIntersecting: entries[e].isIntersecting,
+          time: entries[e].time
+        });
+      }
+    }, {root: wrapper, threshold: thresholds});
+
+    ioB.observe(target);
+
+    // Move target to trigger different thresholds
+    var step = 0;
+    var moveInterval = setInterval(function() {
+      if (step >= 20) {
+        clearInterval(moveInterval);
+        ioB.disconnect();
+
+        b('B:HITS=' + thresholdHits.length);
+        // Log ratio precision
+        var ratios = [];
+        for (var i = 0; i < Math.min(thresholdHits.length, 15); i++) {
+          ratios.push(thresholdHits[i].ratio.toFixed(10));
+        }
+        b('B:RATIOS:' + ratios.join(','));
+
+        // Check for non-standard precision
+        var hasHighPrecision = false;
+        for (var i = 0; i < thresholdHits.length; i++) {
+          var r = thresholdHits[i].ratio;
+          // Check if ratio has more than 6 decimal digits of precision
+          if (r > 0 && r < 1 && (r * 1000000) % 1 !== 0) {
+            hasHighPrecision = true;
+            break;
+          }
+        }
+        b('B:HIGH-PRECISION=' + hasHighPrecision);
+        if (hasHighPrecision) results.push('B:high-precision-ratio');
+
+        document.body.removeChild(wrapper);
+        runSectionC();
+        return;
+      }
+      // Shift target position to change intersection
+      target.style.top = (-step * 5) + 'px';
+      step++;
+    }, 50);
+  } catch(e) {
+    b('B:ERR:' + e.message);
+    runSectionC();
+  }
+  }
+
+  function runSectionC() {
+  // === SECTION C: ResizeObserver callback timing ===
+  b('C:RO-CALLBACK-TIMING');
+  try {
+    if (typeof ResizeObserver === 'undefined') {
+      b('C:NO-RESIZEOBSERVER');
+      runSectionD();
+      return;
+    }
+
+    var roContainer = document.createElement('div');
+    roContainer.style.cssText = 'position:absolute;left:-9999px;';
+    document.body.appendChild(roContainer);
+
+    var roElements = [];
+    for (var i = 0; i < 50; i++) {
+      var el = document.createElement('div');
+      el.style.cssText = 'width:100px;height:100px;display:inline-block;';
+      el.setAttribute('data-idx', i);
+      roContainer.appendChild(el);
+      roElements.push(el);
+    }
+
+    var roCallbackTimes = [];
+    var roCallbackCount = 0;
+
+    var ro = new ResizeObserver(function(entries) {
+      var t = performance.now();
+      roCallbackCount++;
+      roCallbackTimes.push({
+        count: entries.length,
+        time: t
+      });
+    });
+
+    // Observe all
+    for (var i = 0; i < roElements.length; i++) {
+      ro.observe(roElements[i]);
+    }
+
+    // Wait for initial callback, then batch resize
+    setTimeout(function() {
+      b('C:INITIAL-CALLBACKS=' + roCallbackCount);
+
+      roCallbackTimes = [];
+      roCallbackCount = 0;
+
+      // Batch resize in stages
+      var batchSizes = [1, 5, 10, 25, 50];
+      var batchIdx = 0;
+
+      function doBatch() {
+        if (batchIdx >= batchSizes.length) {
+          ro.disconnect();
+          b('C:BATCH-RESULTS:callbacks=' + roCallbackCount);
+          for (var i = 0; i < roCallbackTimes.length; i++) {
+            b('C:CB' + i + ':count=' + roCallbackTimes[i].count +
+              ',t=' + roCallbackTimes[i].time.toFixed(3));
+          }
+          document.body.removeChild(roContainer);
+          runSectionD();
+          return;
+        }
+
+        var count = batchSizes[batchIdx];
+        var t0 = performance.now();
+        for (var i = 0; i < count && i < roElements.length; i++) {
+          roElements[i].style.width = (100 + batchIdx * 10 + i) + 'px';
+        }
+        b('C:RESIZE-BATCH=' + count + ',trigger-time=' + (performance.now() - t0).toFixed(3));
+        batchIdx++;
+        setTimeout(doBatch, 200);
+      }
+      doBatch();
+    }, 500);
+  } catch(e) {
+    b('C:ERR:' + e.message);
+    runSectionD();
+  }
+  }
+
+  function runSectionD() {
+  // === SECTION D: ResizeObserver size precision ===
+  b('D:RO-SIZE-PRECISION');
+  try {
+    if (typeof ResizeObserver === 'undefined') {
+      b('D:NO-RESIZEOBSERVER');
+      runSectionE();
+      return;
+    }
+
+    var testEl = document.createElement('div');
+    testEl.style.cssText = 'position:absolute;left:-9999px;width:100.333px;height:200.667px;' +
+      'padding:5.5px;border:1.5px solid black;box-sizing:border-box;';
+    document.body.appendChild(testEl);
+
+    var sizeData = null;
+
+    var roD = new ResizeObserver(function(entries) {
+      if (entries.length > 0) {
+        var entry = entries[0];
+        sizeData = {
+          contentRect: {
+            width: entry.contentRect.width,
+            height: entry.contentRect.height,
+            x: entry.contentRect.x,
+            y: entry.contentRect.y
+          }
+        };
+        // Check for contentBoxSize/borderBoxSize (newer API)
+        if (entry.contentBoxSize && entry.contentBoxSize[0]) {
+          sizeData.contentBox = {
+            inlineSize: entry.contentBoxSize[0].inlineSize,
+            blockSize: entry.contentBoxSize[0].blockSize
+          };
+        }
+        if (entry.borderBoxSize && entry.borderBoxSize[0]) {
+          sizeData.borderBox = {
+            inlineSize: entry.borderBoxSize[0].inlineSize,
+            blockSize: entry.borderBoxSize[0].blockSize
+          };
+        }
+      }
+    });
+
+    roD.observe(testEl);
+
+    setTimeout(function() {
+      roD.disconnect();
+      if (sizeData) {
+        b('D:CONTENT-RECT:w=' + sizeData.contentRect.width.toFixed(10) +
+          ',h=' + sizeData.contentRect.height.toFixed(10));
+        b('D:CONTENT-RECT:x=' + sizeData.contentRect.x.toFixed(10) +
+          ',y=' + sizeData.contentRect.y.toFixed(10));
+
+        if (sizeData.contentBox) {
+          b('D:CONTENT-BOX:inline=' + sizeData.contentBox.inlineSize.toFixed(10) +
+            ',block=' + sizeData.contentBox.blockSize.toFixed(10));
+        } else {
+          b('D:NO-CONTENT-BOX-SIZE');
+        }
+
+        if (sizeData.borderBox) {
+          b('D:BORDER-BOX:inline=' + sizeData.borderBox.inlineSize.toFixed(10) +
+            ',block=' + sizeData.borderBox.blockSize.toFixed(10));
+        } else {
+          b('D:NO-BORDER-BOX-SIZE');
+        }
+
+        // Check subpixel precision
+        var w = sizeData.contentRect.width;
+        var subpixelDigits = 0;
+        var wStr = w.toString();
+        if (wStr.indexOf('.') >= 0) {
+          subpixelDigits = wStr.length - wStr.indexOf('.') - 1;
+        }
+        b('D:SUBPIXEL-DIGITS=' + subpixelDigits);
+        if (subpixelDigits > 3) {
+          results.push('D:high-subpixel-precision');
+        }
+      } else {
+        b('D:NO-SIZE-DATA');
+      }
+      document.body.removeChild(testEl);
+      runSectionE();
+    }, 300);
+  } catch(e) {
+    b('D:ERR:' + e.message);
+    runSectionE();
+  }
+  }
+
+  function runSectionE() {
+  // === SECTION E: IntersectionObserver root margin timing ===
+  b('E:IO-ROOT-MARGIN');
+  try {
+    var wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:relative;width:300px;height:300px;overflow:hidden;left:-9999px;';
+    document.body.appendChild(wrapper);
+
+    var target = document.createElement('div');
+    target.style.cssText = 'width:50px;height:50px;background:green;position:absolute;top:250px;left:125px;';
+    wrapper.appendChild(target);
+
+    // Test different rootMargin values and measure setup timing
+    var margins = [
+      '0px', '10px', '50px', '100px', '-10px', '-50px',
+      '10px 20px', '10px 20px 30px 40px',
+      '10% 20%', '50%'
+    ];
+
+    var marginTimes = [];
+    for (var m = 0; m < margins.length; m++) {
+      var t0 = performance.now();
+      for (var iter = 0; iter < 200; iter++) {
+        var ioE = new IntersectionObserver(function(){}, {
+          root: wrapper,
+          rootMargin: margins[m],
+          threshold: [0, 0.5, 1]
+        });
+        ioE.observe(target);
+        ioE.disconnect();
+      }
+      var dt = performance.now() - t0;
+      marginTimes.push(margins[m].replace(/\s/g, '_') + ':' + dt.toFixed(2));
+    }
+    b('E:MARGIN-TIMES:' + marginTimes.join(','));
+
+    // Check for margin-dependent timing
+    var times = marginTimes.map(function(t) { return parseFloat(t.split(':').pop()); });
+    var minT = Math.min.apply(null, times);
+    var maxT = Math.max.apply(null, times);
+    b('E:MARGIN-RANGE:min=' + minT.toFixed(2) + ',max=' + maxT.toFixed(2) +
+      ',ratio=' + (maxT/minT).toFixed(3));
+
+    if (maxT / minT > 1.3) {
+      results.push('E:margin-dependent-timing');
+    }
+
+    document.body.removeChild(wrapper);
+    runSectionF();
+  } catch(e) {
+    b('E:ERR:' + e.message);
+    runSectionF();
+  }
+  }
+
+  function runSectionF() {
+  // === SECTION F: Observer disconnect/reconnect allocation pattern ===
+  b('F:OBSERVER-ALLOC-PATTERN');
+  try {
+    var fContainer = document.createElement('div');
+    fContainer.style.cssText = 'position:absolute;left:-9999px;width:200px;height:200px;overflow:hidden;';
+    document.body.appendChild(fContainer);
+
+    var fElements = [];
+    for (var i = 0; i < 20; i++) {
+      var el = document.createElement('div');
+      el.style.cssText = 'width:50px;height:50px;';
+      fContainer.appendChild(el);
+      fElements.push(el);
+    }
+
+    // Measure observe/disconnect cycle timing
+    var cycleTimes = [];
+    for (var batch = 0; batch < 20; batch++) {
+      var io = new IntersectionObserver(function(){}, {root: fContainer});
+
+      var t0 = performance.now();
+      // Observe all
+      for (var i = 0; i < fElements.length; i++) {
+        io.observe(fElements[i]);
+      }
+      // Disconnect
+      io.disconnect();
+      var dt = performance.now() - t0;
+      cycleTimes.push(dt.toFixed(3));
+    }
+    b('F:CYCLE-TIMES:' + cycleTimes.join(','));
+
+    // Look for timing steps (pool page allocation)
+    for (var i = 1; i < cycleTimes.length; i++) {
+      var ratio = parseFloat(cycleTimes[i]) / parseFloat(cycleTimes[i-1]);
+      if (ratio > 2.0 && parseFloat(cycleTimes[i-1]) > 0) {
+        b('F:ALLOC-STEP-AT=' + i + ',RATIO=' + ratio.toFixed(2));
+        results.push('F:observer-alloc-step=' + i);
+      }
+    }
+
+    // ResizeObserver cycles too
+    if (typeof ResizeObserver !== 'undefined') {
+      var roCycleTimes = [];
+      for (var batch = 0; batch < 20; batch++) {
+        var ro = new ResizeObserver(function(){});
+        var t0 = performance.now();
+        for (var i = 0; i < fElements.length; i++) {
+          ro.observe(fElements[i]);
+        }
+        ro.disconnect();
+        var dt = performance.now() - t0;
+        roCycleTimes.push(dt.toFixed(3));
+      }
+      b('F:RO-CYCLE-TIMES:' + roCycleTimes.join(','));
+    }
+
+    document.body.removeChild(fContainer);
+    finishProbe();
+  } catch(e) {
+    b('F:ERR:' + e.message);
+    finishProbe();
+  }
+  }
+
+  function finishProbe() {
+    // === RESULTS ===
+    if (results.length > 0) {
+      b('P715-RESULT:HITS=' + results.join(';'));
+    } else {
+      b('P715-RESULT:NO-LEAK-DETECTED');
+    }
+    b('P715-DONE');
+  }
+}
+
+setTimeout(main, 200);
+</script>
+</head><body style="margin:0"><pre id="log">p715: IntersectionObserver + ResizeObserver internal timing oracle</pre></body></html>

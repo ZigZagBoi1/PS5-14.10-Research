@@ -1,0 +1,57 @@
+V927 — CVE-2025-24213 pattern battery: TWO FIRES, graded — C is a real
+length-desync (capacity-retained stale readback, allocation-OOB unproven);
+G is a probe-design false positive (retracted)
+================================================================================
+Probe:    probes/phase13_webkit/v927_24213_float_patterns.html
+Target:   PS5 14.22 retail (base), LLInt-only (Wasm undefined, v925)
+Date:     2026-11-10 21:48Z
+Source:   tools/browser_runner/beacon_logs/ (21:48:13-21:48:18 session)
+
+=== RESULTS (7 patterns, one load each, all position-proof) ===
+
+A double-transition-race:     CLEAN (val=undefined)
+B fill-valueof-shrink:        CLEAN (idx10=undefined)
+C sort-comparator-shrink:     FIRE  (idx100 survived shrink: number:100.5)
+D f64-detach-midread:         CLEAN (val=undefined)
+E proxy-length-slice:         CLEAN (slice len=100)
+F spread-arguments:           CLEAN (out len=3)
+G arrayfrom-transition:       FIRE  (object through transitioning source)
+
+=== GRADED (board pre-registration: fire => banked as tier-agnostic
+confusion candidate; clean => demoted; only the device speaks) ===
+
+C — BANKED with caveat. After the sort comparator shrank the array to
+length 3 mid-sort, arr[100] still returned the ORIGINAL fill value
+(100.5 = i+0.5 at index 100). This is a REAL length/butterfly desync:
+length=3 while element 100 remains readable. Memory-safety caveat: the
+returned value is OUR OWN fill inside the buffer's retained capacity
+(256 slots were allocated) — reading index 100 is within the real
+allocation. This is the p695-C capacity-vs-length lesson repeating. The
+candidate graduates to a real confusion row, but ALLOCATION-OOB is
+unproven: the decisive test is reading indices >= 256 (beyond the old
+capacity) through the stale view — foreign heap bytes there would be the
+leak window; undefined/zero there means the view stops at capacity.
+
+G — RETRACTED (probe-design false positive). Array.from faithfully copies
+whatever the iterator yields; a source that gains an object property
+mid-iteration makes the iterator yield an object — legitimate JavaScript
+semantics, no engine confusion. My detector conflated iterator semantics
+with type confusion. The pattern needs a redesign where the ITERATION
+MECHANISM (not the source values) is what transitions.
+
+=== NEXT (v928, designed from C) ===
+
+Sort-shrink shape, deep read: after the comparator shrink, read indices
+256..2000 (beyond old capacity) — nonzero values that are NOT our fill
+pattern = foreign heap bytes = the leak window; a crash = the read crossed
+into unmapped (bounds the window); clean undefined = the view stops at
+capacity (semantic bug only, DoS-inconsistent state at best).
+Detector: byte-exact dump of any nonzero foreign values (DAZ law).
+
+=== ERA STATE ===
+
+Unchanged: interpreter-only, address source still the blocker. The two
+candidate rows (C here; p695-C capacity-slack) now point at the same
+question — whether ANY stale-view primitive on 14.22 reads BEYOND the
+allocation. That is the only bridge between "length desync" (semantic)
+and "OOB read" (leak).

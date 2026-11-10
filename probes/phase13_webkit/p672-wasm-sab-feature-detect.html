@@ -1,0 +1,132 @@
+<!--
+  p672: Feature detection for CVE-2026-20664 and CVE-2026-28857 prerequisites
+  
+  Tests:
+    A: WebAssembly.Memory basic support
+    B: toResizableBuffer() API existence (CVE-2026-20664 gate)
+    C: SharedArrayBuffer existence
+    D: SharedArrayBuffer growable (maxByteLength option) (CVE-2026-28857 gate)
+    E: ArrayBuffer.prototype.transfer existence
+    F: ArrayBuffer resizable (maxByteLength option)
+  
+  CRASH_CLASS: NONE (pure feature detection, no exploitation)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p672</title></head>
+<body>p672: Wasm + SAB feature detection
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function(){
+'use strict';
+var L=document.getElementById('log'),bQ=[];
+function emit(t,m){var s=t+(m!==undefined?' '+m:'');L.textContent+=s+'\n';bQ.push(s);if(bQ.length>=1)flush();}
+function flush(){if(!bQ.length)return;var b=bQ.splice(0,2).join('|');try{var x=new XMLHttpRequest();x.open('GET','/beacon/P672-'+encodeURIComponent(b),false);x.send();}catch(e){}}
+window.onerror=function(m){emit('ERR',String(m).slice(0,120));flush();};
+
+emit('START','v1');flush();
+
+// A: WebAssembly.Memory basic
+emit('A','wasm-memory');
+try{
+  var mem=new WebAssembly.Memory({initial:1,maximum:2});
+  emit('A-RESULT','exists=true buffer='+mem.buffer.byteLength);
+}catch(e){emit('A-RESULT','exists=false err='+e.name);}
+flush();
+
+// B: toResizableBuffer (CVE-2026-20664 gate)
+emit('B','toResizableBuffer');
+try{
+  var mem2=new WebAssembly.Memory({initial:1,maximum:2});
+  var hasIt=typeof mem2.toResizableBuffer;
+  emit('B-TYPEOF',hasIt);
+  if(hasIt==='function'){
+    try{
+      var rb=mem2.toResizableBuffer();
+      emit('B-CALL','ok byteLength='+rb.byteLength+' maxByteLength='+(rb.maxByteLength||'N/A')+' resizable='+(rb.resizable||'N/A'));
+    }catch(e2){emit('B-CALL','threw '+e2.name+':'+e2.message);}
+  }
+  emit('B-RESULT',hasIt==='function'?'AVAILABLE':'MISSING');
+}catch(e){emit('B-RESULT','ERROR '+e.name);}
+flush();
+
+// C: SharedArrayBuffer existence
+emit('C','shared-array-buffer');
+try{
+  var hasSAB=typeof SharedArrayBuffer;
+  emit('C-TYPEOF',hasSAB);
+  if(hasSAB==='function'){
+    try{
+      var sab=new SharedArrayBuffer(16);
+      emit('C-ALLOC','ok byteLength='+sab.byteLength);
+    }catch(e2){emit('C-ALLOC','threw '+e2.name+':'+e2.message);}
+  }
+  emit('C-RESULT',hasSAB==='function'?'AVAILABLE':'MISSING');
+}catch(e){emit('C-RESULT','ERROR '+e.name);}
+flush();
+
+// D: SharedArrayBuffer growable (CVE-2026-28857 gate)
+emit('D','sab-growable');
+try{
+  if(typeof SharedArrayBuffer!=='function'){
+    emit('D-RESULT','SKIP — no SAB');
+  } else {
+    try{
+      var gsab=new SharedArrayBuffer(16,{maxByteLength:1024});
+      emit('D-ALLOC','ok byteLength='+gsab.byteLength+' maxByteLength='+gsab.maxByteLength);
+      var canGrow=typeof gsab.grow==='function';
+      emit('D-GROW-FN',canGrow);
+      if(canGrow){
+        try{gsab.grow(32);emit('D-GROW','ok newLength='+gsab.byteLength);}
+        catch(e3){emit('D-GROW','threw '+e3.name+':'+e3.message);}
+      }
+      emit('D-RESULT','AVAILABLE');
+    }catch(e2){
+      emit('D-ALLOC','threw '+e2.name+':'+e2.message);
+      emit('D-RESULT','MISSING (maxByteLength not supported)');
+    }
+  }
+}catch(e){emit('D-RESULT','ERROR '+e.name);}
+flush();
+
+// E: ArrayBuffer.prototype.transfer
+emit('E','ab-transfer');
+try{
+  var ab=new ArrayBuffer(16);
+  var hasTransfer=typeof ab.transfer;
+  emit('E-TYPEOF',hasTransfer);
+  if(hasTransfer==='function'){
+    try{var ab2=ab.transfer(32);emit('E-CALL','ok newLen='+ab2.byteLength+' oldDetached='+ab.detached);}
+    catch(e2){emit('E-CALL','threw '+e2.name+':'+e2.message);}
+  }
+  emit('E-RESULT',hasTransfer==='function'?'AVAILABLE':'MISSING');
+}catch(e){emit('E-RESULT','ERROR '+e.name);}
+flush();
+
+// F: ArrayBuffer resizable
+emit('F','ab-resizable');
+try{
+  try{
+    var rab=new ArrayBuffer(16,{maxByteLength:1024});
+    emit('F-ALLOC','ok byteLength='+rab.byteLength+' maxByteLength='+rab.maxByteLength+' resizable='+rab.resizable);
+    var canResize=typeof rab.resize==='function';
+    emit('F-RESIZE-FN',canResize);
+    if(canResize){
+      try{rab.resize(32);emit('F-RESIZE','ok newLength='+rab.byteLength);}
+      catch(e3){emit('F-RESIZE','threw '+e3.name+':'+e3.message);}
+    }
+    emit('F-RESULT','AVAILABLE');
+  }catch(e2){
+    emit('F-ALLOC','threw '+e2.name+':'+e2.message);
+    emit('F-RESULT','MISSING');
+  }
+}catch(e){emit('F-RESULT','ERROR '+e.name);}
+flush();
+
+// Summary
+emit('SUMMARY','---');
+emit('CVE-2026-20664-GATE','toResizableBuffer');
+emit('CVE-2026-28857-GATE','SharedArrayBuffer+growable');
+emit('DONE','p672-complete');flush();
+})();
+</script>
+</body>
+</html>

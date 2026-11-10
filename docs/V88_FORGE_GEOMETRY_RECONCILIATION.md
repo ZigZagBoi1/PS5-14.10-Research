@@ -1,6 +1,6 @@
 # V88 Forge Geometry Reconciliation (Settlement of Issue #179)
 
-**Target Firmware:** PS5 14.10 / WebKit 605.1.15 (Safari 17.0 fork)  
+**Target Firmware:** PS5 14.10 / WebKit 616.1.27 fork (Safari 17.0 UA token reports 605.1.15)  
 **Status:** Canonical layout specification & test suite  
 **Related Probes:** `p564`, `p578`, `p579`, `p582`
 
@@ -8,7 +8,7 @@
 
 ## 1. Executive Summary
 
-Issue #179 highlighted four critical contradictions across the repository regarding the `CSSFontFace` UAF reclaim and the single-lane V88 vtable forge geometry. This document settles these contradictions by cross-referencing on-device measurements on 14.10 (`docs/FONTFACE_RECLAIM_LEAK_14_10.md`), WebKit 605.1.15 source definitions, and the 10 empirical physics laws established in `README.md`.
+Issue #179 highlighted four critical contradictions across the repository regarding the `CSSFontFace` UAF reclaim and the single-lane V88 vtable forge geometry. This document settles these contradictions by cross-referencing on-device measurements on 14.10 (`docs/FONTFACE_RECLAIM_LEAK_14_10.md`), the 616-era fork source definitions (`Configurations/Version.xcconfig` pins the internal build at 616.1.27; `605.1.15` is the frozen UA token, not a tree generation — cobrajet302gt, PR #240 review), and the 10 empirical physics laws established in `README.md`.
 
 ---
 

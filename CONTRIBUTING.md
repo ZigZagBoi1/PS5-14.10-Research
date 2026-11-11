@@ -2,6 +2,14 @@
 
 This is an open community research project. Everyone is welcome to contribute.
 
+## Where contributors talk
+
+Discord: **[discord.gg/aznssydKrx](https://discord.gg/aznssydKrx)**
+
+Use it for anything that needs a human faster than a pull request: asking for console time on a 14.10 machine, checking whether a capture has already been mined before writing a probe, or flagging a claim that contradicts a saved result. Each console accepts one connection at a time and an unknown syscall can take the game process down, so a few messages before a run are cheaper than a relaunch.
+
+Chat is not the record. A finding still lands in this repository as a probe, a capture, a ledger row and a graded claim — see [docs/RESEARCH_EVIDENCE.md](docs/RESEARCH_EVIDENCE.md).
+
 ## What We Need
 
 ### High Priority

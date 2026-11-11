@@ -1,0 +1,24 @@
+=== PROBE 1479c: SYS 548 PROTECT SEMANTICS ===
+[0] pid=87
+
+--- [A] positive control: an anonymous RW page of ours ---
+[A] anon=0x311408000
+     [before] 547 rv=0 prot=3 start=0x311408000
+  -> PROTECT anon prot=1                             
+     rv=-1   22 Invalid argument  processed=0
+  -> PROTECT anon prot=0                             
+     rv=-1   22 Invalid argument  processed=0
+  -> PROTECT anon prot=3                             
+     rv=-1   22 Invalid argument  processed=0
+  -> PROTECT anon prot=7                             
+     rv=-1   22 Invalid argument  processed=0
+  -> restore anon prot=3                             
+     rv=-1   22 Invalid argument  processed=0
+     anon read ok=true val=0x47524142
+[A] PROTECT_WORKS=false
+
+[!] op 2 never moved a protection this probe owns; [B], [C] and [D] are skipped.
+    (the remaining questions are only meaningful once the call is shown to work)
+
+final canary: pid=87
+=== PROBE 1479c COMPLETE ===

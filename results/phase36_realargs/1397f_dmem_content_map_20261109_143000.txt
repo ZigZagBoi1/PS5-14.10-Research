@@ -1,0 +1,31 @@
+=== PROBE 1397f: dmem CONTENT MAP ===
+[0] pid=350
+[0] dmem0 fd=22
+[0] low-1MiB map -> 0x0402A18000 13 Permission denied
+
+[A] non-zero pages in the low 1 MiB (page granularity)
+   page 0x000 : C0012800 80000000 80000000 C0001200
+   page 0x001 : 12345678 CAFEBABE 00000000 00000000
+   page 0x002 : 11112222 00000000 00000000 00000000
+   page 0x003 : 33334444 00000000 00000000 00000000
+   page 0x004 : 55556666 00000000 00000000 00000000
+   page 0x00F : BEEB03FF 00000003 7E000280 5E000100
+   page 0x011 : 00000002 00000002 00000002 00000000
+   page 0x012 : 00000002 00000002 00000002 00000000
+   page 0x013 : 00000002 00000002 00000002 00000000
+   page 0x014 : 00000002 00000002 00000002 00000000
+   page 0x015 : 00000002 00000002 00000002 00000000
+   page 0x016 : 00000002 00000002 00000002 00000000
+   [A] 12 of 256 pages non-zero
+
+[B] the whole 4 GiB at 16 MiB granularity
+   off=0x000000000 : C0012800 80000000 80000000 C0001200
+   [B] 1 of 256 sampled 16MiB rungs non-zero
+
+[C] dense pass over the first 0x40000, 0x1000 at a time (already covered, cheap confirmation)
+   [C] 6 of 64 pages non-zero between 0x100000 and 0x400000
+
+[D] close
+   dmem0 -> 0
+
+=== PROBE 1397f COMPLETE ===

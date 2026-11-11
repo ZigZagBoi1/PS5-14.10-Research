@@ -1,0 +1,103 @@
+=== PROBE 1547a: does a sub-page device mmap round up to the 16 KiB page? ===
+
+[0] pid=242
+[0] /dev/dmem0 fd=22
+
+--- [A] does a len=0x1000 request produce a 0x1000 entry or a 0x4000 one? ---
+[A] map(off=0x1000, len=0x1000) -> va=0x3115E9000
+[A] 547 at 0x3115E9000: start=0x3115E8000 end=0x3115EC000 len=0x4000 prot=0x3 flags=0x10020
+[A] requested 0x1000; the entry is 0x4000 bytes
+
+--- [A2] what 547 says at the addresses past the requested length ---
+[A2] va=0x3115E9000 (dev off 0x1000): entry 0x3115E8000..0x3115EC000 prot=0x3  (same entry as the map)
+[A2] va=0x3115EA000 (dev off 0x2000): entry 0x3115E8000..0x3115EC000 prot=0x3  (same entry as the map)
+[A2] va=0x3115EB000 (dev off 0x3000): entry 0x3115E8000..0x3115EC000 prot=0x3  (same entry as the map)
+[A2] va=0x3115EC000 (dev off 0x4000): 547 refused -> outside any entry
+
+    ROUNDED: a 0x1000 request produced an entry of at least 0x4000. The mapping therefore
+    covers address space past the end of what was asked for, which is the precondition
+    for straddling an ACL boundary with a request that respects it.
+
+--- [B] does the frame slide with the offset, or quantise to 0x4000? ---
+[B] map(off=0x0000,len=0x1000) -> 0x3115EC000
+[B] map(off=0x1000,len=0x1000) -> 0x3115F1000
+[B] map(off=0x2000,len=0x1000) -> 0x3115F6000
+[B] A0+0x0000 (dev 0)      = 0xC0012800
+[B] A0+0x1000 (dev 1k)     = 0x00000000
+[B] A0+0x2000 (dev 2k)     = 0x00000000
+[B] A1+0x0000 (dev 1k)     = 0x00000000
+[B] A2+0x0000 (dev 2k)     = 0x00000000
+    SLIDE: the 0x1000 map reaches device offset 0x1000 at +0, matching what the
+    offset-0 frame shows at +0x1000. Frames are byte-addressed and 0x4000 long.
+
+--- [C] coarse ladder over the aperture (each rung maps then releases) ---
+[C] off=0x000000000 len=0x1000 -> va=0x3115E8000
+[C] off=0x000004000 len=0x1000 -> va=0x3115E8000
+[C] off=0x000100000 len=0x1000 -> va=0x3115E8000
+[C] off=0x010000000 len=0x1000 -> va=0x3115E8000
+[C] off=0x020000000 len=0x1000 -> va=0x3115E8000
+[C] off=0x040000000 len=0x1000 -> va=0x3115E8000
+[C] off=0x060000000 len=0x1000 -> va=0x3115E8000
+[C] off=0x080000000 len=0x1000 -> va=0x3115E8000
+[C] off=0x0A0000000 len=0x1000 -> va=0x3115E8000
+[C] off=0x0C0000000 len=0x1000 -> va=0x3115E8000
+[C] off=0x0E0000000 len=0x1000 -> va=0x3115E8000
+[C] off=0x100000000 len=0x1000 -> va=0x3115E8000
+[C] off=0x120000000 len=0x1000 -> rv=-1 13 Permission denied
+[C] off=0x140000000 len=0x1000 -> rv=-1 13 Permission denied
+[C] off=0x180000000 len=0x1000 -> rv=-1 13 Permission denied
+[C] off=0x1C0000000 len=0x1000 -> rv=-1 13 Permission denied
+[C] off=0x200000000 len=0x1000 -> rv=-1 13 Permission denied
+[C] off=0x400000000 len=0x1000 -> rv=-1 13 Permission denied
+[C] accepted -> refused transitions: 1 (monotonic over the sampled offsets)
+
+--- [D] bisect 0x100000000 (accepted) .. 0x120000000 (refused) at 0x4000 steps ---
+[D]  1 off=0x110000000 accepted
+[D]  2 off=0x118000000 refused (-1)
+[D]  3 off=0x114000000 refused (-1)
+[D]  4 off=0x112000000 refused (-1)
+[D]  5 off=0x111000000 refused (-1)
+[D]  6 off=0x110800000 refused (-1)
+[D]  7 off=0x110400000 refused (-1)
+[D]  8 off=0x110200000 refused (-1)
+[D]  9 off=0x110100000 refused (-1)
+[D] 10 off=0x110080000 refused (-1)
+[D] 11 off=0x110040000 refused (-1)
+[D] 12 off=0x110020000 refused (-1)
+[D] 13 off=0x110010000 refused (-1)
+[D] 14 off=0x110008000 accepted
+[D] 15 off=0x11000C000 accepted
+[D] LIMIT = 0x110010000  (multiple of 0x4000: yes)
+
+--- [E0] control: map(off = LIMIT - 0x4000, len = 0x4000), also ending exactly at the limit ---
+[E0] map(off=0x11000C000, len=0x4000) -> va=0x3115E8000   (off+len=0x110010000)
+[E0] 547: start=0x3115E8000 end=0x3115EC000
+
+--- [E] map(off = LIMIT - 0x1000, len = 0x1000): ends exactly at the limit ---
+[E] map(off=0x11000F000, len=0x1000) -> va=0x3115EB000   (off+len=0x110010000, LIMIT=0x110010000)
+[E] 547 at the map: start=0x3115E8000 end=0x3115EC000 len=0x4000 prot=0x3
+[E] frame+0x0 is dev off 0x11000F000: entry 0x3115E8000..0x3115EC000 prot=0x3
+[E] frame+0x1000 is dev off 0x110010000: 547 refused
+[E] frame+0x2000 is dev off 0x110011000: 547 refused
+[E] frame+0x3000 is dev off 0x110012000: 547 refused
+
+--- [E1] control: map(off = LIMIT - 0x1000, len = 0x4000), ends at LIMIT + 0x3000 ---
+[E1] map(off=0x11000F000, len=0x4000) -> rv=-1 13 Permission denied   (off+len=0x110013000)
+
+--- [F] verdict, computed from 547 alone, before anything is dereferenced ---
+    NO STRADDLE: the entry ends at the limit even though the request was one aligned page
+    that ended exactly there. The ACL and the entry agree; nothing extends past it.
+
+--- [G] the four sub-blocks (read only, no writes) ---
+[G] reading dev off 0x11000F000 (va 0x3115EB000, prot 0x3) ...
+[G] dev off 0x11000F000  first dword = 0x00000000
+[G] dev off 0x110010000  no covering entry, skipped
+[G] dev off 0x110011000  no covering entry, skipped
+[G] dev off 0x110012000  no covering entry, skipped
+[G] control: the in-window sub-block read 0x0
+    A nonzero dword past the limit is data the ACL refuses to map directly but that this frame
+    exposes. All zeros is inconclusive for content; the mapping is still the finding.
+
+--- [H] teardown ---
+[H] frame released, descriptor closed
+=== PROBE 1547a COMPLETE pid=242 ===

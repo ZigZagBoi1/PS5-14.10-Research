@@ -1,0 +1,21 @@
+=== PROBE 1554a: 548 op1 vs a first-touch fault ===
+
+[0] pid=277
+[0] eboot=0x00000000_7D3E0000 store=0x00000000_7D472C67 = 48 89 (want 48 89)
+[A] control Q=0x3115F8000 prot=3
+[A] 548 op1(Q) rv=0 processed=1, 547 after=nil (want -1)
+[A] CONTROL OK: op 1 on a QUIESCENT page survives. A death in [B] is either
+[A] the child's store fault or the racing delete; the dump's RIP/RDI decides.
+
+[B] P=0x311420000 H=0x311424000 stack=0x311700000
+[B] walk fill ok=true (period 48 bytes, 174762 periods)
+[B] no arm check: P is virgin (first store faults), and H is only reachable through a store into P that succeeded. H reads 0x11223344556677 now.
+[B] >>> CLEAN RESULT = the capture ends after the next two lines and
+[string "-- CRASH_CLASS: HIGH (expected to end the r..."]:279: attempt to call global 'N' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: HIGH (expected to end the r..."]:279: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

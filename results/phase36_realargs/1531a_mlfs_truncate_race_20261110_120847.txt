@@ -1,0 +1,50 @@
+=== PROBE 1531a: MLFS read vs ftruncate ===
+
+fn_addr=0x0000000803DF0B57 pid=193
+
+[A] gadget verification
+eboot=0x000000005E220000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] MLFS file
+  open(/av_contents/content_tmp/r1531.bin, O_CREAT|O_RDWR) -> 28
+  ftruncate(28, 0x8000) rv=0
+  child descriptor -> 29
+  destination mmap -> 0x0000000310978000
+  control channel mmap -> 0x0000000310AA8000
+  leak channel mmap -> 0x0000000310BBC000
+  both destinations zeroed
+  marker readback bytes=4096
+  marker readback lands 0x41 in V: true
+  [B2] truncate(0x4000)->grow->read page 1: bytes=4096 preserved_marker=false
+
+[C] child chain
+  stack mmap -> 0x0000000311760000 need=2708576 alloc=2719744
+  building TCB
+  TCB at 0x311760000 fs_ptr at 0x311761000
+  concatenating 336012 qwords
+  chain qwords=336012 bytes=2688096 alloc=2719744 stack=0x0000000311760000
+  chain write head_ok=true tail_ok=true
+
+[D] race
+  thr_new rv=0 child_tid=101363
+  positive control: oracle channel holds the marker page = true
+  positive control: liveness channel delivered = true
+  round 10 sampled=20 dead=0 foreign=0
+  round 20 sampled=40 dead=0 foreign=0
+  round 30 sampled=60 dead=0 foreign=0
+  round 40 sampled=80 dead=0 foreign=0
+  round 50 sampled=100 dead=0 foreign=0
+  round 60 sampled=120 dead=0 foreign=0
+  rounds=60 cycles=2 samples=120 dead=0 foreign_bytes=0
+  child delivered per quarter: 30 30 30 30 (of 30 each)
+  truncate failures: 0 of 120 cycles, arm failures: 0
+  non-marker bytes in the oracle channel: 0
+  control: main read page 1 after regrow 120 times, non-zero 0 of them, skipped 0
+
+[E] verdict
+  clean: 120 samples of 0x1000 bytes, 0 with no live byte (raced nothing)
+  page 0 (liveness) holds this round's byte, page 1 (oracle) all 0x00
+  final pid=193 expected 193
+
+=== PROBE 1531a COMPLETE ===

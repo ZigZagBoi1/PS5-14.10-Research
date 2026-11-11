@@ -1,0 +1,75 @@
+=== PROBE 1488b: SYS 548 MAP OPS AND A DESCRIPTOR ===
+[0] pid=106
+
+--- [A] op 2 control on a page we own ---
+  ctl 0x31121C000 before: start=0x31121C000 end=0x311220000 prot=3 flags=6357024
+  op2 prot1 -> rv=0 processed=1  | after: start=0x31121C000 end=0x311220000 prot=1 flags=6357024
+  op2 prot3 -> rv=0 processed=1
+[A] 548 control usable: true
+
+--- [B] open the device nodes ---
+  /dev/dmem0     fd=22 
+  /dev/dmem1     fd=23 
+  /dev/gc        fd=24 
+  /dev/zero      fd=25 
+[0] hole 0x311220000, 547 after unmap: nil
+
+--- [C] ops 0..4 with entry+0x08 = a descriptor, fixed hole address ---
+  op0 fd=22  (/dev/dmem0) rv=-1  processed=0 22 Invalid argument | nil
+  op1 fd=22  (/dev/dmem0) rv=0   processed=1  | nil
+  op2 fd=22  (/dev/dmem0) rv=0   processed=1  | nil
+  op3 fd=22  (/dev/dmem0) rv=13172342784 processed=1  | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op4 fd=22  (/dev/dmem0) rv=-1  processed=0 45 Operation not supported | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op0 fd=23  (/dev/dmem1) rv=-1  processed=0 22 Invalid argument | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op1 fd=23  (/dev/dmem1) rv=0   processed=1  | nil
+  op2 fd=23  (/dev/dmem1) rv=0   processed=1  | nil
+  op3 fd=23  (/dev/dmem1) rv=13172342784 processed=1  | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op4 fd=23  (/dev/dmem1) rv=-1  processed=0 45 Operation not supported | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op0 fd=24  (/dev/gc) rv=-1  processed=0 22 Invalid argument | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op1 fd=24  (/dev/gc) rv=0   processed=1  | nil
+  op2 fd=24  (/dev/gc) rv=0   processed=1  | nil
+  op3 fd=24  (/dev/gc) rv=13172342784 processed=1  | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op4 fd=24  (/dev/gc) rv=-1  processed=0 45 Operation not supported | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op0 fd=25  (/dev/zero) rv=-1  processed=0 22 Invalid argument | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op1 fd=25  (/dev/zero) rv=0   processed=1  | nil
+  op2 fd=25  (/dev/zero) rv=0   processed=1  | nil
+  op3 fd=25  (/dev/zero) rv=13172342784 processed=1  | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op4 fd=25  (/dev/zero) rv=-1  processed=0 45 Operation not supported | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op0 fd=4294967295 (no-fd(-1)) rv=-1  processed=0 22 Invalid argument | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op1 fd=4294967295 (no-fd(-1)) rv=0   processed=1  | nil
+  op2 fd=4294967295 (no-fd(-1)) rv=0   processed=1  | nil
+  op3 fd=4294967295 (no-fd(-1)) rv=13172342784 processed=1  | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+  op4 fd=4294967295 (no-fd(-1)) rv=-1  processed=0 45 Operation not supported | start=0x311220000 end=0x311224000 prot=3 flags=6357024
+
+--- [D] ops 0..4 with entry+0x08 = a descriptor, start = 0 ---
+  op0 fd=22  (/dev/dmem0) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op1 fd=22  (/dev/dmem0) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op2 fd=22  (/dev/dmem0) rv=0   processed=1  | entry<0000000000000000>
+  op3 fd=22  (/dev/dmem0) rv=13170786304 processed=1  | entry<0000000000000000>
+  op4 fd=22  (/dev/dmem0) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op0 fd=23  (/dev/dmem1) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op1 fd=23  (/dev/dmem1) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op2 fd=23  (/dev/dmem1) rv=0   processed=1  | entry<0000000000000000>
+  op3 fd=23  (/dev/dmem1) rv=13170802688 processed=1  | entry<0000000000000000>
+  op4 fd=23  (/dev/dmem1) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op0 fd=24  (/dev/gc) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op1 fd=24  (/dev/gc) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op2 fd=24  (/dev/gc) rv=0   processed=1  | entry<0000000000000000>
+  op3 fd=24  (/dev/gc) rv=13170819072 processed=1  | entry<0000000000000000>
+  op4 fd=24  (/dev/gc) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op0 fd=25  (/dev/zero) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op1 fd=25  (/dev/zero) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op2 fd=25  (/dev/zero) rv=0   processed=1  | entry<0000000000000000>
+  op3 fd=25  (/dev/zero) rv=13170835456 processed=1  | entry<0000000000000000>
+  op4 fd=25  (/dev/zero) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op0 fd=4294967295 (no-fd(-1)) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op1 fd=4294967295 (no-fd(-1)) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+  op2 fd=4294967295 (no-fd(-1)) rv=0   processed=1  | entry<0000000000000000>
+  op3 fd=4294967295 (no-fd(-1)) rv=13171703808 processed=1  | entry<0000000000000000>
+  op4 fd=4294967295 (no-fd(-1)) rv=-1  processed=0 22 Invalid argument | entry<0000000000000000>
+
+--- [E] control page still reads as it did ---
+  ctl 0x31121C000: start=0x31121C000 end=0x311220000 prot=3 flags=6357024
+
+final canary: pid=106 (started 106)
+=== PROBE 1488b COMPLETE ===

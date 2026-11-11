@@ -1,0 +1,30 @@
+=== PROBE 1407a: 601 CMD 0x12 KEY CLASS ===
+[0] pid=371 tid=-1
+  in=0x310EA0000 dst=0x310EA4000
+
+[A] process/thread id keys, q0 = 0
+  key = own pid            rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = pid+1              rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = own tid            rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = 1                  rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = 2                  rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = 3                  rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = 0x64               rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = 0x191              rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = 0x100              rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = pid<<32            rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = (pid<<32)|1        rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+
+[B] the same keys with qword0 = a mapped destination page
+  pid, q0=dst              rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  1, q0=dst                rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  2, q0=dst                rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  0x100, q0=dst            rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  tid, q0=dst              rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+
+[C] key = the two words 0x00 writes (0x100 / 0), and a couple of Sony-ish constants
+  key = 0x00000100         rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = 0x50000000         rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+  key = 0x80000000         rv=-1         errno=2 No such file or directory dst_ch=0   <<< NOT ENOENT
+
+=== 1407a DONE ===

@@ -1,0 +1,79 @@
+=== PROBE 1548a: 548 op 3 MAP_FIXED over a device-backed vm_map entry ===
+
+[0] pid=242
+[0] SIG_IGN accepted on 10/10 signals
+[0] /dev/dmem0 fd=22
+
+[A] map /dev/dmem0 offset 0, len 0x40000, prot 3
+    D = 3115E8000 (aligned=true)
+    [A] 547(D)             start=3115E8000 end=311628000 prot=3 flags=10020 len=40000
+    record flags = 10020 (device)
+    [A] about to read 3115E8000
+    [A] dword at D = C0012800 (expect C0012800, the GPU register frame)
+
+[B] eight 548 op3 MAP_FIXED carves at D + i*0x4000 (each deletes one device-backed page)
+    order 8,4,12,2,6,10,14,1 -- the first seven are each the midpoint of a surviving device
+    entry, so the middle-split release path runs seven times; the last is an end clip
+    [B8] carve 311608000 ...
+    [B8] rv=13176438784 info=ok processed=1
+    [B4] carve 3115F8000 ...
+    [B4] rv=13176373248 info=ok processed=1
+    [B12] carve 311618000 ...
+    [B12] rv=13176504320 info=ok processed=1
+    [B2] carve 3115F0000 ...
+    [B2] rv=13176340480 info=ok processed=1
+    [B6] carve 311600000 ...
+    [B6] rv=13176406016 info=ok processed=1
+    [B10] carve 311610000 ...
+    [B10] rv=13176471552 info=ok processed=1
+    [B14] carve 311620000 ...
+    [B14] rv=13176537088 info=ok processed=1
+    [B1] carve 3115EC000 ...
+    [B1] rv=13176324096 info=ok processed=1
+    [B] carves attempted=8 accepted=8 boundary-ok=8
+
+[C] 547 across the sixteen frames after the carves
+    page  0 3115E8000  start=3115E8000 end=3115EC000 prot=3 flags=10020
+    page  1 3115EC000  start=3115EC000 end=3115F0000 prot=3 flags=610020
+    page  2 3115F0000  start=3115F0000 end=3115F4000 prot=3 flags=610020
+    page  3 3115F4000  start=3115F4000 end=3115F8000 prot=3 flags=10020
+    page  4 3115F8000  start=3115F8000 end=3115FC000 prot=3 flags=610020
+    page  5 3115FC000  start=3115FC000 end=311600000 prot=3 flags=10020
+    page  6 311600000  start=311600000 end=311604000 prot=3 flags=610020
+    page  7 311604000  start=311604000 end=311608000 prot=3 flags=10020
+    page  8 311608000  start=311608000 end=31160C000 prot=3 flags=610020
+    page  9 31160C000  start=31160C000 end=311610000 prot=3 flags=10020
+    page 10 311610000  start=311610000 end=311614000 prot=3 flags=610020
+    page 11 311614000  start=311614000 end=311618000 prot=3 flags=10020
+    page 12 311618000  start=311618000 end=31161C000 prot=3 flags=610020
+    page 13 31161C000  start=31161C000 end=311620000 prot=3 flags=10020
+    page 14 311620000  start=311620000 end=311624000 prot=3 flags=610020
+    page 15 311624000  start=311624000 end=311628000 prot=3 flags=10020
+    [C] totals: anon=8 device=8 other=0 absent=0
+    [C] VERDICT: REPLACED -- the carved pages no longer carry the dmem flag 0x10020.
+        CAUTION: flags is NOT a general object-type test. 1533a records flags=0x610020 for
+        BOTH an anonymous entry and the SceGnmTrapData device window, so 0x610020 does not
+        mean 'anonymous' -- it only means 'not this dmem mapping'. The flip is consistent
+        with a replacement, not proof of one. [D] decides, because the dmem frame at device
+        offset 0 holds the register dword 0xC0012800 and an anonymous page reads 0.
+
+[D] content reads, each gated on a 547 record that covers that exact address
+    [D] about to read 311608000
+    carved page 8          00000000
+    [D] about to read 3115E8000
+    uncarved page 0        C0012800
+    the carved page reads 0: an anonymous page replaced the device frame there.
+    the uncarved page 0 still reads the device dword: the surviving neighbours are intact.
+
+[E] re-map the node after the carves: is the pager object still usable?
+    E = 311628000 covering prot=3
+    [D] about to read 311628000
+    E first dword          C0012800
+    [E] VERDICT: the node still maps and still reads the register frame after 8
+        accepted, boundary-checked carves. The object was not freed; an over-release
+        that leaves it alive is not excluded by a content read.
+
+[F] teardown
+    munmap rv=0; 547(D) after munmap: no entry
+
+=== PROBE 1548a COMPLETE pid=242 carves=8 accepted=8 boundary-ok=8 anon=8 device=8 absent=0 ===

@@ -1,0 +1,56 @@
+=== PROBE 1537b: 548 OP 4, AND WHAT OP 0 ACTUALLY DOES ===
+
+[0] pid=214
+--- [A] does op 1 remove the whole containing entry, or only the page asked for? ---
+    477 of 0x40000 is one entry. Removing its middle page separates the two cases.
+[A] BIG=0x310E54000 547 0x310E54000-0x310E94000 prot=0x3 (span 0x40000)
+   -> op 1 on the middle page of a 256 KiB entry          
+      rv=0                processed=1 
+   before: BIG=0x310E54000 MID=0x310E74000
+   BIG (first half)           n=319  547 0x310E54000-0x310E74000 prot=0x3 | 674 has 0x310E54000-0x310E74000 prot=0x3
+   MID (the page asked)       n=319  547 has no record | absent from 674
+   BIG+0x24000 (second half)  n=319  547 0x310E78000-0x310E94000 prot=0x3 | 674 has 0x310E78000-0x310E94000 prot=0x3
+   BIG+0x3C000 (last page)    n=319  547 0x310E78000-0x310E94000 prot=0x3 | 674 has 0x310E78000-0x310E94000 prot=0x3
+   >>> SPLIT: the page went, its neighbours survived, so op 1 is precise
+   rv=0 processed=1
+
+--- [B] op 4 on a fresh 477 range - the one case never called successfully ---
+[B] B4=0x310B34000
+   -> op 4 prot 3 on an exact 16 KiB range                
+      rv=-1               processed=0 45 Operation not supported
+   B4 after op 4              n=320  547 0x310B34000-0x310B38000 prot=0x3 | 674 has 0x310B34000-0x310B38000 prot=0x3
+   VERDICT B4 op4: REFUSED rv=-1 45 Operation not supported
+   -> op 4 prot 1 on a fresh range                        
+      rv=-1               processed=0 45 Operation not supported
+   B4b after op 4             n=321  547 0x310B38000-0x310B3C000 prot=0x3 | 674 has 0x310B38000-0x310B3C000 prot=0x3
+   VERDICT B4b op4 prot1: REFUSED rv=-1 45 Operation not supported
+   73 0x310B38000 len=0x4000 rv=0
+   73 0x310B34000 len=0x4000 rv=0
+
+--- [D] op 0 with the physhm descriptor - judged from 547 and 674, never read ---
+[D] 629(1,2,0,0) = 22
+[D] D=0x310B34000
+   -> op 0 fd=physhm pos=0 on an anon range               
+      rv=-1               processed=0 16 Device busy
+   D after op 0               n=320  547 0x310B34000-0x310B38000 prot=0x3 | 674 has 0x310B34000-0x310B38000 prot=0x3
+   VERDICT D op0 physhm: REFUSED rv=-1 16 Device busy
+   no read: every read of a physhm range has killed the loader (321a, 318a)
+   73 0x310B34000 len=0x4000 rv=0
+
+--- [C] op 0 with the dmem0 descriptor on an existing anonymous range ---
+    All twelve earlier op-0 calls targeted anonymous ranges and all gave EBUSY.
+    dmem0 offset 0 is the ONE device page that reads (0xC0012800) and stores stick.
+[C] /dev/dmem0 fd=23
+[C] C=0x310B34000
+   -> op 0 fd=dmem0 pos=0 on an anon range                
+      rv=-1               processed=0 16 Device busy
+   C after op 0               n=320  547 0x310B34000-0x310B38000 prot=0x3 | 674 has 0x310B34000-0x310B38000 prot=0x3
+   VERDICT C op0 dmem0: REFUSED rv=-1 16 Device busy
+   not reading: op 0 gave no readable range at C or at its return value
+   73 0x310B34000 len=0x4000 rv=0
+
+--- [E] teardown, only ranges 547 still reports as exactly ours ---
+   BIG final                  n=319  547 0x310E54000-0x310E74000 prot=0x3 | 674 has 0x310E54000-0x310E74000 prot=0x3
+
+final canary: pid=214 (started 214)
+=== PROBE 1537b COMPLETE ===

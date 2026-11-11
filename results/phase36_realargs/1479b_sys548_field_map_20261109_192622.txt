@@ -1,0 +1,28 @@
+=== PROBE 1479b: SYS 548 ENTRY FIELD MAP ===
+[0] pid=80
+[0] page=0x310A54000
+
+--- [A] reference: op 2 with an all-zero entry, count 1 ---
+  all zero, op=2                                 rv=0                           processed=1
+  [after] 547 rv=0 prot=3 dword0 ok=true
+
+--- [B] single byte 0xFF at each offset, op=2, rest zero ---
+  byte +0x00 = 0xFF                              rv=-1   22 Invalid argument    processed=0
+  byte +0x01 = 0xFF                              rv=-1   22 Invalid argument    processed=0
+  byte +0x02 = 0xFF                              rv=0                           processed=1
+  byte +0x03 = 0xFF                              rv=0                           processed=1
+  byte +0x04 = 0xFF                              rv=0                           processed=1
+  byte +0x05 = 0xFF                              rv=0                           processed=1
+  byte +0x06 = 0xFF                              rv=0                           processed=1
+  byte +0x07 = 0xFF                              rv=0                           processed=1
+  byte +0x08 = 0xFF                              rv=0                           processed=1
+  byte +0x09 = 0xFF                              rv=0                           processed=1
+  byte +0x0A = 0xFF                              rv=0                           processed=1
+  byte +0x0B = 0xFF                              rv=0                           processed=1
+  byte +0x0C = 0xFF                              rv=0                           processed=1
+  byte +0x0D = 0xFF                              rv=0                           processed=1
+  byte +0x0E = 0xFF                              rv=0                           processed=1
+  byte +0x0F = 0xFF                              rv=0                           processed=1
+  byte +0x10 = 0xFF                              rv=-1   22 Invalid argument    processed=0
+  byte +0x11 = 0xFF                              rv=-1   22 Invalid argument    processed=0
+  byte +0x12 = 0xFF                              rv=0                           processed=1

@@ -1,0 +1,28 @@
+=== PROBE 1419a: 628 CONTAINER + PHYSICAL LADDER ===
+[0] pid=378
+[A] idx 0..0x14 at phys 0x100000000, flags 0, prot 0
+  idx=0x0 -> -1 errno=16 Device busy
+  idx=0x1 -> -1 errno=16 Device busy
+  idx=0x2 -> -1 errno=16 Device busy
+  idx=0x3 -> -1 errno=16 Device busy
+  idx=0x4 -> -1 errno=16 Device busy
+  idx=0x5 -> -1 errno=16 Device busy
+  idx=0x6 -> -1 errno=16 Device busy
+  idx=0x7 -> -1 errno=16 Device busy
+  idx=0x8 -> -1 errno=16 Device busy
+  idx=0x9 -> -1 errno=16 Device busy
+  idx=0xA -> -1 errno=16 Device busy
+  idx=0xB -> -1 errno=16 Device busy
+  idx=0xC -> -1 errno=16 Device busy
+  idx=0xD -> -1 errno=16 Device busy
+  idx=0xE -> -1 errno=16 Device busy
+  idx=0xF -> -1 errno=16 Device busy
+  idx=0x10 -> -1 errno=16 Device busy
+  idx=0x11 -> -1 errno=16 Device busy
+  idx=0x12 -> -1 errno=16 Device busy
+  idx=0x13 -> -1 errno=16 Device busy
+  idx=0x14 -> -1 errno=16 Device busy
+[B] idx 0..0x14 at phys 0x100000000, flags 0x40, prot 0x40
+[C] physical ladder, flags 0x40, prot 0x40
+[D] successes=0
+=== PROBE 1419a COMPLETE ===

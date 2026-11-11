@@ -1,0 +1,21 @@
+=== PROBE 1522a: MAPDIRECTMEMORY VIA 6-ARG FCALL ===
+
+pid=-1
+
+[A] environment
+  type(dlsym)                = function
+  type(native)               = table
+  type(native.fcall_with_rax)= function
+  type(fcall)                = table
+  type(memory.alloc)         = function
+  getuid()                   = 1
+  is_in_sandbox()            = 1
+  dlsym wrapper gate         = getuid()==0, so the wrapper raises; using syscall.dlsym
+  GetDirectMemorySize      = FAIL sceKernelGetDirectMemorySize:raw rv=-1 out=0x0
+  AllocateDirectMemory     = FAIL sceKernelGetDirectMemorySize:raw rv=-1 out=0x0; sceKernelAllocateDirectMemory:raw rv=-1 out=0x0
+  MapDirectMemory          = FAIL sceKernelGetDirectMemorySize:raw rv=-1 out=0x0; sceKernelAllocateDirectMemory:raw rv=-1 out=0x0; sceKernelMapDirectMemory:raw rv=-1 out=0x0
+  MapDirectMemory2         = FAIL sceKernelGetDirectMemorySize:raw rv=-1 out=0x0; sceKernelAllocateDirectMemory:raw rv=-1 out=0x0; sceKernelMapDirectMemory:raw rv=-1 out=0x0; sceKernelMapDirectMemory2:raw rv=-1 out=0x0
+  MapNamedDirectMemory     = FAIL sceKernelGetDirectMemorySize:raw rv=-1 out=0x0; sceKernelAllocateDirectMemory:raw rv=-1 out=0x0; sceKernelMapDirectMemory:raw rv=-1 out=0x0; sceKernelMapDirectMemory2:raw rv=-1 out=0x0; sceKernelMapNamedDirectMemory:raw rv=-1 out=0x0
+  ReleaseDirectMemory      = FAIL sceKernelGetDirectMemorySize:raw rv=-1 out=0x0; sceKernelAllocateDirectMemory:raw rv=-1 out=0x0; sceKernelMapDirectMemory:raw rv=-1 out=0x0; sceKernelMapDirectMemory2:raw rv=-1 out=0x0; sceKernelMapNamedDirectMemory:raw rv=-1 out=0x0; sceKernelReleaseDirectMemory:raw rv=-1 out=0x0
+
+VERDICT: MapDirectMemory did not resolve; nothing else is meaningful.

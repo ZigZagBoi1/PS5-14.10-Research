@@ -1,0 +1,31 @@
+=== PROBE 1506a: IS profil LIVE ON 14.10? ===
+[0] pid=125
+
+--- [A] buffer ---
+  disable first: rv=0 
+  mmap(0x800000) -> 0x314060000 
+  buffer zeroed
+
+--- [B] arm: scale 1, off 0, size 0x200000 ---
+  profil arm: rv=0 
+  spinning...
+  spin done (sink=450000015000001)
+  disable: rv=0 
+
+--- [C] scan 0x%X u_shorts at 0x%X ---	2097152	13220839424
+  nonzero u_shorts: 2 of 2097152
+    i=0x4D9  pc~0x4D90000
+    i=0x4D9  pc~0x4D90000
+  VERDICT: profil sampling IS LIVE
+
+--- [D] re-arm with pr_off = 0x10000000 (index must drop by 0x10000000/0x10000 = 0x1000) ---
+  profil arm2: rv=0 
+  nonzero: 2  first index: 0x4D9
+  a subtractive offset is confirmed if first index moved DOWN by 0x1000
+
+--- [E] control: scale 0 ---
+  profil scale=0: rv=0 
+  nonzero with scale 0: 2 (expected 0: scale 0 disables)
+
+final canary pid 125
+=== PROBE 1506a COMPLETE ===

@@ -1,0 +1,40 @@
+=== PROBE 1405a: 601 CMD 0x12 FIELD ===
+[0] pid=371
+  in=0x310E40000 dst=0x310E44000
+
+[1] which dword of the struct flips EFAULT -> ENOENT (all else zero)
+  +0x000 = 1               rv=-1         errno=14 Bad address
+  +0x004 = 1               rv=-1         errno=14 Bad address
+  +0x008 = 1               rv=-1         errno=2 No such file or directory
+  +0x00C = 1               rv=-1         errno=2 No such file or directory
+  +0x010 = 1               rv=-1         errno=14 Bad address
+  +0x014 = 1               rv=-1         errno=14 Bad address
+  +0x018 = 1               rv=-1         errno=14 Bad address
+  +0x01C = 1               rv=-1         errno=14 Bad address
+  +0x020 = 1               rv=-1         errno=14 Bad address
+  +0x024 = 1               rv=-1         errno=14 Bad address
+  +0x040 = 1               rv=-1         errno=14 Bad address
+  +0x080 = 1               rv=-1         errno=14 Bad address
+  +0x100 = 1               rv=-1         errno=14 Bad address
+  all zero (control)       rv=-1         errno=14 Bad address
+
+[2] the field's value is a pointer: does a kernel VA reach a copyin or a raw deref?
+  q0 = dst page            rv=-1         errno=14 Bad address
+  q0 = stub page (k)       rv=-1         errno=14 Bad address
+  q0 = kernel image base   rv=-1         errno=14 Bad address
+  q0 = kernel image +16M   rv=-1         errno=14 Bad address
+
+[3] a small integer in q0 (if it is a handle/key, a low value may hit)
+  q0 = 0x1                 rv=-1         errno=14 Bad address
+  q0 = 0x2                 rv=-1         errno=14 Bad address
+  q0 = 0x3                 rv=-1         errno=14 Bad address
+  q0 = 0x16                rv=-1         errno=14 Bad address
+  q0 = 0x20                rv=-1         errno=14 Bad address
+  q0 = 0x100               rv=-1         errno=14 Bad address
+
+[4] last: an unmapped kernel VA. If this kills the process, the handler
+    dereferences q0 in kernel mode rather than copying in from it.
+  q0 = 0xFFFFFFFFD0000000 (unmapped) ...
+  q0 = unmapped kernel VA  rv=-1         errno=14 Bad address
+
+=== 1405a DONE ===

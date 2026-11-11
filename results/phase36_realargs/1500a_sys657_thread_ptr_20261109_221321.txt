@@ -1,0 +1,24 @@
+=== PROBE 1500a: 657 TREATS ARG2 AS A STRUCT THREAD POINTER ===
+[0] pid=125
+
+--- [A] building the fake chain ---
+  E 0x3127FC000
+  T 0x312800000  P 0x312804000  M 0x312808000  EN 0x31280C000
+  T[+8]=0x312804000  P[+0x200]=0x0  M[+0x1d0]=0x1280C000  M[+0x1c4]=0
+
+--- [B] control: count 0 must skip the deref ---
+  657(E, 0, T, 0) -> ok=true rv=0
+
+--- [C] 657(E, 1, fake_thread, 0) ---
+  (if the capture ends here, the kernel faulted on our pointer)
+  returned: ok=true rv=-1 22 Invalid argument
+
+--- [D] canary scan ---
+  M[+0x1c4] = 0   
+  E   changed    3 dwords (first +0x0 = 00000001)
+  T   changed    3 dwords (first +0x0 = 00000000)
+  P   changed    2 dwords (first +0x200 = 12808000)
+  M   changed    8 dwords (first +0x20 = 00000000)
+  EN  changed    8 dwords (first +0x20 = 00000000)
+  final canary live: true (pid 125)
+=== PROBE 1500a COMPLETE ===

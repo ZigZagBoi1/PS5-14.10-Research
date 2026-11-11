@@ -1,0 +1,34 @@
+=== PROBE 1508a: 548 op 3 WITH MAP_FIXED ===
+[0] pid=80
+
+--- [A] baseline anon mapping ---
+  V=0x31106C000 
+  marker at V+0x100 = 11223344   547 rv=0 prot=3
+
+--- [B] op3 with flags 0x0 (control: must NOT disturb V) ---
+  rv=13170573312 processed=1 
+  marker after control = 11223344 (intact, expected)
+
+--- [C] op3 with flags 0x10 (MAP_FIXED) over the live entry ---
+  a replacement destroys V+0x100; a refusal leaves 11223344
+  rv=13170556928 processed=1 
+  marker now = 00000000   547 rv=0 prot=3
+  VERDICT: MAP_FIXED REPLACED THE ENTRY
+
+--- [D] op3 flags 0x10 onto an untouched 16 KiB-aligned hole ---
+  V2=0x311074000 (now free, we munmap it)
+  munmap V2 -> 0
+  547(V2) rv=-1 (want -1 = free)
+  rv=13170589696 processed=1 
+  547(V2) rv=0 prot=3  -> mapped exactly at V2 (MAP_FIXED honoured)
+  write/read V2+0x100 = 55667788
+
+--- [E] device window ---
+  [C] replaced an entry, so try the same on SceGnmTrapCode at 0xF00000000
+  this destroys a device pager entry; a panic here is the expected failure mode
+  rv=64424509440 processed=1 
+  547(0xF00000000) rv=0 prot=3
+  read 0xF00000000 = 00000000
+
+final canary pid 80
+=== PROBE 1508a COMPLETE ===

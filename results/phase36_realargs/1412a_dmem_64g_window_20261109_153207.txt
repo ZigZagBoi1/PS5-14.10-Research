@@ -1,0 +1,294 @@
+=== PROBE 1412a: THE 64 GiB WINDOW ===
+[0] pid=378
+[0] dmem0 fd=25
+
+[A] top of the low window, 0x110000000 .. 0x120000000 at 16 MiB
+  first refused inside this 16 MiB run: off=0x111000000 13 Permission denied
+  first refused inside this 16 MiB run: off=0x120000000 13 Permission denied
+  highest offset that maps = 0x110000000
+
+[B] extent of the 64 GiB window (map only, no reads)
+  base+0x1000      MAP va=0x310855000
+  base+0x10000     MAP va=0x310858000
+  base+0x100000    MAP va=0x31085C000
+  base+0x400000    MAP va=0x310860000
+  base+0x1000000   MAP va=0x310864000
+  base+0x4000000   13 Permission denied
+  base+0x8000000   13 Permission denied
+  base len=0x1000      MAP va=0x310868000
+  base len=0x200000    MAP va=0x31086C000
+  base len=0x10000000  13 Permission denied
+
+[C] protection variants at the 64 GiB base
+  prot=0x0   MAP va=0x310A6C000
+  prot=0x1   MAP va=0x310A70000
+  prot=0x2   13 Permission denied
+  prot=0x3   13 Permission denied
+  prot=0x5   13 Permission denied
+  prot=0x7   13 Permission denied
+  prot=0x13  13 Permission denied
+  MAP_PRIVATE (flags=2), prot=1:
+    22 Invalid argument
+
+[D] contents of the 64 GiB page (reads last, each pre-printed)
+  mapped at 0x310A74000
+  reading +0x0
+  reading +0x4
+  reading +0x8
+  reading +0xC
+  reading +0x10
+  reading +0x14
+  reading +0x18
+  reading +0x1C
+  reading +0x20
+  reading +0x24
+  reading +0x28
+  reading +0x2C
+  reading +0x30
+  reading +0x34
+  reading +0x38
+  reading +0x3C
+  reading +0x40
+  reading +0x44
+  reading +0x48
+  reading +0x4C
+  reading +0x50
+  reading +0x54
+  reading +0x58
+  reading +0x5C
+  reading +0x60
+  reading +0x64
+  reading +0x68
+  reading +0x6C
+  reading +0x70
+  reading +0x74
+  reading +0x78
+  reading +0x7C
+  reading +0x80
+  reading +0x84
+  reading +0x88
+  reading +0x8C
+  reading +0x90
+  reading +0x94
+  reading +0x98
+  reading +0x9C
+  reading +0xA0
+  reading +0xA4
+  reading +0xA8
+  reading +0xAC
+  reading +0xB0
+  reading +0xB4
+  reading +0xB8
+  reading +0xBC
+  reading +0xC0
+  reading +0xC4
+  reading +0xC8
+  reading +0xCC
+  reading +0xD0
+  reading +0xD4
+  reading +0xD8
+  reading +0xDC
+  reading +0xE0
+  reading +0xE4
+  reading +0xE8
+  reading +0xEC
+  reading +0xF0
+  reading +0xF4
+  reading +0xF8
+  reading +0xFC
+  reading +0x100
+  reading +0x104
+  reading +0x108
+  reading +0x10C
+  reading +0x110
+  reading +0x114
+  reading +0x118
+  reading +0x11C
+  reading +0x120
+    +0x120 = 00000002
+  reading +0x124
+  reading +0x128
+  reading +0x12C
+  reading +0x130
+  reading +0x134
+  reading +0x138
+  reading +0x13C
+  reading +0x140
+  reading +0x144
+  reading +0x148
+  reading +0x14C
+  reading +0x150
+  reading +0x154
+  reading +0x158
+  reading +0x15C
+  reading +0x160
+  reading +0x164
+  reading +0x168
+  reading +0x16C
+  reading +0x170
+  reading +0x174
+  reading +0x178
+  reading +0x17C
+  reading +0x180
+  reading +0x184
+  reading +0x188
+  reading +0x18C
+  reading +0x190
+  reading +0x194
+  reading +0x198
+  reading +0x19C
+  reading +0x1A0
+  reading +0x1A4
+  reading +0x1A8
+  reading +0x1AC
+  reading +0x1B0
+  reading +0x1B4
+  reading +0x1B8
+  reading +0x1BC
+  reading +0x1C0
+  reading +0x1C4
+  reading +0x1C8
+  reading +0x1CC
+  reading +0x1D0
+  reading +0x1D4
+  reading +0x1D8
+  reading +0x1DC
+  reading +0x1E0
+  reading +0x1E4
+  reading +0x1E8
+  reading +0x1EC
+  reading +0x1F0
+  reading +0x1F4
+  reading +0x1F8
+  reading +0x1FC
+  reading +0x200
+  reading +0x204
+  reading +0x208
+  reading +0x20C
+  reading +0x210
+  reading +0x214
+  reading +0x218
+  reading +0x21C
+  reading +0x220
+  reading +0x224
+  reading +0x228
+  reading +0x22C
+  reading +0x230
+  reading +0x234
+  reading +0x238
+  reading +0x23C
+  reading +0x240
+  reading +0x244
+  reading +0x248
+  reading +0x24C
+  reading +0x250
+  reading +0x254
+  reading +0x258
+  reading +0x25C
+  reading +0x260
+  reading +0x264
+  reading +0x268
+  reading +0x26C
+  reading +0x270
+  reading +0x274
+  reading +0x278
+  reading +0x27C
+  reading +0x280
+  reading +0x284
+  reading +0x288
+  reading +0x28C
+  reading +0x290
+  reading +0x294
+  reading +0x298
+  reading +0x29C
+  reading +0x2A0
+  reading +0x2A4
+  reading +0x2A8
+  reading +0x2AC
+  reading +0x2B0
+  reading +0x2B4
+  reading +0x2B8
+  reading +0x2BC
+  reading +0x2C0
+  reading +0x2C4
+  reading +0x2C8
+  reading +0x2CC
+  reading +0x2D0
+  reading +0x2D4
+  reading +0x2D8
+  reading +0x2DC
+  reading +0x2E0
+  reading +0x2E4
+  reading +0x2E8
+  reading +0x2EC
+  reading +0x2F0
+  reading +0x2F4
+  reading +0x2F8
+  reading +0x2FC
+  reading +0x300
+  reading +0x304
+  reading +0x308
+  reading +0x30C
+  reading +0x310
+  reading +0x314
+  reading +0x318
+  reading +0x31C
+  reading +0x320
+  reading +0x324
+  reading +0x328
+  reading +0x32C
+  reading +0x330
+  reading +0x334
+  reading +0x338
+  reading +0x33C
+  reading +0x340
+  reading +0x344
+  reading +0x348
+  reading +0x34C
+  reading +0x350
+  reading +0x354
+  reading +0x358
+  reading +0x35C
+  reading +0x360
+  reading +0x364
+  reading +0x368
+  reading +0x36C
+  reading +0x370
+  reading +0x374
+  reading +0x378
+  reading +0x37C
+  reading +0x380
+  reading +0x384
+  reading +0x388
+  reading +0x38C
+  reading +0x390
+  reading +0x394
+  reading +0x398
+  reading +0x39C
+  reading +0x3A0
+  reading +0x3A4
+  reading +0x3A8
+  reading +0x3AC
+  reading +0x3B0
+  reading +0x3B4
+  reading +0x3B8
+  reading +0x3BC
+  reading +0x3C0
+  reading +0x3C4
+  reading +0x3C8
+  reading +0x3CC
+  reading +0x3D0
+  reading +0x3D4
+  reading +0x3D8
+  reading +0x3DC
+  reading +0x3E0
+  reading +0x3E4
+  reading +0x3E8
+  reading +0x3EC
+  reading +0x3F0
+  reading +0x3F4
+  reading +0x3F8
+  reading +0x3FC
+  non-zero dwords in the first 1 KiB: 1
+
+=== 1412a DONE ===

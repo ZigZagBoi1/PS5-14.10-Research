@@ -1,0 +1,30 @@
+=== PROBE 1446e: SELECT FDSET LENGTH (no guard page) ===
+
+pid=423
+
+[A] region=0x310B94000 span=65536 bytes  bitmap=0x310B94000  timeout=0x310B94200
+  nfds=1024     implied=128     rv=0  (2 No such file or directory)
+  nfds=1025     implied=128     rv=0  (2 No such file or directory)
+  nfds=8192     implied=1024    rv=0  (2 No such file or directory)
+  nfds=65536    implied=8192    rv=0  (2 No such file or directory)
+  nfds=131072   implied=16384   rv=0  (2 No such file or directory)
+  nfds=262144   implied=32768   rv=0  (2 No such file or directory)
+  nfds=524288   implied=65536   rv=0  (2 No such file or directory)
+  nfds=1048576  implied=131072  rv=-1 (14 Bad address        )  <-- EFAULT where nfds/8 exceeds the region: nfds is trusted
+  nfds=4194304  implied=524288  rv=-1 (14 Bad address        )  <-- EFAULT where nfds/8 exceeds the region: nfds is trusted
+
+[B] region=0x310BA4000 span=4194304 bytes  bitmap=0x310BA4000  timeout=0x310BA4200
+  nfds=524288   implied=65536   rv=0  (14 Bad address        )
+  nfds=1048576  implied=131072  rv=0  (14 Bad address        )
+  nfds=4194304  implied=524288  rv=0  (14 Bad address        )
+  nfds=8388608  implied=1048576 rv=0  (14 Bad address        )
+
+[C] pselect(522), 64 KiB region
+  nfds=1024     implied=128     rv=0  (14 Bad address)
+  nfds=524288   implied=65536   rv=0  (14 Bad address)
+  nfds=1048576  implied=131072  rv=0  (14 Bad address)
+  nfds=4194304  implied=524288  rv=0  (14 Bad address)
+
+[D] survivor pid=423 (was 423)
+
+=== PROBE 1446e COMPLETE ===

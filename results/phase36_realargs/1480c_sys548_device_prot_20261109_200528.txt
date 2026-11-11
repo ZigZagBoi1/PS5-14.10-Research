@@ -1,0 +1,295 @@
+=== PROBE 1480c: SYS 548 OP 2 AGAINST THE DEVICE MAPPINGS ===
+[0] pid=87
+
+--- [A] mappings whose protection is not 0/1/2/3/5 ---
+[A] 674 rv=0 records=325
+   0x200F70000 - 0x210F70000 prot=0x33 anon:00006920c4fa
+   0x210F70000 - 0x211470000 prot=0x33 anon:00006920c4fa
+   0x211470000 - 0x211CE0000 prot=0x33 anon:00006920c4fa
+   0x211CE0000 - 0x211CF0000 prot=0x33 anon:00006920c4fa
+   0x211CF0000 - 0x212560000 prot=0x33 anon:00006920c4fa
+   0x212560000 - 0x212570000 prot=0x33 anon:00006920c4fa
+   0x212570000 - 0x212DE0000 prot=0x33 anon:00006920c4fa
+   0x212DE0000 - 0x310F70000 prot=0x33 anon:00006920c4fa
+   0x800000000 - 0x800004000 prot=0x4 sigtramp_alias
+   0x80066C000 - 0x800760000 prot=0x4 libSceSsl.sprx
+   0x8049AC000 - 0x8049F0000 prot=0x4 libSceNpManager.sprx
+   0x807864000 - 0x80787C000 prot=0x4 libSceSaveDataDialog.sprx
+   0x80851C000 - 0x808558000 prot=0x4 libSceAudioOut.sprx
+   0x808D34000 - 0x808D38000 prot=0x4 libSceRtc.sprx
+   0x809D18000 - 0x809D3C000 prot=0x4 libSceCamera.sprx
+   0x80BF04000 - 0x80BF08000 prot=0x4 libSceAjm.sprx
+   0x80E29C000 - 0x80E2A4000 prot=0x4 libSceImeDialog.sprx
+   0x8140B4000 - 0x8140B8000 prot=0x4 libSceCommonDialog.sprx
+   0x8146C4000 - 0x8146E4000 prot=0x4 libSceNpWebApi2.sprx
+   0x818A00000 - 0x818A34000 prot=0x4 libSceNet.sprx
+   0x819B78000 - 0x819B7C000 prot=0x4 libSceMsgDialog.sprx
+   0x81BB98000 - 0x81BB9C000 prot=0x4 libSceSysUtil.sprx
+   0x81CC74000 - 0x81CC90000 prot=0x4 libScePad.sprx
+   0x81DE94000 - 0x81DEAC000 prot=0x4 libSceIme.sprx
+   0x81E370000 - 0x81E380000 prot=0x4 libSceUserService.sprx
+   0x8221F8000 - 0x8221FC000 prot=0x4 libSceNpGameIntent.sprx
+   0x823404000 - 0x823410000 prot=0x4 libSceSysmodule.sprx
+   0x8236C0000 - 0x8236C8000 prot=0x4 libSceIpmi.sprx
+   0x8236EC000 - 0x823720000 prot=0x4 libSceNpCommon.sprx
+   0x8238B0000 - 0x8238B8000 prot=0x4 libSceAudioIn.sprx
+   0x827384000 - 0x8273C4000 prot=0x4 libSceAvPlayer.sprx
+   0x829780000 - 0x829788000 prot=0x4 libSceNetCtl.sprx
+   0x829CC4000 - 0x829CC8000 prot=0x4 libSceRegMgr.sprx
+   0x82A958000 - 0x82A978000 prot=0x4 libSceVideoOut.sprx
+   0x82AE34000 - 0x82AE64000 prot=0x4 libSceHttp.sprx
+   0x82F8DC000 - 0x82F8F0000 prot=0x4 libSceAvSetting.sprx
+   0x830408000 - 0x830450000 prot=0x4 libSceSaveData.sprx
+   0x8311E4000 - 0x8311F0000 prot=0x4 libSceRazorCpu.sprx
+   0x832268000 - 0x832294000 prot=0x4 libSceHttp2.sprx
+   0x832A5C000 - 0x832A64000 prot=0x4 libSceMbus.sprx
+   0x836340000 - 0x83636C000 prot=0x4 libSceSystemService.sprx
+   0x839D6C000 - 0x839D80000 prot=0x4 libSceNpWebApi.sprx
+   0x83A3E4000 - 0x83A50C000 prot=0x4 libSceLibcInternal.sprx
+   0x83F390000 - 0x83F39C000 prot=0x4 libSceGnmDriverForNeoMode.sp
+   0x83FF48000 - 0x83FF90000 prot=0x4 libkernel.sprx
+   0xC80000000 - 0xC80048000 prot=0x33 (NoName)eboot.bin
+   0xF00000000 - 0xF00004000 prot=0x33 SceGnmTrapCode
+   0xF00004000 - 0xF00008000 prot=0x33 SceGnmTrapData
+   0xF00008000 - 0xF00104000 prot=0x33 SceAgcDdid
+   0xF00104000 - 0xF00140000 prot=0x33 SceGnmEopFifo
+   0xF00140000 - 0xF00144000 prot=0x33 SceGnmShadowRegInfo
+   0xF00144000 - 0xF01144000 prot=0x33 SceGnmCwsr
+   0xF01144000 - 0xF01148000 prot=0x33 SceGnmMisc
+   0xF01148000 - 0xF01328000 prot=0x33 SceGnmACQRB
+   0xFE0000000 - 0xFE0010000 prot=0x10 SceGnmDriver
+   0xFE0200000 - 0xFE0204000 prot=0x23 SceGnmDingDong
+[A] 56 such mappings
+
+--- [B] ask 548 for prot 3 on each of them ---
+   target=0x200F70000 prot_before=0x33 anon:00006920c4fa
+  -> op=2 prot=3 on 0x200F70000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0x210F70000 prot_before=0x33 anon:00006920c4fa
+  -> op=2 prot=3 on 0x210F70000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0x211470000 prot_before=0x33 anon:00006920c4fa
+  -> op=2 prot=3 on 0x211470000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0x211CE0000 prot_before=0x33 anon:00006920c4fa
+  -> op=2 prot=3 on 0x211CE0000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0x211CF0000 prot_before=0x33 anon:00006920c4fa
+  -> op=2 prot=3 on 0x211CF0000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0x212560000 prot_before=0x33 anon:00006920c4fa
+  -> op=2 prot=3 on 0x212560000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0x212570000 prot_before=0x33 anon:00006920c4fa
+  -> op=2 prot=3 on 0x212570000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0x212DE0000 prot_before=0x33 anon:00006920c4fa
+  -> op=2 prot=3 on 0x212DE0000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0x800000000 prot_before=0x4 sigtramp_alias
+  -> op=2 prot=3 on 0x800000000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x80066C000 prot_before=0x4 libSceSsl.sprx
+  -> op=2 prot=3 on 0x80066C000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x8049AC000 prot_before=0x4 libSceNpManager.sprx
+  -> op=2 prot=3 on 0x8049AC000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x807864000 prot_before=0x4 libSceSaveDataDialog.sprx
+  -> op=2 prot=3 on 0x807864000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x80851C000 prot_before=0x4 libSceAudioOut.sprx
+  -> op=2 prot=3 on 0x80851C000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x808D34000 prot_before=0x4 libSceRtc.sprx
+  -> op=2 prot=3 on 0x808D34000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x809D18000 prot_before=0x4 libSceCamera.sprx
+  -> op=2 prot=3 on 0x809D18000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x80BF04000 prot_before=0x4 libSceAjm.sprx
+  -> op=2 prot=3 on 0x80BF04000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x80E29C000 prot_before=0x4 libSceImeDialog.sprx
+  -> op=2 prot=3 on 0x80E29C000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x8140B4000 prot_before=0x4 libSceCommonDialog.sprx
+  -> op=2 prot=3 on 0x8140B4000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x8146C4000 prot_before=0x4 libSceNpWebApi2.sprx
+  -> op=2 prot=3 on 0x8146C4000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x818A00000 prot_before=0x4 libSceNet.sprx
+  -> op=2 prot=3 on 0x818A00000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x819B78000 prot_before=0x4 libSceMsgDialog.sprx
+  -> op=2 prot=3 on 0x819B78000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x81BB98000 prot_before=0x4 libSceSysUtil.sprx
+  -> op=2 prot=3 on 0x81BB98000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x81CC74000 prot_before=0x4 libScePad.sprx
+  -> op=2 prot=3 on 0x81CC74000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x81DE94000 prot_before=0x4 libSceIme.sprx
+  -> op=2 prot=3 on 0x81DE94000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x81E370000 prot_before=0x4 libSceUserService.sprx
+  -> op=2 prot=3 on 0x81E370000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x8221F8000 prot_before=0x4 libSceNpGameIntent.sprx
+  -> op=2 prot=3 on 0x8221F8000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x823404000 prot_before=0x4 libSceSysmodule.sprx
+  -> op=2 prot=3 on 0x823404000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x8236C0000 prot_before=0x4 libSceIpmi.sprx
+  -> op=2 prot=3 on 0x8236C0000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x8236EC000 prot_before=0x4 libSceNpCommon.sprx
+  -> op=2 prot=3 on 0x8236EC000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x8238B0000 prot_before=0x4 libSceAudioIn.sprx
+  -> op=2 prot=3 on 0x8238B0000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x827384000 prot_before=0x4 libSceAvPlayer.sprx
+  -> op=2 prot=3 on 0x827384000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x829780000 prot_before=0x4 libSceNetCtl.sprx
+  -> op=2 prot=3 on 0x829780000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x829CC4000 prot_before=0x4 libSceRegMgr.sprx
+  -> op=2 prot=3 on 0x829CC4000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x82A958000 prot_before=0x4 libSceVideoOut.sprx
+  -> op=2 prot=3 on 0x82A958000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x82AE34000 prot_before=0x4 libSceHttp.sprx
+  -> op=2 prot=3 on 0x82AE34000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x82F8DC000 prot_before=0x4 libSceAvSetting.sprx
+  -> op=2 prot=3 on 0x82F8DC000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x830408000 prot_before=0x4 libSceSaveData.sprx
+  -> op=2 prot=3 on 0x830408000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x8311E4000 prot_before=0x4 libSceRazorCpu.sprx
+  -> op=2 prot=3 on 0x8311E4000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x832268000 prot_before=0x4 libSceHttp2.sprx
+  -> op=2 prot=3 on 0x832268000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x832A5C000 prot_before=0x4 libSceMbus.sprx
+  -> op=2 prot=3 on 0x832A5C000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x836340000 prot_before=0x4 libSceSystemService.sprx
+  -> op=2 prot=3 on 0x836340000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x839D6C000 prot_before=0x4 libSceNpWebApi.sprx
+  -> op=2 prot=3 on 0x839D6C000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x83A3E4000 prot_before=0x4 libSceLibcInternal.sprx
+  -> op=2 prot=3 on 0x83A3E4000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x83F390000 prot_before=0x4 libSceGnmDriverForNeoMode.sp
+  -> op=2 prot=3 on 0x83F390000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0x83FF48000 prot_before=0x4 libkernel.sprx
+  -> op=2 prot=3 on 0x83FF48000                      
+     rv=-1    13 Permission denied   processed=0
+   target=0xC80000000 prot_before=0x33 (NoName)eboot.bin
+  -> op=2 prot=3 on 0xC80000000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0xF00000000 prot_before=0x33 SceGnmTrapCode
+  -> op=2 prot=3 on 0xF00000000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0xF00004000 prot_before=0x33 SceGnmTrapData
+  -> op=2 prot=3 on 0xF00004000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0xF00008000 prot_before=0x33 SceAgcDdid
+  -> op=2 prot=3 on 0xF00008000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0xF00104000 prot_before=0x33 SceGnmEopFifo
+  -> op=2 prot=3 on 0xF00104000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0xF00140000 prot_before=0x33 SceGnmShadowRegInfo
+  -> op=2 prot=3 on 0xF00140000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0xF00144000 prot_before=0x33 SceGnmCwsr
+  -> op=2 prot=3 on 0xF00144000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0xF01144000 prot_before=0x33 SceGnmMisc
+  -> op=2 prot=3 on 0xF01144000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0xF01148000 prot_before=0x33 SceGnmACQRB
+  -> op=2 prot=3 on 0xF01148000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0xFE0000000 prot_before=0x10 SceGnmDriver
+  -> op=2 prot=3 on 0xFE0000000                      
+     rv=0                            processed=1
+     547 now prot=3
+   target=0xFE0200000 prot_before=0x23 SceGnmDingDong
+  -> op=2 prot=3 on 0xFE0200000                      
+     rv=0                            processed=1
+     547 now prot=3
+[B] 19 mapping(s) now report prot 3
+
+--- [C] read one dword from each moved mapping ---
+[C] reading 0x200F70000 now (547 said prot 3)
+[C] 0x200F70000 -> 00000000
+[C] reading 0x210F70000 now (547 said prot 3)
+[C] 0x210F70000 -> 00000000
+[C] reading 0x211470000 now (547 said prot 3)
+[C] 0x211470000 -> 00000000
+[C] reading 0x211CE0000 now (547 said prot 3)
+[C] 0x211CE0000 -> AFAFAFAF
+[C] reading 0x211CF0000 now (547 said prot 3)
+[C] 0x211CF0000 -> 00000000
+[C] reading 0x212560000 now (547 said prot 3)
+[C] 0x212560000 -> AFAFAFAF
+[C] reading 0x212570000 now (547 said prot 3)
+[C] 0x212570000 -> 00000000
+[C] reading 0x212DE0000 now (547 said prot 3)
+[C] 0x212DE0000 -> AFAFAFAF
+[C] reading 0xC80000000 now (547 said prot 3)
+[C] 0xC80000000 -> 00000000
+[C] reading 0xF00000000 now (547 said prot 3)
+[C] 0xF00000000 -> BF800001
+[C] reading 0xF00004000 now (547 said prot 3)
+[C] 0xF00004000 -> 00144000
+[C] reading 0xF00008000 now (547 said prot 3)
+[C] 0xF00008000 -> 00000000
+[C] reading 0xF00104000 now (547 said prot 3)
+[C] 0xF00104000 -> 00000000
+[C] reading 0xF00140000 now (547 said prot 3)
+[C] 0xF00140000 -> 00000000
+[C] reading 0xF00144000 now (547 said prot 3)
+[C] 0xF00144000 -> 00000000
+[C] reading 0xF01144000 now (547 said prot 3)
+[C] 0xF01144000 -> 00000000
+[C] reading 0xF01148000 now (547 said prot 3)
+[C] 0xF01148000 -> 00000000
+[C] reading 0xFE0000000 now (547 said prot 3)
+[C] 0xFE0000000 -> C0012800
+[C] reading 0xFE0200000 now (547 said prot 3)
+[C] 0xFE0200000 -> FFFFFFFF
+
+final canary: pid=87 (started 87)
+=== PROBE 1480c COMPLETE ===

@@ -1,0 +1,56 @@
+=== PROBE 1462a: SYS 601 COMMAND 0x12 AND NAMES ===
+
+[0] pid=495
+[A] control 601(0x00, buf)
+[A] rv=0  out=00000100 00000000
+
+[B] 601(0x12, name, buf, 0x100)
+[B1] name="dce"
+[B1] rv=-1 errno=22 Invalid argument
+[B2] name="gc"
+[B2] rv=-1 errno=22 Invalid argument
+[B3] name="ajm"
+[B3] rv=-1 errno=22 Invalid argument
+[B4] name="dmem0"
+[B4] rv=-1 errno=22 Invalid argument
+[B5] name="notification0"
+[B5] rv=-1 errno=22 Invalid argument
+[B6] name="/dev/dce"
+[B6] rv=-1 errno=22 Invalid argument
+[B7] name="/dev/gc"
+[B7] rv=-1 errno=22 Invalid argument
+[B8] name="/dev/dmem0"
+[B8] rv=-1 errno=22 Invalid argument
+[B9] name="0"
+[B9] rv=-1 errno=22 Invalid argument
+[B10] name=""
+[B10] rv=-1 errno=22 Invalid argument
+
+[C] 601(0x12, N, buf, N) for small integers, to see the errno ladder
+[C] arg1=0
+[C] rv=-1 errno=14 Bad address
+[C] arg1=1
+[C] rv=-1 errno=22 Invalid argument
+[C] arg1=2
+[C] rv=-1 errno=22 Invalid argument
+[C] arg1=3
+[C] rv=-1 errno=22 Invalid argument
+[C] arg1=16
+[C] rv=-1 errno=22 Invalid argument
+[C] arg1=256
+[C] rv=-1 errno=22 Invalid argument
+
+[D] 0x13 and 0x14 returned 0 with no write -- try a struct pointer in arg2
+[D] cmd=0x13
+[D] rv=0  out=00000000 00000000
+[D] out=00000000 00000000 00000000 00000000
+[D] cmd=0x14
+[D] rv=0  out=00000000 00000000
+[D] out=00000000 00000000 00000000 00000000
+[D] cmd=0x19
+[D] rv=0  out=00000000 00000000
+[D] out=00000000 00000000 00000000 00000000
+
+[Z] alive pid=495 (was 495)
+
+=== PROBE 1462a COMPLETE ===

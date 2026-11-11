@@ -1,0 +1,11 @@
+=== PROBE 1401a: 601 CMD 0x12 ERRNO ===
+[0] pid=0
+[string "-- CRASH_CLASS: MODERATE..."]:58: bad argument #2 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: MODERATE..."]:58: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

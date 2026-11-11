@@ -1,0 +1,45 @@
+=== PROBE 1514a: 548 op 3 CLIP OF A SHARED SHM OBJECT ===
+[0] pid=92
+
+[A] shm_open(SHM_ANON) and map it twice MAP_SHARED
+   shm_open = 26 
+   ftruncate = 0 
+   map A = 0x3110AC000 
+   map B = 0x3110EC000 
+   write A+0x8000 read B+0x8000: MATCH
+   write B+0x24000 read A+0x24000: MATCH
+   A            547(0x3110AC000): start=0x3110AC000 end=0x3110EC000 len=0x40000 prot=0x3
+   B            547(0x3110EC000): start=0x3110EC000 end=0x31112C000 len=0x40000 prot=0x3
+
+[B] 548 op3 MAP_FIXED carve of A+0x10000
+   rv=13170884608 processed=1 
+   requested 0x3110BC000, landed 0x3110BC000
+
+[C] is the shared object still shared?
+   +0x00000 expected A1B2C3D4 | A=00000000 B=00000000 <-- LOST
+   +0x08000 expected A1B2C3D4 | A=A1B2C3D4 B=A1B2C3D4 
+   +0x24000 expected E5F6A7B8 | A=E5F6A7B8 B=E5F6A7B8 
+   after carve, A->B propagation: WORKS
+   after carve, B->A propagation: WORKS
+   A below      547(0x3110AC000): start=0x3110AC000 end=0x3110BC000 len=0x10000 prot=0x3
+   A at         547(0x3110BC000): start=0x3110BC000 end=0x3110C0000 len=0x4000 prot=0x3
+   A above      547(0x3110DC000): start=0x3110C0000 end=0x3110EC000 len=0x2C000 prot=0x3
+   B            547(0x3110EC000): start=0x3110EC000 end=0x31112C000 len=0x40000 prot=0x3
+   B sweep: 0 dwords not ours and not zero (first at +0xFFFFFFFFFFFFFFFF)
+
+[D] unmap A; B must still be a working shared mapping
+   munmap A = 0
+   B+0x8000 = A1B2C3D4  B+0x24000 = E5F6A7B8
+   B write +0x3C000 then read back: OK
+   B after      547(0x3110EC000): start=0x3110EC000 end=0x31112C000 len=0x40000 prot=0x3
+
+[E] carve B's middle while A is gone, then read the whole surface
+   rv=13171212288 processed=1 
+   unreadable dwords in B after both carves: 0
+   B below      547(0x3110EC000): start=0x3110EC000 end=0x31110C000 len=0x20000 prot=0x3
+   B at         547(0x31110C000): start=0x31110C000 end=0x311110000 len=0x4000 prot=0x3
+   B above      547(0x31111C000): start=0x311110000 end=0x31112C000 len=0x1C000 prot=0x3
+
+[Z] alive pid=92 (was 92)
+[Z] shared-object witness: 1 of 3 checks lost after the first carve; A->B works; B->A works
+=== PROBE 1514a COMPLETE ===

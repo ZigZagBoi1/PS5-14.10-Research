@@ -1,0 +1,39 @@
+=== PROBE 1481b: ARE THE GPU WINDOWS WRITABLE ===
+[0] pid=87
+
+--- [A] calibration on an anonymous page of ours ---
+[A] anon 0x311378000: wrote 11223344 read 11223344 -> oracle works
+
+--- [B] rebuild the named windows and protect them ---
+[B] 674 rv=0 records=336
+[B] 6 candidate windows
+   (NoName)eboot.bin    0xF0000000-0xF0004000 prot now 3
+   (NoName)eboot.bin    0x7EEF38000-0x7EEF3C000 prot now 3
+   (NoName)eboot.bin    0xC80000000-0xC80008000 prot now 3
+   (NoName)eboot.bin    0xC80008000-0xC80048000 prot now 3
+   SceGnmTrapCode       0xF00000000-0xF00004000 prot now 3
+   SceGnmTrapData       0xF00004000-0xF00008000 prot now 3
+
+--- [C] store a marker into each and read it back ---
+[C] (NoName)eboot.bin    0xF0000000: read 00000000, writing 00000011
+[C]    readback 00000011 -> STORE LANDED
+[C]    restored 00000000 (was 00000000) OK
+[C] (NoName)eboot.bin    0x7EEF38000: read 00000000, writing 00000011
+[C]    readback 00000011 -> STORE LANDED
+[C]    restored 00000000 (was 00000000) OK
+[C] (NoName)eboot.bin    0xC80000000: read 00000000, writing 00000011
+[C]    readback 00000011 -> STORE LANDED
+[C]    restored 00000000 (was 00000000) OK
+[C] (NoName)eboot.bin    0xC80008000: read 44665747, writing 44665758
+[C]    readback 44665758 -> STORE LANDED
+[C]    restored 44665747 (was 44665747) OK
+[C] SceGnmTrapCode       0xF00000000: read BF800001, writing BF800012
+[C]    readback BF800012 -> STORE LANDED
+[C]    restored BF800001 (was BF800001) OK
+[C] SceGnmTrapData       0xF00004000: read 00144000, writing 00144011
+[C]    readback 00144011 -> STORE LANDED
+[C]    restored 00144000 (was 00144000) OK
+[C] 6 of 6 stores landed
+
+final canary: pid=87 (started 87)
+=== PROBE 1481b COMPLETE ===

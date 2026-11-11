@@ -1,0 +1,27 @@
+=== PROBE 1428a: MSFILTER READBACK COUNT TRUST ===
+
+pid=402 src=0x311328000 dst=0x311330000
+
+[A] baseline: joined group with 1 source, read back with claim=1
+  socket=28 join=0 set(1 src)=0
+  claim=1   rv=0 numsrc=1 changed=32 lastslot=0
+    entry0 dwords: 00001C1C 00000000 00000120 00000000
+
+[B] THE QUESTION: same 1-source group, claim=128 (16 KiB requested)
+  claim=128 rv=0 numsrc=1 changed=4096 lastslot=127
+    entry0 dwords: 00001C1C 00000000 00000120 00000000
+    slot1  dwords: 00000000 00000000 00000000 00000000
+  >>> OVER-READ: kernel wrote past the real list
+
+[C] claim=128 on a joined group with NO filter set
+  socket=29 join=0
+  claim=128 rv=0 numsrc=0 changed=4096 lastslot=127
+
+[D] claim=0 on a group that really has 4 sources
+  socket=30 join=0 set(4 src)=0
+  claim=0   rv=0 numsrc=4 changed=0 lastslot=-1
+
+[E] claim=128 on a group that is NOT joined
+  not joined rv=-1 numsrc=128 changed=0 errno=49 Can't assign requested address
+
+=== PROBE 1428a COMPLETE ===

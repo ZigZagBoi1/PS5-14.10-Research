@@ -1,0 +1,16 @@
+=== PROBE 1529b: copyin race vs 548 op 3 (shm destination) ===
+
+fn_addr=0x0000000831D4CB57 pid=172
+
+[A] gadget verification
+eboot=0x0000000030414000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] shm destination + victim
+  shm_open(SHM_ANON=1, O_CREAT|O_RDWR) rv=26
+  ftruncate(26, 0x186c000) rv=0
+  shm mmap -> 0x0000000315C1C000
+  victim mmap -> 0x0000000311548000
+  victim tagged 0x41 for 0x100 bytes: true
+
+[C] child chain

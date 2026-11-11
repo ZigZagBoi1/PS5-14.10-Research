@@ -1,0 +1,16 @@
+=== PROBE 1565a: does 674's copyout respect the user page write bit? ===
+
+[0] pid=319
+[A] 674 rv=0 count=315
+[A] largest prot-5 range: name='executable' [0x78420000,0x788B4000)
+[A] target T=0x7866A000 (inside the segment)
+[B] before: C0FFFBD1 F875FB85 0F6696EB 0000441F
+
+[C] 674(T=0x7866A000, 72, 1, cnt) -- one record into RX text
+[C] if this returns 0 and the bytes change, copyout ignores the write bit
+[C] rv=-1 count=315
+[D] changed dwords=0 of 16
+
+[D] rv=-1 changed=0: not a write; see errno above
+
+=== PROBE 1565a COMPLETE ===

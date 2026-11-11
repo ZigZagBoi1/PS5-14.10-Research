@@ -1,0 +1,42 @@
+=== PROBE 1472a: AIO GENERATION WRAP ===
+
+canary getpid=509
+
+[0] socketpair rv=0 read=24 write=25
+[A] 24 poll/delete/submit cycles on one slot
+  cycle  1: id=0x00000212 slot=0x212 gen=0 high=0x0 poll=0x00000003 del=0x00000000
+  cycle  2: id=0x00002212 slot=0x212 gen=1 high=0x0 poll=0x00000003 del=0x00000000
+  cycle  3: id=0x00004212 slot=0x212 gen=2 high=0x0 poll=0x00000003 del=0x00000000
+  cycle  4: id=0x00006212 slot=0x212 gen=3 high=0x0 poll=0x00000003 del=0x00000000
+  cycle  5: id=0x00008212 slot=0x212 gen=4 high=0x0 poll=0x00000003 del=0x00000000
+  cycle  6: id=0x0000A212 slot=0x212 gen=5 high=0x0 poll=0x00000003 del=0x00000000
+  cycle  7: id=0x0000C212 slot=0x212 gen=6 high=0x0 poll=0x00000003 del=0x00000000
+  cycle  8: id=0x0000E212 slot=0x212 gen=7 high=0x0 poll=0x00000003 del=0x00000000
+  cycle  9: id=0x00000212 slot=0x212 gen=0 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 10: id=0x00002212 slot=0x212 gen=1 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 11: id=0x00004212 slot=0x212 gen=2 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 12: id=0x00006212 slot=0x212 gen=3 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 13: id=0x00008212 slot=0x212 gen=4 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 14: id=0x0000A212 slot=0x212 gen=5 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 15: id=0x0000C212 slot=0x212 gen=6 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 16: id=0x0000E212 slot=0x212 gen=7 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 17: id=0x00000212 slot=0x212 gen=0 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 18: id=0x00002212 slot=0x212 gen=1 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 19: id=0x00004212 slot=0x212 gen=2 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 20: id=0x00006212 slot=0x212 gen=3 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 21: id=0x00008212 slot=0x212 gen=4 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 22: id=0x0000A212 slot=0x212 gen=5 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 23: id=0x0000C212 slot=0x212 gen=6 high=0x0 poll=0x00000003 del=0x00000000
+  cycle 24: id=0x0000E212 slot=0x212 gen=7 high=0x0 poll=0x00000003 del=0x00000000
+  first id 0x00000212 (slot 0x212 gen 0); slot changes=0; distinct gens=8
+
+[B] stale id from cycle 1 against a live, polled object
+  live id=0x00000212 slot=0x212 gen=0 poll state=0x00000003
+  662 with the cycle-1 id 0x00000212 -> rv=0 state=0x00000000
+  *** STALE ID ACCEPTED ***
+  662 with the live id 0x00000212 -> rv=0 state=0x80020003
+  *** the live object is gone although its own id was never used: alias confirmed ***
+
+[Z] alive pid=509 (was 509)
+
+=== PROBE 1472a COMPLETE ===

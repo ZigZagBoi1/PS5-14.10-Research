@@ -1,0 +1,44 @@
+=== PROBE 1529b: copyin race vs 548 op 3 (shm destination) ===
+
+fn_addr=0x000000082FF80B57 pid=186
+
+[A] gadget verification
+eboot=0x0000000040110000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] shm destination + victim
+  shm_open(SHM_ANON=1, O_CREAT|O_RDWR) rv=42
+  ftruncate(42, 0x80000) rv=0
+  shm mmap -> 0x0000000312818000
+  victim mmap -> 0x0000000311BB8000
+  victim tagged 0x41 for 0x100 bytes: true
+
+[C] child chain
+  stack mmap -> 0x0000000315728000 alloc=4947968 bytes=0
+  chain qwords=615521 bytes=4924168 alloc=4947968 stack=0x0000000315728000 write=true
+
+[D] race
+  mapping aliases the descriptor: true
+  pre-placement rv=13182402560 done=1 log offset=68
+  thr_new rv=0 child_tid=102088
+  round 100 bad_place=0 bad_prot=0 child_offset=197120
+  round 200 bad_place=0 bad_prot=0 child_offset=356608
+  round 300 bad_place=0 bad_prot=0 child_offset=465664
+  round 400 bad_place=0 bad_prot=0 child_offset=31232
+  round 500 bad_place=0 bad_prot=0 child_offset=445952
+  rounds=500 bad_place=0 bad_prot=0 last_victim_word=0
+
+[E] scan the shm destination
+  shm size=0x80000 scanned_from=68 scanned=524288 chunks_with_0x41=0 read_fails=0
+  stale bytes seen DURING the loop: 0
+
+[E2] child liveness
+  shared offset = 22784, first sample was 68, growth=22716
+  per-round offsets: 197120 356608 465664 31232 445952 (wraps each lap), distinct=5
+
+[F] verdict
+  clean: 524288 bytes copied after V's page was replaced, none of
+  them carrying the 0x41 that page held before it was released
+  final pid=186 expected 186
+
+=== PROBE 1529b COMPLETE ===

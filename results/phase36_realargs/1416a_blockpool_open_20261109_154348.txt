@@ -1,0 +1,32 @@
+=== PROBE 1416a: BLOCKPOOL OPEN ===
+[0] pid=378
+[0] ST=0x310740000 OUT=0x310744000 ARR=0x310748000
+[1] descriptor snapshot before
+[A] fstat sweep done
+[2] 653 blockpool_open, every flag value the body accepts
+  653(0x00000000) -> rv=26 errno=9 Bad file descriptor
+  653(0x00100000) -> rv=27 errno=9 Bad file descriptor
+  653(0x00400000) -> rv=711 errno=9 Bad file descriptor
+  653(0x00500000) -> rv=-1 errno=24 Too many open files
+  653(0x00500001) -> rv=-1 errno=22 Invalid argument
+  653(0xFFFFFFFF) -> rv=-1 errno=22 Invalid argument
+[3] descriptor snapshot after
+[B] fstat sweep done
+  fd 26: -1 -> 0
+  fd 27: -1 -> 0
+[4] 654 blockpool_map with the shapes the 13.60 body requires
+  654(0x0,0x10000,0,0,0) -> rv=-1 errno=22 Invalid argument out0=00000000
+  654(0x0,0x10000,3,0,0) -> rv=-1 errno=22 Invalid argument out0=00000000
+  654(0x0,0x10000,10,0,0) -> rv=-1 errno=22 Invalid argument out0=00000000
+  654(0x10000,0x10000,0,0,0) -> rv=-1 errno=22 Invalid argument out0=00000000
+  654(0x0,0x100000,0,0,0) -> rv=-1 errno=22 Invalid argument out0=00000000
+  654(0x0,0x1000000,0,0,0) -> rv=-1 errno=22 Invalid argument out0=00000000
+  654(0x0,0x0,0,0,0) -> rv=-1 errno=22 Invalid argument out0=00000000
+[5] 655 unmap and 657 batch
+  655(0,0x10000) -> rv=-1 errno=22 Invalid argument
+  655(0x10000,0x10000) -> rv=-1 errno=22 Invalid argument
+  657(ARR,0,OUT,0) -> rv=0 errno=22 Invalid argument
+  657(ARR,1,OUT,0) -> rv=-1 errno=22 Invalid argument
+[6] 653 again after the map attempts (state check)
+  653(0x100000) -> rv=-1 errno=24 Too many open files
+=== PROBE 1416a COMPLETE ===

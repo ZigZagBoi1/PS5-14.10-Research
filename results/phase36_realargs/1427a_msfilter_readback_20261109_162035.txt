@@ -1,0 +1,26 @@
+=== PROBE 1427a: IPV6_MSFILTER READBACK ORACLE ===
+
+[A] reproduce 50f on this pid
+  socket A = 22
+  join group A tag 1 -> 0
+  set INCLUDE 0src  -> 0
+  set EXCLUDE 0src  -> 0
+  set INCLUDE 1src  -> 0
+[B] getsockopt(the oracle)
+/savedata0/misc.lua:15: uint64:new: invalid type passed to constructor (nil)
+stack traceback:
+	[C]: in function 'assert'
+	/savedata0/misc.lua:15: in function 'error'
+	/savedata0/misc.lua:19: in function 'errorf'
+	/savedata0/uint64.lua:65: in function </savedata0/uint64.lua:40>
+	(tail call): ?
+	/savedata0/uint64.lua:27: in function 'ub8'
+	/savedata0/memory.lua:74: in function 'write_dword'
+	[string "-- CRASH_CLASS: MODERATE..."]:49: in function 'd'
+	[string "-- CRASH_CLASS: MODERATE..."]:144: in function 'get_filter'
+	[string "-- CRASH_CLASS: MODERATE..."]:174: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

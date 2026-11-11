@@ -1,0 +1,9 @@
+=== PROBE 1565a: does 674's copyout respect the user page write bit? ===
+
+[0] pid=319
+[A] 674 rv=0 count=316
+[A] no eboot prot-5 record; listing the first five 16 KiB-aligned exec ranges
+[A]   [0x78420000,0x788B4000) prot=5
+[A]   [0x8A15C000,0x8A1BC000) prot=5
+[A]   [0x98250000,0x98364000) prot=5
+=== VOID: no eboot text record, nothing to test ===

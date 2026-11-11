@@ -1,0 +1,55 @@
+=== PROBE 1397b: /dev/dmem0 OFFSET INDEX ===
+[0] pid=350
+[0] dmem0 fd=22 dmem1 fd=23
+
+[A] offset ladder on dmem0 (prot=1, read only, one page each)
+   off=0x00000000 -> 13177618432 25 Inappropriate ioctl for device
+   off=0x00001000 -> 13177638912 25 Inappropriate ioctl for device
+   off=0x00002000 -> 13177659392 25 Inappropriate ioctl for device
+   off=0x00003000 -> 13177679872 25 Inappropriate ioctl for device
+   off=0x00004000 -> 13177683968 25 Inappropriate ioctl for device
+   off=0x00008000 -> 13177700352 25 Inappropriate ioctl for device
+   off=0x0000C000 -> 13177716736 25 Inappropriate ioctl for device
+   off=0x00010000 -> 13177733120 25 Inappropriate ioctl for device
+   off=0x00020000 -> 13177749504 25 Inappropriate ioctl for device
+   off=0x00040000 -> 13177765888 25 Inappropriate ioctl for device
+   off=0x00080000 -> 13177782272 25 Inappropriate ioctl for device
+   off=0x00100000 -> 13177798656 25 Inappropriate ioctl for device
+   off=0x00200000 -> 13177815040 25 Inappropriate ioctl for device
+   off=0x00400000 -> 13177831424 25 Inappropriate ioctl for device
+   off=0x00800000 -> 13177847808 25 Inappropriate ioctl for device
+   off=0x01000000 -> 13177864192 25 Inappropriate ioctl for device
+   off=0x02000000 -> 13177880576 25 Inappropriate ioctl for device
+   off=0x04000000 -> 13177896960 25 Inappropriate ioctl for device
+   off=0x08000000 -> 13177913344 25 Inappropriate ioctl for device
+   off=0x10000000 -> 13177929728 25 Inappropriate ioctl for device
+   [A] mapped 0 of 20 offsets
+
+[B] same offsets on dmem1 (should be the same backing store)
+
+[C] alignment and length rules at the offset that worked
+   dmem0 off=0x1001 -> 13177950209 25 Inappropriate ioctl for device
+   dmem0 off=0x1800 -> 13177968640 25 Inappropriate ioctl for device
+   dmem0 off=0x800 -> 13177980928 25 Inappropriate ioctl for device
+   dmem0 off=0x1400 -> 13178000384 25 Inappropriate ioctl for device
+   dmem0 off=0x1000 len=0x1000 -> 13178015744 25 Inappropriate ioctl for device
+   dmem0 off=0x1000 len=0x2000 -> 13178032128 25 Inappropriate ioctl for device
+   dmem0 off=0x1000 len=0x4000 -> 13178048512 25 Inappropriate ioctl for device
+   dmem0 off=0x1000 len=0x8000 -> 13178081280 25 Inappropriate ioctl for device
+   dmem0 off=0x1000 len=0x10000 -> 13178130432 25 Inappropriate ioctl for device
+   dmem0 off=0x1000 len=0x40000 -> 13178212352 25 Inappropriate ioctl for device
+
+[D] /dev/gc offsets (its page read all FF)
+   gc off=0x00000000 -> 13178486784 25 Inappropriate ioctl for device
+   gc off=0x00001000 -> 13178507264 25 Inappropriate ioctl for device
+   gc off=0x00002000 -> 13178527744 25 Inappropriate ioctl for device
+   gc off=0x00004000 -> -1 22 Invalid argument
+   gc off=0x00010000 -> -1 22 Invalid argument
+   gc off=0x00100000 -> -1 22 Invalid argument
+   gc off=0x01000000 -> -1 22 Invalid argument
+
+[E] close
+   close(22) -> 0
+   close(23) -> 0
+
+=== PROBE 1397b COMPLETE ===

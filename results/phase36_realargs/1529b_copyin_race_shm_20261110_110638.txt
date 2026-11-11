@@ -1,0 +1,38 @@
+=== PROBE 1529b: copyin race vs 548 op 3 (shm destination) ===
+
+fn_addr=0x00000008332E8B57 pid=165
+
+[A] gadget verification
+eboot=0x000000006CD40000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] shm destination + victim
+  shm_open(SHM_ANON=1, O_CREAT|O_RDWR) rv=23
+  ftruncate(23, 0x186c000) rv=0
+  shm mmap -> 0x00000003141D0000
+  victim mmap -> 0x00000003110EC000
+
+[C] child chain
+  chain qwords=300011 bytes=2400088 alloc=2420568 stack=0x0000000312EE0020 write=true
+
+[D] race
+  pre-placement rv=13171081216 done=1 log offset=0
+  thr_new rv=0 child_tid=102174
+  round 5000 bad_place=0 bad_prot=0
+  round 10000 bad_place=0 bad_prot=0
+  round 15000 bad_place=0 bad_prot=0
+  round 20000 bad_place=0 bad_prot=0
+  rounds=20000 bad_place=0 bad_prot=0 last_victim_word=0
+
+[E] scan the shm destination
+  shm size=0x186C000 scanned_from=0 scanned=25608192 chunks_with_0x41=0 read_fails=0
+
+[E2] child liveness
+  shared offset = 25600000, a full child writes 25600000
+
+[F] verdict
+  clean: 25608192 bytes copied after V's page was replaced, none of
+  them carrying the 0x41 that page held before it was released
+  final pid=165 expected 165
+
+=== PROBE 1529b COMPLETE ===

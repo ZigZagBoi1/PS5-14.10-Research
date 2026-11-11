@@ -1,0 +1,30 @@
+=== PROBE 1562a: 548 op2 on a sub-range of a device entry ===
+
+[0] pid=312
+[A] 674 did not name the window; using the documented 0xF00004000
+[A] W=0xF00004000 547: prot=51 rec=[0xF00004000,0xF00008000) flags=0x610020
+
+[B] op2(MID=0xF00008000, 0x4000, prot=0x33)
+[B] rv=0 processed=1
+[B] 547(MID) after=51
+
+[C] op2(MID, 0x4000, prot=0x37)  -- whole-window answer was EACCES
+[C] rv=-1 processed=0
+[C] 547(MID) after=51
+[C] refused, same as the whole-window call: the check is per entry
+
+[D] op3 MAP_FIXED anon at CARVE=0xF0000C000
+[D] mmap returned 64424558592
+[D] 547(CARVE) prot=3 rec=[0xF0000C000,0xF00010000)
+
+[E] op2(CARVE, 0x4000, prot=0x7) -- the carved anon page, RWX
+[E] rv=-1 processed=0
+[E] 547(CARVE) after=3
+[E] anon page did not become RWX; the max_prot check held
+
+[F] 547(W+3*PAGE) prot=51
+[F] restoring MID to 0x33
+[F] restore rv=0 processed=1
+[F] 547(MID) after restore=51 (want 51)
+
+=== PROBE 1562a COMPLETE ===

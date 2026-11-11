@@ -1,0 +1,28 @@
+=== PROBE 1397j: PAGE 0 AND RECORD BLOCK WRITABILITY ===
+[0] pid=357
+[0] dmem0 fd=23
+
+[A] page 0: tail write
+   page0 map -> 0x03110C8000
+   +0xBF0 before = 00000000
+   +0xBF0 after  = AAAA5555 / 11112222
+   record 0x800 still C0038000 E0000C00 (unchanged expected)
+   dword 0 still C0012800 (pointer-looking, unchanged expected)
+
+[B] page 0x16 tail write
+   page16 map -> 0x03110CE000
+   +0xF00 before = 00000000
+   +0xF00 after  = BBBB6666
+
+[C] sleep 500 ms and re-read
+   nanosleep -> 0
+   page0 +0xBF0 = AAAA5555 11112222
+   page16 +0xF00 = BBBB6666
+
+[D] fresh mapping of page 0 sees the writes?
+   fresh page0 +0xBF0 = AAAA5555 11112222
+
+[Z] close
+   dmem0 -> 0
+
+=== PROBE 1397j COMPLETE ===

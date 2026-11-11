@@ -1,0 +1,21 @@
+=== PROBE 1383b: 601 COMMAND x SHAPE MATRIX PART 2 ===
+[0] pid=305
+[A] shapes: 0/0, arg1=B, arg2=B, both=B
+  0x0D 0/0               rv=0      errno=2 No such file or directory wrote=0
+  0x0D a1                rv=0      errno=2 No such file or directory wrote=0
+  0x0D a2                rv=0      errno=2 No such file or directory wrote=0
+  0x0D a1a2              rv=0      errno=2 No such file or directory wrote=0
+  0x0E 0/0               rv=-1     errno=14 Bad address         wrote=0
+  0x0E a1                rv=0      errno=14 Bad address         wrote=2[ 00000000 00000000]
+  0x0E a2                rv=-1     errno=14 Bad address         wrote=0
+  0x0E a1a2              rv=0      errno=14 Bad address         wrote=2[ 00000000 00000000]
+  0x0F 0/0               rv=-1     errno=1 Operation not permitted wrote=0
+  0x0F a1                rv=-1     errno=1 Operation not permitted wrote=0
+  0x0F a2                rv=-1     errno=1 Operation not permitted wrote=0
+  0x0F a1a2              rv=-1     errno=1 Operation not permitted wrote=0
+  0x10 0/0               rv=-1     errno=22 Invalid argument    wrote=0
+  0x10 a1                rv=-1     errno=22 Invalid argument    wrote=0
+  0x10 a2                rv=-1     errno=22 Invalid argument    wrote=0
+  0x10 a1a2              rv=-1     errno=22 Invalid argument    wrote=0
+  0x11 0/0               rv=-1     errno=14 Bad address         wrote=0
+  0x11 a1                rv=-1     errno=22 Invalid argument    wrote=0

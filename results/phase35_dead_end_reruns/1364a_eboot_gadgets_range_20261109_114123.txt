@@ -1,0 +1,46 @@
+=== PROBE 1364a: EBOOT GADGET INVENTORY (547 range) ===
+[0] pid=205
+[0] eboot text base from 593 = 0x2ACC000
+[1] region 0x2ACC000-0x2F60000  dwords: 0 0 5 6358060
+[2] scanned 0x40000 / 0x494000
+[2] scanned 0x80000 / 0x494000
+[2] scanned 0xC0000 / 0x494000
+[2] scanned 0x100000 / 0x494000
+[2] scanned 0x140000 / 0x494000
+[2] scanned 0x180000 / 0x494000
+[2] scanned 0x1C0000 / 0x494000
+[2] scanned 0x200000 / 0x494000
+[2] scanned 0x240000 / 0x494000
+[2] scanned 0x280000 / 0x494000
+[2] scanned 0x2C0000 / 0x494000
+[2] scanned 0x300000 / 0x494000
+[2] scanned 0x340000 / 0x494000
+[2] scanned 0x380000 / 0x494000
+[2] scanned 0x3C0000 / 0x494000
+[2] scanned 0x400000 / 0x494000
+[2] scanned 0x440000 / 0x494000
+[2] scanned 0x480000 / 0x494000
+[3] scanned 4800512 bytes of 0x494000
+
+[pop rsp; ret] count=0
+[pop rax; ret] count=0
+[pop rdi; ret] count=0
+[pop rsi; ret] count=0
+[pop rdx; ret] count=0
+[pop rbx; ret] count=0
+[mov rax,cr4; ret] count=0
+[mov cr4,rax; ret] count=0
+[mov [rdi],rax; ret] count=0
+[mov rax,[rdi]; ret] count=0
+[mov [rsi],rax; ret] count=0
+[mov rax,[rsi]; ret] count=0
+[mov [rdi],rbx; ret] count=0
+[mov eax,ebx; ret] count=0
+[mov rax,rbx; ret] count=0
+[cpuid; ret] count=0
+[swapgs] count=0
+[iretq] count=0
+
+[cpuid sites]
+
+=== PROBE 1364a COMPLETE ===

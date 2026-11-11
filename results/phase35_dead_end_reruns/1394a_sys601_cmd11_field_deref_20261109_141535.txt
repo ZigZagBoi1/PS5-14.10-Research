@@ -1,0 +1,7 @@
+=== PROBE 1394a: 601 0x11 STRUCT-FIELD DEREFERENCE ===
+[0] pid=343
+[0] SIG_IGN installed on 10/10 signals
+[0] canary ok
+
+[A] 601(0x11, 0, page) with the page filled by one value
+  -> 601(0x11, 0, K1(image))

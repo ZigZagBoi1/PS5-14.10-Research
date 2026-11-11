@@ -1,0 +1,156 @@
+=== PROBE 1378a: SYSCALLS 677-750 WITH SIGSYS IGNORED ===
+[0] pid=300 sigign=10/10
+[A] control: 4095 has no handler
+c4095
+  C n=4095 rv=-1 errno=78 Function not implemented
+[B] 677-750 with six zeros
+s677
+  Z n=677 rv=-1 errno=78 Function not implemented
+s678
+  Z n=678 rv=-1 errno=78 Function not implemented
+s679
+  Z n=679 rv=-1 errno=78 Function not implemented
+s680
+  Z n=680 rv=-1 errno=78 Function not implemented
+s681
+  Z n=681 rv=-1 errno=78 Function not implemented
+s682
+  Z n=682 rv=-1 errno=78 Function not implemented
+s683
+  Z n=683 rv=-1 errno=78 Function not implemented
+s684
+  Z n=684 rv=-1 errno=78 Function not implemented
+s685
+  Z n=685 rv=-1 errno=78 Function not implemented
+s686
+  Z n=686 rv=-1 errno=78 Function not implemented
+s687
+  Z n=687 rv=-1 errno=78 Function not implemented
+s688
+  Z n=688 rv=-1 errno=78 Function not implemented
+s689
+  Z n=689 rv=-1 errno=78 Function not implemented
+s690
+  Z n=690 rv=-1 errno=78 Function not implemented
+s691
+  Z n=691 rv=-1 errno=78 Function not implemented
+s692
+  Z n=692 rv=-1 errno=78 Function not implemented
+s693
+  Z n=693 rv=-1 errno=78 Function not implemented
+s694
+  Z n=694 rv=-1 errno=78 Function not implemented
+s695
+  Z n=695 rv=-1 errno=78 Function not implemented
+s696
+  Z n=696 rv=-1 errno=78 Function not implemented
+s697
+  Z n=697 rv=-1 errno=78 Function not implemented
+s698
+  Z n=698 rv=-1 errno=78 Function not implemented
+s699
+  Z n=699 rv=-1 errno=78 Function not implemented
+s700
+  Z n=700 rv=-1 errno=78 Function not implemented
+s701
+  Z n=701 rv=-1 errno=78 Function not implemented
+s702
+  Z n=702 rv=-1 errno=78 Function not implemented
+s703
+  Z n=703 rv=-1 errno=78 Function not implemented
+s704
+  Z n=704 rv=-1 errno=78 Function not implemented
+s705
+  Z n=705 rv=-1 errno=78 Function not implemented
+s706
+  Z n=706 rv=-1 errno=78 Function not implemented
+s707
+  Z n=707 rv=-1 errno=78 Function not implemented
+s708
+  Z n=708 rv=-1 errno=78 Function not implemented
+s709
+  Z n=709 rv=-1 errno=78 Function not implemented
+s710
+  Z n=710 rv=-1 errno=78 Function not implemented
+s711
+  Z n=711 rv=-1 errno=78 Function not implemented
+s712
+  Z n=712 rv=-1 errno=78 Function not implemented
+s713
+  Z n=713 rv=-1 errno=78 Function not implemented
+s714
+  Z n=714 rv=-1 errno=78 Function not implemented
+s715
+  Z n=715 rv=-1 errno=78 Function not implemented
+s716
+  Z n=716 rv=-1 errno=78 Function not implemented
+s717
+  Z n=717 rv=-1 errno=78 Function not implemented
+s718
+  Z n=718 rv=-1 errno=78 Function not implemented
+s719
+  Z n=719 rv=-1 errno=78 Function not implemented
+s720
+  Z n=720 rv=-1 errno=78 Function not implemented
+s721
+  Z n=721 rv=-1 errno=78 Function not implemented
+s722
+  Z n=722 rv=-1 errno=78 Function not implemented
+s723
+  Z n=723 rv=-1 errno=78 Function not implemented
+s724
+  Z n=724 rv=-1 errno=78 Function not implemented
+s725
+  Z n=725 rv=-1 errno=78 Function not implemented
+s726
+  Z n=726 rv=-1 errno=78 Function not implemented
+s727
+  Z n=727 rv=-1 errno=78 Function not implemented
+s728
+  Z n=728 rv=-1 errno=78 Function not implemented
+s729
+  Z n=729 rv=-1 errno=78 Function not implemented
+s730
+  Z n=730 rv=-1 errno=78 Function not implemented
+s731
+  Z n=731 rv=-1 errno=78 Function not implemented
+s732
+  Z n=732 rv=-1 errno=78 Function not implemented
+s733
+  Z n=733 rv=-1 errno=78 Function not implemented
+s734
+  Z n=734 rv=-1 errno=78 Function not implemented
+s735
+  Z n=735 rv=-1 errno=78 Function not implemented
+s736
+  Z n=736 rv=-1 errno=78 Function not implemented
+s737
+  Z n=737 rv=-1 errno=78 Function not implemented
+s738
+  Z n=738 rv=-1 errno=78 Function not implemented
+s739
+  Z n=739 rv=-1 errno=78 Function not implemented
+s740
+  Z n=740 rv=-1 errno=78 Function not implemented
+s741
+  Z n=741 rv=-1 errno=78 Function not implemented
+s742
+  Z n=742 rv=-1 errno=78 Function not implemented
+s743
+  Z n=743 rv=-1 errno=78 Function not implemented
+s744
+  Z n=744 rv=-1 errno=78 Function not implemented
+s745
+  Z n=745 rv=-1 errno=78 Function not implemented
+s746
+  Z n=746 rv=-1 errno=78 Function not implemented
+s747
+  Z n=747 rv=-1 errno=78 Function not implemented
+s748
+  Z n=748 rv=-1 errno=78 Function not implemented
+s749
+  Z n=749 rv=-1 errno=78 Function not implemented
+s750
+  Z n=750 rv=-1 errno=78 Function not implemented
+[C] nothing outside ENOSYS
+=== PROBE 1378a COMPLETE ===

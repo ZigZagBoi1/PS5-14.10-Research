@@ -1,0 +1,16 @@
+=== PROBE 1357a: SYS 601 CMD 0x12 GATE ===
+[0] pid=169
+  struct=0x3116A0000 dest=0x3116A4000
+
+[A] control
+  0x00 (0, 0) : -1  errno=14 Bad address
+
+[B] cmd 0x12 with qword1 != 0
+  0x12 {0, 1}      : -1  errno=2 No such file or directory
+  0x12 {0, 0}      : -1  errno=14 Bad address  (expected errno 14)
+  0x12 {0x1000, 1}: -1  errno=2 No such file or directory
+
+[C] which command sets bit 0x400 / stores into td+0x578?
+    baseline 0x12 {0,1}, then <cmd> {0,1}, then 0x12 {0,1} again
+  cmd 0x05 -> -1           (0x12 before -1           after -1          )
+  cmd 0x10 -> -1           (0x12 before -1           after -1          )

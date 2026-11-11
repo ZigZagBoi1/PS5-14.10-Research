@@ -1,0 +1,5 @@
+=== PROBE 1349a: LOW 622 DEREF SHAPE ===
+
+pid=143 page=0x3_108DC000 valid=true
+
+[A] cmd 0x01, page full of its own address, size 0x40

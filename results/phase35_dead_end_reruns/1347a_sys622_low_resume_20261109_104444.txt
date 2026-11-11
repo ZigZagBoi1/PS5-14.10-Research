@@ -1,0 +1,72 @@
+=== PROBE 1347a: 622 LOW COMMANDS ===
+start=0x01
+
+pid=122 page=0x3_10964000 valid=true
+
+[A] 0x372 / 0x520, sub 0..31, arg3 null
+  cmd=0x372 sub=0  ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=1  ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=2  ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=3  ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=4  ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=5  ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=6  ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=7  ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=8  ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=9  ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=10 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=11 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=12 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=13 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=14 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=15 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=16 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=17 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=18 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=19 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=20 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=21 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=22 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=23 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=24 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=25 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=26 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=27 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=28 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=29 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=30 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x372 sub=31 ret=0x0_00000000         changed=1 buf=0x8002004E 0xDEADBEEF
+  cmd=0x520 sub=0  ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=1  ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=2  ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=3  ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=4  ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=5  ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=6  ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=7  ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=8  ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=9  ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=10 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=11 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=12 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=13 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=14 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=15 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=16 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=17 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=18 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=19 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=20 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=21 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=22 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=23 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=24 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=25 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=26 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=27 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=28 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=29 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=30 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+  cmd=0x520 sub=31 ret=-1                   changed=0 buf=0xDEADBEEF 0xDEADBEEF
+
+[B] cmd 0x01..0xFF, arg3 null, size 0x40

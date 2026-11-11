@@ -1,0 +1,30 @@
+=== PROBE 1385a: DEVICE OPEN vs THE 601 ATTACH OBJECT ===
+[0] pid=331
+[A] baseline, no device open
+  no-fds             601(0x00) rv=0      errno=2 No such file or directory nz=1 00000100
+  no-fds             601(0x0A) rv=-1     errno=1 Operation not permitted nz=0
+  no-fds             601(0x0E) rv=-1     errno=14 Bad address           nz=0
+  no-fds             601(0x12) rv=-1     errno=14 Bad address           nz=0
+  no-fds             601(0x13) rv=0      errno=14 Bad address           nz=0
+  first opened 14/15 fds
+[B] with 14 descriptors open
+  with-fds           601(0x00) rv=0      errno=1 Operation not permitted nz=1 00000100
+  with-fds           601(0x0A) rv=-1     errno=1 Operation not permitted nz=0
+  with-fds           601(0x0E) rv=-1     errno=14 Bad address           nz=0
+  with-fds           601(0x12) rv=-1     errno=14 Bad address           nz=0
+  with-fds           601(0x13) rv=0      errno=14 Bad address           nz=0
+  second opened 14/15 fds
+[C] reopened in the same order, 14 descriptors
+  reopened           601(0x00) rv=0      errno=1 Operation not permitted nz=1 00000100
+  reopened           601(0x0A) rv=-1     errno=1 Operation not permitted nz=0
+  reopened           601(0x0E) rv=-1     errno=14 Bad address           nz=0
+  reopened           601(0x12) rv=-1     errno=14 Bad address           nz=0
+  reopened           601(0x13) rv=0      errno=14 Bad address           nz=0
+[D] only /dev/deci_stdout and /dev/gc
+  opened 1
+  two-fds            601(0x00) rv=0      errno=1 Operation not permitted nz=1 00000100
+  two-fds            601(0x0A) rv=-1     errno=1 Operation not permitted nz=0
+  two-fds            601(0x0E) rv=-1     errno=14 Bad address           nz=0
+  two-fds            601(0x12) rv=-1     errno=14 Bad address           nz=0
+  two-fds            601(0x13) rv=0      errno=14 Bad address           nz=0
+=== PROBE 1385a COMPLETE ===

@@ -132,6 +132,23 @@ class StateToolTests(unittest.TestCase):
         self.assertIn("p560_sort_oob_write_20261027.txt", text)
         self.assertIn("| 2026-10-27 |", text)
 
+    def test_empty_ledger_gets_the_header_before_a_row(self):
+        index = self.root / "results" / "INDEX.md"
+        index.parent.mkdir(exist_ok=True)
+        index.write_text("", encoding="utf-8")
+        _code, _out = self._run(["row", "9999z", "--claim", "c", "--result", "r"])
+        lines = index.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(lines[0], "# Run ledger")
+        self.assertTrue(any(line.startswith("| 20") for line in lines))
+
+    def test_existing_ledger_without_a_final_newline_stays_one_row_per_line(self):
+        index = self.root / "results" / "INDEX.md"
+        index.parent.mkdir(exist_ok=True)
+        index.write_text("| 2026-01-01 00:00 | old | c | r | M | - |", encoding="utf-8")
+        _code, _out = self._run(["row", "9999z", "--claim", "c", "--result", "r"])
+        lines = index.read_text(encoding="utf-8").splitlines()
+        self.assertEqual(len([line for line in lines if line.startswith("| 20")]), 2)
+
     def test_pipe_in_a_claim_cannot_add_a_column(self):
         self._run(["row", "9999z", "--claim", "left | forged-column",
                    "--result", "r", "--grade", "M"])

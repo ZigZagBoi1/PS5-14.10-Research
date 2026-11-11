@@ -1,0 +1,68 @@
+=== PROBE 1210a: sys 643 proc+0xa34 bit sweep ===
+[base] 608=00000000/1 Operation not permitted 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit00] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit01] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit02] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit03] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit04] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit05] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit06] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit07] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit08] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit09] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit10] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit11] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit12] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit13] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit14] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit15] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit16] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit17] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit18] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit19] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit20] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit21] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit22] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit23] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit24] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit25] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit26] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit27] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit28] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit29] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit30] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[bit31] 643 rv=00000000 err=2 No such file or directory -> DIFF
+        608=00000000/2 No such file or directory 674=00000000/22 Invalid argument 547=00000000/22 Invalid argument 638=00000000/22 Invalid argument 605=00000000/22 Invalid argument 602=00000000/1 Operation not permitted 607=00000000/2 No such file or directory
+[Z] alive
+=== DONE

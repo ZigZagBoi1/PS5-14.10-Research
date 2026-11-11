@@ -1,0 +1,40 @@
+=== PROBE 894a: AIO POLL THEN DOUBLE DELETE ===
+
+[A] pid = 104
+  [socketpair] ret=0x00000000_00000000
+  fds = 22, 23
+  [SO_LINGER] ret=0x00000000_00000000
+  buf=0x3106E5A60
+[B1] submit 669(cmd=0x1001, reqs, 4, prio=3, ids):
+  [submit] ret=0x00000000_00000000
+    id[0]=0x00004205
+    id[1]=0x00014205
+    id[2]=0x00024205
+    id[3]=0x00034205
+[B2] cancel 666:
+  [cancel] ret=0x00000000_00000000
+    state[0]=2
+    state[1]=2
+    state[2]=4
+    state[3]=4
+[B3] poll 664 (this is the step our earlier disproves lacked):
+  [poll] ret=0x00000000_00000000
+    state[0]=2
+    state[1]=2
+    state[2]=4
+    state[3]=4
+[B4] delete #1 662:
+  [delete1] ret=0x00000000_00000000
+    err1[0]=0x80020010
+    err1[1]=0x80020010
+    err1[2]=0x00000000
+    err1[3]=0x00000000
+[B5] delete #2 662 (same ids):
+  [delete2] ret=0x00000000_00000000
+    err2[0]=0x80020010   (err1=0x80020010)
+    err2[1]=0x80020010   (err1=0x80020010)
+    err2[2]=0x80020003   (err1=0x00000000)
+    err2[3]=0x80020003   (err1=0x00000000)
+[C] double-free signature: no
+
+=== PROBE 894a DONE ===

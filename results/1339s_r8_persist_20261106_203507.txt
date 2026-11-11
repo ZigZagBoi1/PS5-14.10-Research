@@ -1,0 +1,4 @@
+=== 1339s R8 PERSIST TEST ===
+pid=395
+ABORT: fd=7.9228162514264e+28
+=== DONE ===

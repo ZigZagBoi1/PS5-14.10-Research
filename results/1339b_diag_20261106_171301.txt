@@ -1,0 +1,25 @@
+=== 1339b DIAGNOSTIC: setsockopt(25) SET path ===
+[1] socket
+  fd=23
+[2] direct TCLASS=42 via option 61
+  setsockopt(61, 42): ok=true rv=0
+  getsockopt(61): ok=true rv=0 TCLASS=42
+
+[3] SET via setsockopt(25) cmsg TCLASS=99
+  cmsg: [00000014 00000029 0000003D 00000000 00000063 00000000]
+  setsockopt(25, cmsg, 24): ok=true rv=0
+  getsockopt(61): ok=true rv=0 TCLASS=99 (expect 99)
+
+[4] FREE via setsockopt(25, NULL, 0)
+  setsockopt(25, NULL, 0): ok=true rv=0
+  TCLASS after free: 0 (expect 0=default)
+
+[5] re-SET after free: setsockopt(25, cmsg TCLASS=77, 24)
+  setsockopt(25, cmsg, 24): ok=true rv=0
+  TCLASS after re-set: 77 (expect 77)
+
+[6] test with optlen=0x18 (24 decimal, same as above)
+  setsockopt(25, cmsg, 0x18): ok=true rv=0
+  TCLASS: 55 (expect 55)
+
+=== DONE ===

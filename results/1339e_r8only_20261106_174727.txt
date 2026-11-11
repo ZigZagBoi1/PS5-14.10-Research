@@ -1,0 +1,18 @@
+=== 1339e R8=24 ISOLATED TEST ===
+fn=807C20B57
+pid=290
+ebase=56990000
+fd=22
+baseline TCLASS=42
+sp: rd=23 wr=24
+chain: 44 entries
+ctx R8: 18
+spawning child...
+thr_create ok=true tid=101569
+releasing...
+waiting 2s...
+done marker: D00D
+TCLASS=42 (expect 99)
+*** R8=24 FAILED (TCLASS unchanged) ***
+pid=290
+=== DONE ===

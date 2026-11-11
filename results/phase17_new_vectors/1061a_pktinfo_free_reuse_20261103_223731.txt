@@ -1,0 +1,25 @@
+=== PROBE 1061a: ip6_pktinfo free/reuse overlap ===
+
+[S] T fd=22
+[T] addr=:: ifx=0 rv=0 buf=0 0 ifx=0
+[T] addr=:: ifx=1 rv=0 buf=0 0 ifx=1
+[T] addr=AA ifx=1 rv=-1 buf=AAAAAAAAAAAAAC00 AAAAAAAAAAAAAC00 ifx=1
+[T] addr=::1 ifx=0 rv=0 buf=1 1 ifx=0
+[S] A fd=23
+[S] B fd=24
+[A] set A pktinfo rv=0
+[A] get A pktinfo rv=0
+[A] out len=14 q0=1 q1=1 q2=0
+[B] set A len=0 rv=-1
+[C] get A after free rv=0
+[C] out len=14 q0=1 q1=1 q2=0
+[D] set B pktinfo rv=-1
+[E] get A after B alloc rv=0
+[E] out len=14 q0=1 q1=1 q2=0
+[E] shared=false
+[F] get B after A realloc rv=0
+[F] out len=14 q0=0 q1=0 q2=0
+[G] get A after close B rv=0
+[G] out len=14 q0=1 q1=1 q2=0
+[E] alive pid=274
+=== COMPLETE ===

@@ -1,0 +1,6 @@
+=== PROBE 1043a: native chain concurrency gate ===
+[0] fn=836E80B57 syscall_address=836E80B57 ok=true
+[0] pid=138
+[0] eboot=18EE8000 poprax=418285970 poprdi=419110398 store=418884711 jmp=418370689
+[A] block=310FC0000 res=310E30000
+[B] chain words=60012 bytes=480096 head=310FC4000

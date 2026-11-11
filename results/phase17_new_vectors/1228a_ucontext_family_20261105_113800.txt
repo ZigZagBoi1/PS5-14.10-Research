@@ -1,0 +1,22 @@
+=== PROBE 1228a: ucontext family ===
+[0] pid=87 eboot=0x206C0000
+[A] find EB FE in eboot .text
+    gadget = 0x206D5481
+    ret gadget 0x206C0042 byte=0xC3
+[B] create a spinning child
+  [430] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument
+    child tid = 0x18E3A
+  [433(tid,0)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+[C] 632 suspend, then 634 get
+  [632(tid)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+  [634(tid,buf)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+    first: A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5
+    634 raw: 0 supervisor qwords 
+[D] retry with a 635-shaped buffer
+  [634(tid,shaped)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+    634 shaped: 0 supervisor qwords 
+[E] 633 resume, 433 alive
+  [633(tid)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+  [433(tid,0)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+[Z] pid_end=87
+=== DONE ===

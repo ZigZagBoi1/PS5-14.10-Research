@@ -1,0 +1,46 @@
+=== PROBE 898a: aio step bisect ===
+[0] pid=80
+[1] socketpair fd=22
+[A] submit + poll only
+    A1         submit ret=0   ids=4205,0
+    A1         poll   ret=0   st=2,2
+    A2         submit ret=0   ids=206,0
+    A2         poll   ret=0   st=1,1
+    A3         submit ret=0   ids=207,0
+    A3         poll   ret=0   st=1,1
+    A4         submit ret=0   ids=208,0
+    A4         poll   ret=0   st=1,1
+    A5         submit ret=0   ids=209,0
+    A5         poll   ret=0   st=1,1
+    A6         submit ret=0   ids=20A,0
+    A6         poll   ret=0   st=1,1
+[A] survived 6 rounds
+[B] submit + cancel + poll
+    B1         submit ret=0   ids=20B,0
+    B1         cancel ret=0   st=4,4
+    B1         poll   ret=0   st=4,4
+    B2         submit ret=0   ids=20C,0
+    B2         cancel ret=0   st=4,4
+    B2         poll   ret=0   st=4,4
+    B3         submit ret=0   ids=20D,0
+    B3         cancel ret=0   st=4,4
+    B3         poll   ret=0   st=4,4
+[B] survived 3 rounds
+[C] submit + cancel + poll + delete
+    C1         submit ret=0   ids=20E,0
+    C1         cancel ret=0   st=4,4
+    C1         poll   ret=0   st=4,4
+    C1         delete ret=0   errs=0,0
+    C1         poll   ret=0   st=2147614723,2147614723
+    C2         submit ret=0   ids=220E,0
+    C2         cancel ret=0   st=4,4
+    C2         poll   ret=0   st=4,4
+    C2         delete ret=0   errs=0,0
+    C2         poll   ret=0   st=2147614723,2147614723
+    C3         submit ret=0   ids=420E,0
+    C3         cancel ret=0   st=4,4
+    C3         poll   ret=0   st=4,4
+    C3         delete ret=0   errs=0,0
+    C3         poll   ret=0   st=2147614723,2147614723
+[C] survived 3 rounds
+[Z] alive pid=80

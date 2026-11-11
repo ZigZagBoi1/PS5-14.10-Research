@@ -1,0 +1,4 @@
+=== PROBE 970b: SETSOCKOPT LOOP vs CLOSE ===
+
+[0] pid=80 base=0x7A7A0000 pop_rax=0x7A7A0992
+  [1] socket(AF_INET6,SOCK_DGRAM) = 23

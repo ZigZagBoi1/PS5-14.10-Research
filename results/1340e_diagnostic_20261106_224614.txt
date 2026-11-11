@@ -1,0 +1,352 @@
+=== 1340e DIAG ===
+fdlimit: 4096
+pid=429
+gadgets OK
+spray=22..121 (100)
+starting 20000 trials (DIAGNOSTIC: close master on tc=42)
+t=59 USE-WIN tc=42 (u=1)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=476 USE-WIN tc=42 (u=2)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=1240 USE-WIN tc=42 (u=3)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=1618 USE-WIN tc=42 (u=4)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=1762 USE-WIN tc=42 (u=5)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=2128 USE-WIN tc=42 (u=6)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=2313 USE-WIN tc=42 (u=7)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=2616 USE-WIN tc=42 (u=8)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=2987 USE-WIN tc=42 (u=9)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=3614 USE-WIN tc=42 (u=10)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=3794 USE-WIN tc=42 (u=11)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=3853 USE-WIN tc=42 (u=12)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=4115 USE-WIN tc=42 (u=13)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=4155 USE-WIN tc=42 (u=14)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=4197 USE-WIN tc=42 (u=15)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=4483 USE-WIN tc=42 (u=16)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=4514 USE-WIN tc=42 (u=17)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=4648 USE-WIN tc=42 (u=18)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=4830 USE-WIN tc=42 (u=19)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=4839 USE-WIN tc=42 (u=20)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=4959 USE-WIN tc=42 (u=21)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=5000 u=21 f=4979 r=0
+t=5059 USE-WIN tc=42 (u=22)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=5524 USE-WIN tc=42 (u=23)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=5555 USE-WIN tc=42 (u=24)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=5595 USE-WIN tc=42 (u=25)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=5973 USE-WIN tc=42 (u=26)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=6142 USE-WIN tc=42 (u=27)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=6256 USE-WIN tc=42 (u=28)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=6308 USE-WIN tc=42 (u=29)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=6425 USE-WIN tc=42 (u=30)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=6512 USE-WIN tc=42 (u=31)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=7225 USE-WIN tc=42 (u=32)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=7613 USE-WIN tc=42 (u=33)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=7692 USE-WIN tc=42 (u=34)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=8159 USE-WIN tc=42 (u=35)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=8317 USE-WIN tc=42 (u=36)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=8862 USE-WIN tc=42 (u=37)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9124 USE-WIN tc=42 (u=38)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9386 USE-WIN tc=42 (u=39)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9587 USE-WIN tc=42 (u=40)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9611 USE-WIN tc=42 (u=41)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9648 USE-WIN tc=42 (u=42)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9680 USE-WIN tc=42 (u=43)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9687 USE-WIN tc=42 (u=44)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9690 USE-WIN tc=42 (u=45)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9778 USE-WIN tc=42 (u=46)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9782 USE-WIN tc=42 (u=47)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9851 USE-WIN tc=42 (u=48)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9856 USE-WIN tc=42 (u=49)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9891 USE-WIN tc=42 (u=50)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9893 USE-WIN tc=42 (u=51)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9919 USE-WIN tc=42 (u=52)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9922 USE-WIN tc=42 (u=53)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9937 USE-WIN tc=42 (u=54)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9965 USE-WIN tc=42 (u=55)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9969 USE-WIN tc=42 (u=56)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=9975 USE-WIN tc=42 (u=57)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=10000 u=57 f=9943 r=0
+t=10362 USE-WIN tc=42 (u=58)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=10802 USE-WIN tc=42 (u=59)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=10873 USE-WIN tc=42 (u=60)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=10931 USE-WIN tc=42 (u=61)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=10957 USE-WIN tc=42 (u=62)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=11014 USE-WIN tc=42 (u=63)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=11038 USE-WIN tc=42 (u=64)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=11184 USE-WIN tc=42 (u=65)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=11194 USE-WIN tc=42 (u=66)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=11207 USE-WIN tc=42 (u=67)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=11371 USE-WIN tc=42 (u=68)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=11439 USE-WIN tc=42 (u=69)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=11898 USE-WIN tc=42 (u=70)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=11916 USE-WIN tc=42 (u=71)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=12207 USE-WIN tc=42 (u=72)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=12289 USE-WIN tc=42 (u=73)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=12659 USE-WIN tc=42 (u=74)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=12713 USE-WIN tc=42 (u=75)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=12734 USE-WIN tc=42 (u=76)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=12806 USE-WIN tc=42 (u=77)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=12855 USE-WIN tc=42 (u=78)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=14057 USE-WIN tc=42 (u=79)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=14078 USE-WIN tc=42 (u=80)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=14768 USE-WIN tc=42 (u=81)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=14913 USE-WIN tc=42 (u=82)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=15000 u=82 f=14918 r=0
+t=15229 USE-WIN tc=42 (u=83)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=15282 USE-WIN tc=42 (u=84)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=15376 USE-WIN tc=42 (u=85)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=15870 USE-WIN tc=42 (u=86)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=16158 USE-WIN tc=42 (u=87)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=16248 USE-WIN tc=42 (u=88)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=16503 USE-WIN tc=42 (u=89)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=16984 USE-WIN tc=42 (u=90)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=17160 USE-WIN tc=42 (u=91)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=17557 USE-WIN tc=42 (u=92)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=17813 USE-WIN tc=42 (u=93)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=17978 USE-WIN tc=42 (u=94)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=18026 USE-WIN tc=42 (u=95)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=18066 USE-WIN tc=42 (u=96)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=18248 USE-WIN tc=42 (u=97)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=18449 USE-WIN tc=42 (u=98)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=18526 USE-WIN tc=42 (u=99)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=18574 USE-WIN tc=42 (u=100)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=18659 USE-WIN tc=42 (u=101)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=18835 USE-WIN tc=42 (u=102)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=18874 USE-WIN tc=42 (u=103)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=19023 USE-WIN tc=42 (u=104)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=19183 USE-WIN tc=42 (u=105)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=19279 USE-WIN tc=42 (u=106)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=19362 USE-WIN tc=42 (u=107)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=19564 USE-WIN tc=42 (u=108)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=19667 USE-WIN tc=42 (u=109)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=19763 USE-WIN tc=42 (u=110)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=19791 USE-WIN tc=42 (u=111)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=19892 USE-WIN tc=42 (u=112)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=19978 USE-WIN tc=42 (u=113)
+  closing master fd=122 (DIAG: crash=TOCTOU)
+  survived close → SEQUENTIAL confirmed
+t=20000 u=113 f=19887 r=0
+=== RESULTS: use=113 free=19887 reclaim=0 ===
+pid=429
+=== DONE ===

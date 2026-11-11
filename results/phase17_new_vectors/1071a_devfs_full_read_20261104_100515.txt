@@ -1,0 +1,44 @@
+=== PROBE 1071a: READ EVERY ENUMERATED DEVICE ===
+
+[S] sigsys-ignore ok=true rv=0 pid=92
+
+[R] dmem0          fd=22 rv=-1 touched=0 kp=0
+[R] dmem1          fd=22 rv=-1 touched=0 kp=0
+[R] dmem2          fd=22 rv=-1 touched=0 kp=0
+[R] a53mm          open=FAIL
+[R] a53mmsys       open=FAIL
+[R] dbggc          open=FAIL
+[R] sbl_srv        open=FAIL
+[R] encdec         open=FAIL
+[R] uvd_dec        open=FAIL
+[R] uvd_enc        fd=22 rv=-1 touched=0 kp=0
+[R] fttrm          open=FAIL
+[R] duid           open=FAIL
+[R] mp3            open=FAIL
+[R] acm            open=FAIL
+[R] lvd3           open=FAIL
+[R] rng            fd=22 rv=-1 touched=0 kp=0
+[R] camera         fd=22 rv=-1 touched=0 kp=0
+[R] sce_zlib       fd=22 rv=-1 touched=0 kp=0
+[R] dipsw          fd=22 rv=-1 touched=0 kp=0
+[R] bt             fd=22 rv=0 touched=0 kp=0
+[R] hid            fd=22 rv=0 touched=0 kp=0
+[R] hmd_cmd        fd=22 rv=-1 touched=0 kp=0
+[R] hmd_snsr       fd=22 rv=-1 touched=0 kp=0
+[R] hmd_3da        fd=22 rv=-1 touched=0 kp=0
+[R] hmd_dist       fd=22 rv=-1 touched=0 kp=0
+[R] hmd2_cmd       fd=22 rv=-1 touched=0 kp=0
+[R] hmd2_imu       fd=22 rv=-1 touched=0 kp=0
+[R] hmd2_leddet    fd=22 rv=-1 touched=0 kp=0
+[R] hmd2_image     open=FAIL
+[R] hmd2_gen_data  fd=22 rv=-1 touched=0 kp=0
+[R] hmd2_gaze      fd=22 rv=-1 touched=0 kp=0
+[R] hmd2_track     fd=22 rv=-1 touched=0 kp=0
+[R] hmd2_slam_trace open=FAIL
+[R] null           fd=22 rv=0 touched=0 kp=0
+[R] zero           fd=22 rv=1024 touched=128 kp=0
+[R] random         fd=22 rv=1024 touched=128 kp=0
+[R] urandom        fd=22 rv=1024 touched=128 kp=0
+
+[F] nodes with a kernel-range qword: 0
+=== DONE 1071a ===

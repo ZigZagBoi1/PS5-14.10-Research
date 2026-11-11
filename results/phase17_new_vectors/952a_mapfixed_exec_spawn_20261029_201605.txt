@@ -1,0 +1,10 @@
+=== PROBE 952a: MAP_FIXED EXEC SPAWN ===
+[0] pid=587 fn=83C298B57
+[0] ebase=71F60000 rax=71F60992 rdi=72029DFE store=71FF2C67 jmp=71F75481
+--- A: locate an execute-only page ---
+  page 0x83C1D8000 547 failed
+  page 0x83C1B8000 547 failed
+  page 0x83C198000 547 failed
+  page 0x83C1F8000 547 failed
+  page 0x83C218000 547 failed
+[!] no execute-only page

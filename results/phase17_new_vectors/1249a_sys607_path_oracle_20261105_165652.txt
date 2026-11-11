@@ -1,0 +1,15 @@
+=== PROBE 1249a: syscall 607 path-metadata oracle ===
+[0] pid=124 buf=0x310ACF580 pathbuf=0x310ACFD60
+[1] 607(path, out0x88) over candidate paths
+  /app0/eboot.bin        rv=-1 errno="13 Permission denied"
+  /dev/null              rv=-1 errno="22 Invalid argument"
+  /                      rv=-1 errno="22 Invalid argument"
+  /app0                  rv=-1 errno="22 Invalid argument"
+  /user                  rv=-1 errno="2 No such file or directory"
+  /dev                   rv=-1 errno="22 Invalid argument"
+  nosuchpath             rv=-1 errno="2 No such file or directory"
+  empty                  rv=-1 errno="2 No such file or directory"
+[2] argument-boundary controls
+  607(NULL, buf)          ok=true rv=-1 errno="14 Bad address"
+  607(path, NULL)         ok=true rv=-1 errno="13 Permission denied"
+=== DONE 1249a ===

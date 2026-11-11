@@ -1,0 +1,12 @@
+=== PROBE 1233a: kernel memory files ===
+[0] pid=80
+  open(/proc/kcore) = -1 err=2 No such file or directory
+  open(/proc/kallsyms) = -1 err=2 No such file or directory
+  open(/proc/self/mem) = -1 err=2 No such file or directory
+  open(/dev/kmem) = -1 err=2 No such file or directory
+  open(/dev/mem) = -1 err=2 No such file or directory
+  open(/dev/mem0) = -1 err=2 No such file or directory
+  open(/dev/physmem) = -1 err=2 No such file or directory
+  open(/proc/self/maps) = -1 err=2 No such file or directory
+[Z] pid_end=80
+=== DONE ===

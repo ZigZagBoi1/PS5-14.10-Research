@@ -1,0 +1,21 @@
+=== PROBE 1191a: POISON ymm0, ONE SYSCALL, SPILL ===
+[A] eboot=0x000000002DCA4000 LOAD=0x000000002DD7F597 STORE=0x000000002DD9BCB7
+[A] MARK=0x0000000310A8AE20 SCR=0x0000000310A8B580 BUF=0x0000000310A8C060 VO=0x0000000310A8C840
+[A] marker bytes = 00000000efbeadde00000000efbeadde00000000efbeadde00000000efbeadde
+[P0] poison, no syscall, spill (control)          run=true rv=0x0000000000000000
+     00000000efbeadde00000000efbeadde00000000efbeadde00000000efbeadde  -> MARKER-INTACT
+     scr 000000000000000000000000efbeadde (load gadget's own scratch writes)
+[P1] poison, getpid(20), spill                    run=true rv=0x00000000000000B1
+     00000000efbeadde00000000efbeadde00000000efbeadde00000000efbeadde  -> MARKER-INTACT
+     scr 000000000000000000000000efbeadde (load gadget's own scratch writes)
+[P2] poison, 638(1000000000, VO, 0, 0), spill     run=true rv=0x0000000000000000
+     00000000efbeadde00000000efbeadde00000000efbeadde00000000efbeadde  -> MARKER-INTACT
+     scr 000000000000000000000000efbeadde (load gadget's own scratch writes)
+[P3] poison, 196(fd 0, VO, 0, 0), spill           run=true rv=0xFFFFFFFFFFFFFFFFFFFFFFFF
+     00000000efbeadde00000000efbeadde00000000efbeadde00000000efbeadde  -> MARKER-INTACT
+     scr 000000000000000000000000efbeadde (load gadget's own scratch writes)
+[P4] poison, clock_gettime(232)(0, VO), spill     run=true rv=0x0000000000000000
+     00000000efbeadde00000000efbeadde00000000efbeadde00000000efbeadde  -> MARKER-INTACT
+     scr 000000000000000000000000efbeadde (load gadget's own scratch writes)
+[Z] alive
+=== DONE ===

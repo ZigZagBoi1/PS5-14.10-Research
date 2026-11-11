@@ -1,0 +1,27 @@
+# tools/kernel_read_sweep_chunks.py --ip 192.168.1.121 --chunk 60 --timeout 60
+# probe: probes/phase17_new_vectors/1058a_image_4k_read_sweep.lua
+# base 0xFFFFFFFF95000000  span 0x6200000  step 0x4000  pages 6272  connections 105
+# every chunk printed readable=0; no [HIT] line was emitted
+chunk     0..F0000 readable=0
+...
+chunk 5190000..5280000 readable=0
+chunk 5280000..5370000 readable=0
+chunk 5370000..5460000 readable=0
+chunk 5460000..5550000 readable=0
+chunk 5550000..5640000 readable=0
+chunk 5640000..5730000 readable=0
+chunk 5730000..5820000 readable=0
+chunk 5820000..5910000 readable=0
+chunk 5910000..5A00000 readable=0
+chunk 5A00000..5AF0000 readable=0
+chunk 5AF0000..5BE0000 readable=0
+chunk 5BE0000..5CD0000 readable=0
+chunk 5CD0000..5DC0000 readable=0
+chunk 5DC0000..5EB0000 readable=0
+chunk 5EB0000..5FA0000 readable=0
+chunk 5FA0000..6090000 readable=0
+chunk 6090000..6180000 readable=0
+chunk 6180000..6200000 readable=0
+
+readable pages: 0  unmeasured: 0
+# a witness connected after the last chunk: WITNESS-OK (same process)

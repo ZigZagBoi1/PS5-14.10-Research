@@ -1,0 +1,6 @@
+=== PROBE 987a: LOADER SOURCE EXTRACT (fd 18) ===
+
+[A] sequential read, printing matching lines only
+  [read] PCALL-FAIL
+[Z] bytes=0 chunks=0 hits=0
+=== COMPLETE ===

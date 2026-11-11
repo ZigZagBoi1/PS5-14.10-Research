@@ -1,0 +1,5 @@
+=== PROBE 936c: SYSV LOOKUP ONLY, NO CREATE ===
+
+[0] pid=235
+
+[A] msgget(0x1234, 0)      -- lookup, no IPC_CREAT

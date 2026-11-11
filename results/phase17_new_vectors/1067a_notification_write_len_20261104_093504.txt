@@ -1,0 +1,4 @@
+=== PROBE 1067a: /dev/notification0 write length ===
+[S] pid=80
+[A] buf=310888020 watch=310616E40
+[!] watch not armed

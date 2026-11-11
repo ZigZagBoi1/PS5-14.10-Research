@@ -1,0 +1,15 @@
+=== PROBE 1231a: aio cmd=2 write path ===
+[0] pid=87
+  [socketpair] ret=0x00000000_00000000 err=22 Invalid argument
+    fds 24 25
+[1] submit cmd=1 (read) as the control
+  [669 cmd=1] ret=0x00000000_00000000 err=22 Invalid argument
+    id=0x00004205
+[2] drain whatever the read produced, then submit cmd=2 (write) from the marker buffer
+  [664] ret=0x00000000_00000000 err=22 Invalid argument
+    state=0x2 result=0xAAAAAAAA
+  [669 cmd=2] ret=0x00000000_00000000 err=22 Invalid argument
+    id=0x00000206
+  [664 again] ret=0x00000000_00000000 err=22 Invalid argument
+    state=0x3 result=0xAAAAAAAA
+[3] try to receive the written bytes on the peer

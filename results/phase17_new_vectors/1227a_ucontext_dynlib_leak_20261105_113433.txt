@@ -1,0 +1,18 @@
+=== PROBE 1227a: ucontext and dynlib record leaks ===
+[0] pid=87
+[1] thr_self = 0xFFFFFFFFFFFFFFFF (-1) err=14 Bad address
+  [634 self] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+    first 0x40: A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5
+    634 self: 0 supervisor-range qwords 
+  [634 pid] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+    634 pid: 0 supervisor-range qwords 
+[2] 660 dynlib_get_info2 
+  [660(0)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument
+    [0..7]=00000160 A5A5A5A5 A5A5A5A5 A5A5A5A5
+    660: 0 supervisor-range qwords 
+[3] 659 dynlib_get_list2
+  [659(buf,0x100)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=14 Bad address
+    [0..7]=00000000 00000013 00000014 A5A5A5A5
+    659: 0 supervisor-range qwords 
+[Z] pid_end=87
+=== DONE ===

@@ -1,0 +1,10 @@
+=== 1339r RACE FRESH STACKS ===
+pid=395
+ebase=33984000
+params: TRIALS=500 SPRAY=256 pool=310F14000
+t50:tc=42 fw=0 spray=256
+t100:tc=42 fw=0 spray=256
+trial 125: fd=-9223372036854775808 EXHAUSTED
+=== RESULTS: reclaim=0 free_wins=500 trials=0 ===
+pid=395
+=== DONE ===

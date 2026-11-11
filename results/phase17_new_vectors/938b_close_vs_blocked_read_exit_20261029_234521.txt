@@ -1,0 +1,14 @@
+=== PROBE 938b: CLOSE VS BLOCKED READ ===
+
+[0] pid=249
+[0] gadgets rax=41535890 rdi=42360318 rsi=41588605 rdx=45400791 store=42134631
+[A] control child getpid: tid=0 out=1
+[B] pair fds=22,23
+    child read pending, closing peer fd 23
+    tid=0 out=1 (0 = EOF, absent = still blocked)
+[C] pair fds=23,24
+    child read pending, closing its own fd 23
+    tid=0 out=0 (0xFFFFFFFF = EBADF, absent = still blocked)
+
+[Z] alive pid=249
+=== COMPLETE ===

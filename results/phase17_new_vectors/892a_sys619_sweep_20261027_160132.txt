@@ -1,0 +1,17 @@
+=== PROBE 892a: SYS 619 SWEEP ===
+
+[A] control: getpid = 104
+[B] argument count, all zeros:
+  [narg=0 zeros] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [narg=1 zeros] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [narg=2 zeros] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [narg=3 zeros] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [narg=4 zeros] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [narg=5 zeros] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [narg=6 zeros] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+[C] plausible pointers:
+  [619(buf,0,0,0)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  buf[0]=0x00000000
+  [619(pid,0,0,0)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+
+=== PROBE 892a DONE ===

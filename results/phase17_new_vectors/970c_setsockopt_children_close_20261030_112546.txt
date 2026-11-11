@@ -1,0 +1,18 @@
+=== PROBE 970c: FIVE CHILDREN vs CLOSE ===
+
+[0] pid=87 base=0x1B174000 pop_rax=0x1B174992
+  [1] socket(AF_INET6,SOCK_DGRAM) = 22
+  [r1] fd=23 children=5 close=true
+  [r2] fd=23 children=5 close=true
+  [r3] fd=23 children=5 close=true
+  [r4] fd=23 children=5 close=true
+  [r5] fd=23 children=5 close=true
+  [r6] fd=23 children=5 close=true
+  [r7] fd=23 children=5 close=true
+  [r8] fd=23 children=5 close=true
+  [r9] fd=23 children=5 close=true
+  [r10] fd=23 children=5 close=true
+  [r11] fd=23 children=5 close=true
+  [r12] fd=23 children=5 close=true
+[Z] alive pid=87 close_ok=12
+=== COMPLETE ===

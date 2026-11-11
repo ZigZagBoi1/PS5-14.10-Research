@@ -1,0 +1,21 @@
+=== PROBE 1223c: blockpool_map with a chosen VA ===
+[0] pid=80
+[1] blockpool_open = 0x19 err=22 Invalid argument
+    va=0x2000000000 len=0x10000 acc=3 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    va=0x2000000000 len=0x10000 acc=0 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    va=0x2000000000 len=0x10000 acc=10 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    va=0x3000000000 len=0x10000 acc=3 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    va=0x3000000000 len=0x10000 acc=0 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    va=0x3000000000 len=0x10000 acc=10 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    va=0x1000000000 len=0x10000 acc=3 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    va=0x1000000000 len=0x10000 acc=0 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    va=0x1000000000 len=0x10000 acc=10 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    va=0x40000000 len=0x10000 acc=3 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    va=0x40000000 len=0x10000 acc=0 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    va=0x40000000 len=0x10000 acc=10 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+[2] every VA refused; trying the handle in uap[3] and uap[4]
+    handle in uap[3] -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    handle in uap[4] -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+[3] nothing mapped
+[Z] pid_end=80
+=== DONE ===

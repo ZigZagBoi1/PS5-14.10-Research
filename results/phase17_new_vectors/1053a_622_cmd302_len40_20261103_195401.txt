@@ -1,0 +1,6 @@
+=== PROBE 1053a: 622 0x302 with a defined input ===
+[S] pid=172
+[A] zero=31150B8E0 fill=311410280 buf=3114112A0
+>A_ctl300 cmd=300 src=31150B8E0 len=64
+[A_ctl300] rv=0 reply=FFFFFFFF
+>B_302_zero cmd=302 src=31150B8E0 len=64

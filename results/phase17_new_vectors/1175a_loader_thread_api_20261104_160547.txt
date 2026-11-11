@@ -1,0 +1,31 @@
+=== PROBE 1175a: LOADER THREAD API ===
+[F] probe socket fd=21 (0 = the thread cannot send here)
+[1] spawning print-only thread
+[1] spawn ok
+MAIN-1
+T1 state alive; pipe=0x815570b57
+THREAD-ALIVE 1
+THREAD-ALIVE 2
+THREAD-ALIVE 3
+THREAD-ALIVE 4
+THREAD-DONE
+MAIN-2
+MAIN-3
+MAIN-4
+MAIN-5
+MAIN-6
+[1] main survived stage 1, spawn_ok=true
+[2] spawning thread that calls 601 cmd 0x0C (the known parker)
+[2] spawn ok
+MAIN2-1
+T2 pipe_ok=true fn=0x815570b57
+MAIN2-2
+MAIN2-3
+MAIN2-4
+MAIN2-5
+MAIN2-6
+MAIN2-7
+MAIN2-8
+[2] main survived stage 2, park_thread_spawn_ok=true
+[Z] alive
+=== 1175a DONE ===

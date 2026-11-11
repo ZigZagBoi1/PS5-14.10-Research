@@ -1,0 +1,33 @@
+=== PROBE 1163a: 639 FIVE-SLOT ABI ===
+[S] sentinel fill proved=true v=A5A5A5A5 rec=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 c=A5A5A5A5
+[A] well-formed call, five slots
+  rv=0 errno= value_written=true record_written=true
+  key=-37242000 off=3600 corr=0 val=-4611686018427392000 nearest=0
+[B] arithmetic on three mid-table inputs
+  input=0 rv=0 key=-37242000 off=3600 corr=0 val=-3600 nearest=0 expects=-3600 delta=0
+  input=1000000000 rv=0 key=985482000 off=0 corr=3600 val=999996400 nearest=3600 expects=999996400 delta=0
+  input=4096573200 rv=0 key=4096573200 off=0 corr=0 val=4096573200 nearest=3600 expects=4096573200 delta=0
+[C] zero destinations are skipped
+  v=0    rv=0 errno=- vout=skipped rout=written cout=written
+  r=0    rv=0 errno=- vout=written rout=skipped cout=written
+  c=0    rv=0 errno=- vout=written rout=written cout=skipped
+  all-0  rv=0 errno=- vout=skipped rout=skipped cout=skipped
+[D] wild destination 0x100 on the LAST slot only
+  rv=-1 errno=14 Bad address value_written=true record_written=true vout=FFFFF1F0 rout=FDC7BB70
+[E] policy sweep (slot +0x08 low dword)
+  policy=0 rv=0 errno= key=-37242000 off=3600 corr=0 val=-3600 nearest=0
+  policy=1 rv=0 errno= key=-37242000 off=3600 corr=0 val=-3600 nearest=0
+  policy=2 rv=0 errno= key=-37242000 off=3600 corr=0 val=-3600 nearest=0
+  policy=3 rv=0 errno= key=-37242000 off=3600 corr=0 val=-3600 nearest=0
+  policy=0x00000000FFFFFFFF rv=0 errno= key=-37242000 off=3600 corr=0 val=-3600 nearest=0
+[F] lower edge (first key is -37242000 = 0xFFFFFFFFFDC7BB70)
+  first-key   rv=0 errno= key=-37242000 off=3600
+  first+1     rv=0 errno= key=-37242000 off=3600
+  zero        rv=0 errno= key=-37242000 off=3600
+  above-last  rv=0 errno= key=4128627600 off=0
+[G] slot-alignment control: 638 (four slots) on the same input, after a refill
+  638 rv=0 errno=- vout=written value=3600 rout=written key=-37242000 off=3600
+[F2] below-first: the only call that can reach table[-1]
+  below-first rv=0 errno= key=-37242000 off=3600 corr=0 val=-16780816 nearest=0
+[Z] alive pid=80
+=== DONE ===

@@ -1,0 +1,4 @@
+=== PROBE 1040a: 622 cmd 0x302 pointer dereference ===
+[S] pid=80
+[A] page=3107A6F20 watch=3104F2AE0 buf=31053E300
+>A_user arg3=3107A6F20

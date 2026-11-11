@@ -1,0 +1,9 @@
+=== PROBE 1063a: kern.file / kern.proc.all direct ===
+
+[A] kern.file size-call rv=-1 size=0
+[B] kern.proc.all size-call rv=-1 size=0
+[C] kern.proc.pid(0) size-call rv=-1 size=0
+[D] kern.file fetch rv=-1 len=64 kaddr=0 first_at=nil
+[E] kern.proc.all fetch rv=-1 len=64 kaddr=0 first_at=nil
+[Z] alive pid=274
+=== COMPLETE ===

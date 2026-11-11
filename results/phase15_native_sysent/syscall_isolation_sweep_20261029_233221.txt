@@ -1,0 +1,15 @@
+syscall  status           detail
+------------------------------------------------------------
+200      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+201      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+202      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+203      RETURNED         ret=0x0 (num=0)
+204      RETURNED         ret=0x0 (num=0)
+205      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+206      RETURNED         ret=0x0 (num=0)
+207      KILLED_IN_CALL   
+208      CONNECT_FAILED   
+
+SUMMARY: 9 numbers, CONNECT_FAILED=1, KILLED_IN_CALL=1, RETURNED=7
+Returned values from: 200, 201, 202, 203, 204, 205, 206
+Process terminated inside: 207

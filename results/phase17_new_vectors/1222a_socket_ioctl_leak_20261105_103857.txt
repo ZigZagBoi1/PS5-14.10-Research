@@ -1,0 +1,100 @@
+=== PROBE 1222a: socket ioctl + Sony net extensions ===
+[A] socket(AF_INET, SOCK_DGRAM, 0)
+    fd=22 (22)
+[B] FIONBIO (0x8004667E) through syscall 54 - does 54 resolve a socket at all
+  [FIONBIO] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+  [FIONBIO off] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+  [FIONBIO zero] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+[C] SIOC* ifreq sweep on the socket, 0x200 buffer scanned for kernel pointers
+    scan 0xC0206911: 32 qwords, 0 supervisor-range 
+  ioctl 0xC0206911 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+    scan 0x8912: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008912 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0xC0206920: 32 qwords, 0 supervisor-range 
+  ioctl 0xC0206920 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+    scan 0x8921: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008921 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0xC0206922: 32 qwords, 0 supervisor-range 
+  ioctl 0xC0206922 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+    scan 0x8923: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008923 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8913: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008913 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8914: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008914 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8915: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008915 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8916: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008916 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8917: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008917 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8918: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008918 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8919: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008919 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x891A: 32 qwords, 0 supervisor-range 
+  ioctl 0x0000891A ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x891B: 32 qwords, 0 supervisor-range 
+  ioctl 0x0000891B ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0xC0206933: 32 qwords, 0 supervisor-range 
+  ioctl 0xC0206933 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+    scan 0xC0206934: 32 qwords, 0 supervisor-range 
+  ioctl 0xC0206934 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+    scan 0xC0806935: 32 qwords, 0 supervisor-range 
+  ioctl 0xC0806935 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+    scan 0xC0206936: 32 qwords, 0 supervisor-range 
+  ioctl 0xC0206936 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+    scan 0xC0206938: 32 qwords, 0 supervisor-range 
+  ioctl 0xC0206938 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+    scan 0xC020693A: 32 qwords, 0 supervisor-range 
+  ioctl 0xC020693A ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=13 Permission denied
+    scan 0x8940: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008940 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8941: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008941 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8942: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008942 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8943: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008943 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8944: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008944 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8945: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008945 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8946: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008946 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8947: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008947 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8948: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008948 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x8949: 32 qwords, 0 supervisor-range 
+  ioctl 0x00008949 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x894A: 32 qwords, 0 supervisor-range 
+  ioctl 0x0000894A ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x894B: 32 qwords, 0 supervisor-range 
+  ioctl 0x0000894B ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x894C: 32 qwords, 0 supervisor-range 
+  ioctl 0x0000894C ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x894D: 32 qwords, 0 supervisor-range 
+  ioctl 0x0000894D ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x894E: 32 qwords, 0 supervisor-range 
+  ioctl 0x0000894E ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+    scan 0x894F: 32 qwords, 0 supervisor-range 
+  ioctl 0x0000894F ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+[C] supervisor-range qwords across the sweep: 0
+[D] Sony socket extensions, first calls
+  sys 102 (fd,buf,0x100) ret=0x00000000_00000001 err=25 Inappropriate ioctl for device
+    scan sys102: 32 qwords, 0 supervisor-range 
+  sys 102 (buf,0x100) ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=9 Bad file descriptor
+    scan sys102-b: 32 qwords, 0 supervisor-range 
+  sys 125 (fd,buf,0x100) ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=14 Bad address
+    scan sys125: 32 qwords, 0 supervisor-range 
+  sys 125 (buf,0x100) ret=0x00000000_00000004 err=14 Bad address
+[string "-- CRASH_CLASS: LOW..."]:32: attempt to perform arithmetic on local 'addr' (a table value)
+stack traceback:
+	[string "-- CRASH_CLASS: LOW..."]:32: in function 'scan'
+	[string "-- CRASH_CLASS: LOW..."]:86: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

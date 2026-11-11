@@ -1,0 +1,13 @@
+=== PROBE 904a: minimal child spawn ===
+[0] pid=80
+[0] gadgets rax=631196050 rdi=632020478 store=631794791 jmp=631280769
+[1] socketpair fd=24
+[R1] chain=22 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+[R2] chain=22 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+[R3] chain=22 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+[R4] chain=22 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+[R5] chain=22 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+[R6] chain=22 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+[R7] chain=22 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+[R8] chain=22 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+[Z] done

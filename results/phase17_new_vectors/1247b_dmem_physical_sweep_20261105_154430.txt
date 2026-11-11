@@ -1,0 +1,26 @@
+=== PROBE 1247b: mmap_dmem container hunt + physical sweep ===
+[0] pid=117
+[A] 628(pa=0, len=0x4000, idx=0..0x14, prot=3, extra=0, extra_pa=0)
+  idx=0   -> rv=-1           errno="16 Device busy"
+  idx=1   -> rv=-1           errno="16 Device busy"
+  idx=2   -> rv=-1           errno="16 Device busy"
+  idx=3   -> rv=-1           errno="16 Device busy"
+  idx=4   -> rv=-1           errno="16 Device busy"
+  idx=5   -> rv=-1           errno="16 Device busy"
+  idx=6   -> rv=-1           errno="16 Device busy"
+  idx=7   -> rv=-1           errno="16 Device busy"
+  idx=8   -> rv=-1           errno="16 Device busy"
+  idx=9   -> rv=-1           errno="16 Device busy"
+  idx=10  -> rv=-1           errno="16 Device busy"
+  idx=11  -> rv=-1           errno="16 Device busy"
+  idx=12  -> rv=-1           errno="16 Device busy"
+  idx=13  -> rv=-1           errno="16 Device busy"
+  idx=14  -> rv=-1           errno="16 Device busy"
+  idx=15  -> rv=-1           errno="16 Device busy"
+  idx=16  -> rv=-1           errno="16 Device busy"
+  idx=17  -> rv=-1           errno="16 Device busy"
+  idx=18  -> rv=-1           errno="16 Device busy"
+  idx=19  -> rv=-1           errno="16 Device busy"
+  idx=20  -> rv=-1           errno="16 Device busy"
+[A] resolving indices: 0
+=== DONE 1247b ===

@@ -1,0 +1,20 @@
+=== PROBE 1232a: aio write from kernel memory ===
+[0] pid=80
+  [socketpair] ret=0x00000000_00000000 err=2 No such file or directory
+    fds 24 25
+[A] kernel image base src=0xFFFFFFFF85000000
+  [669 cmd=2] ret=0x00000000_00000000 err=2 No such file or directory
+    id=0x00000206
+  [664] ret=0x00000000_00000000 err=2 No such file or directory
+    state=0x3 result=0xAAAAAAAA
+  [recvfrom] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=35 Resource temporarily unavailable
+    bytes: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[A] kernel base + 4MB src=0xFFFFFFFF85400000
+  [669 cmd=2] ret=0x00000000_00000000 err=35 Resource temporarily unavailable
+    id=0x00000207
+  [664] ret=0x00000000_00000000 err=35 Resource temporarily unavailable
+    state=0x3 result=0xAAAAAAAA
+  [recvfrom] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=35 Resource temporarily unavailable
+    bytes: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+[Z] pid_end=80
+=== DONE ===

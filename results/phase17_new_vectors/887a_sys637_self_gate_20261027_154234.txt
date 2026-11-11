@@ -1,0 +1,14 @@
+=== PROBE 887a: SYS 637 SELF-GATE ===
+
+[A] self pid = 97
+[C0] 671 mode=1 before: A=6144 B=0
+[B1] 637(0, 0x40000000) -- pid 0 / SELF:
+  [637 self] ret=0x00000000_00000000 (lo=0)
+[B2] 637(97, 0x40000000) -- explicit own pid:
+  [637 pid] ret=0x00000000_00000000 (lo=0)
+[B3] 637(97, 0) -- explicit own pid, zero limit:
+  [637 pid 0-limit] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (lo=4294967295)
+[C1] 671 mode=1 after:  A=6144 B=0
+  A delta = 0
+  [mmap 1MB-after-637] ret=0x00000003_10CF0000 (lo=282001408)
+[D1] 622 cmd 0x100 with arg1=0:

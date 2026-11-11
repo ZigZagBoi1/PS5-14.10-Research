@@ -1,0 +1,16 @@
+=== PROBE 893a: SYS 616 NAME READ ===
+
+[A] self pid = 104
+[B] 616(id, outbuf):
+  [616(104, buf)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    name=''
+  [616(0, buf)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    name=''
+  [616(1, buf)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    name=''
+  [616(2, buf)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    name=''
+  [616(10, buf)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+    name=''
+
+=== PROBE 893a DONE ===

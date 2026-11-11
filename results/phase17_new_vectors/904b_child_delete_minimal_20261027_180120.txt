@@ -1,0 +1,20 @@
+=== PROBE 904a: minimal child spawn ===
+[0] pid=80
+[0] gadgets rax=117180818 rdi=118005246 store=117779559 jmp=117265537
+[1] socketpair fd=22
+[2] submit ok=true ret=0x0 ids=4205,14205
+[3] chain slots=13
+/savedata0/misc.lua:15: uint64:new: invalid type passed to constructor (nil)
+stack traceback:
+	[C]: in function 'assert'
+	/savedata0/misc.lua:15: in function 'error'
+	/savedata0/misc.lua:19: in function 'errorf'
+	/savedata0/uint64.lua:65: in function </savedata0/uint64.lua:40>
+	(tail call): ?
+	/savedata0/uint64.lua:119: in function </savedata0/uint64.lua:118>
+	[string "-- CRASH_CLASS: HIGH..."]:68: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

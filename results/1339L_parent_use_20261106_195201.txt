@@ -1,0 +1,8 @@
+=== 1339L PARENT-USE RACE ===
+pid=339
+ebase=1FF7C000
+cmsg: use=311594000 bad=311598000 entries=20 total=480 bytes
+chain: blk=3116DC000 base=3116E0000
+  chain verified OK (17 entries)
+gadgets: pop_rax=1FF7C992 pop_rdi=20045DFE pop_rsi=1FF8977D pop_rdx=2032C2D7 pop_rcx=1FF7CE64 fn=836778B57
+params: TRIALS=200 SPRAY=128 USE_CALLS=100 (before=20 after=80)

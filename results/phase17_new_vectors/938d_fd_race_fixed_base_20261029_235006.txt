@@ -1,0 +1,16 @@
+=== PROBE 938d ===
+
+[0] pid=270 base=0x6EDC4000 size=0x494000 fn=34980399959
+[0] pop_rax=0x6EDC4992 store_rsi=0x6EF64BA9
+[A] control child getpid
+    out=270 (pid should appear here)
+[B] blocked read, parent closes the peer
+    socketpair rv=0x0 fds=22,23
+    child blocked? out=0
+    after close(peer): out=0 (0=EOF woken)
+[C] blocked read, parent closes the child's own fd
+    socketpair rv=0x0 fds=23,24
+    child blocked? out=0
+    after close(child fd): out=0 (0xFFFFFFFF=EBADF)
+[Z] alive pid=270
+=== COMPLETE ===

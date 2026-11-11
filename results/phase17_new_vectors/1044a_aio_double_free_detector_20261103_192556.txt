@@ -1,0 +1,12 @@
+=== PROBE 1044a: aio double-free detector ===
+[0] pid=154 eboot=481FC000 g=1210042770/1210867198/1210095485/1213907671/1210641511/1210127489
+[A] block=310B24000 ID=310830000 ST=310F24000
+[S0] create ok=true rv=0 id=16901
+[S0] serial delete ok=true st=80020010
+[S1] recreate ok=true rv=0 id=518 same_as_first=false
+[B] chain words=180012 bytes=1440096 head=310B28000
+[S2] spawn ok=true rv=0
+[P] parent delete ok=true st=80020010 rv=0
+[D] child status words: zero=19747 nonzero=253 res=0
+[D] total successes=19747 (1 = normal, >1 = double free)
+[Z] alive pid=154

@@ -1,0 +1,17 @@
+=== PROBE 1200c: IS IOCTL 54 REAL ===
+[A] fds null=22 dmem0=23
+  null  TCGETS   0x5413              rv=00000000 written-dwords=0
+  null  TIOCGWINSZ 0x5413/0x5414     rv=00000000 written-dwords=0
+  null  cmd 0                        rv=00000000 written-dwords=0
+  dmem0 cmd 0                        rv=00000000 written-dwords=0
+  dmem0 cmd 0x5413                   rv=00000000 written-dwords=0
+  BADFD 9999 TCGETS                  rv=00000000 written-dwords=0
+  BADFD -1   cmd 0                   rv=TRAP written-dwords=0
+  null  TCGETS ptr=0                 rv=00000000 written-dwords=0
+  null  TCGETS ptr=kernel            rv=00000000 written-dwords=0
+  dmem0 TCGETS ptr=0                 rv=00000000 written-dwords=0
+[B] fcntl(null,F_GETFL)=00000002
+[B] fcntl(dmem0,F_GETFL)=00000002
+[C] close(9999)=00000000
+[Z] alive
+=== DONE

@@ -1,0 +1,13 @@
+=== 1340f MULTIROUND v2 ===
+fdlimit: 4096
+pid=429
+ebase=30614000
+pop_r8: 47 58 C3
+fd=22
+tc0=42
+spray=125
+building chains (20000 rounds)...
+FREE built
+USE built
+chains OK
+starting 50 trials (20000 rounds/child)

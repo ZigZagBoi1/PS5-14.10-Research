@@ -1,0 +1,21 @@
+=== PROBE 1228b: ucontext family, mmap stack ===
+[0] pid=87 eboot=0x206C0000
+    gadget = 0x206D5481
+[A] mmap stack 0x10000 prot 3 flags 0x1002
+    stack = 0x3112F0000 err=3 No such process
+[B] 430
+  [430] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument
+    tid = 0x18E3B
+  [433(tid,0)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+[C] 632 then 634
+  [632(tid)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+  [634(tid,buf)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+    first: A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5
+    634 raw: 0 supervisor qwords 
+  [634(tid,shaped)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+    634 shaped: 0 supervisor qwords 
+[D] 633 resume
+  [633(tid)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+  [433(tid,0)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+[Z] pid_end=87
+=== DONE ===

@@ -1,0 +1,7 @@
+=== PROBE 1193c: 601/0x00 STRUCT-VS-ARG3 DISCRIMINATION ===
+[1] about to call 601(0x00, zeroed struct, 0)
+   returned rv=0 raw=0x0 errno=2 No such file or directory buf0=0x0000000000000100
+[2] about to call 601(0x00, 0xA5 struct, 0)
+   returned rv=0 raw=0x0 errno=2 No such file or directory buf0=0x0000000000000100
+[Z] alive
+=== DONE ===

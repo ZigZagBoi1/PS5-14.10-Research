@@ -1,0 +1,83 @@
+=== PROBE 1255a: sysent presence map 538-676 ===
+
+[0] pid=80 SIG_IGN ok=true rv=0
+[0] control 4095 ret=-1 err=78 Function not implemented
+n=538 ret=-1 err=22 Invalid argument
+n=539 ret=-1 err=3 No such process
+n=540 ret=-1 err=14 Bad address
+n=541 ret=-1 err=3 No such process
+n=542 ret=-1 err=22 Invalid argument
+n=543 ret=-1 err=22 Invalid argument
+n=544 ret=-1 err=3 No such process
+n=545 ret=-1 err=3 No such process
+n=546 ret=-1 err=3 No such process
+n=547 ret=-1 err=13 Permission denied
+n=548 ret=0 err=13 Permission denied
+n=549 ret=-1 err=22 Invalid argument
+n=550 ret=-1 err=3 No such process
+n=551 ret=-1 err=14 Bad address
+n=552 ret=-1 err=3 No such process
+n=553 ret=-1 err=22 Invalid argument
+n=554 ret=-1 err=22 Invalid argument
+n=555 ret=-1 err=22 Invalid argument
+n=556 ret=-1 err=3 No such process
+n=557 ret=-1 err=22 Invalid argument
+n=558 ret=-1 err=3 No such process
+n=559 ret=-1 err=1 Operation not permitted
+n=560 ret=0 err=1 Operation not permitted
+n=561 ret=-1 err=78 Function not implemented
+n=562 ret=-1 err=78 Function not implemented
+n=567 ret=-1 err=3 No such process
+n=568 ret=-1 err=78 Function not implemented
+n=569 ret=-1 err=78 Function not implemented
+n=570 ret=-1 err=78 Function not implemented
+n=571 ret=-1 err=78 Function not implemented
+n=572 ret=-1 err=13 Permission denied
+n=573 ret=-1 err=78 Function not implemented
+n=574 ret=-1 err=78 Function not implemented
+n=575 ret=-1 err=78 Function not implemented
+n=576 ret=-1 err=78 Function not implemented
+n=577 ret=-1 err=78 Function not implemented
+n=578 ret=-1 err=78 Function not implemented
+n=579 ret=-1 err=78 Function not implemented
+n=580 ret=-1 err=78 Function not implemented
+n=581 ret=-1 err=78 Function not implemented
+n=582 ret=-1 err=78 Function not implemented
+n=583 ret=-1 err=78 Function not implemented
+n=584 ret=-1 err=78 Function not implemented
+n=586 ret=-1 err=1 Operation not permitted
+n=587 ret=-1 err=1 Operation not permitted
+n=588 ret=-1 err=22 Invalid argument
+n=589 ret=-1 err=78 Function not implemented
+n=590 ret=-1 err=78 Function not implemented
+n=591 ret=-1 err=14 Bad address
+n=592 ret=-1 err=12 Cannot allocate memory
+n=593 ret=-1 err=14 Bad address
+n=594 ret=-1 err=14 Bad address
+n=595 ret=-1 err=3 No such process
+n=596 ret=0 err=3 No such process
+n=597 ret=-1 err=78 Function not implemented
+n=598 ret=-1 err=14 Bad address
+n=599 ret=-1 err=1 Operation not permitted
+n=600 ret=-1 err=1 Operation not permitted
+n=601 ret=-1 err=14 Bad address
+n=602 ret=0 err=14 Bad address
+n=603 ret=-1 err=1 Operation not permitted
+n=604 ret=-1 err=1 Operation not permitted
+n=605 ret=-1 err=22 Invalid argument
+n=606 ret=0 err=22 Invalid argument
+n=607 ret=-1 err=14 Bad address
+n=608 ret=-1 err=14 Bad address
+n=609 ret=-1 err=78 Function not implemented
+n=610 ret=-1 err=78 Function not implemented
+n=611 ret=-1 err=1 Operation not permitted
+n=612 ret=-1 err=14 Bad address
+n=613 ret=-1 err=1 Operation not permitted
+n=614 ret=-1 err=78 Function not implemented
+n=615 ret=-1 err=14 Bad address
+n=616 ret=-1 err=3 No such process
+n=617 ret=0 err=3 No such process
+n=618 ret=-1 err=1 Operation not permitted
+n=619 ret=-1 err=78 Function not implemented
+n=620 ret=0 err=78 Function not implemented
+n=621 ret=-1 err=78 Function not implemented

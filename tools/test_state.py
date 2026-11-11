@@ -167,6 +167,13 @@ class StateToolTests(unittest.TestCase):
             self._run(["set", "bad:key=value"])
         self.assertFalse(before.exists())
 
+    def test_state_key_with_surrounding_space_is_refused(self):
+        for key in (" leading", "trailing ", " both "):
+            with self.assertRaises(SystemExit):
+                self._run(["set", key + "=value"])
+        self.assertFalse((self.root / "results" / "STATE.md").exists())
+
+
     def test_state_marker_in_a_value_round_trips(self):
         value = "<!-- STATE:END -->"
         self._run(["set", "notes=" + value])

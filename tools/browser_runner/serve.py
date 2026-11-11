@@ -26,7 +26,7 @@ import tempfile
 import threading
 import time
 import re
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 
 try:
     from .capture import CaptureWriter, MAX_BODY_BYTES, decode_request
@@ -190,6 +190,13 @@ def _safe_file(base, relative):
     if candidate != base and base not in candidate.parents:
         return None
     return candidate if candidate.is_file() else None
+
+
+def _reset_requested(parsed, name):
+    """Accept the documented path form and the operator query form exactly."""
+    if parsed.path == "/" + name + "=1":
+        return True
+    return parse_qs(parsed.query).get(name) == ["1"]
 
 
 def generate_self_signed(certfile, keyfile):
@@ -454,7 +461,7 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
         # p686 operator reset: GET /p686reset=1 clears the census state, so a
         # new campaign can start without touching the console. The page calls
         # it once at its load cap, together with its own localStorage reset.
-        if 'p686reset=1' in parsed.query:
+        if _reset_requested(parsed, 'p686reset'):
             qs = parse_qs(parsed.query)
             P686_STATE['pendingArm'] = None
             P686_STATE['alive'] = False
@@ -495,7 +502,7 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             return
 
         # p688 operator reset: GET /p688reset=1
-        if 'p688reset=1' in parsed.query:
+        if _reset_requested(parsed, 'p688reset'):
             qs = parse_qs(parsed.query)
             P688_STATE['pendingArm'] = None
             P688_STATE['alive'] = False
@@ -533,7 +540,7 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             return
 
         # p689 operator reset / rewind: GET /p689reset=1[&arm=N|&arm=clear]
-        if 'p689reset=1' in parsed.query:
+        if _reset_requested(parsed, 'p689reset'):
             qs = parse_qs(parsed.query)
             P689_STATE['pendingArm'] = None
             P689_STATE['alive'] = False
@@ -571,7 +578,7 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             return
 
         # p690 operator reset: GET /p690reset=1
-        if 'p690reset=1' in parsed.query:
+        if _reset_requested(parsed, 'p690reset'):
             qs = parse_qs(parsed.query)
             P690_STATE['pendingArm'] = None
             P690_STATE['alive'] = False

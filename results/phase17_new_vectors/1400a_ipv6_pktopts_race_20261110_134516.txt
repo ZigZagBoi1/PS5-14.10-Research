@@ -1,0 +1,25 @@
+=== PROBE 1400a: IPv6 PKTOPTS RACE ===
+
+[0] eboot_base = 0x74D0000
+[1] fn_addr (loader syscall stub) = 0x310B7DFD0
+[2] No syscall;ret near fn_addr — child thread race deferred
+[2] Running single-thread close+spray race instead
+
+--- Phase 1: IPv6 socket baseline ---
+[P1] socket(AF_INET6, SOCK_DGRAM, UDP) = 22
+[P1] setsockopt(IPV6_PKTINFO) = 0
+[P1] getsockopt(IPV6_PKTINFO) = 0, len=20
+[P1] Baseline OK — IPV6_PKTINFO works on game process
+
+--- Phase 2: Close/setsockopt race ---
+[R10] completed, anomalies so far: 0
+[R20] completed, anomalies so far: 0
+[R30] completed, anomalies so far: 0
+[R40] completed, anomalies so far: 0
+[R50] completed, anomalies so far: 0
+
+=== RESULTS: 50 rounds, 0 anomalies ===
+No overlap detected in single-thread close+spray
+Next: try concurrent child threads for tighter race window
+
+=== PROBE 1400a COMPLETE ===

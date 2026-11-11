@@ -102,7 +102,7 @@ try{
   emit('A-RESULT','markerHits='+hitsA+',numSamples='+samplesA.length);
   for(var k=0;k<samplesA.length;k++)
     emit('A-SAMPLE','i='+samplesA[k].i+',j='+samplesA[k].j+',hex=0x'+samplesA[k].h);
-  if(hitsA>0) emit('A-VERDICT','MARKER-RECOVERED — butterfly reuse confirmed');
+  if(hitsA>0) emit('A-VERDICT','ENGINE-DIVERGENCE — marker recovered; inspect before CVE claim');
   else if(samplesA.length>0) emit('A-VERDICT','OTHER-NUMBERS — stale data but not our marker');
   else emit('A-VERDICT','no-numbers (callback result is undefined)');
 }catch(e){emit('A-ERR',e.name+':'+e.message);}
@@ -159,7 +159,7 @@ try{
   emit('B-RESULT','ptrHits='+hitsB+',samples='+samplesB.length);
   for(var k=0;k<samplesB.length;k++)
     emit('B-SAMPLE','hex=0x'+samplesB[k].h);
-  if(hitsB>0) emit('B-VERDICT','FAKE-PTR-RECOVERED');
+  if(hitsB>0) emit('B-VERDICT','ENGINE-DIVERGENCE — fake pointer pattern recovered');
   else emit('B-VERDICT','no-ptr-recovery');
 }catch(e){emit('B-ERR',e.name+':'+e.message);}
 flush();
@@ -234,7 +234,7 @@ try{
     emit('C-PTRLIKE','count='+ptrLike.length);
     for(var k=0;k<Math.min(ptrLike.length,5);k++)
       emit('C-PTR','0x'+ptrLike[k].h);
-    if(ptrLike.length>0) emit('C-VERDICT','HEAP-PTR-LEAK — address disclosed!');
+    if(ptrLike.length>0) emit('C-VERDICT','ENGINE-DIVERGENCE — pointer-shaped value; inspect');
     else emit('C-VERDICT','numbers-but-no-ptrs');
   } else {
     emit('C-VERDICT','no-numeric-leak (callback result undefined)');
@@ -332,7 +332,7 @@ try{
     var ptrLike=leaksE.filter(function(x){
       return x.h&&x.h!=='N/A'&&x.h.slice(0,6)==='000000'&&x.h.slice(6,8)!=='00';
     });
-    if(ptrLike.length>0) emit('E-VERDICT','PTR-IN-DOUBLE-BUTTERFLY — '+ptrLike.length);
+    if(ptrLike.length>0) emit('E-VERDICT','ENGINE-DIVERGENCE — '+ptrLike.length+' pointer-shaped values in double butterfly');
     else emit('E-VERDICT','stale-data-in-double-butterfly');
   } else {
     emit('E-VERDICT','no-unexpected-values');

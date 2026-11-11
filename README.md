@@ -64,7 +64,7 @@ The game **Hamidashi Creative** (Artemis/Lua engine) loads a modified save file 
 
 - Direct memory read/write via `memory.*` API
 - Syscall invocation via `make_syscall(N)` (bypasses Lua-side filter; kernel restrictions still apply)
-- GPU mmap for large heap R/W (256+ pages, no guard pages)
+- GPU mmap for large heap R/W (41c: >=1 MiB readable below the anchor = 64 x 16 KiB pages, no guard pages)
 - CClosure function pointer redirect for calling existing Lua C functions
 - `native.fcall_with_rax` for arbitrary userland function calls
 - Thread creation via `thr_create(430)` with full register control and `thr_new(455)` with arg delivery
@@ -128,7 +128,7 @@ These are the tools we can use right now on 14.10:
 | **Thread ROP execution** | `thr_create(430)` with CS=0x43/SS=0x3B, full GP register control. Multi-gadget chains (pop rdi, pop rax, mov [rdi],eax;ret) confirmed. Thread wrote 0xDEADBEEF to controlled address. | 80a-80k, 156c/156d |
 | **Arbitrary userland function calls** | `native.fcall_with_rax`: getpid=0x22a, socket=0x16, close=0x0 all correct | 129b |
 | **C11 threading** | `Thrd_create` spawns 5+ concurrent threads with join. `Atomic_fetch_add_8` as entry verified. Budget: 8 children max. | 126g/126h, PR #71 |
-| **Heap R/W (256+ pages)** | GPU mmap adjacency, no guard pages | 41c |
+| **Heap R/W (>=1 MiB = 64 x 16 KiB pages)** | GPU mmap adjacency, no guard pages; 41c scanned 256 x 0x1000 steps | 41c |
 | **CClosure function redirect** | Selected existing Lua C targets (rawequal/rawget/type) produced target-like outputs with restore checks. Arbitrary target/ABI and ROP support remain unverified. | 56c/56f |
 | **Raw syscall invocation** | `make_syscall(N)` for tested numbers. Bypasses Lua-side filter only; kernel restrictions apply. | multiple |
 | **Userland ASLR bypass** | `dynlib_get_info(593)` returns base addresses for 39 userland modules. Kernel ASLR is separate. | 41o |
@@ -346,7 +346,7 @@ probes/                              # 3326 probe scripts (2931 Lua + 66 JS + 32
   phase13_webkit/                   # 361 probes (304 HTML + 57 JS): FontFace UAF, Canvas forge, engine fingerprint, crash corpus, p722-p802 info-leak residue campaign (unrun)
   phase14_cclosure_redirect/         # CClosure +0x20 redirect experiments
   phase14_final_push/               # 54a-56l: deep syscall survey, CClosure, KASLR exhaustive
-  phase15_native_sysent/            # 57a+: native sysent survey, msync CVE probe
+  phase15_native_sysent/            # 57a-57b: native sysent 677-734 (withdrawn: outside the 14.10 table)
   phase16_thr_create_crash/          # thr_create(430) crash analysis and CS=0x43 fix
   phase17_new_vectors/              # 1470 probes: massive vector exploration
   phase17_seg_hypothesis/           # Segment register hypothesis testing

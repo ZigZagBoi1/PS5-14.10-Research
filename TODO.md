@@ -14,6 +14,7 @@
 
 Canvas UAF write primitive confirmed (p553). FontFace reclaim disclosure confirmed (p563/p564). The gap is **self-address**: FontFace gives engine heap pointers, not the address of our own buffers. See `docs/WEBKIT_INFO_LEAK_STRATEGY.md`.
 
+- [x] ~~**Run probe 57a** (`native_survey_677_734`)~~ — closed: 677-734 are outside the 14.10 dispatch table (measured absent with SIG_IGN, `results/phase17_new_vectors/1248a*`).
 - [ ] ★★★ **P567: WebKit feature detection** — determine if BigUint64Array, WebAssembly, SharedArrayBuffer, OffscreenCanvas, Workers available. BigUint64Array/Wasm i64 would bypass DAZ for pointer reads. Ready: `probes/phase23_info_leak/p567_feature_detect.js`.
 - [ ] ★★★ **P568: 768B ArrayBuffer reclaim** — spray 768-byte ArrayBuffers to reclaim freed Canvas2D context, read raw bytes via DataView/BigUint64Array (integer path bypasses DAZ). Ready: `probes/phase23_info_leak/p568_arraybuffer_768_reclaim.js`.
 - [ ] ★★★ **P569: FontFace + Canvas UAF combo** — combine FontFace heap disclosure with Canvas UAF R/W in one page. If both land in same bmalloc region, compute relative offsets to solve self-address gap. Ready: `probes/phase23_info_leak/p569_fontface_canvas_combo.js`.

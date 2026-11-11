@@ -63,7 +63,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-15 20:03 | 29 | - | - | ? | results/phase4_ipc_network/29_rthdr_mmap_20261015_200310.txt |
 | 2026-10-15 20:04 | 30 | - | - | ? | results/phase4_ipc_network/30_mmap_fcntl_deep_20261015_200421.txt |
 | 2026-10-15 20:10 | 30b | - | - | ? | results/phase4_ipc_network/30b_fcntl_scm_20261015_201028.txt |
-| 2026-10-15 20:15 | 30c | - | - | ? | results/phase4_ipc_network/30c_fcntl_bypass_20261015_201500.txt |
 | 2026-10-15 20:20 | 31 | - | - | ? | results/phase4_ipc_network/31_sockopt_fuzz_20261015_202000.txt |
 | 2026-10-15 20:25 | 31b | - | - | ? | results/phase4_ipc_network/31b_tcpinfo_dump_20261015_202500.txt |
 | 2026-10-15 20:30 | 31c | - | - | ? | results/phase4_ipc_network/31c_ps5opts_fuzz_20261015_203000.txt |
@@ -111,7 +110,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-15 23:47 | 40 | - | - | ? | results/phase8_live_network/40_tcp_connectback_20261015_234749.txt |
 | 2026-10-15 23:52 | 41z | - | - | ? | results/phase7_heap_exploitation/41z_chain_hijack_20261015_235238.txt |
 | 2026-10-16 00:00 | 40 | - | - | ? | results/phase8_live_network/40_tcp_connectback_20261016_000025.txt |
-| 2026-10-16 00:11 | 42a | - | - | ? | results/phase8_live_network/42a_kernel_rw_20261016_001156.txt |
 | 2026-10-16 06:55 | 42b | - | - | ? | results/phase9_kaslr_defeat/42b_kaslr_defeat_20261016_065521.txt |
 | 2026-10-16 06:57 | 42c | - | - | ? | results/phase9_kaslr_defeat/42c_kaslr_deep_20261016_065713.txt |
 | 2026-10-16 06:59 | 42d | - | - | ? | results/phase9_kaslr_defeat/42d_dmem_kaslr_20261016_065912.txt |
@@ -122,7 +120,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-16 07:04 | 42g | - | - | ? | results/phase9_kaslr_defeat/42g_fnaddr_dump_20261016_070424.txt |
 | 2026-10-16 07:05 | 42g | - | - | ? | results/42g_rop_kptr_leak_20261016_070509.txt |
 | 2026-10-16 07:05 | 42h | - | - | ? | results/phase9_kaslr_defeat/42h_code_dump_20261016_070529.txt |
-| 2026-10-16 07:06 | 42g2 | - | - | ? | results/42g2_high_phys_decode_20261016_070600.txt |
 | 2026-10-16 07:06 | 42g3 | - | - | ? | results/42g3_high_phys_only_20261016_070632.txt |
 | 2026-10-16 07:07 | 42g4 | - | - | ? | results/42g4_minimal_high_20261016_070704.txt |
 | 2026-10-16 07:07 | 42i | - | - | ? | results/phase9_kaslr_defeat/42i_vmquery_20261016_070711.txt |
@@ -132,12 +129,10 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-16 07:11 | 42i | - | - | ? | results/42i_chain_analysis_20261016_071113.txt |
 | 2026-10-16 18:06 | 43o | - | - | ? | results/43o_afroute_kaslr_20261016_180647.txt |
 | 2026-10-16 18:06 | 43p | - | - | ? | results/43p_aio_bypass_20261016_180656.txt |
-| 2026-10-16 18:07 | 43a | - | - | ? | results/43a_kldstat_kaslr_20261016_180703.txt |
 | 2026-10-16 18:07 | 43b | - | - | ? | results/43b_kldsym_resolve_20261016_180719.txt |
 | 2026-10-16 18:07 | 43c | - | - | ? | results/43c_sysarch_gsbase_20261016_180744.txt |
 | 2026-10-16 18:07 | 43d | - | - | ? | results/43d_kinfo_proc_full_20261016_180723.txt |
 | 2026-10-16 18:07 | 43e | - | - | ? | results/43e_blocked_syscall_bypass_20261016_180750.txt |
-| 2026-10-16 18:07 | 43f | - | - | ? | results/43f_sysctl_write_20261016_180756.txt |
 | 2026-10-16 18:07 | 43i | - | - | ? | results/43i_fn_redirect_20261016_180730.txt |
 | 2026-10-16 18:08 | 43g | - | - | ? | results/43g_sony_syscall_sweep_20261016_180802.txt |
 | 2026-10-16 18:08 | 43h | - | - | ? | results/43h_mtypeprotect_wxbypass_20261016_180808.txt |
@@ -153,22 +148,15 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-16 18:56 | 45a | - | - | ? | results/45a_native_exec_kaslr_20261016_185642.txt |
 | 2026-10-16 19:13 | 45b | - | - | ? | results/45b_shellcode_write_diag_20261016_191357.txt |
 | 2026-10-16 19:26 | 45c | - | - | ? | results/45c_execution_reality_check_20261016_192602.txt |
-| 2026-10-16 19:27 | 45c | - | - | ? | results/45c_execution_reality_check_20261016_192713.txt |
 | 2026-10-16 19:47 | 46a | - | - | ? | results/46a_sony_syscall_deep_20261016_194741.txt |
 | 2026-10-16 19:47 | 46b | - | - | ? | results/46b_loader_dispatch_20261016_194751.txt |
 | 2026-10-16 19:48 | 46d | - | - | ? | results/46d_socket_bypass_20261016_194839.txt |
 | 2026-10-16 19:56 | 47a | - | - | ? | results/47a_dispatch_deep_20261016_195632.txt |
-| 2026-10-16 19:57 | 46a | - | - | ? | results/46a_sony_syscall_deep_20261016_195704.txt |
 | 2026-10-16 20:04 | 47b | - | - | ? | results/47b_cclosure_hijack_20261016_200432.txt |
 | 2026-10-16 20:04 | 47b | - | - | ? | results/47b_cclosure_hijack_20261016_200459.txt |
 | 2026-10-16 20:11 | 48a | - | - | ? | results/48a_sctp_ipv6_icmp_20261016_201145.txt |
 | 2026-10-16 20:13 | 46c | - | - | ? | results/46c_ip_options_listener_20261016_201355.txt |
-| 2026-10-16 20:27 | 48b | - | - | ? | results/48b_sctp_loopback_fuzz_20261016_202732.txt |
-| 2026-10-16 20:27 | 48c | - | - | ? | results/48c_ipv6_exthdr_fuzz_20261016_202737.txt |
 | 2026-10-16 20:58 | 49a | - | - | ? | results/49a_tcp_inject_loopback_20261016_205847.txt |
-| 2026-10-16 20:59 | 49a | - | - | ? | results/49a_tcp_inject_loopback_20261016_205919.txt |
-| 2026-10-16 20:59 | 49b | - | - | ? | results/49b_ipv6_frag_reassembly_20261016_205926.txt |
-| 2026-10-16 21:28 | 50a | - | - | ? | results/50a_exotic_protocols_20261016_212850.txt |
 | 2026-10-16 21:29 | 50b | - | - | ? | results/50b_timer_manipulation_20261016_212925.txt |
 | 2026-10-16 21:36 | 50c | - | - | ? | results/50c_resource_exhaustion_20261016_213603.txt |
 | 2026-10-16 21:48 | 51a | - | - | ? | results/51a_sony_syscall_survey_20261016_214814.txt |
@@ -182,22 +170,16 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-18 08:34 | 54i | - | - | ? | results/54i_sys567_pmc_read_20261018_083439.txt |
 | 2026-10-18 08:36 | 54j | - | - | ? | results/54j_sys572_vm_deep_20261018_083604.txt |
 | 2026-10-18 08:36 | 54j | - | - | ? | results/54j_sys624_oracle_20261018_083648.txt |
-| 2026-10-18 09:04 | 54b | - | - | ? | results/54b_jail_bypass_20261018_090446.txt |
 | 2026-10-18 09:05 | 54c | - | - | ? | results/54c_aio_full_attack_20261018_090527.txt |
-| 2026-10-18 09:06 | 54f | - | - | ? | results/54f_kaslr_deep_20261018_090603.txt |
-| 2026-10-18 09:09 | 54k | - | - | ? | results/54k_sys649_deep_and_rdmsr_20261018_090952.txt |
 | 2026-10-18 09:12 | 53b | - | - | ? | results/53b_afroute_retest_20261018_091237.txt |
 | 2026-10-18 09:12 | 53b | - | - | ? | results/53b_afroute_retest_20261018_091257.txt |
 | 2026-10-18 09:12 | 53b | - | - | ? | results/phase13_53batch/53b_afroute_retest_20261018_091257.txt |
-| 2026-10-18 09:12 | 54d | - | - | ? | results/54d_dmem_page_flip_20261018_091257.txt |
 | 2026-10-18 09:12 | 54e | - | - | ? | results/54e_device_fuzz_20261018_091240.txt |
 | 2026-10-18 09:12 | 54e | - | - | ? | results/54e_device_fuzz_20261018_091259.txt |
 | 2026-10-18 09:13 | 53d | - | - | ? | results/53d_cclosure_retest_20261018_091303.txt |
 | 2026-10-18 09:13 | 53d | - | - | ? | results/phase13_53batch/53d_cclosure_retest_20261018_091303.txt |
 | 2026-10-18 09:13 | 54a2 | - | - | ? | results/54a2_rdmsr_precise_20261018_091308.txt |
-| 2026-10-18 09:13 | 54a2 | - | - | ? | results/phase14_final_push/54a2_rdmsr_precise_20261018_091308.txt |
 | 2026-10-18 09:13 | 54i | - | - | ? | results/54i_sys572_buffer_exam_20261018_091303.txt |
-| 2026-10-18 09:13 | 54i | - | - | ? | results/phase14_final_push/54i_sys572_buffer_exam_20261018_091303.txt |
 | 2026-10-18 09:18 | 54l | - | - | ? | results/54l_rwx_verify_20261018_091853.txt |
 | 2026-10-18 09:18 | 54l | - | - | ? | results/phase14_final_push/54l_rwx_verify_20261018_091853.txt |
 | 2026-10-18 09:20 | 54m | - | - | ? | results/54m_cclosure_redirect_20261018_092047.txt |
@@ -212,7 +194,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-18 09:40 | 01 | - | - | ? | results/phase1_identity_layout/01_identity_20261018_094011.txt |
 | 2026-10-18 09:40 | 01 | - | - | ? | results/phase1_identity_layout/01_identity_20261018_094017.txt |
 | 2026-10-18 09:40 | 54p | - | - | ? | results/phase14_final_push/54p_redirect_minimal_20261018_094036.txt |
-| 2026-10-18 09:40 | 55a | - | - | ? | results/phase14_final_push/55a_chicken_switches_20261018_094008.txt |
 | 2026-10-18 09:41 | 01 | - | - | ? | results/phase1_identity_layout/01_identity_20261018_094103.txt |
 | 2026-10-18 09:41 | 01 | - | - | ? | results/phase1_identity_layout/01_identity_20261018_094147.txt |
 | 2026-10-18 09:42 | 01 | - | - | ? | results/phase1_identity_layout/01_identity_20261018_094249.txt |
@@ -221,13 +202,9 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-18 09:43 | 54p | - | - | ? | results/phase14_final_push/54p_redirect_minimal_20261018_094326.txt |
 | 2026-10-18 09:45 | 54q | - | - | ? | results/phase14_final_push/54q_cfunc_redirect_return1_20261018_094551.txt |
 | 2026-10-18 09:48 | 55b | - | - | ? | results/phase14_final_push/55b_batch_vm_ops_20261018_094849.txt |
-| 2026-10-18 10:04 | 55d | - | - | ? | results/phase14_final_push/55d_sys601_process_control_20261018_100435.txt |
-| 2026-10-18 10:07 | 55e | - | - | ? | results/phase14_final_push/55e_vm_cred_survey_20261018_100751.txt |
 | 2026-10-18 10:09 | 55f | - | - | ? | results/phase14_final_push/55f_674_deep_dump_20261018_100958.txt |
-| 2026-10-18 10:34 | 52a | - | - | ? | results/phase13_52batch/52a_survey_627_676_20261018_103436.txt |
 | 2026-10-18 10:34 | 52b | - | - | ? | results/phase13_52batch/52b_624_oracle_20261018_103451.txt |
 | 2026-10-18 10:34 | 54r | - | - | ? | results/phase14_final_push/54r_cfunc_code_bytes_20261018_103421.txt |
-| 2026-10-18 10:34 | 55g | - | - | ? | results/phase14_final_push/55g_cclosure_write_diagnostic_20261018_103406.txt |
 | 2026-10-18 10:40 | 56a | - | - | ? | results/phase14_final_push/56a_controlled_redirect_20261018_104052.txt |
 | 2026-10-18 10:41 | 56a | - | - | ? | results/phase14_final_push/56a_controlled_redirect_20261018_104142.txt |
 | 2026-10-18 10:47 | 56a | - | - | ? | results/phase14_final_push/56a_controlled_redirect_20261018_104741.txt |
@@ -546,7 +523,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-20 03:08 | 53b | - | - | ? | results/phase13_53batch/53b_afroute_retest_20261020_030812.txt |
 | 2026-10-20 03:08 | 53b | - | - | ? | results/phase13_53batch/53b_afroute_retest_20261020_030848.txt |
 | 2026-10-20 03:08 | 80w | - | - | ? | results/phase17_new_vectors/80w_loader_health_20261020_030828.txt |
-| 2026-10-20 03:09 | 53b | - | - | ? | results/phase13_53batch/53b_afroute_retest_20261020_030901.txt |
 | 2026-10-20 03:09 | 80w | - | - | ? | results/phase17_new_vectors/80w_loader_health_20261020_030910.txt |
 | 2026-10-20 03:10 | 53g | - | - | ? | results/phase17_new_vectors/53g_afroute_single_valid_20261020_031032.txt |
 | 2026-10-20 03:10 | 80w | - | - | ? | results/phase17_new_vectors/80w_loader_health_20261020_031020.txt |
@@ -584,22 +560,13 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-20 06:56 | 147a | - | - | ? | results/phase17_new_vectors/147a_safe_ipv6_race_20261020_065601.txt |
 | 2026-10-20 06:58 | 148a | - | - | ? | results/phase17_new_vectors/148a_threaded_sockopt_race_20261020_065817.txt |
 | 2026-10-20 07:51 | 150a | - | - | ? | results/phase17_new_vectors/150a_dump_kernel_lua_20261020_075120.txt |
-| 2026-10-20 07:54 | 151a | - | - | ? | results/phase19_umtx_454/151a_umtx_shm_race_20261020_075419.txt |
 | 2026-10-20 08:45 | 153a | - | - | ? | results/phase19_umtx_454/153a_shm_threaded_race_20261020_084524.txt |
 | 2026-10-20 08:46 | 139a | - | - | ? | results/phase17_new_vectors/139a_sysent_677_734_20261020_084616.txt |
-| 2026-10-20 09:04 | 56h | - | - | ? | results/phase14_cclosure_redirect/56h_find_thrd_create_20261020_090420.txt |
 | 2026-10-20 09:17 | 56i | - | - | ? | results/phase14_cclosure_redirect/56i_native_register_20261020_091741.txt |
-| 2026-10-20 09:19 | 56j | - | - | ? | results/phase14_cclosure_redirect/56j_native_functions_20261020_091908.txt |
 | 2026-10-20 09:20 | 56k | - | - | ? | results/phase14_cclosure_redirect/56k_kernel_read_20261020_092058.txt |
 | 2026-10-20 09:21 | 56k | - | - | ? | results/phase14_cclosure_redirect/56k_kernel_read_20261020_092112.txt |
-| 2026-10-20 09:31 | 56k | - | - | ? | results/phase14_cclosure_redirect/56k_kernel_read_20261020_093127.txt |
 | 2026-10-20 09:32 | 56l | - | - | ? | results/phase14_cclosure_redirect/56l_umtx_shm_deep_20261020_093254.txt |
-| 2026-10-20 09:36 | 56m | - | - | ? | results/phase14_cclosure_redirect/56m_umtx_ops_and_thr_20261020_093600.txt |
-| 2026-10-20 09:48 | 56o | - | - | ? | results/phase14_cclosure_redirect/56o_thr_create_minimal_20261020_094804.txt |
-| 2026-10-20 09:54 | 56p | - | - | ? | results/phase14_cclosure_redirect/56p_thr_create_refine_20261020_095417.txt |
-| 2026-10-20 10:05 | 56q | - | - | ? | results/phase14_cclosure_redirect/56q_thr_mclen_20261020_100500.txt |
 | 2026-10-20 10:06 | 56i5b | - | - | ? | results/phase14_final_push/56i5b_ro_candidate_fingerprint_20261020_100603.txt |
-| 2026-10-20 10:07 | 56r | - | - | ? | results/phase14_cclosure_redirect/56r_thr_diagnostic_20261020_100748.txt |
 | 2026-10-20 10:15 | 56s | - | - | ? | results/phase14_cclosure_redirect/56s_thr_errno_20261020_101531.txt |
 | 2026-10-20 10:16 | 32e | - | - | ? | results/phase5_buffer_io/32e_ping_20261020_101631.txt |
 | 2026-10-20 10:16 | 56i5 | - | - | ? | results/phase14_final_push/56i5_kptr_investigate_20261020_101653.txt |
@@ -616,7 +583,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-20 10:37 | 152g | - | - | ? | results/phase19_umtx_454/152g_shm_same_type_reclaim_20261020_103742.txt |
 | 2026-10-20 10:39 | 152h | - | - | ? | results/phase19_umtx_454/152h_shm_thread_pressure_20261020_103935.txt |
 | 2026-10-20 10:41 | 152i | - | - | ? | results/phase19_umtx_454/152i_shm_key_semantics_20261020_104133.txt |
-| 2026-10-20 10:45 | 152k | - | - | ? | results/phase19_umtx_454/152k_shm_side_channel_20261020_104543.txt |
 | 2026-10-20 10:51 | 153b | - | - | ? | results/phase19_umtx_454/153b_umtx_safe_sweep_20261020_105149.txt |
 | 2026-10-20 14:48 | hello | - | - | ? | results/hello_probe_20261020_144853.txt |
 | 2026-10-20 15:17 | 92a | - | - | ? | results/92a_run_b_20261020_151718.txt |
@@ -648,7 +614,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-20 16:34 | 80a | - | - | ? | results/phase17_new_vectors/80a_thr_create_cs43_threading_20261020_163406.txt |
 | 2026-10-20 16:38 | 156a | - | - | ? | results/phase17_new_vectors/156a_thr_create_spin_observable_20261020_163827.txt |
 | 2026-10-20 16:39 | 156b | - | - | ? | results/phase17_new_vectors/156b_ucontext_layout_20261020_163929.txt |
-| 2026-10-20 16:41 | 156c | - | - | ? | results/phase17_new_vectors/156c_thr_create_correct_offsets_20261020_164129.txt |
 | 2026-10-20 16:42 | 80e | - | - | ? | results/phase17_new_vectors/80e_thr_create_child_executes_20261020_164252.txt |
 | 2026-10-20 16:44 | 156d | - | - | ? | results/phase17_new_vectors/156d_thr_create_child_executes_20261020_164412.txt |
 | 2026-10-20 16:44 | 89a | - | - | ? | results/89a_B_20261020_164441.txt |
@@ -810,7 +775,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-21 14:20 | 221a | - | - | ? | results/phase17_new_vectors/221a_netcontrol_stale_registration_20261021_142008.txt |
 | 2026-10-21 14:26 | 160b | - | - | ? | results/phase22_threaded_races/160b_umtx_pi_race_20261021_142640.txt |
 | 2026-10-21 14:31 | 222a | - | - | ? | results/phase17_new_vectors/222a_netcontrol_clean_trigger_20261021_143149.txt |
-| 2026-10-21 14:32 | 223a | - | - | ? | results/phase17_new_vectors/223a_netcontrol_queue_scope_20261021_143212.txt |
 | 2026-10-21 14:32 | 224a | - | - | ? | results/phase17_new_vectors/224a_netcontrol_ifindex_scope_20261021_143238.txt |
 | 2026-10-21 14:32 | 225a | - | - | ? | results/phase17_new_vectors/225a_netcontrol_clean_index_trigger_20261021_143255.txt |
 | 2026-10-21 14:33 | 226a | - | - | ? | results/phase17_new_vectors/226a_netcontrol_queue_capacity_20261021_143323.txt |
@@ -857,25 +821,17 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-21 15:21 | 248a | - | - | ? | results/phase17_new_vectors/248a_dynlib_zeroed_20261021_152141.txt |
 | 2026-10-21 15:24 | 249a | - | - | ? | results/phase17_new_vectors/249a_evf_set_vs_cancel_20261021_152445.txt |
 | 2026-10-21 15:24 | syscall | - | - | ? | results/phase15_native_sysent/syscall_isolation_sweep_20261021_152457.txt |
-| 2026-10-21 15:35 | 251a | - | - | ? | results/phase17_new_vectors/251a_jitshm_20261021_153538.txt |
-| 2026-10-21 15:35 | 252a | - | - | ? | results/phase17_new_vectors/252a_osem_family_20261021_153559.txt |
 | 2026-10-21 15:36 | 253a | - | - | ? | results/phase17_new_vectors/253a_osem_namedobj_name_20261021_153612.txt |
-| 2026-10-21 15:36 | 254a | - | - | ? | results/phase17_new_vectors/254a_namedobj_identity_20261021_153631.txt |
-| 2026-10-21 15:36 | 255a | - | - | ? | results/phase17_new_vectors/255a_set_vm_container_20261021_153651.txt |
 | 2026-10-21 15:37 | 256a | - | - | ? | results/phase17_new_vectors/256a_vm_container_accept_20261021_153708.txt |
-| 2026-10-21 15:37 | 257a | - | - | ? | results/phase17_new_vectors/257a_process_pair_20261021_153735.txt |
 | 2026-10-21 15:40 | 258a | - | - | ? | results/phase17_new_vectors/258a_debug_init_effect_20261021_154044.txt |
 | 2026-10-21 15:45 | 259a | - | - | ? | results/phase17_new_vectors/259a_dev_listing_20261021_154548.txt |
 | 2026-10-21 15:46 | 260a | - | - | ? | results/phase17_new_vectors/260a_open_return_shape_20261021_154621.txt |
 | 2026-10-21 15:46 | 261a | - | - | ? | results/phase17_new_vectors/261a_device_ioctl_reach_20261021_154649.txt |
-| 2026-10-21 15:47 | 262a | - | - | ? | results/phase17_new_vectors/262a_dmem_partitions_20261021_154707.txt |
 | 2026-10-21 15:48 | 263a | - | - | ? | results/phase17_new_vectors/263a_dmem_read_prot_20261021_154812.txt |
 | 2026-10-21 15:51 | 264a | - | - | ? | results/phase17_new_vectors/264a_ioctl_sweep_20261021_155109.txt |
 | 2026-10-21 15:55 | 265a | - | - | ? | results/phase17_new_vectors/265a_dce_ioctl_buffer_20261021_155514.txt |
-| 2026-10-21 15:55 | 266a | - | - | ? | results/phase17_new_vectors/266a_aio_real_fd_20261021_155530.txt |
 | 2026-10-21 15:58 | 267a | - | - | ? | results/phase17_new_vectors/267a_ioctl_control_20261021_155811.txt |
 | 2026-10-21 15:58 | 268a | - | - | ? | results/phase17_new_vectors/268a_device_fd_reality_20261021_155843.txt |
-| 2026-10-21 16:02 | 269a | - | - | ? | results/phase17_new_vectors/269a_umtx_high_ops_20261021_160200.txt |
 | 2026-10-21 16:02 | 270a | - | - | ? | results/phase17_new_vectors/270a_umtx_sentinel_20261021_160225.txt |
 | 2026-10-21 16:08 | 160b | - | - | ? | results/phase22_threaded_races/160b_umtx_pi_race_20261021_160844.txt |
 | 2026-10-21 16:10 | 160c | - | - | ? | results/phase22_threaded_races/160c_umtx_pi_race_4t_20261021_161035.txt |
@@ -888,7 +844,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-21 16:39 | 89a | - | - | ? | results/phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_163959.txt |
 | 2026-10-21 16:51 | 89a | - | - | ? | results/phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_165106.txt |
 | 2026-10-21 16:54 | 89a | - | - | ? | results/phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_165439.txt |
-| 2026-10-21 16:56 | 89a | - | - | ? | results/phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_165612.txt |
 | 2026-10-21 17:21 | 90a | - | - | ? | results/phase22_threaded_races/90a_fd_close_sendmsg_race_20261021_172135.txt |
 | 2026-10-21 17:23 | 90a | - | - | ? | results/phase22_threaded_races/90a_fd_close_sendmsg_race_20261021_172322.txt |
 | 2026-10-21 17:40 | 91a | - | - | ? | results/phase22_threaded_races/91a_ipv6_setsockopt_race_20261021_174047.txt |
@@ -945,7 +900,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-21 21:11 | 239a | - | - | ? | results/phase17_new_vectors/239a_aio_id_slots_20261021_211151.txt |
 | 2026-10-21 21:12 | 240a | - | - | ? | results/phase17_new_vectors/240a_660_module_handles_20261021_211236.txt |
 | 2026-10-21 21:16 | 96a | - | - | ? | results/phase22_threaded_races/96a_robust_lists_20261021_211623.txt |
-| 2026-10-21 21:17 | 241a | - | - | ? | results/phase17_new_vectors/241a_sys622_layout_20261021_211732.txt |
 | 2026-10-21 21:18 | 242a | - | - | ? | results/phase17_new_vectors/242a_sys622_commands_20261021_211852.txt |
 | 2026-10-21 21:20 | 243a | - | - | ? | results/phase17_new_vectors/243a_sys622_arg3_20261021_212019.txt |
 | 2026-10-21 21:21 | 124a | - | - | ? | results/phase21_kernel_leak/124a_gpu_mmap_msync_invalidate_20261021_212103.txt |
@@ -1123,7 +1077,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 09:35 | 156a | - | - | ? | results/phase22_cve_hunt/156a_shm_residue_kaslr_20261022_093529.txt |
 | 2026-10-22 09:40 | 157a | - | - | ? | results/phase22_cve_hunt/157a_sendfile_socket_shm_20261022_094000.txt |
 | 2026-10-22 09:42 | 158a | - | - | ? | results/phase22_cve_hunt/158a_kaslr_deep_sysctl_unix_20261022_094254.txt |
-| 2026-10-22 09:43 | 273a | - | - | ? | results/phase17_new_vectors/273a_pup_device_reach_20261022_094331.txt |
 | 2026-10-22 09:46 | 159a | - | - | ? | results/phase22_cve_hunt/159a_signal_race_scmrights_20261022_094625.txt |
 | 2026-10-22 09:46 | 274a | - | - | ? | results/phase17_new_vectors/274a_dce_ioctl_sweep_20261022_094658.txt |
 | 2026-10-22 09:48 | 275a | - | - | ? | results/phase17_new_vectors/275a_dce_ioctl_encoding_20261022_094845.txt |
@@ -1219,15 +1172,11 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 12:36 | 331a | - | - | ? | results/phase17_new_vectors/331a_mmap_dmem_matrix_20261022_123630.txt |
 | 2026-10-22 12:36 | 332a | - | - | ? | results/phase17_new_vectors/332a_authid_gates_20261022_123643.txt |
 | 2026-10-22 12:36 | 333a | - | - | ? | results/phase17_new_vectors/333a_cred_foreign_pid_20261022_123655.txt |
-| 2026-10-22 12:41 | 334a | - | - | ? | results/phase17_new_vectors/334a_obj_family_shapes_20261022_124106.txt |
 | 2026-10-22 12:44 | 337a | - | - | ? | results/phase17_new_vectors/337a_mdbg_minimal_20261022_124437.txt |
 | 2026-10-22 12:45 | 335a | - | - | ? | results/phase17_new_vectors/335a_info_family_shapes_20261022_124546.txt |
 | 2026-10-22 12:45 | 336a | - | - | ? | results/phase17_new_vectors/336a_evf_handle_20261022_124514.txt |
 | 2026-10-22 12:45 | 338a | - | - | ? | results/phase17_new_vectors/338a_evf_handle_space_20261022_124527.txt |
-| 2026-10-22 12:47 | 339a | - | - | ? | results/phase17_new_vectors/339a_637_598_659_20261022_124747.txt |
-| 2026-10-22 12:53 | 340a | - | - | ? | results/phase17_new_vectors/340a_dynlib_out_637_limit_20261022_125339.txt |
 | 2026-10-22 12:53 | 341a | - | - | ? | results/phase17_new_vectors/341a_named_objects_create_20261022_125357.txt |
-| 2026-10-22 12:54 | 342a | - | - | ? | results/phase17_new_vectors/342a_named_objects_after_relaunch_20261022_125458.txt |
 | 2026-10-22 12:57 | 343a | - | - | ? | results/phase17_new_vectors/343a_fmem_limit_effect_20261022_125753.txt |
 | 2026-10-22 12:58 | 344a | - | - | ? | results/phase17_new_vectors/344a_fmem_limit_gpu_20261022_125834.txt |
 | 2026-10-22 13:02 | 345a | - | - | ? | results/phase17_new_vectors/345a_fmem_raise_20261022_130203.txt |
@@ -1262,7 +1211,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 15:30 | 108a | - | - | ? | results/phase22_threaded_races/108a_cclosure_gadget_chain_20261022_153037.txt |
 | 2026-10-22 15:35 | syscall | - | - | ? | results/phase15_native_sysent/syscall_isolation_sweep_20261022_153527.txt |
 | 2026-10-22 15:40 | 348a | - | - | ? | results/phase17_new_vectors/348a_gpu_pool_scan_20261022_154009.txt |
-| 2026-10-22 15:41 | 348a | - | - | ? | results/phase17_new_vectors/348a_gpu_pool_scan_20261022_154151.txt |
 | 2026-10-22 15:47 | 108b | - | - | ? | results/phase22_threaded_races/108b_cclosure_arb_read_20261022_154743.txt |
 | 2026-10-22 15:50 | 109a | - | - | ? | results/phase22_threaded_races/109a_register_leak_scan_20261022_155002.txt |
 | 2026-10-22 15:51 | 348a | - | - | ? | results/phase17_new_vectors/348a_gpu_pool_scan_20261022_155156.txt |
@@ -1287,7 +1235,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 16:14 | 346a | - | - | ? | results/phase17_new_vectors/346a_fmem_headroom_20261022_161448.txt |
 | 2026-10-22 16:15 | 117a | - | - | ? | results/phase22_threaded_races/117a_all_chr_mmap_20261022_161545.txt |
 | 2026-10-22 16:15 | 352j | - | - | ? | results/phase17_new_vectors/352j_aio_hostile_20261022_161504.txt |
-| 2026-10-22 16:17 | 346b | - | - | ? | results/phase17_new_vectors/346b_fmem_ceiling_20261022_161726.txt |
 | 2026-10-22 16:18 | 349d | - | - | ? | results/phase17_new_vectors/349d_osem_timeout_ptr_20261022_161833.txt |
 | 2026-10-22 16:18 | 352k | - | - | ? | results/phase17_new_vectors/352k_aio_commands_20261022_161843.txt |
 | 2026-10-22 16:19 | 118a | - | - | ? | results/phase22_threaded_races/118a_read_gadget_scan_20261022_161950.txt |
@@ -1301,10 +1248,7 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 16:30 | 352o | - | - | ? | results/phase17_new_vectors/352o_aio_targets_20261022_163033.txt |
 | 2026-10-22 16:31 | 119a | - | - | ? | results/phase22_threaded_races/119a_rax_arb_read_20261022_163115.txt |
 | 2026-10-22 16:31 | 352p | - | - | ? | results/phase17_new_vectors/352p_aio_generation_20261022_163108.txt |
-| 2026-10-22 16:36 | 353a | - | - | ? | results/phase17_new_vectors/353a_sigsys_nosys_20261022_163648.txt |
-| 2026-10-22 16:37 | 353b | - | - | ? | results/phase17_new_vectors/353b_lethal_reclassify_20261022_163752.txt |
 | 2026-10-22 16:38 | 119b | - | - | ? | results/phase22_threaded_races/119b_data_segment_scan_20261022_163854.txt |
-| 2026-10-22 16:38 | 353c | - | - | ? | results/phase17_new_vectors/353c_absent_or_rejecting_20261022_163852.txt |
 | 2026-10-22 16:39 | 353d | - | - | ? | results/phase17_new_vectors/353d_fstat_kldstat_20261022_163923.txt |
 | 2026-10-22 16:42 | 119c | - | - | ? | results/phase22_threaded_races/119c_real_data_scan_20261022_164221.txt |
 | 2026-10-22 16:42 | 354a | - | - | ? | results/phase17_new_vectors/354a_unexplained_kills_20261022_164235.txt |
@@ -1336,13 +1280,11 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 17:41 | 357a | - | - | ? | results/phase17_new_vectors/357a_sys622_device_index_20261022_174133.txt |
 | 2026-10-22 17:42 | 358a | - | - | ? | results/phase17_new_vectors/358a_gc_read_20261022_174215.txt |
 | 2026-10-22 17:43 | 359a | - | - | ? | results/phase17_new_vectors/359a_dirent_inodes_20261022_174331.txt |
-| 2026-10-22 17:48 | 122a | - | - | ? | results/phase22_threaded_races/122a_physhm_hexdump_20261022_174827.txt |
 | 2026-10-22 17:49 | 122a2 | - | - | ? | results/phase22_threaded_races/122a2_physhm_safe_20261022_174953.txt |
 | 2026-10-22 17:50 | 360a | - | - | ? | results/phase17_new_vectors/360a_encrypt_ioctl_matrix_20261022_175029.txt |
 | 2026-10-22 17:53 | 361a | - | - | ? | results/phase17_new_vectors/361a_socket_consumption_20261022_175317.txt |
 | 2026-10-22 17:53 | 361b | - | - | ? | results/phase17_new_vectors/361b_socket_consumption_20261022_175357.txt |
 | 2026-10-22 17:54 | 361b | - | - | ? | results/phase17_new_vectors/361b_socket_consumption_20261022_175438.txt |
-| 2026-10-22 17:54 | 361b | - | - | ? | results/phase17_new_vectors/361b_socket_consumption_20261022_175443.txt |
 | 2026-10-22 17:54 | 362a | - | - | ? | results/phase17_new_vectors/362a_compositor_reply_20261022_175455.txt |
 | 2026-10-22 17:55 | 362b | - | - | ? | results/phase17_new_vectors/362b_socket_state_20261022_175509.txt |
 | 2026-10-22 17:56 | 362b | - | - | ? | results/phase17_new_vectors/362b_socket_state_20261022_175632.txt |
@@ -1361,14 +1303,10 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 18:06 | 373a | - | - | ? | results/phase17_new_vectors/373a_compositor_fullread_20261022_180644.txt |
 | 2026-10-22 18:08 | 374a | - | - | ? | results/phase17_new_vectors/374a_eboot_socket_strings_20261022_180807.txt |
 | 2026-10-22 18:08 | 375a | - | - | ? | results/phase17_new_vectors/375a_region_names_20261022_180822.txt |
-| 2026-10-22 18:09 | 376a | - | - | ? | results/phase17_new_vectors/376a_module_strings_20261022_180910.txt |
 | 2026-10-22 18:10 | 376a | - | - | ? | results/phase17_new_vectors/376a_module_strings_20261022_181048.txt |
-| 2026-10-22 18:11 | 377a | - | - | ? | results/phase17_new_vectors/377a_sprx_read_ladder_20261022_181129.txt |
 | 2026-10-22 18:14 | 362b | - | - | ? | results/phase17_new_vectors/362b_socket_state_20261022_181426.txt |
 | 2026-10-22 18:14 | 378a | - | - | ? | results/phase17_new_vectors/378a_jail_artifacts_20261022_181438.txt |
 | 2026-10-22 18:14 | 379a | - | - | ? | results/phase17_new_vectors/379a_socket_targets_20261022_181453.txt |
-| 2026-10-22 18:17 | 380a | - | - | ? | results/phase17_new_vectors/380a_gpu_mapping_write_20261022_181716.txt |
-| 2026-10-22 18:18 | 381a | - | - | ? | results/phase17_new_vectors/381a_gpu_write_control_20261022_181839.txt |
 | 2026-10-22 18:19 | 122a3 | - | - | ? | results/phase22_threaded_races/122a3_physhm_prot_test_20261022_181919.txt |
 | 2026-10-22 18:20 | 122a4 | - | - | ? | results/phase22_threaded_races/122a4_physhm_offset_args_20261022_182057.txt |
 | 2026-10-22 18:22 | 382a | - | - | ? | results/phase17_new_vectors/382a_gpu_refs_20261022_182200.txt |
@@ -1377,9 +1315,7 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 18:26 | 383a | - | - | ? | results/phase17_new_vectors/383a_thr_new_20261022_182600.txt |
 | 2026-10-22 18:26 | 383a | - | - | ? | results/phase17_new_vectors/383a_thr_new_20261022_182615.txt |
 | 2026-10-22 18:26 | 383a | - | - | ? | results/phase17_new_vectors/383a_thr_new_20261022_182639.txt |
-| 2026-10-22 18:27 | 123a | - | - | ? | results/phase22_threaded_races/123a_sys637_kernel_write_20261022_182704.txt |
 | 2026-10-22 18:27 | 383a | - | - | ? | results/phase17_new_vectors/383a_thr_new_20261022_182718.txt |
-| 2026-10-22 18:27 | 383a | - | - | ? | results/phase17_new_vectors/383a_thr_new_20261022_182743.txt |
 | 2026-10-22 18:36 | 50e | - | - | ? | results/phase11_network_attacks/50e_ipv6_msfilter_reach_20261022_183623.txt |
 | 2026-10-22 18:37 | 50f | - | - | ? | results/phase11_network_attacks/50f_ipv6_msfilter_aligned_20261022_183727.txt |
 | 2026-10-22 18:40 | 50g | - | - | ? | results/phase11_network_attacks/50g_ipv6_msfilter_source_sizes_20261022_184026.txt |
@@ -1394,15 +1330,12 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 18:51 | 50n | - | - | ? | results/phase11_network_attacks/50n_cpuset_affinity_read_20261022_185119.txt |
 | 2026-10-22 18:53 | 50o | - | - | ? | results/phase11_network_attacks/50o_ipv6_msfilter_sustained_race_20261022_185346.txt |
 | 2026-10-22 19:14 | 124a | - | - | ? | results/phase22_threaded_races/124a_sys588_wxbypass_verify_20261022_191455.txt |
-| 2026-10-22 19:23 | 125a | - | - | ? | results/phase22_threaded_races/125a_sys662_kaslr_stackclash_20261022_192348.txt |
 | 2026-10-22 19:24 | 122b2 | - | - | ? | results/phase22_threaded_races/122b2_sys630_safe_20261022_192408.txt |
 | 2026-10-22 19:24 | 58a | - | - | ? | results/phase15_native_sysent/58a_msync_reachability_20261022_192449.txt |
 | 2026-10-22 19:26 | 58b | - | - | ? | results/phase15_native_sysent/58b_msync_devpager_20261022_192601.txt |
 | 2026-10-22 19:26 | 58b | - | - | ? | results/phase15_native_sysent/58b_msync_devpager_20261022_192645.txt |
 | 2026-10-22 19:34 | 126a | - | - | ? | results/phase22_threaded_races/126a_fstat_devices_aio_ids_20261022_193437.txt |
-| 2026-10-22 19:44 | 50e2 | - | - | ? | results/phase23_cve_reachability/50e2_ipv6_msfilter_reach_20261022_194410.txt |
 | 2026-10-22 19:45 | 50e3 | - | - | ? | results/phase23_cve_reachability/50e3_msfilter_discriminate_20261022_194524.txt |
-| 2026-10-22 19:46 | 50f | - | - | ? | results/phase23_cve_reachability/50f_ktls_reach_20261022_194646.txt |
 | 2026-10-22 19:49 | 50o | - | - | ? | results/phase11_network_attacks/50o_ipv6_msfilter_sustained_race_20261022_194955.txt |
 | 2026-10-22 19:50 | 50p | - | - | ? | results/phase11_network_attacks/50p_ipv6_msfilter_long_race_20261022_195014.txt |
 | 2026-10-22 19:51 | 50g | - | - | ? | results/phase23_cve_reachability/50g_665_668_sigsys_20261022_195155.txt |
@@ -1460,7 +1393,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 22:30 | 400a | - | - | ? | results/phase17_new_vectors/400a_thread_storm_small_20261022_223035.txt |
 | 2026-10-22 22:36 | 275a | - | - | ? | results/phase17_new_vectors/275a_sysent_tail_realargs_20261022_223604.txt |
 | 2026-10-22 22:36 | 401a | - | - | ? | results/phase17_new_vectors/401a_thread_one_syscall_20261022_223624.txt |
-| 2026-10-22 22:37 | 275b | - | - | ? | results/phase17_new_vectors/275b_sysent_tail_guarded_20261022_223712.txt |
 | 2026-10-22 22:37 | 402a | - | - | ? | results/phase17_new_vectors/402a_syscall_gadget_scan_20261022_223728.txt |
 | 2026-10-22 22:38 | 403a | - | - | ? | results/phase17_new_vectors/403a_pop_rax_scan_20261022_223816.txt |
 | 2026-10-22 22:38 | 404a | - | - | ? | results/phase17_new_vectors/404a_thread_syscall_chain_20261022_223835.txt |
@@ -1475,7 +1407,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 22:55 | 408a | - | - | ? | results/phase17_new_vectors/408a_chain_writes_20261022_225531.txt |
 | 2026-10-22 22:55 | 408a | - | - | ? | results/phase17_new_vectors/408a_chain_writes_20261022_225543.txt |
 | 2026-10-22 22:56 | 409a | - | - | ? | results/phase17_new_vectors/409a_chain_arg_gadgets_20261022_225607.txt |
-| 2026-10-22 22:56 | 410a | - | - | ? | results/phase17_new_vectors/410a_osem_race_20261022_225639.txt |
 | 2026-10-22 23:03 | 411a | - | - | ? | results/phase17_new_vectors/411a_aio_race_20261022_230339.txt |
 | 2026-10-22 23:04 | 412a | - | - | ? | results/phase17_new_vectors/412a_aio_race_long_20261022_230453.txt |
 | 2026-10-22 23:06 | 413a | - | - | ? | results/phase17_new_vectors/413a_chain_control_long_20261022_230604.txt |
@@ -1499,7 +1430,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 23:26 | 426a | - | - | ? | results/phase17_new_vectors/426a_dlsym_jit_20261022_232608.txt |
 | 2026-10-22 23:26 | 427a | - | - | ? | results/phase17_new_vectors/427a_dlsym_calling_convention_20261022_232628.txt |
 | 2026-10-22 23:26 | 428a | - | - | ? | results/phase17_new_vectors/428a_sys532_full_sweep_20261022_232648.txt |
-| 2026-10-22 23:48 | 429a | - | - | ? | results/phase17_new_vectors/429a_sys532_user_pointer_20261022_234844.txt |
 | 2026-10-22 23:49 | 430a | - | - | ? | results/phase17_new_vectors/430a_sys532_copyout_20261022_234902.txt |
 | 2026-10-22 23:55 | 431a | - | - | ? | results/phase17_new_vectors/431a_sys532_handle_search_20261022_235520.txt |
 | 2026-10-22 23:56 | 432a | - | - | ? | results/phase17_new_vectors/432a_sys532_handle_search2_20261022_235606.txt |
@@ -1508,7 +1438,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 23:59 | 433a | - | - | ? | results/phase17_new_vectors/433a_sys532_handle_map_20261022_235907.txt |
 | 2026-10-23 00:12 | 434a | - | - | ? | results/phase17_new_vectors/434a_compositor_census_20261023_001201.txt |
 | 2026-10-23 00:13 | 434a | - | - | ? | results/phase17_new_vectors/434a_compositor_census_20261023_001328.txt |
-| 2026-10-23 00:16 | 435a | - | - | ? | results/phase17_new_vectors/435a_kernel_gauge_20261023_001637.txt |
 | 2026-10-23 00:16 | 436a | - | - | ? | results/phase17_new_vectors/436a_handle_reuse_20261023_001654.txt |
 | 2026-10-23 00:19 | 437a | - | - | ? | results/phase17_new_vectors/437a_slot_reuse_20261023_001934.txt |
 | 2026-10-23 00:20 | 438a | - | - | ? | results/phase17_new_vectors/438a_slot_prediction_20261023_002050.txt |
@@ -1527,13 +1456,7 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-23 00:37 | 447a | - | - | ? | results/phase17_new_vectors/447a_debug_rwmem_20261023_003742.txt |
 | 2026-10-23 00:39 | 441b | - | - | ? | results/phase17_new_vectors/441b_socket_recheck_20261023_003941.txt |
 | 2026-10-23 06:29 | 160f | - | - | ? | results/phase22_threaded_races/160f_pi_exit_cascade_20261023_062904.txt |
-| 2026-10-23 06:32 | 160f | - | - | ? | results/phase22_threaded_races/160f_pi_exit_cascade_20261023_063249.txt |
-| 2026-10-23 06:35 | 160g | - | - | ? | results/phase22_threaded_races/160g_pi_exit_diag_20261023_063550.txt |
-| 2026-10-23 06:42 | 160h | - | - | ? | results/phase22_threaded_races/160h_dead_owner_rescue_20261023_064240.txt |
 | 2026-10-23 06:46 | 160i | - | - | ? | results/phase22_threaded_races/160i_pi_ownership_fraud_20261023_064652.txt |
-| 2026-10-23 06:50 | 160i | - | - | ? | results/phase22_threaded_races/160i_pi_ownership_fraud_20261023_065002.txt |
-| 2026-10-23 07:02 | 160j | - | - | ? | results/phase22_threaded_races/160j_pi_fraud_diag_20261023_070221.txt |
-| 2026-10-23 07:04 | 58d | - | - | ? | results/phase26_cve_vectors/58d_tiocsctty_reachability_20261023_070440.txt |
 | 2026-10-23 07:10 | 353a | - | - | ? | results/phase17_new_vectors/353a_aio_async_detect_20261023_071045.txt |
 | 2026-10-23 07:13 | 353b | - | - | ? | results/phase17_new_vectors/353b_aio_fd_close_race_20261023_071305.txt |
 | 2026-10-23 07:41 | 353c | - | - | ? | results/phase17_new_vectors/353c_aio_cancel_race_20261023_074144.txt |
@@ -1549,19 +1472,13 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-23 09:36 | 56d3 | - | - | ? | results/phase13_53batch/56d3_cclosure_retcount_20261023_093625.txt |
 | 2026-10-23 09:37 | 56d3 | - | - | ? | results/phase13_53batch/56d3_cclosure_retcount_20261023_093736.txt |
 | 2026-10-23 09:40 | 56d4 | - | - | ? | results/phase13_53batch/56d4_find_ret1_gadget_20261023_094040.txt |
-| 2026-10-23 09:43 | 56d5 | - | - | ? | results/phase13_53batch/56d5_deep_stack_read_20261023_094324.txt |
 | 2026-10-23 09:45 | 56d6 | - | - | ? | results/phase13_53batch/56d6_wide_gadget_scan_20261023_094541.txt |
 | 2026-10-23 09:46 | 56d7 | - | - | ? | results/phase13_53batch/56d7_rax678_stack_leak_20261023_094622.txt |
-| 2026-10-23 09:52 | 56e | - | - | ? | results/phase13_53batch/56e_routing_socket_deep_20261023_095248.txt |
-| 2026-10-23 09:56 | 56e2 | - | - | ? | results/phase13_53batch/56e2_rtdump_hexdump_20261023_095601.txt |
-| 2026-10-23 10:06 | 56f | - | - | ? | results/phase13_53batch/56f_624_side_channel_20261023_100614.txt |
 | 2026-10-23 10:07 | 56g | - | - | ? | results/phase13_53batch/56g_libkernel_symbol_scan_20261023_100744.txt |
 | 2026-10-23 10:08 | 56g2 | - | - | ? | results/phase13_53batch/56g2_module_list_20261023_100809.txt |
-| 2026-10-23 10:09 | 56g3 | - | - | ? | results/phase13_53batch/56g3_sysctl_deep_scan_20261023_100911.txt |
 | 2026-10-23 10:11 | 56h | - | - | ? | results/phase13_53batch/56h_rdtsc_gadget_20261023_101119.txt |
 | 2026-10-23 10:12 | 56h2 | - | - | ? | results/phase13_53batch/56h2_timing_kaslr_20261023_101231.txt |
 | 2026-10-23 10:14 | 56i | - | - | ? | results/phase13_53batch/56i_thread_timer_kaslr_20261023_101400.txt |
-| 2026-10-23 10:14 | 56i2 | - | - | ? | results/phase13_53batch/56i2_timing_stability_20261023_101431.txt |
 | 2026-10-23 10:19 | 56j | - | - | ? | results/phase13_53batch/56j_untested_530_531_537_20261023_101932.txt |
 | 2026-10-23 10:20 | 56k | - | - | ? | results/phase13_53batch/56k_mprotect_kernel_anomaly_20261023_102031.txt |
 | 2026-10-23 10:22 | 243a | - | - | ? | results/phase17_new_vectors/243a_thread_slot_reclaim_20261023_102230.txt |
@@ -1586,7 +1503,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-23 10:53 | 56l | - | - | ? | results/phase13_53batch/56l_thr_new_real_20261023_105339.txt |
 | 2026-10-23 10:56 | 56l | - | - | ? | results/phase13_53batch/56l_thr_new_real_20261023_105601.txt |
 | 2026-10-23 10:58 | 56m | - | - | ? | results/phase13_53batch/56m_ioctl_overcopy_scan_20261023_105857.txt |
-| 2026-10-23 11:00 | 56n | - | - | ? | results/phase13_53batch/56n_ucontext_kptr_scan_20261023_110050.txt |
 | 2026-10-23 11:01 | 455a | - | - | ? | results/phase17_new_vectors/455a_msync_invalidate_20261023_110152.txt |
 | 2026-10-23 11:02 | 455b | - | - | ? | results/phase17_new_vectors/455b_msync_flags_20261023_110216.txt |
 | 2026-10-23 11:03 | 455c | - | - | ? | results/phase17_new_vectors/455c_msync_device_flags_20261023_110354.txt |
@@ -1633,7 +1549,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-23 13:55 | 111a | - | - | ? | results/phase20_event_leak/111a_sys662_event_records_20261023_135525.txt |
 | 2026-10-23 13:55 | 111b | - | - | ? | results/phase20_event_leak/111b_event_arg_order_20261023_135552.txt |
 | 2026-10-23 13:56 | 111b | - | - | ? | results/phase20_event_leak/111b_event_arg_order_20261023_135642.txt |
-| 2026-10-23 13:56 | 271g | - | - | ? | results/phase17_new_vectors/271g_child_thread_rop_kqueue_race_20261023_135621.txt |
 | 2026-10-23 13:57 | 112a | - | - | ? | results/phase17_new_vectors/112a_sys605_gpu_rw_flag_or_20261023_135724.txt |
 | 2026-10-23 13:57 | 112c | - | - | ? | results/phase20_event_leak/112c_credential_bit_oracle_20261023_135758.txt |
 | 2026-10-23 14:00 | 271h | - | - | ? | results/phase17_new_vectors/271h_kqueue_race_data_20261023_140045.txt |
@@ -1674,7 +1589,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-23 14:55 | 476a | - | - | ? | results/phase17_new_vectors/476a_unswept_node_sweep_20261023_145542.txt |
 | 2026-10-23 15:00 | 476a | - | - | ? | results/phase17_new_vectors/476a_unswept_node_sweep_20261023_150014.txt |
 | 2026-10-23 15:05 | 477a | - | - | ? | results/phase17_new_vectors/477a_dmem1_read_command_20261023_150520.txt |
-| 2026-10-23 15:06 | 387a | - | - | ? | results/phase17_new_vectors/387a_ioctl_overcopy_scan_20261023_150627.txt |
 | 2026-10-23 15:06 | 477b | - | - | ? | results/phase17_new_vectors/477b_dmem1_write_group_20261023_150640.txt |
 | 2026-10-23 15:12 | 478a | - | - | ? | results/phase17_new_vectors/478a_dmem1_arg_layout_20261023_151221.txt |
 | 2026-10-23 15:13 | 478b | - | - | ? | results/phase17_new_vectors/478b_dmem1_zero_field_20261023_151329.txt |
@@ -1751,7 +1665,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-23 16:11 | 482d | - | - | ? | results/phase17_new_vectors/482d_dmem_window_call_20261023_161157.txt |
 | 2026-10-23 16:12 | 482d | - | - | ? | results/phase17_new_vectors/482d_dmem_window_call_20261023_161208.txt |
 | 2026-10-23 16:13 | 482e | - | - | ? | results/phase17_new_vectors/482e_dmem_map_ops_20261023_161336.txt |
-| 2026-10-23 16:15 | 388a | - | - | ? | results/phase18_bsd_native/388a_bsd_top5_exploration_20261023_161540.txt |
 | 2026-10-23 16:15 | 482f | - | - | ? | results/phase17_new_vectors/482f_window_mapped_vs_unmapped_20261023_161543.txt |
 | 2026-10-23 16:18 | 388b | - | - | ? | results/phase18_bsd_native/388b_ksem_deep_exploration_20261023_161839.txt |
 | 2026-10-23 16:18 | 482g | - | - | ? | results/phase17_new_vectors/482g_window_exact_placement_20261023_161809.txt |
@@ -1775,11 +1688,9 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-23 17:40 | 390d | - | - | ? | results/phase18_bsd_native/390d_prefetch_survive_20261023_174000.txt |
 | 2026-10-23 17:47 | 390e | - | - | ? | results/phase18_bsd_native/390e_rdtsc_functions_20261023_174700.txt |
 | 2026-10-23 17:47 | 483c | - | - | ? | results/phase17_new_vectors/483c_camera_sweep_resume_20261023_174757.txt |
-| 2026-10-23 18:07 | 391a | - | - | ? | results/phase19_posixshm/391a_shm_open_retest_20261023_180734.txt |
 | 2026-10-23 18:13 | 391b | - | - | ? | results/phase19_posixshm/391b_sendfile_uaf_trigger_20261023_181317.txt |
 | 2026-10-23 18:19 | 391c | - | - | ? | results/phase19_posixshm/391c_shm_trunc_uaf_20261023_181935.txt |
 | 2026-10-23 18:23 | 391d | - | - | ? | results/phase19_posixshm/391d_sendfile_child_drain_20261023_182316.txt |
-| 2026-10-23 18:30 | 392a | - | - | ? | results/phase20_bsd_deep/392a_bsd_high_value_20261023_183045.txt |
 | 2026-10-23 18:34 | 392b | - | - | ? | results/phase20_bsd_deep/392b_bsd_data_returners_20261023_183440.txt |
 | 2026-10-23 18:39 | 392c | - | - | ? | results/phase20_bsd_deep/392c_bsd_remaining_20261023_183931.txt |
 | 2026-10-23 18:41 | 392d | - | - | ? | results/phase20_bsd_deep/392d_bsd_safe_20261023_184111.txt |
@@ -2023,19 +1934,16 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-24 13:42 | 516a | - | - | ? | results/phase17_new_vectors/516a_exec_regions_20261024_134240.txt |
 | 2026-10-24 13:43 | 517a | - | - | ? | results/phase17_new_vectors/517a_libc_syscall_scan_20261024_134346.txt |
 | 2026-10-24 13:44 | 518a | - | - | ? | results/phase17_new_vectors/518a_libc_syscall_stub_20261024_134454.txt |
-| 2026-10-24 13:45 | 519a | - | - | ? | results/phase17_new_vectors/519a_libc_stub_bytes_20261024_134510.txt |
 | 2026-10-24 13:46 | 520a | - | - | ? | results/phase17_new_vectors/520a_libkernel_syscall_entry_20261024_134621.txt |
 | 2026-10-24 13:46 | 520a | - | - | ? | results/phase17_new_vectors/520a_libkernel_syscall_entry_20261024_134631.txt |
 | 2026-10-24 13:47 | 520a | - | - | ? | results/phase17_new_vectors/520a_libkernel_syscall_entry_20261024_134702.txt |
 | 2026-10-24 13:50 | 521a | - | - | ? | results/phase17_new_vectors/521a_corrected_mib_leaks_20261024_135059.txt |
-| 2026-10-24 13:53 | 58a | - | - | ? | results/phase15_native_sysent/58a_msync_reachability_20261024_135342.txt |
 | 2026-10-24 13:53 | 58b | - | - | ? | results/phase15_native_sysent/58b_msync_device_pager_20261024_135357.txt |
 | 2026-10-24 13:58 | 523a | - | - | ? | results/phase17_new_vectors/523a_aio_delete_race_threads_20261024_135839.txt |
 | 2026-10-24 14:00 | 523b | - | - | ? | results/phase17_new_vectors/523b_aio_delete_storm_20261024_140023.txt |
 | 2026-10-24 14:01 | 523c | - | - | ? | results/phase17_new_vectors/523c_aio_delete_race_fixed_20261024_140141.txt |
 | 2026-10-24 14:08 | 523c | - | - | ? | results/phase17_new_vectors/523c_aio_delete_race_fixed_20261024_140856.txt |
 | 2026-10-24 14:09 | 523c | - | - | ? | results/phase17_new_vectors/523c_aio_delete_race_fixed_20261024_140951.txt |
-| 2026-10-24 14:14 | 524a | - | - | ? | results/phase17_new_vectors/524a_aio_double_delete_single_20261024_141445.txt |
 | 2026-10-24 14:17 | 524b | - | - | ? | results/phase17_new_vectors/524b_aio_double_free_allocator_20261024_141727.txt |
 | 2026-10-24 14:17 | 524b | - | - | ? | results/phase17_new_vectors/524b_aio_double_free_allocator_20261024_141737.txt |
 | 2026-10-24 14:20 | 525a | - | - | ? | results/phase17_new_vectors/525a_aio_delete_create_swap_20261024_142013.txt |
@@ -2416,7 +2324,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-25 11:52 | 764a | - | - | ? | results/phase17_new_vectors/764a_aio_pathA_race_20261025_115216.txt |
 | 2026-10-25 11:55 | 528w | - | - | ? | results/phase27_phys_memory/528w_gpu_cmdbuf_decode_20261025_115528.txt |
 | 2026-10-25 11:55 | 765a | - | - | ? | results/phase17_new_vectors/765a_aio_pathA_contended_20261025_115544.txt |
-| 2026-10-25 11:56 | 528x | - | - | ? | results/phase27_phys_memory/528x_gpu_sdma_hunt_20261025_115659.txt |
 | 2026-10-25 11:56 | 766a | - | - | ? | results/phase17_new_vectors/766a_aio_cancel_effect_20261025_115613.txt |
 | 2026-10-25 11:57 | 528y | - | - | ? | results/phase27_phys_memory/528y_gc_ioctl_sweep_20261025_115747.txt |
 | 2026-10-25 11:57 | 767a | - | - | ? | results/phase17_new_vectors/767a_iopl_context_20261025_115719.txt |
@@ -2490,7 +2397,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-25 12:50 | 531m | - | - | ? | results/phase27_phys_memory/531m_thr_test_20261025_125031.txt |
 | 2026-10-25 12:51 | 531n | - | - | ? | results/phase27_phys_memory/531n_thr_diag_20261025_125138.txt |
 | 2026-10-25 12:52 | 531o | - | - | ? | results/phase27_phys_memory/531o_thr_heap_20261025_125214.txt |
-| 2026-10-25 12:53 | 156d | - | - | ? | results/phase17_new_vectors/156d_thr_create_child_executes_20261025_125313.txt |
 | 2026-10-25 12:54 | 531p | - | - | ? | results/phase27_phys_memory/531p_thr_nosig_20261025_125402.txt |
 | 2026-10-25 12:54 | 531q | - | - | ? | results/phase27_phys_memory/531q_sig_test_20261025_125439.txt |
 | 2026-10-25 12:54 | 793a | - | - | ? | results/phase17_new_vectors/793a_sys557_stale_id_20261025_125435.txt |
@@ -2618,12 +2524,10 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-25 20:07 | 74e | - | - | ? | results/phase16_kwrite/74e_verify_module_kptrs_20261025_200742.txt |
 | 2026-10-25 20:08 | 541d | - | - | ? | results/phase29_aio_race/541d_wait_race_20261025_200804.txt |
 | 2026-10-25 20:12 | 75a | - | - | ? | results/phase16_kwrite/75a_dynlib_v2_kaslr_20261025_201209.txt |
-| 2026-10-25 20:12 | 75a | - | - | ? | results/phase16_kwrite/75a_dynlib_v2_kaslr_20261025_201254.txt |
 | 2026-10-25 20:14 | 541d | - | - | ? | results/phase29_aio_race/541d_wait_race_20261025_201427.txt |
 | 2026-10-25 20:17 | 75b | - | - | ? | results/phase16_kwrite/75b_572_598_659_deep_20261025_201714.txt |
 | 2026-10-25 20:18 | 75c | - | - | ? | results/phase16_kwrite/75c_572_deep_dump_20261025_201834.txt |
 | 2026-10-25 21:11 | 544a | - | - | ? | results/phase30_mapdirect_loader/544a_fcall_stub_layout_20261025_211156.txt |
-| 2026-10-25 21:12 | 544a | - | - | ? | results/phase30_mapdirect_loader/544a_fcall_stub_layout_20261025_211235.txt |
 | 2026-10-25 21:15 | 544b | - | - | ? | results/phase30_mapdirect_loader/544b_mapdm_7arg_20261025_211538.txt |
 | 2026-10-25 21:16 | 544c | - | - | ? | results/phase30_mapdirect_loader/544c_mapdm_diag_20261025_211640.txt |
 | 2026-10-25 21:20 | 544d | - | - | ? | results/phase30_mapdirect_loader/544d_alloc_diag_20261025_212017.txt |
@@ -2683,7 +2587,15 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-25 22:22 | 545f | - | - | ? | results/phase30_mapdirect_loader/545f_mapdm_mapfixed_20261025_222259.txt |
 | 2026-10-25 22:24 | 545g | - | - | ? | results/phase30_mapdirect_loader/545g_mapdm_native_after_20261025_222432.txt |
 | 2026-10-25 22:26 | 545h | - | - | ? | results/phase30_mapdirect_loader/545h_mmap_dmem_raw_20261025_222648.txt |
-| 2026-10-26 09:02 | 546a | - | - | ? | results/phase30_mapdirect_loader/546a_mapdm_child_20261026_090208.txt |
+| 2026-10-26 | p550 | - | - | ? | results/phase13_webkit/p550_canvas_uaf_transform_leak_20261026.txt |
+| 2026-10-26 | p551 | - | - | ? | results/phase13_webkit/p551_canvas_uaf_variants_20261026.txt |
+| 2026-10-26 | p552 | - | - | ? | results/phase13_webkit/p552_canvas_uaf_desync_exploit_20261026.txt |
+| 2026-10-26 | p553 | - | - | ? | results/phase13_webkit/p553_canvas_uaf_write_confirm_20261026.txt |
+| 2026-10-26 | p554 | - | - | ? | results/phase13_webkit/p554_canvas_crosstype_offsetmap_20261026.txt |
+| 2026-10-26 | p554b | - | - | ? | results/phase13_webkit/p554b_crosstype_lean_20261026.txt |
+| 2026-10-26 | p554c | - | - | ? | results/phase13_webkit/p554c_crosstype_safe_20261026.txt |
+| 2026-10-26 | p554d | - | - | ? | results/phase13_webkit/p554d_sametype_deep_20261026.txt |
+| 2026-10-26 | p556 | - | - | ? | results/phase13_webkit/p556_rab_offset_race_20261026.txt |
 | 2026-10-26 09:12 | 546b | - | - | ? | results/phase30_mapdirect_loader/546b_mapdm_diag_20261026_091216.txt |
 | 2026-10-26 09:15 | 546c | - | - | ? | results/phase30_mapdirect_loader/546c_mapdm_solo_20261026_091546.txt |
 | 2026-10-26 09:47 | 791a | - | - | ? | results/phase17_new_vectors/791a_aio_lastitem_race_20261026_094704.txt |
@@ -2723,8 +2635,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-26 11:51 | 803b | - | - | ? | results/phase17_new_vectors/803b_wx_bypass_548_20261026_115135.txt |
 | 2026-10-26 11:51 | 803b | - | - | ? | results/phase17_new_vectors/803b_wx_bypass_548_20261026_115157.txt |
 | 2026-10-26 11:52 | 803c | - | - | ? | results/phase17_new_vectors/803c_mmap_548_protect_20261026_115225.txt |
-| 2026-10-26 11:52 | 803c | - | - | ? | results/phase17_new_vectors/803c_mmap_548_protect_20261026_115236.txt |
-| 2026-10-26 11:53 | 803d | - | - | ? | results/phase17_new_vectors/803d_548_op_matrix_20261026_115307.txt |
 | 2026-10-26 11:53 | 803e | - | - | ? | results/phase17_new_vectors/803e_548_maxprot_matrix_20261026_115339.txt |
 | 2026-10-26 11:54 | 803f | - | - | ? | results/phase17_new_vectors/803f_548_op3_payload_20261026_115424.txt |
 | 2026-10-26 11:55 | 803g | - | - | ? | results/phase17_new_vectors/803g_548_text_pages_20261026_115523.txt |
@@ -2750,7 +2660,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-26 12:17 | 812a | - | - | ? | results/phase17_new_vectors/812a_cross_family_ids_20261026_121734.txt |
 | 2026-10-26 12:19 | 812b | - | - | ? | results/phase17_new_vectors/812b_cross_family_ids_20261026_121932.txt |
 | 2026-10-26 12:19 | 812c | - | - | ? | results/phase17_new_vectors/812c_osem_id_type_20261026_121954.txt |
-| 2026-10-26 12:23 | 813a | - | - | ? | results/phase17_new_vectors/813a_sigreturn_gate_20261026_122338.txt |
 | 2026-10-26 12:26 | 814a | - | - | ? | results/phase17_new_vectors/814a_getcontext_dump_20261026_122643.txt |
 | 2026-10-26 12:26 | 814a | - | - | ? | results/phase17_new_vectors/814a_getcontext_dump_20261026_122659.txt |
 | 2026-10-26 12:28 | 814b | - | - | ? | results/phase17_new_vectors/814b_sigreturn_roundtrip_20261026_122800.txt |
@@ -2762,20 +2671,17 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-26 12:38 | 816a | - | - | ? | results/phase17_new_vectors/816a_rflags_iopl_20261026_123814.txt |
 | 2026-10-26 12:42 | 816b | - | - | ? | results/phase17_new_vectors/816b_frame_control_20261026_124248.txt |
 | 2026-10-26 12:44 | 816c | - | - | ? | results/phase17_new_vectors/816c_frame_readback_20261026_124415.txt |
-| 2026-10-26 13:43 | 546d | - | - | ? | results/phase30_mapdirect_loader/546d_mapdm_fixed_20261026_134339.txt |
-| 2026-10-26 14:03 | 547a | - | - | ? | results/phase30_mapdirect_loader/547a_dmem0_low_phys_20261026_140353.txt |
 | 2026-10-26 14:05 | 547b | - | - | ? | results/phase30_mapdirect_loader/547b_phys_scan_20261026_140531.txt |
 | 2026-10-26 14:06 | 547c | - | - | ? | results/phase30_mapdirect_loader/547c_large_phys_map_20261026_140657.txt |
 | 2026-10-26 14:07 | 547d | - | - | ? | results/phase30_mapdirect_loader/547d_dense_scan_20261026_140739.txt |
 | 2026-10-26 14:10 | 547e | - | - | ? | results/phase30_mapdirect_loader/547e_pool_rest_20261026_141054.txt |
-| 2026-10-26 14:10 | 547f | - | - | ? | results/phase30_mapdirect_loader/547f_dmem12_20261026_141012.txt |
 | 2026-10-26 14:15 | 547g | - | - | ? | results/phase30_mapdirect_loader/547g_high_phys_scan_20261026_141513.txt |
-| 2026-10-26 14:39 | 548a | - | - | ? | results/phase31_sony_leak/548a_sony_leak_hunt_20261026_143900.txt |
 | 2026-10-26 17:05 | 817a | - | - | ? | results/phase17_new_vectors/817a_aio_window_16_20261026_170533.txt |
 | 2026-10-26 17:11 | 817b | - | - | ? | results/phase17_new_vectors/817b_aio_shared_barrier_20261026_171132.txt |
 | 2026-10-26 17:18 | 818a | - | - | ? | results/phase17_new_vectors/818a_aio_orphan_thread_20261026_171823.txt |
 | 2026-10-26 18:42 | 819a | - | - | ? | results/phase17_new_vectors/819a_devctrl_cmd0_shape_20261026_184259.txt |
 | 2026-10-26 18:43 | 819a | - | - | ? | results/phase17_new_vectors/819a_devctrl_cmd0_shape_20261026_184322.txt |
+| 2026-10-26 18:50 | ping | - | - | ? | results/ping_20261026_185034.txt |
 | 2026-10-26 18:57 | 820a | - | - | ? | results/phase17_new_vectors/820a_sys639_region_record_20261026_185757.txt |
 | 2026-10-26 18:58 | 820a | - | - | ? | results/phase17_new_vectors/820a_sys639_region_record_20261026_185813.txt |
 | 2026-10-26 19:06 | 821a | - | - | ? | results/phase17_new_vectors/821a_kernel_va_mapping_20261026_190642.txt |
@@ -2784,7 +2690,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-26 19:14 | 821b | - | - | ? | results/phase17_new_vectors/821b_mprotect_probe_20261026_191443.txt |
 | 2026-10-26 19:15 | 822a | - | - | ? | results/phase17_new_vectors/822a_batch548_kernel_va_20261026_191532.txt |
 | 2026-10-26 19:15 | 822b | - | - | ? | results/phase17_new_vectors/822b_batch548_layout_20261026_191555.txt |
-| 2026-10-26 19:26 | 824a | - | - | ? | results/phase17_new_vectors/824a_osem_create_20261026_192653.txt |
 | 2026-10-26 19:27 | 825a | - | - | ? | results/phase17_new_vectors/825a_osem_name_uaf_20261026_192754.txt |
 | 2026-10-26 19:28 | 826a | - | - | ? | results/phase17_new_vectors/826a_osem_refcount_20261026_192827.txt |
 | 2026-10-26 19:28 | 827a | - | - | ? | results/phase17_new_vectors/827a_osem_dangling_open_20261026_192855.txt |
@@ -2896,13 +2801,17 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-26 23:26 | 880b | - | - | ? | results/phase17_new_vectors/880b_aio_slot_swap_20261026_232643.txt |
 | 2026-10-26 23:28 | 881a | - | - | ? | results/phase17_new_vectors/881a_aio_waiter_deletes_20261026_232852.txt |
 | 2026-10-26 23:58 | 881a | - | - | ? | results/phase17_new_vectors/881a_aio_waiter_deletes_20261026_235854.txt |
+| 2026-10-27 | p555 | - | - | ? | results/phase13_webkit/p555_reentrancy_timing_20261027.txt |
+| 2026-10-27 | p557 | - | - | ? | results/phase13_webkit/p557_ssv_desync_test_20261027.txt |
+| 2026-10-27 | p558 | - | - | ? | results/phase13_webkit/p558_rab_escalation_20261027.txt |
+| 2026-10-27 | p559 | - | - | ? | results/phase13_webkit/p559_rab_oob_values_20261027.txt |
+| 2026-10-27 | p560 | - | - | ? | results/phase13_webkit/p560_sort_oob_write_20261027.txt |
 | 2026-10-27 00:03 | 882a | - | - | ? | results/phase17_new_vectors/882a_aio_last_item_storm_20261027_000320.txt |
 | 2026-10-27 00:05 | 882a | - | - | ? | results/phase17_new_vectors/882a_aio_last_item_storm_20261027_000506.txt |
 | 2026-10-27 00:06 | 883a | - | - | ? | results/phase17_new_vectors/883a_aio_storm_loop_fixed_20261027_000641.txt |
 | 2026-10-27 00:08 | 883a | - | - | ? | results/phase17_new_vectors/883a_aio_storm_loop_fixed_20261027_000802.txt |
 | 2026-10-27 00:09 | 883a | - | - | ? | results/phase17_new_vectors/883a_aio_storm_loop_fixed_20261027_000906.txt |
 | 2026-10-27 00:09 | 883a | - | - | ? | results/phase17_new_vectors/883a_aio_storm_loop_fixed_20261027_000952.txt |
-| 2026-10-27 00:12 | 883b | - | - | ? | results/phase17_new_vectors/883b_aio_padded_chain_single_20261027_001203.txt |
 | 2026-10-27 00:12 | 884a | - | - | ? | results/phase17_new_vectors/884a_aio_k_deletes_20261027_001222.txt |
 | 2026-10-27 00:16 | 885a | - | - | ? | results/phase17_new_vectors/885a_aio_loop_debug_20261027_001626.txt |
 | 2026-10-27 05:35 | 555a | - | - | ? | results/phase32_aio_race/555a_aio_recon_20261027_053544.txt |
@@ -2928,8 +2837,21 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-27 15:07 | 557b | - | - | ? | results/phase32_aio_race/557b_wait_no_race_diag_20261027_150745.txt |
 | 2026-10-27 15:10 | 557c | - | - | ? | results/phase32_aio_race/557c_aio_capacity_diag_20261027_151031.txt |
 | 2026-10-27 15:12 | 557d | - | - | ? | results/phase32_aio_race/557d_aio_fd_compare_20261027_151247.txt |
+| 2026-10-27 15:42 | 887a | - | - | ? | results/phase17_new_vectors/887a_sys637_self_gate_20261027_154234.txt |
+| 2026-10-27 15:43 | 888a | - | - | ? | results/phase17_new_vectors/888a_sys637_cross_target_20261027_154328.txt |
+| 2026-10-27 15:43 | 889a | - | - | ? | results/phase17_new_vectors/889a_mmap_arena_control_20261027_154349.txt |
+| 2026-10-27 15:44 | 890a | - | - | ? | results/phase17_new_vectors/890a_mmap_capacity_20261027_154417.txt |
+| 2026-10-27 15:59 | 891a | - | - | ? | results/phase17_new_vectors/891a_gate_free_branches_20261027_155950.txt |
+| 2026-10-27 16:01 | 892a | - | - | ? | results/phase17_new_vectors/892a_sys619_sweep_20261027_160132.txt |
+| 2026-10-27 16:04 | 893a | - | - | ? | results/phase17_new_vectors/893a_sys616_name_read_20261027_160401.txt |
+| 2026-10-27 16:22 | 894a | - | - | ? | results/phase17_new_vectors/894a_aio_poll_delete_twice_20261027_162214.txt |
+| 2026-10-27 16:24 | 895a | - | - | ? | results/phase17_new_vectors/895a_aio_delete_race_threads_20261027_162413.txt |
+| 2026-10-27 16:28 | 896a | - | - | ? | results/phase17_new_vectors/896a_aio_delete_race_clean_20261027_162858.txt |
 | 2026-10-27 16:32 | 555a | - | - | ? | results/phase32_aio_race/555a_aio_recon_20261027_163221.txt |
 | 2026-10-27 16:36 | 559a | - | - | ? | results/phase32_aio_race/559a_spray_vehicle_hunt_20261027_163651.txt |
+| 2026-10-27 16:36 | 898a | - | - | ? | results/phase17_new_vectors/898a_aio_stage_bisect_20261027_163638.txt |
+| 2026-10-27 16:44 | 901a | - | - | ? | results/phase17_new_vectors/901a_aio_scope_asymmetry_20261027_164457.txt |
+| 2026-10-27 16:45 | 901a | - | - | ? | results/phase17_new_vectors/901a_aio_scope_asymmetry_20261027_164525.txt |
 | 2026-10-27 16:51 | 559c | - | - | ? | results/phase32_aio_race/559c_spray_simple_20261027_165106.txt |
 | 2026-10-27 16:52 | 559e | - | - | ? | results/phase32_aio_race/559e_spray_stress_20261027_165237.txt |
 | 2026-10-27 16:55 | 560a | - | - | ? | results/phase32_aio_race/560a_kqueue_close_race_20261027_165505.txt |
@@ -2940,24 +2862,37 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-27 17:03 | 561d | - | - | ? | results/phase32_aio_race/561d_find_syscall_gadget_20261027_170345.txt |
 | 2026-10-27 17:10 | 561e | - | - | ? | results/phase32_aio_race/561e_child_nosyscall_read_20261027_171055.txt |
 | 2026-10-27 17:13 | 562a | - | - | ? | results/phase32_aio_race/562a_phys_read_single_20261027_171305.txt |
+| 2026-10-27 17:13 | 902a | - | - | ? | results/phase17_new_vectors/902a_aio_child_delete_only_20261027_171312.txt |
+| 2026-10-27 17:13 | 902a | - | - | ? | results/phase17_new_vectors/902a_aio_child_delete_only_20261027_171324.txt |
+| 2026-10-27 17:14 | 902a | - | - | ? | results/phase17_new_vectors/902a_aio_child_delete_only_20261027_171456.txt |
 | 2026-10-27 17:17 | 562b | - | - | ? | results/phase32_aio_race/562b_phys_read_robust_20261027_171718.txt |
 | 2026-10-27 17:21 | 562c | - | - | ? | results/phase32_aio_race/562c_isolate_binary_20261027_172122.txt |
 | 2026-10-27 17:23 | 562d | - | - | ? | results/phase32_aio_race/562d_child_spinloop_20261027_172303.txt |
 | 2026-10-27 17:25 | 562e | - | - | ? | results/phase32_aio_race/562e_phys_read_dup2_20261027_172529.txt |
 | 2026-10-27 17:29 | 562f | - | - | ? | results/phase32_aio_race/562f_dup2_test_20261027_172915.txt |
 | 2026-10-27 17:35 | 562g | - | - | ? | results/phase32_aio_race/562g_direct_write_phys_20261027_173531.txt |
+| 2026-10-27 17:37 | 902b | - | - | ? | results/phase17_new_vectors/902b_aio_child_control_20261027_173745.txt |
 | 2026-10-27 17:40 | 562h | - | - | ? | results/phase32_aio_race/562h_phys_read_384b_pattern_20261027_174047.txt |
 | 2026-10-27 17:42 | 562i | - | - | ? | results/phase32_aio_race/562i_diagnose_crash_20261027_174203.txt |
 | 2026-10-27 17:44 | 562j | - | - | ? | results/phase32_aio_race/562j_mainthread_phys_read_20261027_174416.txt |
+| 2026-10-27 17:44 | 903a | - | - | ? | results/phase17_new_vectors/903a_alloc_type_20261027_174449.txt |
+| 2026-10-27 17:45 | 903b | - | - | ? | results/phase17_new_vectors/903b_child_instrumented_20261027_174540.txt |
 | 2026-10-27 17:46 | 562k | - | - | ? | results/phase32_aio_race/562k_socketpair_phys_20261027_174643.txt |
+| 2026-10-27 18:00 | 904a | - | - | ? | results/phase17_new_vectors/904a_spawn_minimal_20261027_180059.txt |
+| 2026-10-27 18:01 | 904b | - | - | ? | results/phase17_new_vectors/904b_child_delete_minimal_20261027_180120.txt |
+| 2026-10-27 18:01 | 904b | - | - | ? | results/phase17_new_vectors/904b_child_delete_minimal_20261027_180129.txt |
+| 2026-10-27 18:02 | 905a | - | - | ? | results/phase17_new_vectors/905a_aio_double_delete_race_20261027_180233.txt |
 | 2026-10-27 18:04 | 562m | - | - | ? | results/phase32_aio_race/562m_stdout_inject_20261027_180417.txt |
+| 2026-10-27 18:08 | 906a | - | - | ? | results/phase17_new_vectors/906a_aio_double_delete_sentinel_20261027_180859.txt |
 | 2026-10-27 18:10 | 562n | - | - | ? | results/phase32_aio_race/562n_dual_child_20261027_181054.txt |
 | 2026-10-27 18:13 | 562o | - | - | ? | results/phase32_aio_race/562o_direct_read_20261027_181339.txt |
 | 2026-10-27 18:15 | 562p | - | - | ? | results/phase32_aio_race/562p_kernel_copyin_20261027_181536.txt |
 | 2026-10-27 18:16 | 562q | - | - | ? | results/phase32_aio_race/562q_copyin_diag_20261027_181649.txt |
 | 2026-10-27 18:21 | 562r | - | - | ? | results/phase32_aio_race/562r_survival_test_20261027_182159.txt |
+| 2026-10-27 18:22 | 907a | - | - | ? | results/phase17_new_vectors/907a_thread_exhaustion_20261027_182220.txt |
 | 2026-10-27 18:29 | 562s | - | - | ? | results/phase32_aio_race/562s_chain_then_mapdm_20261027_182932.txt |
 | 2026-10-27 18:36 | 562t | - | - | ? | results/phase32_aio_race/562t_baseline_child_20261027_183603.txt |
+| 2026-10-27 18:36 | 908a | - | - | ? | results/phase17_new_vectors/908a_child_no_stub_20261027_183640.txt |
 | 2026-10-27 18:37 | 562u | - | - | ? | results/phase32_aio_race/562u_heap_stack_child_20261027_183742.txt |
 | 2026-10-27 18:38 | 562v | - | - | ? | results/phase32_aio_race/562v_heap_mapdm_read_20261027_183833.txt |
 | 2026-10-27 18:40 | 562w | - | - | ? | results/phase32_aio_race/562w_prebuilt_mapdm_20261027_184050.txt |
@@ -2966,22 +2901,31 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-27 18:43 | 911a | - | - | ? | results/phase17_new_vectors/911a_aio_race_exiting_children_20261027_184323.txt |
 | 2026-10-27 18:44 | 562y | - | - | ? | results/phase32_aio_race/562y_dmem0_pread_20261027_184431.txt |
 | 2026-10-27 18:45 | 912a | - | - | ? | results/phase17_new_vectors/912a_aio_delete_storm_20261027_184548.txt |
+| 2026-10-27 18:46 | 913a | - | - | ? | results/phase17_new_vectors/913a_sync_gadget_scan_20261027_184607.txt |
+| 2026-10-27 18:46 | 913b | - | - | ? | results/phase17_new_vectors/913b_selfloop_scan_20261027_184626.txt |
 | 2026-10-27 18:47 | 562z | - | - | ? | results/phase32_aio_race/562z_dmem0_mmap_20261027_184729.txt |
+| 2026-10-27 18:47 | 914a | - | - | ? | results/phase17_new_vectors/914a_aio_storm_128_20261027_184724.txt |
 | 2026-10-27 18:48 | 563a | - | - | ? | results/phase32_aio_race/563a_kernel_elf_scan_20261027_184847.txt |
 | 2026-10-27 18:50 | 563b | - | - | ? | results/phase32_aio_race/563b_dmem0_heatmap_20261027_185023.txt |
 | 2026-10-27 18:53 | 563c | - | - | ? | results/phase32_aio_race/563c_devmem_and_finescan_20261027_185338.txt |
 | 2026-10-27 18:56 | 563d | - | - | ? | results/phase32_aio_race/563d_ultramin_mapdm_20261027_185613.txt |
 | 2026-10-27 19:07 | 563e | - | - | ? | results/phase32_aio_race/563e_selfmod_rop_20261027_190735.txt |
+| 2026-10-27 19:13 | 915a | - | - | ? | results/phase17_new_vectors/915a_aio_waiter_delete_20261027_191334.txt |
+| 2026-10-27 19:14 | 916a | - | - | ? | results/phase17_new_vectors/916a_aio_completion_race_20261027_191426.txt |
 | 2026-10-27 19:22 | 563f | - | - | ? | results/phase32_aio_race/563f_selfmod_fastread_20261027_192231.txt |
 | 2026-10-27 19:46 | 918a | - | - | ? | results/phase17_new_vectors/918a_sys663_signature_20261027_194624.txt |
+| 2026-10-27 19:46 | 917a | - | - | ? | results/phase17_new_vectors/917a_aio_capture_wait_ret_20261027_194605.txt |
 | 2026-10-27 19:48 | 919a | - | - | ? | results/phase17_new_vectors/919a_sys663_returns_20261027_194818.txt |
 | 2026-10-27 19:48 | 919a | - | - | ? | results/phase17_new_vectors/919a_sys663_returns_20261027_194824.txt |
 | 2026-10-27 19:50 | 563g | - | - | ? | results/phase32_aio_race/563g_copyin_bypass_20261027_195025.txt |
+| 2026-10-27 19:50 | 920a | - | - | ? | results/phase17_new_vectors/920a_aio_delete_mismatch_20261027_195014.txt |
 | 2026-10-27 19:51 | 563h | - | - | ? | results/phase32_aio_race/563h_dmem_high_flags_20261027_195135.txt |
 | 2026-10-27 19:52 | 563i | - | - | ? | results/phase32_aio_race/563i_dmem_read_seek_20261027_195259.txt |
 | 2026-10-27 19:57 | 922a | - | - | ? | results/phase17_new_vectors/922a_aio_delete_overcount_20261027_195748.txt |
+| 2026-10-27 19:57 | 921a | - | - | ? | results/phase17_new_vectors/921a_aio_delete_count_sweep_20261027_195732.txt |
 | 2026-10-27 19:58 | 923a | - | - | ? | results/phase17_new_vectors/923a_aio_forged_id_20261027_195800.txt |
 | 2026-10-27 19:58 | 925a | - | - | ? | results/phase17_new_vectors/925a_aio_stale_gen_terminal_20261027_195828.txt |
+| 2026-10-27 19:58 | 924a | - | - | ? | results/phase17_new_vectors/924a_aio_stale_gen_20261027_195817.txt |
 | 2026-10-27 20:01 | 563j | - | - | ? | results/phase32_aio_race/563j_mapdm_phys0_trace_test_20261027_200109.txt |
 | 2026-10-27 20:05 | 563k | - | - | ? | results/phase32_aio_race/563k_mapdm_flag_sweep_20261027_200543.txt |
 | 2026-10-27 20:19 | 564a | - | - | ? | results/phase32_aio_race/564a_ipv6_2292pktoptions_test_20261027_201950.txt |
@@ -2997,6 +2941,23 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-27 22:24 | 77e | - | - | ? | results/phase16_kwrite/77e_prolapse_same_type_reclaim_20261027_222425.txt |
 | 2026-10-27 22:34 | 77f | - | - | ? | results/phase16_kwrite/77f_prolapse_full_chain_20261027_223403.txt |
 | 2026-10-27 22:36 | 65l | - | - | ? | results/phase16_kwrite/65l_aio_race_fixed_20261027_223615.txt |
+| 2026-10-28 | p561 | - | - | ? | results/phase13_webkit/p561_transfer_sort_uaf_20261028.txt |
+| 2026-10-28 | p562 | - | - | ? | results/phase13_webkit/p562_double_detach_uaf_20261028.txt |
+| 2026-10-28 | p563 | - | - | ? | results/phase13_webkit/p563_canvas_crosstype_reclaim_20261028.txt |
+| 2026-10-28 | p564 | - | - | ? | results/phase13_webkit/p564_canvas_force_reclaim_20261028.txt |
+| 2026-10-28 | p565 | - | - | ? | results/phase13_webkit/p565_canvas_offset128_20261028.txt |
+| 2026-10-28 | p566 | - | - | ? | results/phase13_webkit/p566_canvas_full_reclaim_20261028.txt |
+| 2026-10-28 | v700b | - | - | ? | results/phase13_webkit/v700b_string_crosstype_768_20261028.txt |
+| 2026-10-28 | v700c | - | - | ? | results/phase13_webkit/v700c_string_payload_dead_20261028.txt |
+| 2026-10-28 | v701 | - | - | ? | results/phase13_webkit/v701_sametype_state_grow_20261028.txt |
+| 2026-10-28 | v702 | - | - | ? | results/phase13_webkit/v702_gc_free_variant_a_20261028.txt |
+| 2026-10-28 | v703 | - | - | ? | results/phase13_webkit/v703_gc_free_variant_b_20261028.txt |
+| 2026-10-28 | v704 | - | - | ? | results/phase13_webkit/v704_ab768_direct_reclaim_20261028.txt |
+| 2026-10-28 | v705 | - | - | ? | results/phase13_webkit/v705_property_survival_scan_20261028.txt |
+| 2026-10-28 | v706 | - | - | ? | results/phase13_webkit/v706_factory_method_scan_20261028.txt |
+| 2026-10-28 | v707 | - | - | ? | results/phase13_webkit/v707_ab_fill_pattern_20261028.txt |
+| 2026-10-28 | v707b | - | - | ? | results/phase13_webkit/v707b_ab_fill_variant_b_20261028.txt |
+| 2026-10-28 | v707c | - | - | ? | results/phase13_webkit/v707c_ab_fill_variant_c_20261028.txt |
 | 2026-10-28 08:07 | 570a | - | - | ? | results/phase17_new_vectors/570a_dlsym_info2_test_20261028_080738.txt |
 | 2026-10-28 08:16 | 571a | - | - | ? | results/phase17_new_vectors/571a_sys599_656_test_20261028_081628.txt |
 | 2026-10-28 08:18 | 572a | - | - | ? | results/phase17_new_vectors/572a_vm_info_reshape_20261028_081812.txt |
@@ -3019,20 +2980,21 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-28 10:24 | race | - | - | ? | results/race_overlap2_20261028_102429.txt |
 | 2026-10-28 10:28 | race | - | - | ? | results/race_reclaim_20261028_102804.txt |
 | 2026-10-28 10:32 | 71 | - | - | ? | results/phase33_umtx_exploit/71_robust_lists_20261028_103205.txt |
-| 2026-10-28 10:58 | 68a | - | - | ? | results/phase16_kwrite/68a_aio_uaf_readback_20261028_105844.txt |
 | 2026-10-28 11:06 | 68b | - | - | ? | results/phase16_kwrite/68b_aio_spray_pipes_20261028_110601.txt |
 | 2026-10-28 11:11 | 75a | - | - | ? | results/phase16_kwrite/75a_coixao_spray_oracle_20261028_111124.txt |
-| 2026-10-28 11:15 | 65l | - | - | ? | results/phase16_kwrite/65l_aio_race_fixed_20261028_111549.txt |
 | 2026-10-28 11:16 | 77f | - | - | ? | results/phase16_kwrite/77f_prolapse_full_chain_20261028_111636.txt |
 | 2026-10-28 11:19 | 75b | - | - | ? | results/phase16_kwrite/75b_ipv6_spray_size_sweep_20261028_111954.txt |
 | 2026-10-28 11:33 | 75c | - | - | ? | results/phase16_kwrite/75c_zone128_spray_oracle_20261028_113341.txt |
 | 2026-10-28 11:42 | 75d | - | - | ? | results/phase16_kwrite/75d_zone128_spray_cpupin_20261028_114234.txt |
 | 2026-10-28 11:52 | 75e | - | - | ? | results/phase16_kwrite/75e_zone128_more_frees_20261028_115212.txt |
 | 2026-10-28 12:07 | overlap | - | - | ? | results/phase16_kwrite/overlap_detect2_20261028_120720.txt |
+| 2026-10-28 19:06 | 58d | - | - | ? | results/phase15_native_sysent/58d_shm_sendfile_reachability_20261028_190649.txt |
 | 2026-10-28 19:07 | 50e | - | - | ? | results/phase11_network_attacks/50e_ipv6_msfilter_reach_20261028_190701.txt |
 | 2026-10-28 19:07 | 50e | - | - | ? | results/phase11_network_attacks/50e_ipv6_msfilter_reach_20261028_190737.txt |
 | 2026-10-28 19:08 | 108a | - | - | ? | results/phase17_new_vectors/108a_scm_rights_fd_lifecycle_20261028_190816.txt |
 | 2026-10-28 19:11 | 105a | - | - | ? | results/phase17_new_vectors/105a_evfilt_proc_kptr_leak_20261028_191128.txt |
+| 2026-10-28 19:11 | canary | - | - | ? | results/canary_20261028_191120.txt |
+| 2026-10-28 19:12 | 78d | - | - | ? | results/phase16_thr_create_crash/78d_kevent_evfilt_proc_20261028_191208.txt |
 | 2026-10-28 19:14 | 931a | - | - | ? | results/phase17_new_vectors/931a_kevent_proc_repeat_20261028_191409.txt |
 | 2026-10-28 19:15 | 931a | - | - | ? | results/phase17_new_vectors/931a_kevent_proc_repeat_20261028_191514.txt |
 | 2026-10-28 19:15 | 931a | - | - | ? | results/phase17_new_vectors/931a_kevent_proc_repeat_20261028_191545.txt |
@@ -3050,11 +3012,26 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-28 19:23 | 928c | - | - | ? | results/phase17_new_vectors/928c_exec_page_control_20261028_192304.txt |
 | 2026-10-28 19:24 | 934a | - | - | ? | results/phase17_new_vectors/934a_shm_rx_page_20261028_192458.txt |
 | 2026-10-28 19:26 | 88a | - | - | ? | results/phase17_new_vectors/88a_handle_namespace_confusion_20261028_192603.txt |
+| 2026-10-28 19:26 | 88b | - | - | ? | results/phase17_new_vectors/88b_handle_typing_20261028_192633.txt |
+| 2026-10-28 19:27 | 88c | - | - | ? | results/phase17_new_vectors/88c_ef_shapes_20261028_192735.txt |
+| 2026-10-28 19:34 | 557a | - | - | ? | results/phase17_new_vectors/557a_what_creates_20261028_193403.txt |
+| 2026-10-28 19:34 | 557b | - | - | ? | results/phase17_new_vectors/557b_name_lifetime_20261028_193442.txt |
+| 2026-10-28 19:35 | 557c | - | - | ? | results/phase17_new_vectors/557c_stale_name_kernel_20261028_193539.txt |
+| 2026-10-28 19:37 | 557d | - | - | ? | results/phase17_new_vectors/557d_name_length_20261028_193749.txt |
+| 2026-10-28 19:39 | 50f | - | - | ? | results/phase11_network_attacks/50f_ipv6_cmsg_20261028_193913.txt |
+| 2026-10-28 19:39 | 50g | - | - | ? | results/phase11_network_attacks/50g_ipv6_cmsg_sizes_20261028_193956.txt |
+| 2026-10-28 19:40 | 50h | - | - | ? | results/phase11_network_attacks/50h_ipv6_cmsg_bound_20261028_194041.txt |
 | 2026-10-28 19:41 | 954d | - | - | ? | results/phase11_network_attacks/954d_ipv6_sendmsg_plain_20261028_194127.txt |
+| 2026-10-28 19:41 | 50i | - | - | ? | results/phase11_network_attacks/50i_ipv6_sendmsg_plain_20261028_194127.txt |
 | 2026-10-28 19:42 | 954e | - | - | ? | results/phase11_network_attacks/954e_ipv6_opt_map_20261028_194207.txt |
+| 2026-10-28 19:42 | 50j | - | - | ? | results/phase11_network_attacks/50j_ipv6_opt_map_20261028_194207.txt |
+| 2026-10-28 19:43 | 50k | - | - | ? | results/phase11_network_attacks/50k_ipv6_cmsg_validate_20261028_194333.txt |
 | 2026-10-28 19:44 | 954g | - | - | ? | results/phase11_network_attacks/954g_ipv6_cmsg_correct_20261028_194441.txt |
+| 2026-10-28 19:44 | 50l | - | - | ? | results/phase11_network_attacks/50l_ipv6_cmsg_correct_20261028_194441.txt |
 | 2026-10-28 19:45 | 954h | - | - | ? | results/phase11_network_attacks/954h_ipv6_2292_cmsg_20261028_194513.txt |
 | 2026-10-28 19:45 | 954i | - | - | ? | results/phase11_network_attacks/954i_ipv6_sticky_2292_20261028_194547.txt |
+| 2026-10-28 19:45 | 50m | - | - | ? | results/phase11_network_attacks/50m_ipv6_2292_cmsg_20261028_194513.txt |
+| 2026-10-28 19:45 | 50n | - | - | ? | results/phase11_network_attacks/50n_ipv6_sticky_2292_20261028_194547.txt |
 | 2026-10-28 19:48 | 96b | - | - | ? | results/phase17_new_vectors/96b_handle_generation_wrap_20261028_194828.txt |
 | 2026-10-28 19:49 | 96c | - | - | ? | results/phase17_new_vectors/96c_handle_cross_family_aba_20261028_194929.txt |
 | 2026-10-28 19:49 | 96c | - | - | ? | results/phase17_new_vectors/96c_handle_cross_family_aba_20261028_194951.txt |
@@ -3069,6 +3046,8 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-28 20:08 | 937c | - | - | ? | results/phase17_new_vectors/937c_aio_three_actor_race_20261028_200847.txt |
 | 2026-10-28 20:09 | 937c | - | - | ? | results/phase17_new_vectors/937c_aio_three_actor_race_20261028_200923.txt |
 | 2026-10-28 20:11 | 938a | - | - | ? | results/phase17_new_vectors/938a_sys629_integer_branch_20261028_201120.txt |
+| 2026-10-28 20:43 | 98a | - | - | ? | results/phase17_new_vectors/98a_gpu_pte_wxbypass_20261028_204352.txt |
+| 2026-10-28 20:44 | 98b | - | - | ? | results/phase17_new_vectors/98b_secB_20261028_204403.txt |
 | 2026-10-28 20:45 | 939a | - | - | ? | results/phase17_new_vectors/939a_file_backed_exec_20261028_204533.txt |
 | 2026-10-28 20:47 | 939b | - | - | ? | results/phase17_new_vectors/939b_file_fd_mapping_20261028_204747.txt |
 | 2026-10-28 20:48 | 939c | - | - | ? | results/phase17_new_vectors/939c_file_maxprot_oracle_20261028_204810.txt |
@@ -3077,6 +3056,13 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-28 20:50 | 940a | - | - | ? | results/phase17_new_vectors/940a_exec_backing_file_20261028_205023.txt |
 | 2026-10-28 20:51 | 941a | - | - | ? | results/phase17_new_vectors/941a_umtx_pi_ops_20261028_205120.txt |
 | 2026-10-28 20:51 | 941a | - | - | ? | results/phase17_new_vectors/941a_umtx_pi_ops_20261028_205128.txt |
+| 2026-10-28 20:52 | 114a | - | - | ? | results/phase17_new_vectors/114a_gpu_mmap_alias_race_20261028_205250.txt |
+| 2026-10-28 20:52 | 93a | - | - | ? | results/phase17_new_vectors/93a_gpu_vm_range_ops_20261028_205225.txt |
+| 2026-10-28 20:52 | 99a | - | - | ? | results/phase17_new_vectors/99a_hw_write_vm_selfmod_20261028_205232.txt |
+| 2026-10-28 20:52 | 99b | - | - | ? | results/phase17_new_vectors/99b_secB_20261028_205244.txt |
+| 2026-10-28 20:53 | 114a | - | - | ? | results/phase17_new_vectors/114a_gpu_mmap_alias_race_20261028_205304.txt |
+| 2026-10-28 20:53 | 114a | - | - | ? | results/phase17_new_vectors/114a_gpu_mmap_alias_race_20261028_205313.txt |
+| 2026-10-28 20:53 | 114b | - | - | ? | results/phase17_new_vectors/114b_secB_20261028_205338.txt |
 | 2026-10-28 21:14 | 93c | - | - | ? | results/phase23_newvuln/93c_lockf_spray_128b_20261028_211446.txt |
 | 2026-10-28 21:14 | 93d | - | - | ? | results/phase23_newvuln/93d_dynlib_info2_leak_20261028_211439.txt |
 | 2026-10-28 21:16 | 93a | - | - | ? | results/phase23_newvuln/93a_sndbuf_race_20261028_211607.txt |
@@ -3085,6 +3071,12 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-28 21:26 | 93a4 | - | - | ? | results/phase23_newvuln/93a4_sndbuf_simple_20261028_212618.txt |
 | 2026-10-28 21:28 | 93a5 | - | - | ? | results/phase23_newvuln/93a5_minimal_20261028_212835.txt |
 | 2026-10-28 21:29 | 93a4 | - | - | ? | results/phase23_newvuln/93a4_sndbuf_simple_20261028_212912.txt |
+| 2026-10-28 21:37 | 942a | - | - | ? | results/phase17_new_vectors/942a_sys620_attr_oracle_20261028_213746.txt |
+| 2026-10-28 21:37 | 943a | - | - | ? | results/phase17_new_vectors/943a_uninit_copyout_sweep_20261028_213753.txt |
+| 2026-10-28 21:38 | 943a | - | - | ? | results/phase17_new_vectors/943a_uninit_copyout_sweep_20261028_213802.txt |
+| 2026-10-28 21:38 | 944a | - | - | ? | results/phase17_new_vectors/944a_extattr_surface_20261028_213845.txt |
+| 2026-10-28 21:39 | 944a | - | - | ? | results/phase17_new_vectors/944a_extattr_surface_20261028_213908.txt |
+| 2026-10-28 21:43 | 945a | - | - | ? | results/phase17_new_vectors/945a_extattr_list_isolate_20261028_214351.txt |
 | 2026-10-28 21:48 | 947a | - | - | ? | results/phase17_new_vectors/947a_mlfs_surface_20261028_214831.txt |
 | 2026-10-28 21:48 | 947b | - | - | ? | results/phase17_new_vectors/947b_mlfs_inode_lifetime_20261028_214857.txt |
 | 2026-10-28 21:50 | 948a | - | - | ? | results/phase17_new_vectors/948a_aio_file_fd_20261028_215023.txt |
@@ -3109,18 +3101,97 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-28 22:33 | 94c | - | - | ? | results/phase23_newvuln/94c_aio_overlap_v2_20261028_223313.txt |
 | 2026-10-28 22:34 | 94c | - | - | ? | results/phase23_newvuln/94c_aio_overlap_v2_20261028_223427.txt |
 | 2026-10-28 22:36 | 94d | - | - | ? | results/phase23_newvuln/94d_aio_status_debug_20261028_223628.txt |
+| 2026-10-29 | v674 | - | - | ? | results/phase13_webkit/v674_canvas_api_info_leak_20261029.txt |
+| 2026-10-29 | v674b | - | - | ? | results/phase13_webkit/v674b_apng_decoder_overread_20261029.txt |
+| 2026-10-29 | v675 | - | - | ? | results/phase13_webkit/v675_same_type_alias_baseline_20261029.txt |
+| 2026-10-29 | v676 | - | - | ? | results/phase13_webkit/v676_ab_spray_miss_20261029.txt |
+| 2026-10-29 | v677 | - | - | ? | results/phase13_webkit/v677_gc_pressure_free_20261029.txt |
+| 2026-10-29 | v677b | - | - | ? | results/phase13_webkit/v677b_gc_pressure_variant_b_20261029.txt |
+| 2026-10-29 | v677c | - | - | ? | results/phase13_webkit/v677c_gc_pressure_variant_c_20261029.txt |
+| 2026-10-29 | v677d | - | - | ? | results/phase13_webkit/v677d_gc_pressure_variant_d_20261029.txt |
+| 2026-10-29 | v678 | - | - | ? | results/phase13_webkit/v678_staged_alloc_gc_20261029.txt |
+| 2026-10-29 | v679 | - | - | ? | results/phase13_webkit/v679_aslr_spray_probabilistic_20261029.txt |
+| 2026-10-29 | v679b | - | - | ? | results/phase13_webkit/v679b_aslr_spray_1gb_20261029.txt |
+| 2026-10-29 | v680 | - | - | ? | results/phase13_webkit/v680_address_space_mapper_20261029.txt |
+| 2026-10-29 | v681 | - | - | ? | results/phase13_webkit/v681_aslr_zero_spray_20261029.txt |
+| 2026-10-29 | v682 | - | - | ? | results/phase13_webkit/v682_aslr_low_range_20261029.txt |
+| 2026-10-29 | v683 | - | - | ? | results/phase13_webkit/v683_oob_state_stack_20261029.txt |
+| 2026-10-29 | v684 | - | - | ? | results/phase13_webkit/v684_weakref_ab_scan_20261029.txt |
+| 2026-10-29 | v685 | - | - | ? | results/phase13_webkit/v685_opaque_root_gc_dead_20261029.txt |
+| 2026-10-29 | v707e | - | - | ? | results/phase13_webkit/v707e_ab_fill_variant_e_20261029.txt |
+| 2026-10-29 | v707f | - | - | ? | results/phase13_webkit/v707f_ab_fill_variant_f_20261029.txt |
+| 2026-10-29 | v707g | - | - | ? | results/phase13_webkit/v707g_ab_fill_variant_g_20261029.txt |
+| 2026-10-29 | v707h | - | - | ? | results/phase13_webkit/v707h_ab_fill_variant_h_20261029.txt |
+| 2026-10-29 20:04 | 93a | - | - | ? | results/phase17_new_vectors/93a_gpu_vm_range_ops_20261029_200455.txt |
+| 2026-10-29 20:06 | 93a | - | - | ? | results/phase17_new_vectors/93a_gpu_vm_range_ops_20261029_200646.txt |
+| 2026-10-29 20:06 | 98a | - | - | ? | results/phase17_new_vectors/98a_gpu_pte_wxbypass_20261029_200657.txt |
+| 2026-10-29 20:07 | 949b | - | - | ? | results/phase17_new_vectors/949b_sys653_selector_20261029_200736.txt |
+| 2026-10-29 20:07 | 98a | - | - | ? | results/phase17_new_vectors/98a_secB_20261029_200717.txt |
+| 2026-10-29 20:08 | 949c | - | - | ? | results/phase17_new_vectors/949c_sys653_narg_20261029_200806.txt |
+| 2026-10-29 20:08 | 98a | - | - | ? | results/phase17_new_vectors/98a_secB_20261029_200824.txt |
+| 2026-10-29 20:09 | 99a | - | - | ? | results/phase17_new_vectors/99a_hw_write_vm_selfmod_20261029_200912.txt |
+| 2026-10-29 20:09 | 99a | - | - | ? | results/phase17_new_vectors/99a_secB_20261029_200923.txt |
+| 2026-10-29 20:10 | 114a | - | - | ? | results/phase17_new_vectors/114a_gpu_mmap_alias_race_20261029_201025.txt |
+| 2026-10-29 20:10 | 114a | - | - | ? | results/phase17_new_vectors/114a_secC_20261029_201034.txt |
 | 2026-10-29 20:14 | 951a | - | - | ? | results/phase17_new_vectors/951a_mapfixed_over_exec_20261029_201443.txt |
 | 2026-10-29 20:16 | 952a | - | - | ? | results/phase17_new_vectors/952a_mapfixed_exec_spawn_20261029_201621.txt |
 | 2026-10-29 20:16 | 952a | - | - | ? | results/phase17_new_vectors/952a_mapfixed_exec_spawn_20261029_201641.txt |
+| 2026-10-29 20:16 | 952a | - | - | ? | results/phase17_new_vectors/952a_mapfixed_exec_spawn_20261029_201605.txt |
+| 2026-10-29 20:18 | 953a | - | - | ? | results/phase17_new_vectors/953a_mapfixed_mprotect_x_20261029_201850.txt |
+| 2026-10-29 20:18 | canary953 | - | - | ? | results/canary953_20261029_201822.txt |
 | 2026-10-29 20:19 | 953a | - | - | ? | results/phase17_new_vectors/953a_mapfixed_mprotect_x_20261029_201910.txt |
+| 2026-10-29 23:29 | syscall | - | - | ? | results/phase15_native_sysent/syscall_isolation_sweep_20261029_232929.txt |
+| 2026-10-29 23:32 | syscall | - | - | ? | results/phase15_native_sysent/syscall_isolation_sweep_20261029_233221.txt |
+| 2026-10-29 23:36 | syscall | - | - | ? | results/phase15_native_sysent/syscall_isolation_sweep_20261029_233635.txt |
+| 2026-10-29 23:37 | 936a | - | - | ? | results/phase17_new_vectors/936a_sysv_ipc_reach_20261029_233737.txt |
+| 2026-10-29 23:38 | 936b | - | - | ? | results/phase17_new_vectors/936b_sysv_creators_ordered_20261029_233818.txt |
+| 2026-10-29 23:38 | 936c | - | - | ? | results/phase17_new_vectors/936c_sysv_lookup_only_20261029_233847.txt |
+| 2026-10-29 23:39 | 937a | - | - | ? | results/phase17_new_vectors/937a_stats_handlers_641_642_646_20261029_233919.txt |
+| 2026-10-29 23:45 | 938b | - | - | ? | results/phase17_new_vectors/938b_close_vs_blocked_read_exit_20261029_234521.txt |
+| 2026-10-29 23:46 | 938c | - | - | ? | results/phase17_new_vectors/938c_close_vs_blocked_read_rsi_20261029_234628.txt |
+| 2026-10-29 23:47 | 939a | - | - | ? | results/939a_gadget_bytes_20261029_234714.txt |
+| 2026-10-29 23:47 | 939a | - | - | ? | results/939a_gadget_bytes_20261029_234726.txt |
+| 2026-10-29 23:49 | 938d | - | - | ? | results/phase17_new_vectors/938d_fd_race_fixed_base_20261029_234956.txt |
+| 2026-10-29 23:49 | 939b | - | - | ? | results/939b_dynlib_base_20261029_234904.txt |
+| 2026-10-29 23:49 | 939c | - | - | ? | results/939c_gadget_check_20261029_234923.txt |
+| 2026-10-29 23:50 | 938d | - | - | ? | results/phase17_new_vectors/938d_fd_race_fixed_base_20261029_235006.txt |
+| 2026-10-29 23:50 | 938d | - | - | ? | results/phase17_new_vectors/938d_fd_race_fixed_base_20261029_235021.txt |
+| 2026-10-29 23:50 | 938d | - | - | ? | results/phase17_new_vectors/938d_fd_race_fixed_base_20261029_235042.txt |
+| 2026-10-30 10:40 | 954a | - | - | ? | results/phase17_new_vectors/954a_aio_inflight_oracle_20261030_104037.txt |
+| 2026-10-30 10:41 | 955a | - | - | ? | results/phase17_new_vectors/955a_aio_inflight_delete_race_20261030_104154.txt |
+| 2026-10-30 10:51 | 956a | - | - | ? | results/phase17_new_vectors/956a_aio_lock_probe_20261030_105108.txt |
+| 2026-10-30 10:51 | 957a | - | - | ? | results/phase17_new_vectors/957a_aio_slot_reuse_race_20261030_105153.txt |
+| 2026-10-30 10:53 | 958a | - | - | ? | results/phase17_new_vectors/958a_aio_double_delete_hunt_20261030_105321.txt |
+| 2026-10-30 10:53 | 958a | - | - | ? | results/phase17_new_vectors/958a_aio_double_delete_hunt_20261030_105341.txt |
+| 2026-10-30 10:54 | 959a | - | - | ? | results/phase17_new_vectors/959a_aio_state_map_20261030_105401.txt |
+| 2026-10-30 11:22 | 970a | - | - | ? | results/phase17_new_vectors/970a_setsockopt_close_race_20261030_112215.txt |
+| 2026-10-30 11:22 | 970b | - | - | ? | results/phase17_new_vectors/970b_setsockopt_loop_close_20261030_112249.txt |
+| 2026-10-30 11:25 | 970c | - | - | ? | results/phase17_new_vectors/970c_setsockopt_children_close_20261030_112546.txt |
+| 2026-10-30 11:26 | 971a | - | - | ? | results/phase17_new_vectors/971a_scmrights_close_race_20261030_112622.txt |
+| 2026-10-30 11:32 | 972a | - | - | ? | results/phase17_new_vectors/972a_gadget_validate_20261030_113223.txt |
+| 2026-10-30 11:33 | 971b | - | - | ? | results/phase17_new_vectors/971b_blocked_recvmsg_close_20261030_113304.txt |
+| 2026-11-03 | p588d | - | - | ? | results/phase13_webkit/p588d_v6_definitive_null_test_20261103.txt |
+| 2026-11-03 | p588d | - | - | ? | results/phase13_webkit/p588d_v7_trigger_sweep_20261103.txt |
+| 2026-11-03 | p588d | - | - | ? | results/phase13_webkit/p588d_v8b_engine_write_map_20261103.txt |
+| 2026-11-03 | p589 | - | - | ? | results/phase13_webkit/p589_alpha_fontfaceset_trigger_20261103.txt |
+| 2026-11-03 | p590 | - | - | ? | results/phase13_webkit/p590_two_uaf_test_20261103.txt |
 | 2026-11-03 11:08 | p588 | - | - | ? | results/phase12_kernel_analysis/p588-constant-drain-lk-lc_20261103_110854.txt |
 | 2026-11-03 11:12 | p588 | - | - | ? | results/phase12_kernel_analysis/p588-constant-drain-lk-lc_20261103_111208.txt |
+| 2026-11-03 11:16 | 972a | - | - | ? | results/phase17_new_vectors/972a_sys_641_642_646_20261103_111605.txt |
+| 2026-11-03 11:16 | 972a | - | - | ? | results/phase17_new_vectors/972a_sys_641_642_646_20261103_111616.txt |
+| 2026-11-03 11:16 | 972b | - | - | ? | results/phase17_new_vectors/972b_sys_641_642_646_shapes_20261103_111636.txt |
 | 2026-11-03 11:17 | p589 | - | - | ? | results/phase12_kernel_analysis/p589-find-libkernel-drain_20261103_111730.txt |
+| 2026-11-03 11:17 | 973a | - | - | ? | results/phase17_new_vectors/973a_sysv_ipc_reach_20261103_111703.txt |
 | 2026-11-03 11:18 | p589 | - | - | ? | results/phase12_kernel_analysis/p589-find-libkernel-drain_20261103_111814.txt |
+| 2026-11-03 11:22 | 974a | - | - | ? | results/phase17_new_vectors/974a_aio_many_inflight_20261103_112243.txt |
+| 2026-11-03 11:23 | 974b | - | - | ? | results/phase17_new_vectors/974b_aio_pair_complete_delete_20261103_112307.txt |
 | 2026-11-03 11:25 | p590 | - | - | ? | results/phase12_kernel_analysis/p590-lk-code-offset-drain_20261103_112532.txt |
+| 2026-11-03 11:25 | 975a | - | - | ? | results/phase17_new_vectors/975a_aio_fd_oracle_20261103_112532.txt |
+| 2026-11-03 11:25 | 975b | - | - | ? | results/phase17_new_vectors/975b_aio_special_fds_20261103_112556.txt |
 | 2026-11-03 11:26 | 975c | - | - | ? | results/phase17_new_vectors/975c_fcntl_fd_map_20261103_112621.txt |
 | 2026-11-03 11:26 | 975d | - | - | ? | results/phase17_new_vectors/975d_fd_identify_20261103_112648.txt |
 | 2026-11-03 11:27 | 975e | - | - | ? | results/phase17_new_vectors/975e_fd_peername_20261103_112723.txt |
+| 2026-11-03 11:27 | 975d | - | - | ? | results/phase17_new_vectors/975d_fd_identify_20261103_112700.txt |
 | 2026-11-03 11:28 | 976a | - | - | ? | results/phase17_new_vectors/976a_ioctl_real_fds_20261103_112812.txt |
 | 2026-11-03 11:29 | 977a | - | - | ? | results/phase17_new_vectors/977a_device_fd_mmap_20261103_112901.txt |
 | 2026-11-03 11:29 | 977b | - | - | ? | results/phase17_new_vectors/977b_fd18_content_20261103_112918.txt |
@@ -3143,16 +3214,27 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-03 13:36 | p588 | - | - | ? | results/phase13_webkit/p588-route-d-discriminator_20261103_133624.txt |
 | 2026-11-03 13:38 | p588b | - | - | ? | results/phase13_webkit/p588b-route-d-null-table_20261103_133856.txt |
 | 2026-11-03 13:48 | p588c | - | - | ? | results/phase13_webkit/p588c-second-walk-diag_20261103_134800.txt |
+| 2026-11-03 14:57 | 979a | - | - | ? | results/phase17_new_vectors/979a_aio_direction_oracle_20261103_145752.txt |
+| 2026-11-03 14:58 | 980a | - | - | ? | results/phase17_new_vectors/980a_copyin_kernel_addr_20261103_145828.txt |
+| 2026-11-03 15:02 | 981a | - | - | ? | results/phase11_network_attacks/981a_ipv6_pktoptions_connected_20261103_150254.txt |
+| 2026-11-03 15:03 | 982a | - | - | ? | results/phase11_network_attacks/982a_ipv6_msfilter_aligned_20261103_150323.txt |
 | 2026-11-03 15:06 | 983a | - | - | ? | results/phase17_new_vectors/983a_opmc_index_bounds_20261103_150605.txt |
 | 2026-11-03 15:06 | 983b | - | - | ? | results/phase17_new_vectors/983b_opmc_value_mask_20261103_150650.txt |
 | 2026-11-03 15:08 | 984a | - | - | ? | results/phase17_new_vectors/984a_sys605_arg2_20261103_150821.txt |
 | 2026-11-03 15:11 | 985a | - | - | ? | results/phase17_new_vectors/985a_device_fd_io_20261103_151106.txt |
 | 2026-11-03 15:26 | 986a | - | - | ? | results/phase17_new_vectors/986a_vm_prot_kernel_probe_20261103_152645.txt |
+| 2026-11-03 15:26 | 986a | - | - | ? | results/phase17_new_vectors/986a_vm_prot_kernel_probe_20261103_152618.txt |
+| 2026-11-03 15:26 | 986a | - | - | ? | results/phase17_new_vectors/986a_vm_prot_kernel_probe_20261103_152633.txt |
 | 2026-11-03 15:31 | 987a | - | - | ? | results/phase17_new_vectors/987a_loader_source_extract_20261103_153117.txt |
+| 2026-11-03 15:31 | 987a | - | - | ? | results/phase17_new_vectors/987a_loader_source_extract_20261103_153105.txt |
 | 2026-11-03 15:32 | 988a | - | - | ? | results/phase17_new_vectors/988a_fault_channel_20261103_153229.txt |
 | 2026-11-03 15:38 | 989a | - | - | ? | results/phase17_new_vectors/989a_shared_maxprot_20261103_153858.txt |
 | 2026-11-03 15:39 | 989b | - | - | ? | results/phase17_new_vectors/989b_shared_maxprot_fixed_20261103_153943.txt |
+| 2026-11-03 15:42 | 990a | - | - | ? | results/phase17_new_vectors/990a_crash_attribution_20261103_154231.txt |
+| 2026-11-03 15:51 | 991a | - | - | ? | results/phase17_new_vectors/991a_siginfo_page_20261103_155109.txt |
+| 2026-11-03 15:51 | 991a | - | - | ? | results/phase17_new_vectors/991a_siginfo_page_20261103_155123.txt |
 | 2026-11-03 16:28 | 992a | - | - | ? | results/phase17_new_vectors/992a_loader_globals_20261103_162806.txt |
+| 2026-11-03 16:28 | 993a | - | - | ? | results/phase17_new_vectors/993a_siginfo_dump_20261103_162852.txt |
 | 2026-11-03 16:29 | 993b | - | - | ? | results/phase17_new_vectors/993b_chain_selftest_20261103_162932.txt |
 | 2026-11-03 16:31 | 993c | - | - | ? | results/phase17_new_vectors/993c_frame_dump_20261103_163122.txt |
 | 2026-11-03 16:32 | 994a | - | - | ? | results/phase17_new_vectors/994a_handler_registers_20261103_163210.txt |
@@ -3178,6 +3260,99 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-03 17:01 | 1006a | - | - | ? | results/phase17_new_vectors/1006a_kernel_read_probe_20261103_170148.txt |
 | 2026-11-03 17:10 | 1008a | - | - | ? | results/phase17_new_vectors/1008a_cpl_test_20261103_171024.txt |
 | 2026-11-03 17:11 | 1008a | - | - | ? | results/phase17_new_vectors/1008a_cpl_test_20261103_171134.txt |
+| 2026-11-03 17:13 | 1009a | - | - | ? | results/phase17_new_vectors/1009a_sigsys_catch_20261103_171331.txt |
+| 2026-11-03 17:14 | 1010a | - | - | ? | results/phase17_new_vectors/1010a_sigsys_error_20261103_171414.txt |
+| 2026-11-03 17:15 | 1011a | - | - | ? | results/phase17_new_vectors/1011a_sigsys_real_20261103_171507.txt |
+| 2026-11-03 17:27 | 1015a | - | - | ? | results/phase17_new_vectors/1015a_ipv6_pktoptions_leak_20261103_172725.txt |
+| 2026-11-03 17:27 | 1019a | - | - | ? | results/phase17_new_vectors/1019a_pktopts_other_options_20261103_172738.txt |
+| 2026-11-03 17:28 | 1018a | - | - | ? | results/phase17_new_vectors/1018a_kernel_pid_kinfo_20261103_172849.txt |
+| 2026-11-03 17:28 | 1019a | - | - | ? | results/phase17_new_vectors/1019a_pktopts_other_options_20261103_172802.txt |
+| 2026-11-03 17:28 | 1019a | - | - | ? | results/phase17_new_vectors/1019a_pktopts_other_options_20261103_172834.txt |
+| 2026-11-03 17:30 | 1021a | - | - | ? | results/phase17_new_vectors/1021a_fstat_and_neighbours_20261103_173016.txt |
+| 2026-11-03 17:30 | 1021a | - | - | ? | results/phase17_new_vectors/1021a_fstat_and_neighbours_20261103_173029.txt |
+| 2026-11-03 17:31 | 1022a | - | - | ? | results/phase17_new_vectors/1022a_map_fixed_kernel_half_20261103_173132.txt |
+| 2026-11-03 17:32 | 1023a | - | - | ? | results/phase17_new_vectors/1023a_fstat_fd_table_20261103_173205.txt |
+| 2026-11-03 17:32 | 1024a | - | - | ? | results/phase17_new_vectors/1024a_fstat_full_scan_20261103_173240.txt |
+| 2026-11-03 17:34 | 1018a | - | - | ? | results/phase17_new_vectors/1018a_kernel_pid_kinfo_20261103_173401.txt |
+| 2026-11-03 17:34 | 1018a | - | - | ? | results/phase17_new_vectors/1018a_kernel_pid_kinfo_20261103_173419.txt |
+| 2026-11-03 17:34 | 1019a | - | - | ? | results/phase17_new_vectors/1019a_pktopts_other_options_20261103_173401.txt |
+| 2026-11-03 17:35 | 1015a | - | - | ? | results/phase17_new_vectors/1015a_ipv6_pktoptions_leak_20261103_173501.txt |
+| 2026-11-03 17:39 | 1025a | - | - | ? | results/phase17_new_vectors/1025a_sony_copyout_sweep_20261103_173959.txt |
+| 2026-11-03 17:42 | 1025a | - | - | ? | results/phase17_new_vectors/1025a_sony_copyout_sweep_20261103_174207.txt |
+| 2026-11-03 17:42 | 1026a | - | - | ? | results/phase17_new_vectors/1026a_638_write_probe_20261103_174249.txt |
+| 2026-11-03 17:43 | 1026a | - | - | ? | results/phase17_new_vectors/1026a_638_write_probe_20261103_174317.txt |
+| 2026-11-03 17:43 | 1027a | - | - | ? | results/phase17_new_vectors/1027a_638_struct_20261103_174353.txt |
+| 2026-11-03 17:46 | 1028a | - | - | ? | results/phase17_new_vectors/1028a_638_pointer_presence_20261103_174618.txt |
+| 2026-11-03 17:47 | 1029a | - | - | ? | results/phase17_new_vectors/1029a_638_neighbourhood_20261103_174711.txt |
+| 2026-11-03 17:52 | 1030a | - | - | ? | results/phase17_new_vectors/1030a_dynlib_dlopen_20261103_175203.txt |
+| 2026-11-03 17:52 | 1031a | - | - | ? | results/phase17_new_vectors/1031a_dlopen_shapes_20261103_175251.txt |
+| 2026-11-03 17:53 | 1032a | - | - | ? | results/phase17_new_vectors/1032a_loadprx_growth_20261103_175312.txt |
+| 2026-11-03 17:55 | 1033a | - | - | ? | results/phase17_new_vectors/1033a_stats_enum_leak_20261103_175530.txt |
+| 2026-11-03 17:56 | 1034a | - | - | ? | results/phase17_new_vectors/1034a_physhm_arg1_20261103_175646.txt |
+| 2026-11-03 18:12 | 1037a | - | - | ? | results/phase17_new_vectors/1037a_dl_get_info_20261103_181242.txt |
+| 2026-11-03 18:16 | 1038a | - | - | ? | results/phase17_new_vectors/1038a_device_read_write_20261103_181643.txt |
+| 2026-11-03 18:23 | 1038a | - | - | ? | results/phase17_new_vectors/1038a_device_read_write_20261103_182309.txt |
+| 2026-11-03 18:24 | 1039a | - | - | ? | results/phase17_new_vectors/1039a_622_shape_sweep_20261103_182423.txt |
+| 2026-11-03 18:34 | 1041a | - | - | ? | results/phase17_new_vectors/1041a_lua_thread_test_20261103_183453.txt |
+| 2026-11-03 18:35 | 1041a | - | - | ? | results/phase17_new_vectors/1041a_lua_thread_test_20261103_183508.txt |
+| 2026-11-03 18:37 | 1042a | - | - | ? | results/phase17_new_vectors/1042a_aio_lua_race_20261103_183724.txt |
+| 2026-11-03 18:37 | 1042a | - | - | ? | results/phase17_new_vectors/1042a_aio_lua_race_20261103_183752.txt |
+| 2026-11-03 18:49 | 1042b | - | - | ? | results/phase17_new_vectors/1042b_aio_lua_thread_single_20261103_184954.txt |
+| 2026-11-03 18:50 | 1042c | - | - | ? | results/phase17_new_vectors/1042c_aio_lua_race_gated_20261103_185030.txt |
+| 2026-11-03 18:53 | 1042d | - | - | ? | results/phase17_new_vectors/1042d_aio_race_parent_child_20261103_185323.txt |
+| 2026-11-03 18:55 | 1042e | - | - | ? | results/phase17_new_vectors/1042e_getpid_control_20261103_185541.txt |
+| 2026-11-03 19:00 | 1043a | - | - | ? | results/phase17_new_vectors/1043a_native_chain_concurrency_20261103_190058.txt |
+| 2026-11-03 19:21 | 1043a | - | - | ? | results/phase17_new_vectors/1043a_native_chain_concurrency_20261103_192147.txt |
+| 2026-11-03 19:23 | 1043a | - | - | ? | results/phase17_new_vectors/1043a_native_chain_concurrency_20261103_192323.txt |
+| 2026-11-03 19:24 | 1043b | - | - | ? | results/phase17_new_vectors/1043b_aio_native_race_20261103_192406.txt |
+| 2026-11-03 19:25 | 1044a | - | - | ? | results/phase17_new_vectors/1044a_aio_double_free_detector_20261103_192556.txt |
+| 2026-11-03 19:27 | 1045a | - | - | ? | results/phase17_new_vectors/1045a_child_fault_containment_20261103_192726.txt |
+| 2026-11-03 19:29 | 1046a | - | - | ? | results/phase17_new_vectors/1046a_aio_shape_matrix_20261103_192912.txt |
+| 2026-11-03 19:29 | 1047a | - | - | ? | results/phase17_new_vectors/1047a_aio_double_free_polled_20261103_192946.txt |
+| 2026-11-03 19:30 | 1048a | - | - | ? | results/phase17_new_vectors/1048a_aio_poll_timing_20261103_193033.txt |
+| 2026-11-03 19:32 | 1049a | - | - | ? | results/phase17_new_vectors/1049a_aio_invalidation_probe_20261103_193227.txt |
+| 2026-11-03 19:33 | 1050a | - | - | ? | results/phase17_new_vectors/1050a_aio_double_free_v2_20261103_193333.txt |
+| 2026-11-03 19:34 | 1051a | - | - | ? | results/phase17_new_vectors/1051a_aio_three_way_delete_race_20261103_193436.txt |
+| 2026-11-03 19:35 | 1052a | - | - | ? | results/phase17_new_vectors/1052a_aio_poll_delete_race_20261103_193514.txt |
+| 2026-11-03 19:35 | 1052b | - | - | ? | results/phase17_new_vectors/1052b_aio_poll_delete_aligned_20261103_193529.txt |
+| 2026-11-03 19:47 | 1040a | - | - | ? | results/phase17_new_vectors/1040a_622_cmd302_ptr_20261103_194722.txt |
+| 2026-11-03 19:54 | 1053a | - | - | ? | results/phase17_new_vectors/1053a_622_cmd302_len40_20261103_195401.txt |
+| 2026-11-03 20:03 | 1054a | - | - | ? | results/phase17_new_vectors/1054a_622_cmd302_ptrs_20261103_200354.txt |
+| 2026-11-03 20:11 | 1056a | - | - | ? | results/phase17_new_vectors/1056a_kernel_read_sweep_20261103_201104.txt |
+| 2026-11-03 20:11 | 1057a | - | - | ? | results/phase17_new_vectors/1057a_fault_frame_dump_20261103_201152.txt |
+| 2026-11-03 20:14 | 1001a | - | - | ? | results/phase17_new_vectors/1001a_kernel_map_sweep_20261103_201400.txt |
+| 2026-11-03 20:19 | 1001a | - | - | ? | results/phase17_new_vectors/1001a_kernel_map_sweep_20261103_201929.txt |
+| 2026-11-03 20:20 | 1058a | - | - | ? | results/phase17_new_vectors/1058a_image_4k_read_sweep_20261103_202034.txt |
+| 2026-11-03 20:23 | 1058a | - | - | ? | results/phase17_new_vectors/1058a_image_4k_read_sweep_20261103_202351.txt |
+| 2026-11-03 20:34 | 1001a | - | - | ? | results/phase17_new_vectors/1001a_kernel_map_sweep_20261103_203453.txt |
+| 2026-11-03 20:35 | 1058a | - | - | ? | results/phase17_new_vectors/1058a_image_4k_read_sweep_20261103_203517.txt |
+| 2026-11-03 20:38 | 1001a | - | - | ? | results/phase17_new_vectors/1001a_kernel_map_sweep_20261103_203810.txt |
+| 2026-11-03 21:01 | 1058a | - | - | ? | results/phase17_new_vectors/1058a_image_4k_read_sweep_20261103_210113.txt |
+| 2026-11-03 21:06 | 1001a | - | - | ? | results/phase17_new_vectors/1001a_kernel_map_sweep_20261103_210601.txt |
+| 2026-11-03 21:06 | 1058a | - | - | ? | results/phase17_new_vectors/1058a_image_4k_read_sweep_20261103_210616.txt |
+| 2026-11-03 21:09 | 1001a | - | - | ? | results/phase17_new_vectors/1001a_kernel_map_sweep_20261103_210911.txt |
+| 2026-11-03 21:13 | 1058a | - | - | ? | results/phase17_new_vectors/1058a_image_4k_read_sweep_20261103_211325.txt |
+| 2026-11-03 21:18 | 1059a | - | - | ? | results/phase17_new_vectors/1059a_sweep_step_debug_20261103_211808.txt |
+| 2026-11-03 21:23 | 1058a | - | - | ? | results/phase17_new_vectors/1058a_image_4k_read_sweep_20261103_212310.txt |
+| 2026-11-03 21:25 | 1058a | - | - | ? | results/phase17_new_vectors/1058a_image_4k_read_sweep_20261103_212500.txt |
+| 2026-11-03 21:25 | 1058a | - | - | ? | results/phase17_new_vectors/1058a_image_4k_read_sweep_20261103_212523.txt |
+| 2026-11-03 21:47 | 1058a | - | - | ? | results/phase17_new_vectors/1058a_image_4k_read_sweep_20261103_214712.txt |
+| 2026-11-03 22:35 | 1061a | - | - | ? | results/phase17_new_vectors/1061a_pktinfo_free_reuse_20261103_223540.txt |
+| 2026-11-03 22:35 | 1061a | - | - | ? | results/phase17_new_vectors/1061a_pktinfo_free_reuse_20261103_223554.txt |
+| 2026-11-03 22:36 | 1061a | - | - | ? | results/phase17_new_vectors/1061a_pktinfo_free_reuse_20261103_223629.txt |
+| 2026-11-03 22:36 | 1061a | - | - | ? | results/phase17_new_vectors/1061a_pktinfo_free_reuse_20261103_223641.txt |
+| 2026-11-03 22:36 | 1061a | - | - | ? | results/phase17_new_vectors/1061a_pktinfo_free_reuse_20261103_223659.txt |
+| 2026-11-03 22:37 | 1061a | - | - | ? | results/phase17_new_vectors/1061a_pktinfo_free_reuse_20261103_223706.txt |
+| 2026-11-03 22:37 | 1061a | - | - | ? | results/phase17_new_vectors/1061a_pktinfo_free_reuse_20261103_223716.txt |
+| 2026-11-03 22:37 | 1061a | - | - | ? | results/phase17_new_vectors/1061a_pktinfo_free_reuse_20261103_223731.txt |
+| 2026-11-03 23:15 | 1062a | - | - | ? | results/phase17_new_vectors/1062a_sys615_stack_leak_20261103_231500.txt |
+| 2026-11-03 23:20 | 1063a | - | - | ? | results/phase17_new_vectors/1063a_kern_file_direct_20261103_232000.txt |
+| 2026-11-03 23:21 | 1063a | - | - | ? | results/phase17_new_vectors/1063a_kern_file_direct_20261103_232100.txt |
+| 2026-11-03 23:30 | 56l | - | - | ? | results/phase14_final_push/56l_corrected_mib_probe_20261103_233000.txt |
+| 2026-11-03 23:35 | 1065a | - | - | ? | results/phase17_new_vectors/1065a_umtx_op_matrix_20261103_233500.txt |
+| 2026-11-03 23:37 | 1065a | - | - | ? | results/phase17_new_vectors/1065a_umtx_op_matrix_20261103_233720.txt |
+| 2026-11-03 23:59 | 1065a | - | - | ? | results/phase17_new_vectors/1065a_umtx_op_matrix_20261103_235900.txt |
+| 2026-11-04 00:15 | 1066a | - | - | ? | results/phase17_new_vectors/1066a_sys613_copyout_20261104_001500.txt |
 | 2026-11-04 02:37 | p598v7 | - | - | ? | results/phase13_webkit/p598v7-layout-probe_20261104_023708.txt |
 | 2026-11-04 03:39 | p598v8 | - | - | ? | results/phase13_webkit/p598v8-zero-seed_20261104_033947.txt |
 | 2026-11-04 04:01 | p599v1v2 | - | - | ? | results/phase13_webkit/p599v1v2-gc-destructor_20261104_040100.txt |
@@ -3204,11 +3379,135 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-04 08:52 | p608q | - | - | ? | results/phase13_webkit/p608q_no_dfg_fine_20261104_085200.txt |
 | 2026-11-04 08:55 | p608r | - | - | ? | results/phase13_webkit/p608r_resizable_vs_normal_20261104_085500.txt |
 | 2026-11-04 09:04 | p608s | - | - | ? | results/phase13_webkit/p608s_corruption_detect_20261104_090400.txt |
+| 2026-11-04 09:34 | 1068a | - | - | ? | results/phase17_new_vectors/1068a_sys587_foreign_pid_20261104_093419.txt |
+| 2026-11-04 09:35 | 1067a | - | - | ? | results/phase17_new_vectors/1067a_notification_write_len_20261104_093504.txt |
+| 2026-11-04 09:35 | 1067a | - | - | ? | results/phase17_new_vectors/1067a_notification_write_len_20261104_093517.txt |
+| 2026-11-04 09:37 | 1040a | - | - | ? | results/phase17_new_vectors/1040a_622_cmd302_ptr_20261104_093743.txt |
+| 2026-11-04 09:44 | 1004a | - | - | ? | results/phase17_new_vectors/1004a_kernel_half_sweep_20261104_094441.txt |
 | 2026-11-04 09:47 | p609 | - | - | ? | results/phase13_webkit/p609_webp_vuln_test_20261104_094700.txt |
+| 2026-11-04 09:47 | 1005a | - | - | ? | results/phase17_new_vectors/1005a_postboot_edges_20261104_094712.txt |
+| 2026-11-04 09:49 | 1070a | - | - | ? | results/phase17_new_vectors/1070a_devfs_enum_20261104_094917.txt |
+| 2026-11-04 09:50 | 1070a | - | - | ? | results/phase17_new_vectors/1070a_devfs_enum_20261104_095013.txt |
+| 2026-11-04 09:51 | 1070a | - | - | ? | results/phase17_new_vectors/1070a_devfs_enum_20261104_095112.txt |
+| 2026-11-04 09:51 | 1070a | - | - | ? | results/phase17_new_vectors/1070a_devfs_enum_20261104_095131.txt |
+| 2026-11-04 09:52 | 1071a | - | - | ? | results/phase17_new_vectors/1071a_devfs_full_read_20261104_095227.txt |
 | 2026-11-04 09:59 | p609b | - | - | ? | results/phase13_webkit/p609b_webp_oom_discriminate_20261104_095945.txt |
+| 2026-11-04 10:05 | 1071a | - | - | ? | results/phase17_new_vectors/1071a_devfs_full_read_20261104_100515.txt |
+| 2026-11-04 10:05 | 1072a | - | - | ? | results/phase17_new_vectors/1072a_622_cmd302_kaddr_20261104_100535.txt |
+| 2026-11-04 10:09 | 1074a | - | - | ? | results/phase17_new_vectors/1074a_622_shape_sweep_full_20261104_100958.txt |
+| 2026-11-04 10:11 | 1073a | - | - | ? | results/phase17_new_vectors/1073a_hidden_node_open_20261104_101148.txt |
+| 2026-11-04 10:13 | 1075a | - | - | ? | results/phase17_new_vectors/1075a_device_ioctl_20261104_101328.txt |
 | 2026-11-04 10:14 | p610 | - | - | ? | results/phase13_webkit/p610_png_heap_read_20261104_101400.txt |
+| 2026-11-04 10:14 | 1076a | - | - | ? | results/phase17_new_vectors/1076a_camera_ioctl_20261104_101408.txt |
+| 2026-11-04 10:22 | 1074a | - | - | ? | results/phase17_new_vectors/1074a_622_shape_sweep_full_20261104_102213.txt |
+| 2026-11-04 10:29 | 1074a | - | - | ? | results/phase17_new_vectors/1074a_622_shape_sweep_full_20261104_102934.txt |
+| 2026-11-04 10:29 | 1074a | - | - | ? | results/phase17_new_vectors/1074a_622_shape_sweep_full_20261104_102943.txt |
 | 2026-11-04 10:35 | p611 | - | - | ? | results/phase13_webkit/p611_svg_filter_overread_20261104_103510.txt |
+| 2026-11-04 10:39 | 1074a | - | - | ? | results/phase17_new_vectors/1074a_622_shape_sweep_full_20261104_103948.txt |
+| 2026-11-04 10:44 | 1078a | - | - | ? | results/phase17_new_vectors/1078a_622_arm_handle_20261104_104443.txt |
+| 2026-11-04 10:48 | 622 | - | - | ? | results/622_arm_cmd_20261104_104819.txt |
+| 2026-11-04 10:48 | 622 | - | - | ? | results/622_arm_cmd_20261104_104828.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105122.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105123.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105124.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105125.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105130.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105131.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105134.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105135.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105136.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105153.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105154.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105155.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105156.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105157.txt |
+| 2026-11-04 10:51 | 622 | - | - | ? | results/622_arm_cmd_20261104_105158.txt |
+| 2026-11-04 10:52 | 622 | - | - | ? | results/622_arm_cmd_20261104_105208.txt |
+| 2026-11-04 10:52 | 622 | - | - | ? | results/622_arm_cmd_20261104_105259.txt |
+| 2026-11-04 10:53 | 622 | - | - | ? | results/622_arm_cmd_20261104_105300.txt |
+| 2026-11-04 10:53 | 622 | - | - | ? | results/622_arm_cmd_20261104_105301.txt |
+| 2026-11-04 10:53 | 622 | - | - | ? | results/622_arm_cmd_20261104_105310.txt |
+| 2026-11-04 10:54 | 622 | - | - | ? | results/622_arm_cmd_20261104_105425.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105528.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105529.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105531.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105532.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105533.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105534.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105535.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105537.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105538.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105539.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105540.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105541.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105542.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105543.txt |
+| 2026-11-04 10:55 | 622 | - | - | ? | results/622_arm_cmd_20261104_105551.txt |
+| 2026-11-04 10:56 | 622 | - | - | ? | results/622_arm_cmd_20261104_105615.txt |
+| 2026-11-04 10:56 | 622 | - | - | ? | results/622_arm_cmd_20261104_105616.txt |
+| 2026-11-04 10:56 | 622 | - | - | ? | results/622_arm_cmd_20261104_105617.txt |
+| 2026-11-04 10:56 | 622 | - | - | ? | results/622_arm_cmd_20261104_105618.txt |
+| 2026-11-04 10:56 | 622 | - | - | ? | results/622_arm_cmd_20261104_105619.txt |
+| 2026-11-04 10:56 | 622 | - | - | ? | results/622_arm_cmd_20261104_105628.txt |
 | 2026-11-04 11:32 | p612 | - | - | ? | results/phase13_webkit/p612_t_determinism_20261104_113237.txt |
+| 2026-11-04 12:06 | 1150a | - | - | ? | results/phase17_new_vectors/1150a_devfs_errno_20261104_120627.txt |
+| 2026-11-04 12:07 | 1151a | - | - | ? | results/phase17_new_vectors/1151a_devfs_open_modes_20261104_120724.txt |
+| 2026-11-04 12:08 | 1151a | - | - | ? | results/phase17_new_vectors/1151a_devfs_open_modes_20261104_120816.txt |
+| 2026-11-04 12:08 | 1152a | - | - | ? | results/phase17_new_vectors/1152a_622_271_errno_20261104_120858.txt |
+| 2026-11-04 13:11 | 1160a | - | - | ? | results/phase17_new_vectors/1160a_638_table_walk_20261104_131147.txt |
+| 2026-11-04 13:12 | 1160a | - | - | ? | results/phase17_new_vectors/1160a_638_table_walk_20261104_131222.txt |
+| 2026-11-04 13:13 | 1160a | - | - | ? | results/phase17_new_vectors/1160a_638_table_walk_20261104_131318.txt |
+| 2026-11-04 13:14 | 1161a | - | - | ? | results/phase17_new_vectors/1161a_638_table_dump_20261104_131423.txt |
+| 2026-11-04 13:18 | 1162a | - | - | ? | results/phase17_new_vectors/1162a_636_637_gate_639_abi_20261104_131810.txt |
+| 2026-11-04 14:52 | 1163a | - | - | ? | results/phase17_new_vectors/1163a_639_five_slots_20261104_145220.txt |
+| 2026-11-04 15:01 | 1164a | - | - | ? | results/phase17_new_vectors/1164a_638_tail_and_policy_20261104_150148.txt |
+| 2026-11-04 15:29 | 1165a | - | - | ? | results/phase17_new_vectors/1165a_usb_ioctl_copyout_contents_20261104_152913.txt |
+| 2026-11-04 15:32 | 56l | - | - | ? | results/phase14_final_push/56l_corrected_mib_probe_20261104_153236.txt |
+| 2026-11-04 15:34 | 1166a | - | - | ? | results/phase17_new_vectors/1166a_417_selector_control_20261104_153445.txt |
+| 2026-11-04 15:48 | 1170a | - | - | ? | results/phase17_new_vectors/1170a_mdbg_log_drain_20261104_154828.txt |
+| 2026-11-04 15:53 | 601 | - | - | ? | results/601_cmd_20261104_155349.txt |
+| 2026-11-04 15:53 | 601 | - | - | ? | results/601_cmd_20261104_155350.txt |
+| 2026-11-04 15:53 | 601 | - | - | ? | results/601_cmd_20261104_155351.txt |
+| 2026-11-04 15:53 | 601 | - | - | ? | results/601_cmd_20261104_155352.txt |
+| 2026-11-04 15:53 | 601 | - | - | ? | results/601_cmd_20261104_155353.txt |
+| 2026-11-04 15:54 | 601 | - | - | ? | results/601_cmd_20261104_155402.txt |
+| 2026-11-04 15:56 | 1172a | - | - | ? | results/phase17_new_vectors/1172a_mdbg_mid_sweep_20261104_155634.txt |
+| 2026-11-04 16:00 | 1173a | - | - | ? | results/phase17_new_vectors/1173a_libc_gadget_scan_20261104_160017.txt |
+| 2026-11-04 16:04 | 1173a | - | - | ? | results/phase17_new_vectors/1173a_libc_gadget_scan_20261104_160427.txt |
+| 2026-11-04 16:05 | 1175a | - | - | ? | results/phase17_new_vectors/1175a_loader_thread_api_20261104_160547.txt |
+| 2026-11-04 16:06 | 1176a | - | - | ? | results/phase17_new_vectors/1176a_mdbg_threaded_sweep_20261104_160636.txt |
+| 2026-11-04 16:06 | 1176a | - | - | ? | results/phase17_new_vectors/1176a_mdbg_threaded_sweep_20261104_160655.txt |
+| 2026-11-04 16:07 | 1176b | - | - | ? | results/phase17_new_vectors/1176b_mdbg_threaded_sweep_20261104_160745.txt |
+| 2026-11-04 16:08 | 1177a | - | - | ? | results/phase17_new_vectors/1177a_mdbg_sweep_high_20261104_160845.txt |
+| 2026-11-04 16:09 | 1178a | - | - | ? | results/phase17_new_vectors/1178a_mdbg_drain_repeat_20261104_160925.txt |
+| 2026-11-04 16:10 | 1179a | - | - | ? | results/phase17_new_vectors/1179a_mdbg_arg_shapes_20261104_161012.txt |
+| 2026-11-04 16:11 | 1180a | - | - | ? | results/phase17_new_vectors/1180a_mdbg_sweep_30_4f_20261104_161101.txt |
+| 2026-11-04 16:11 | 1181a | - | - | ? | results/phase17_new_vectors/1181a_mdbg_sweep_50_ff_20261104_161126.txt |
+| 2026-11-04 16:12 | 1182a | - | - | ? | results/phase17_new_vectors/1182a_ymm_store_scan_20261104_161219.txt |
+| 2026-11-04 16:20 | 1183a | - | - | ? | results/phase17_new_vectors/1183a_page_scan_20261104_162003.txt |
+| 2026-11-04 16:23 | 1183a | - | - | ? | results/phase17_new_vectors/1183a_page_scan_20261104_162301.txt |
+| 2026-11-04 16:24 | 1183b | - | - | ? | results/phase17_new_vectors/1183b_libkernel_text_locate_20261104_162413.txt |
+| 2026-11-04 16:26 | 1184a | - | - | ? | results/phase17_new_vectors/1184a_eboot_ymm_scan_20261104_162647.txt |
+| 2026-11-04 16:27 | 1184a | - | - | ? | results/phase17_new_vectors/1184a_eboot_ymm_scan_20261104_162729.txt |
+| 2026-11-04 16:55 | 1185a | - | - | ? | results/phase17_new_vectors/1185a_gadget_window_dump_20261104_165528.txt |
+| 2026-11-04 16:56 | 1186a | - | - | ? | results/phase17_new_vectors/1186a_eboot_dump_1mb_20261104_165602.txt |
+| 2026-11-04 16:57 | 1187a | - | - | ? | results/phase17_new_vectors/1187a_ymm0_spill_test_20261104_165730.txt |
+| 2026-11-04 17:00 | 1188a | - | - | ? | results/phase17_new_vectors/1188a_fcall_validate_20261104_170051.txt |
+| 2026-11-04 17:02 | 1189a | - | - | ? | results/phase17_new_vectors/1189a_inchain_ymm_spill_20261104_170208.txt |
+| 2026-11-04 17:04 | 1190a | - | - | ? | results/phase17_new_vectors/1190a_ymm_store_after_syscalls_20261104_170402.txt |
+| 2026-11-04 17:05 | 1191a | - | - | ? | results/phase17_new_vectors/1191a_ymm0_poison_spill_20261104_170531.txt |
+| 2026-11-04 17:27 | 1192a | - | - | ? | results/phase17_new_vectors/1192a_601_dispatcher_command_20261104_172719.txt |
+| 2026-11-04 18:16 | 1193a | - | - | ? | results/phase17_new_vectors/1193a_601_errno_attach_flag_20261104_181636.txt |
+| 2026-11-04 18:16 | 1193c | - | - | ? | results/phase17_new_vectors/1193c_601_cmd0_struct_vs_arg3_20261104_181632.txt |
+| 2026-11-04 18:17 | 1194b | - | - | ? | results/phase17_new_vectors/1194b_601_arg2_write_leak_20261104_181707.txt |
+| 2026-11-04 18:17 | 1194c | - | - | ? | results/phase17_new_vectors/1194c_601_type_gate_discriminator_20261104_181720.txt |
+| 2026-11-04 18:17 | 1194d | - | - | ? | results/phase17_new_vectors/1194d_601_arg2_struct_consumers_20261104_181743.txt |
+| 2026-11-04 18:18 | 1194e | - | - | ? | results/phase17_new_vectors/1194e_601_arg3_outptr_sweep_20261104_181806.txt |
+| 2026-11-04 18:44 | 1195a | - | - | ? | results/phase17_new_vectors/1195a_601_attach_hunt_20261104_184447.txt |
+| 2026-11-04 18:52 | 1196a | - | - | ? | results/phase17_new_vectors/1196a_virtual_query_all_magic_20261104_185203.txt |
+| 2026-11-04 18:58 | 1196b | - | - | ? | results/phase17_new_vectors/1196b_sony_info_magic_sweep_20261104_185821.txt |
+| 2026-11-04 18:59 | 1196c | - | - | ? | results/phase17_new_vectors/1196c_dynlib_get_info2_records_20261104_185910.txt |
+| 2026-11-04 19:00 | 1197a | - | - | ? | results/phase17_new_vectors/1197a_sony_errno_census_20261104_190001.txt |
 | 2026-11-04 19:49 | p553 | - | - | ? | results/phase13_webkit/p553_canvas_uaf_rw_20261104_194910.txt |
 | 2026-11-04 19:54 | 1100a | - | - | ? | results/phase34_shm_race/1100a_shm_ftruncate_race_20261104_195438.txt |
 | 2026-11-04 19:56 | 1100b | - | - | ? | results/phase34_shm_race/1100b_shm_race_small_20261104_195600.txt |
@@ -3231,12 +3530,35 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-04 20:57 | 1108a | - | - | ? | results/phase34_shm_race/1108a_shm_race_live_20261104_205725.txt |
 | 2026-11-04 20:58 | 1109a | - | - | ? | results/phase34_shm_race/1109a_shm_race_10k_20261104_205842.txt |
 | 2026-11-04 21:01 | 1110a | - | - | ? | results/phase34_shm_race/1110a_shm_race_wd_20261104_210120.txt |
+| 2026-11-04 21:01 | 1198a | - | - | ? | results/phase17_new_vectors/1198a_dynlib_get_info_ex_records_20261104_210133.txt |
+| 2026-11-04 21:02 | 1199a | - | - | ? | results/phase17_new_vectors/1199a_priv_grant_597_20261104_210201.txt |
 | 2026-11-04 21:06 | 1110a | - | - | ? | results/phase34_shm_race/1110a_shm_race_wd_20261104_210618.txt |
+| 2026-11-04 21:07 | 1199b | - | - | ? | results/phase17_new_vectors/1199b_597_arg_shapes_20261104_210744.txt |
 | 2026-11-04 21:09 | 1111a | - | - | ? | results/phase34_shm_race/1111a_sendfile_ftrunc_race_20261104_210900.txt |
 | 2026-11-04 21:18 | 1113a | - | - | ? | results/phase34_shm_race/1113a_sendfile_sanity_20261104_211850.txt |
 | 2026-11-04 21:23 | 1114a | - | - | ? | results/phase34_shm_race/1114a_read_ftrunc_race_20261104_212359.txt |
+| 2026-11-04 21:47 | 1200a | - | - | ? | results/phase17_new_vectors/1200a_ioctl_magic_differential_20261104_214714.txt |
+| 2026-11-04 21:47 | 1200b | - | - | ? | results/phase17_new_vectors/1200b_ioctl_return_constant_20261104_214755.txt |
+| 2026-11-04 21:49 | 1200c | - | - | ? | results/phase17_new_vectors/1200c_is_ioctl_real_20261104_214900.txt |
+| 2026-11-04 21:50 | 1200d | - | - | ? | results/phase17_new_vectors/1200d_failure_reporting_20261104_215018.txt |
+| 2026-11-04 21:51 | 1201a | - | - | ? | results/phase17_new_vectors/1201a_597_grant_errno_20261104_215119.txt |
+| 2026-11-04 21:53 | 1200e | - | - | ? | results/phase17_new_vectors/1200e_devfs_ioctl_errno_20261104_215321.txt |
+| 2026-11-04 21:53 | 1202a | - | - | ? | results/phase17_new_vectors/1202a_fd_taking_syscall_oracle_20261104_215350.txt |
+| 2026-11-04 21:57 | 1203a | - | - | ? | results/phase17_new_vectors/1203a_localise_sweep_death_20261104_215717.txt |
+| 2026-11-04 21:57 | 1203a | - | - | ? | results/phase17_new_vectors/1203a_localise_sweep_death_20261104_215754.txt |
+| 2026-11-04 22:07 | 1204a | - | - | ? | results/phase17_new_vectors/1204a_547_shape_379_gate_20261104_220709.txt |
+| 2026-11-04 22:07 | 1205a | - | - | ? | results/phase17_new_vectors/1205a_379_id10_sweep_20261104_220736.txt |
 | 2026-11-04 22:09 | p595 | - | - | ? | results/phase13_webkit/p595-apng-overread_20261104_220908.txt |
+| 2026-11-04 22:09 | 1206a | - | - | ? | results/phase17_new_vectors/1206a_379_id_space_20261104_220938.txt |
+| 2026-11-04 22:13 | 1207a | - | - | ? | results/phase17_new_vectors/1207a_605_service_magic_live_20261104_221352.txt |
+| 2026-11-04 22:23 | 1208a | - | - | ? | results/phase17_new_vectors/1208a_sony_range_branch_oracle_20261104_222301.txt |
+| 2026-11-04 22:26 | 1208b | - | - | ? | results/phase17_new_vectors/1208b_sony_branch_oracle_part2_20261104_222609.txt |
+| 2026-11-04 22:31 | 1209a | - | - | ? | results/phase17_new_vectors/1209a_636_tz_table_load_20261104_223151.txt |
+| 2026-11-04 22:35 | 1210a | - | - | ? | results/phase17_new_vectors/1210a_643_a34_bit_sweep_20261104_223541.txt |
+| 2026-11-04 22:35 | 1210a | - | - | ? | results/phase17_new_vectors/1210a_643_a34_bit_sweep_20261104_223550.txt |
+| 2026-11-04 22:45 | 1211a | - | - | ? | results/phase17_new_vectors/1211a_aio_multi_wait_mode0_20261104_224549.txt |
 | 2026-11-04 22:49 | p622 | - | - | ? | results/phase13_webkit/p622-cve-2023-41993_20261104_224917.txt |
+| 2026-11-04 22:51 | 1212a | - | - | ? | results/phase17_new_vectors/1212a_r10_trampoline_20261104_225144.txt |
 | 2026-11-04 22:56 | p621 | - | - | ? | results/phase13_webkit/p621-cve-2024-44308_20261104_225617.txt |
 | 2026-11-04 23:07 | p620 | - | - | ? | results/phase13_webkit/p620-crash-backtrace_20261104_230750.txt |
 | 2026-11-04 23:13 | 1198a | - | - | ? | results/phase17_new_vectors/1198a_dynlib_get_info_ex_records_20261104_231354.txt |
@@ -3244,6 +3566,14 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-04 23:42 | 1199a | - | - | ? | results/phase17_new_vectors/1199a_fault_oracle_kaslr_20261104_234210.txt |
 | 2026-11-04 23:44 | 1199b | - | - | ? | results/phase17_new_vectors/1199b_fault_oracle_upper_20261104_234410.txt |
 | 2026-11-04 23:54 | 1199c | - | - | ? | results/phase17_new_vectors/1199c_fault_oracle_edges_20261104_235448.txt |
+| 2026-11-05 | p629 | - | - | ? | results/phase13_webkit/p629_canvas2d_offset_map_20261105.txt |
+| 2026-11-05 | p630 | - | - | ? | results/phase13_webkit/p630_textbase_leak_survey_20261105.txt |
+| 2026-11-05 | p631 | - | - | ? | results/phase13_webkit/p631_webp_cve_2023_4863_20261105.txt |
+| 2026-11-05 | p632 | - | - | ? | results/phase13_webkit/p632_cve_2025_43529_dfg_storebarrier_20261105.txt |
+| 2026-11-05 | p633 | - | - | ? | results/phase13_webkit/p633_dom_stale_css_sidechannel_20261105.txt |
+| 2026-11-05 | p634 | - | - | ? | results/phase13_webkit/p634_cve_2018_4416_structureid_20261105.txt |
+| 2026-11-05 | p635 | - | - | ? | results/phase13_webkit/p635_cve_2026_43720_canvas_reentry_20261105.txt |
+| 2026-11-05 | p636 | - | - | ? | results/phase13_webkit/p636_isoheap_gigacage_jit_20261105.txt |
 | 2026-11-05 01:50 | 1300a | - | - | ? | results/phase34_kread_survey/1300a_kread_survey_20261105_015027.txt |
 | 2026-11-05 01:55 | 1300b | - | - | ? | results/phase34_kread_survey/1300b_dlsym_real_handles_20261105_015555.txt |
 | 2026-11-05 05:14 | 1400a | - | - | ? | results/phase14_kernel_read/1400a_microarch_gadget_scan_20261105_051451.txt |
@@ -3306,7 +3636,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-05 08:53 | p646 | - | - | ? | results/phase13_webkit/p646_cve_2019_8623_licm_uninit_20261105_085344.txt |
 | 2026-11-05 08:55 | 93d3 | - | - | ? | results/phase34_shm_race/93d3_kevent_sony_fuzz_20261105_085507.txt |
 | 2026-11-05 08:56 | 93d4 | - | - | ? | results/phase34_shm_race/93d4_handle_race_20261105_085636.txt |
-| 2026-11-05 09:01 | 525a | - | - | ? | results/phase23_cve_2026/525a_sysv_ipc_presence_20261105_090149.txt |
 | 2026-11-05 09:05 | 93d5 | - | - | ? | results/phase34_shm_race/93d5_rack_tcp_probe_20261105_090502.txt |
 | 2026-11-05 09:06 | 93d6 | - | - | ? | results/phase34_shm_race/93d6_dev_mmap_scan_20261105_090649.txt |
 | 2026-11-05 09:07 | 1199d | - | - | ? | results/phase9_kaslr_defeat/1199d-spectre-prerequisites_20261105_090708.txt |
@@ -3319,25 +3648,75 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-05 09:22 | 1199h | - | - | ? | results/phase9_kaslr_defeat/1199h-read-gadgets_20261105_092247.txt |
 | 2026-11-05 09:30 | 1199i | - | - | ? | results/phase9_kaslr_defeat/1199i-counting-thread-poc_20261105_093032.txt |
 | 2026-11-05 09:34 | 1199j | - | - | ? | results/phase9_kaslr_defeat/1199j-counting-thread-thr-new_20261105_093412.txt |
+| 2026-11-05 09:36 | 1213a | - | - | ? | results/phase17_new_vectors/1213a_stub_harvest_r10_trampoline_20261105_093632.txt |
+| 2026-11-05 09:58 | 1213c | - | - | ? | results/phase17_new_vectors/1213c_eboot_r10_census_20261105_095853.txt |
+| 2026-11-05 09:59 | 1213d | - | - | ? | results/phase17_new_vectors/1213d_wide_tails_20261105_095919.txt |
+| 2026-11-05 09:59 | 1214a | - | - | ? | results/phase17_new_vectors/1214a_eboot_dump_100000_20261105_095945.txt |
+| 2026-11-05 09:59 | 1214b | - | - | ? | results/phase17_new_vectors/1214b_eboot_dump_200000_20261105_095951.txt |
+| 2026-11-05 09:59 | 1214c | - | - | ? | results/phase17_new_vectors/1214c_eboot_dump_300000_20261105_095952.txt |
+| 2026-11-05 10:01 | 1215a | - | - | ? | results/phase17_new_vectors/1215a_libc_dump_20261105_100131.txt |
+| 2026-11-05 10:02 | 1215b | - | - | ? | results/phase17_new_vectors/1215b_libc_import_window_20261105_100207.txt |
+| 2026-11-05 10:10 | 1216b | - | - | ? | results/phase17_new_vectors/1216b_stub_table_walk_cheap_20261105_101016.txt |
+| 2026-11-05 10:10 | 1217a | - | - | ? | results/phase17_new_vectors/1217a_aio_mode0_trampoline_20261105_101040.txt |
+| 2026-11-05 10:11 | 1218a | - | - | ? | results/phase17_new_vectors/1218a_trampoline_diff_test_20261105_101101.txt |
+| 2026-11-05 10:11 | 1219a | - | - | ? | results/phase17_new_vectors/1219a_663_matrix_20261105_101125.txt |
+| 2026-11-05 10:12 | 1219b | - | - | ? | results/phase17_new_vectors/1219b_mode0_guard_location_20261105_101203.txt |
+| 2026-11-05 10:14 | 1220a | - | - | ? | results/phase17_new_vectors/1220a_379_prot_trampoline_20261105_101406.txt |
+| 2026-11-05 10:24 | 1221a | - | - | ? | results/phase17_new_vectors/1221a_stock_vs_trampoline_20261105_102419.txt |
+| 2026-11-05 10:38 | 1222a | - | - | ? | results/phase17_new_vectors/1222a_socket_ioctl_leak_20261105_103857.txt |
+| 2026-11-05 10:47 | 1223a | - | - | ? | results/phase17_new_vectors/1223a_blockpool_handle_20261105_104739.txt |
 | 2026-11-05 11:14 | 93e2 | - | - | ? | results/phase34_shm_race/93e2_poll_close_race_20261105_111424.txt |
 | 2026-11-05 11:16 | 93e3 | - | - | ? | results/phase34_shm_race/93e3_poll_uaf_tighten_20261105_111627.txt |
 | 2026-11-05 11:19 | 93e4 | - | - | ? | results/phase34_shm_race/93e4_kqueue_close_race_20261105_111901.txt |
+| 2026-11-05 11:22 | 1223b | - | - | ? | results/phase17_new_vectors/1223b_blockpool_map_20261105_112255.txt |
 | 2026-11-05 11:23 | 93e5 | - | - | ? | results/phase34_shm_race/93e5_close_dup2_race_20261105_112333.txt |
+| 2026-11-05 11:23 | 1223c | - | - | ? | results/phase17_new_vectors/1223c_blockpool_va_20261105_112324.txt |
+| 2026-11-05 11:24 | 1223d | - | - | ? | results/phase17_new_vectors/1223d_blockpool_fd_test_20261105_112401.txt |
+| 2026-11-05 11:25 | 1224a | - | - | ? | results/phase17_new_vectors/1224a_blockpool_determinism_20261105_112545.txt |
+| 2026-11-05 11:26 | 1224b | - | - | ? | results/phase17_new_vectors/1224b_blockpool_fdlimit_20261105_112602.txt |
+| 2026-11-05 11:31 | 1224c | - | - | ? | results/phase17_new_vectors/1224c_blockpool_fresh_mmap_20261105_113133.txt |
+| 2026-11-05 11:31 | 1225a | - | - | ? | results/phase17_new_vectors/1225a_routes_first_contact_20261105_113155.txt |
+| 2026-11-05 11:34 | 1226a | - | - | ? | results/phase17_new_vectors/1226a_dmem_container_20261105_113410.txt |
+| 2026-11-05 11:34 | 1227a | - | - | ? | results/phase17_new_vectors/1227a_ucontext_dynlib_leak_20261105_113433.txt |
+| 2026-11-05 11:34 | 1227b | - | - | ? | results/phase17_new_vectors/1227b_thr_self_pointer_20261105_113451.txt |
+| 2026-11-05 11:38 | 1228a | - | - | ? | results/phase17_new_vectors/1228a_ucontext_family_20261105_113800.txt |
+| 2026-11-05 11:38 | 1228b | - | - | ? | results/phase17_new_vectors/1228b_ucontext_mmapstack_20261105_113820.txt |
+| 2026-11-05 11:38 | 1228b | - | - | ? | results/phase17_new_vectors/1228b_ucontext_mmapstack_20261105_113835.txt |
+| 2026-11-05 11:38 | 1228c | - | - | ? | results/phase17_new_vectors/1228c_ucontext_156c_offsets_20261105_113856.txt |
+| 2026-11-05 11:43 | 1229a | - | - | ? | results/phase17_new_vectors/1229a_ucontext_layout_20261105_114304.txt |
+| 2026-11-05 11:46 | 1230a | - | - | ? | results/phase17_new_vectors/1230a_blockpool_handle_type_20261105_114659.txt |
+| 2026-11-05 11:51 | 1231a | - | - | ? | results/phase17_new_vectors/1231a_aio_write_source_20261105_115149.txt |
+| 2026-11-05 12:11 | 1001a | - | - | ? | results/phase17_new_vectors/1001a_kernel_map_sweep_20261105_121144.txt |
+| 2026-11-05 12:12 | 1231b | - | - | ? | results/phase17_new_vectors/1231b_aio_write_dontwait_20261105_121208.txt |
+| 2026-11-05 12:12 | 1232a | - | - | ? | results/phase17_new_vectors/1232a_aio_kernel_read_20261105_121221.txt |
+| 2026-11-05 12:13 | 1233a | - | - | ? | results/phase17_new_vectors/1233a_kernel_mem_files_20261105_121317.txt |
 | 2026-11-05 12:18 | 93e8 | - | - | ? | results/phase34_shm_race/93e8_close_race_diagnostic_20261105_121818.txt |
 | 2026-11-05 12:21 | 93e9 | - | - | ? | results/phase34_shm_race/93e9_close_race_delayed_20261105_122100.txt |
 | 2026-11-05 12:22 | 93f | - | - | ? | results/phase34_shm_race/93f_blocking_close_race_20261105_122232.txt |
 | 2026-11-05 12:24 | 94a | - | - | ? | results/phase34_shm_race/94a_shm_ftruncate_race_20261105_122406.txt |
+| 2026-11-05 12:25 | 1234a | - | - | ? | results/phase17_new_vectors/1234a_poll_close_race_20261105_122552.txt |
 | 2026-11-05 12:26 | 94b | - | - | ? | results/phase34_shm_race/94b_sendfile_truncate_race_20261105_122629.txt |
+| 2026-11-05 12:41 | 1234b | - | - | ? | results/phase17_new_vectors/1234b_fd_reuse_read_20261105_124109.txt |
+| 2026-11-05 12:45 | 1235a | - | - | ? | results/phase17_new_vectors/1235a_aio_mode3_guard_20261105_124519.txt |
 | 2026-11-05 12:48 | 94c | - | - | ? | results/phase34_shm_race/94c_sendfile_behavior_20261105_124858.txt |
+| 2026-11-05 12:53 | 1236a | - | - | ? | results/phase17_new_vectors/1236a_aio_mode_space_zero_ids_20261105_125350.txt |
+| 2026-11-05 12:56 | 1237b | - | - | ? | results/phase17_new_vectors/1237b_suspended_in_syscall_ctx_20261105_125603.txt |
+| 2026-11-05 12:57 | 1237c | - | - | ? | results/phase17_new_vectors/1237c_suspend_in_poll_20261105_125717.txt |
+| 2026-11-05 13:07 | 1238a | - | - | ? | results/phase17_new_vectors/1238a_tid_space_pid_filter_20261105_130709.txt |
 | 2026-11-05 13:12 | 95a | - | - | ? | results/phase34_shm_race/95a_setitimer_watchdog_20261105_131221.txt |
+| 2026-11-05 13:12 | 1240a | - | - | ? | results/phase17_new_vectors/1240a_physhm_copyin_20261105_131220.txt |
 | 2026-11-05 13:14 | 94d | - | - | ? | results/phase34_shm_race/94d_sendfile_tcp_race_20261105_131429.txt |
 | 2026-11-05 13:19 | 96a | - | - | ? | results/phase34_shm_race/96a_gc_ioctl_close_race_20261105_131911.txt |
 | 2026-11-05 13:25 | 96a | - | - | ? | results/phase34_shm_race/96a_gc_ioctl_close_race_20261105_132554.txt |
 | 2026-11-05 13:27 | 97a | - | - | ? | results/phase34_shm_race/97a_shm_ftruncate_mmap_race_20261105_132700.txt |
+| 2026-11-05 13:54 | 1241a | - | - | ? | results/phase17_new_vectors/1241a_sendfile_presence_20261105_135444.txt |
+| 2026-11-05 13:54 | 1242a | - | - | ? | results/phase17_new_vectors/1242a_sys532_cmd31_gate_20261105_135459.txt |
 | 2026-11-05 14:01 | 98a | - | - | ? | results/phase34_shm_race/98a_mmap_munmap_race_20261105_140102.txt |
+| 2026-11-05 14:05 | 1243a | - | - | ? | results/phase17_new_vectors/1243a_sys587_shape_20261105_140511.txt |
 | 2026-11-05 14:07 | 98a | - | - | ? | results/phase34_shm_race/98a_mmap_munmap_race_20261105_140715.txt |
 | 2026-11-05 14:09 | 98b | - | - | ? | results/phase34_shm_race/98b_mmap_munmap_race_v2_20261105_140924.txt |
 | 2026-11-05 14:13 | 1199k | - | - | ? | results/phase9_kaslr_defeat/1199k-single-counter-test_20261105_141334.txt |
+| 2026-11-05 14:13 | 1244a | - | - | ? | results/phase17_new_vectors/1244a_aio_mode_guard_coverage_20261105_141334.txt |
 | 2026-11-05 14:24 | 1199k | - | - | ? | results/phase9_kaslr_defeat/1199k-single-counter-test_20261105_142445.txt |
 | 2026-11-05 14:32 | 1199k | - | - | ? | results/phase9_kaslr_defeat/1199k-single-counter-test_20261105_143249.txt |
 | 2026-11-05 14:35 | 1199k | - | - | ? | results/phase9_kaslr_defeat/1199k-single-counter-test_20261105_143542.txt |
@@ -3349,8 +3728,11 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-05 15:06 | 1199l | - | - | ? | results/phase9_kaslr_defeat/1199l-counting-timer_20261105_150604.txt |
 | 2026-11-05 15:08 | 1199l | - | - | ? | results/phase9_kaslr_defeat/1199l-counting-timer_20261105_150825.txt |
 | 2026-11-05 15:09 | 1199l | - | - | ? | results/phase9_kaslr_defeat/1199l-counting-timer_20261105_150946.txt |
+| 2026-11-05 15:10 | 1245a | - | - | ? | results/phase17_new_vectors/1245a_uninit_copyout_dynamic_20261105_151028.txt |
 | 2026-11-05 15:12 | 1199l | - | - | ? | results/phase9_kaslr_defeat/1199l-counting-timer_20261105_151235.txt |
 | 2026-11-05 15:16 | 1199m | - | - | ? | results/phase9_kaslr_defeat/1199m-cache-timing_20261105_151615.txt |
+| 2026-11-05 15:25 | 1245a | - | - | ? | results/phase17_new_vectors/1245a_native_exec_feasibility_20261105_152559.txt |
+| 2026-11-05 15:27 | 1245b | - | - | ? | results/phase17_new_vectors/1245b_exec_rdtsc_clflush_20261105_152714.txt |
 | 2026-11-05 15:29 | p572 | - | - | ? | results/p572_browser_scan_20261105_152941.txt |
 | 2026-11-05 15:30 | 1199n | - | - | ? | results/phase9_kaslr_defeat/1199n-kernel-cache-footprint_20261105_153031.txt |
 | 2026-11-05 15:34 | p573 | - | - | ? | results/p573_browser_launch_20261105_153403.txt |
@@ -3365,12 +3747,27 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-05 15:42 | p580 | - | - | ? | results/p580_fw_offsets_20261105_154208.txt |
 | 2026-11-05 15:42 | p581 | - | - | ? | results/p581_ofiles_setup_20261105_154259.txt |
 | 2026-11-05 15:44 | p582 | - | - | ? | results/p582_page_walk_20261105_154401.txt |
+| 2026-11-05 15:44 | 1247b | - | - | ? | results/phase17_new_vectors/1247b_dmem_physical_sweep_20261105_154409.txt |
+| 2026-11-05 15:44 | 1247b | - | - | ? | results/phase17_new_vectors/1247b_dmem_physical_sweep_20261105_154430.txt |
+| 2026-11-05 15:44 | 1248a | - | - | ? | results/phase17_new_vectors/1248a_exec_page_hunt_20261105_154412.txt |
+| 2026-11-05 15:44 | 1249a | - | - | ? | results/phase17_new_vectors/1249a_sys607_path_oracle_20261105_154410.txt |
 | 2026-11-05 15:48 | 1199q | - | - | ? | results/phase9_kaslr_defeat/1199q-spectre-fstat-fd_20261105_154802.txt |
 | 2026-11-05 15:48 | p583 | - | - | ? | results/p583_kernel_lua_dump_20261105_154827.txt |
 | 2026-11-05 15:49 | p584 | - | - | ? | results/p584_full_kernel_lua_20261105_154921.txt |
 | 2026-11-05 15:50 | p585 | - | - | ? | results/p585_find_exploit_20261105_155031.txt |
 | 2026-11-05 15:52 | p586 | - | - | ? | results/p586_launch_browser_20261105_155203.txt |
 | 2026-11-05 15:54 | p587 | - | - | ? | results/p587_ipv6_race_20261105_155414.txt |
+| 2026-11-05 16:56 | 1249a | - | - | ? | results/phase17_new_vectors/1249a_sys607_path_oracle_20261105_165652.txt |
+| 2026-11-05 16:57 | 1250a | - | - | ? | results/phase17_new_vectors/1250a_shm_faultin_and_exec_20261105_165710.txt |
+| 2026-11-05 16:57 | 1250b | - | - | ? | results/phase17_new_vectors/1250b_shm_shape_and_copyin_20261105_165752.txt |
+| 2026-11-05 16:58 | 1250c | - | - | ? | results/phase17_new_vectors/1250c_shm_object_inventory_20261105_165829.txt |
+| 2026-11-05 17:01 | 1251a | - | - | ? | results/phase17_new_vectors/1251a_674_calibration_20261105_170156.txt |
+| 2026-11-05 17:07 | 1251a | - | - | ? | results/phase17_new_vectors/1251a_674_calibration_20261105_170708.txt |
+| 2026-11-05 17:07 | 1252a | - | - | ? | results/phase17_new_vectors/1252a_exec_surface_map_20261105_170742.txt |
+| 2026-11-05 21:00 | 1253a | - | - | ? | results/phase17_new_vectors/1253a_sysent_tail_sigsys_20261105_210052.txt |
+| 2026-11-05 21:01 | 1254a | - | - | ? | results/phase17_new_vectors/1254a_kill_list_presence_20261105_210158.txt |
+| 2026-11-05 21:03 | 1255a | - | - | ? | results/phase17_new_vectors/1255a_presence_map_538_676_20261105_210306.txt |
+| 2026-11-05 21:03 | 1256a | - | - | ? | results/phase17_new_vectors/1256a_presence_map_622_676_20261105_210353.txt |
 | 2026-11-05 21:34 | 1199a | - | - | ? | results/1199a_20261105_213431.txt |
 | 2026-11-06 00:06 | 500a | - | - | ? | results/phase23_cve_2026/500a_poll_close_race_20261106_000628.txt |
 | 2026-11-06 00:09 | 500b | - | - | ? | results/phase23_cve_2026/500b_poll_close_minimal_20261106_000923.txt |
@@ -3389,75 +3786,611 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-06 04:04 | 500n | - | - | ? | results/phase23_cve_2026/500n_same_cpu_readback_oracle_20261106_040421.txt |
 | 2026-11-06 04:11 | 500n | - | - | ? | results/phase23_cve_2026/500n_same_cpu_readback_oracle_20261106_041102.txt |
 | 2026-11-06 04:53 | 500o | - | - | ? | results/phase23_cve_2026/500o_safe_reclaim_oracle_20261106_045302.txt |
-| 2026-10-26 | p550 | - | - | ? | results/phase13_webkit/p550_canvas_uaf_transform_leak_20261026.txt |
-| 2026-10-26 | p551 | - | - | ? | results/phase13_webkit/p551_canvas_uaf_variants_20261026.txt |
-| 2026-10-26 | p552 | - | - | ? | results/phase13_webkit/p552_canvas_uaf_desync_exploit_20261026.txt |
-| 2026-10-26 | p553 | - | - | ? | results/phase13_webkit/p553_canvas_uaf_write_confirm_20261026.txt |
-| 2026-10-26 | p554 | - | - | ? | results/phase13_webkit/p554_canvas_crosstype_offsetmap_20261026.txt |
-| 2026-10-26 | p554b | - | - | ? | results/phase13_webkit/p554b_crosstype_lean_20261026.txt |
-| 2026-10-26 | p554c | - | - | ? | results/phase13_webkit/p554c_crosstype_safe_20261026.txt |
-| 2026-10-26 | p554d | - | - | ? | results/phase13_webkit/p554d_sametype_deep_20261026.txt |
-| 2026-10-26 | p556 | - | - | ? | results/phase13_webkit/p556_rab_offset_race_20261026.txt |
-| 2026-10-27 | p555 | - | - | ? | results/phase13_webkit/p555_reentrancy_timing_20261027.txt |
-| 2026-10-27 | p557 | - | - | ? | results/phase13_webkit/p557_ssv_desync_test_20261027.txt |
-| 2026-10-27 | p558 | - | - | ? | results/phase13_webkit/p558_rab_escalation_20261027.txt |
-| 2026-10-27 | p559 | - | - | ? | results/phase13_webkit/p559_rab_oob_values_20261027.txt |
-| 2026-10-27 | p560 | - | - | ? | results/phase13_webkit/p560_sort_oob_write_20261027.txt |
-| 2026-10-28 | p561 | - | - | ? | results/phase13_webkit/p561_transfer_sort_uaf_20261028.txt |
-| 2026-10-28 | p562 | - | - | ? | results/phase13_webkit/p562_double_detach_uaf_20261028.txt |
-| 2026-10-28 | p563 | - | - | ? | results/phase13_webkit/p563_canvas_crosstype_reclaim_20261028.txt |
-| 2026-10-28 | p564 | - | - | ? | results/phase13_webkit/p564_canvas_force_reclaim_20261028.txt |
-| 2026-10-28 | p565 | - | - | ? | results/phase13_webkit/p565_canvas_offset128_20261028.txt |
-| 2026-10-28 | p566 | - | - | ? | results/phase13_webkit/p566_canvas_full_reclaim_20261028.txt |
-| 2026-10-28 | v700b | - | - | ? | results/phase13_webkit/v700b_string_crosstype_768_20261028.txt |
-| 2026-10-28 | v700c | - | - | ? | results/phase13_webkit/v700c_string_payload_dead_20261028.txt |
-| 2026-10-28 | v701 | - | - | ? | results/phase13_webkit/v701_sametype_state_grow_20261028.txt |
-| 2026-10-28 | v702 | - | - | ? | results/phase13_webkit/v702_gc_free_variant_a_20261028.txt |
-| 2026-10-28 | v703 | - | - | ? | results/phase13_webkit/v703_gc_free_variant_b_20261028.txt |
-| 2026-10-28 | v704 | - | - | ? | results/phase13_webkit/v704_ab768_direct_reclaim_20261028.txt |
-| 2026-10-28 | v705 | - | - | ? | results/phase13_webkit/v705_property_survival_scan_20261028.txt |
-| 2026-10-28 | v706 | - | - | ? | results/phase13_webkit/v706_factory_method_scan_20261028.txt |
-| 2026-10-28 | v707 | - | - | ? | results/phase13_webkit/v707_ab_fill_pattern_20261028.txt |
-| 2026-10-28 | v707b | - | - | ? | results/phase13_webkit/v707b_ab_fill_variant_b_20261028.txt |
-| 2026-10-28 | v707c | - | - | ? | results/phase13_webkit/v707c_ab_fill_variant_c_20261028.txt |
-| 2026-10-29 | v674 | - | - | ? | results/phase13_webkit/v674_canvas_api_info_leak_20261029.txt |
-| 2026-10-29 | v674b | - | - | ? | results/phase13_webkit/v674b_apng_decoder_overread_20261029.txt |
-| 2026-10-29 | v675 | - | - | ? | results/phase13_webkit/v675_same_type_alias_baseline_20261029.txt |
-| 2026-10-29 | v676 | - | - | ? | results/phase13_webkit/v676_ab_spray_miss_20261029.txt |
-| 2026-10-29 | v677 | - | - | ? | results/phase13_webkit/v677_gc_pressure_free_20261029.txt |
-| 2026-10-29 | v677b | - | - | ? | results/phase13_webkit/v677b_gc_pressure_variant_b_20261029.txt |
-| 2026-10-29 | v677c | - | - | ? | results/phase13_webkit/v677c_gc_pressure_variant_c_20261029.txt |
-| 2026-10-29 | v677d | - | - | ? | results/phase13_webkit/v677d_gc_pressure_variant_d_20261029.txt |
-| 2026-10-29 | v678 | - | - | ? | results/phase13_webkit/v678_staged_alloc_gc_20261029.txt |
-| 2026-10-29 | v679 | - | - | ? | results/phase13_webkit/v679_aslr_spray_probabilistic_20261029.txt |
-| 2026-10-29 | v679b | - | - | ? | results/phase13_webkit/v679b_aslr_spray_1gb_20261029.txt |
-| 2026-10-29 | v680 | - | - | ? | results/phase13_webkit/v680_address_space_mapper_20261029.txt |
-| 2026-10-29 | v681 | - | - | ? | results/phase13_webkit/v681_aslr_zero_spray_20261029.txt |
-| 2026-10-29 | v682 | - | - | ? | results/phase13_webkit/v682_aslr_low_range_20261029.txt |
-| 2026-10-29 | v683 | - | - | ? | results/phase13_webkit/v683_oob_state_stack_20261029.txt |
-| 2026-10-29 | v684 | - | - | ? | results/phase13_webkit/v684_weakref_ab_scan_20261029.txt |
-| 2026-10-29 | v685 | - | - | ? | results/phase13_webkit/v685_opaque_root_gc_dead_20261029.txt |
-| 2026-10-29 | v707e | - | - | ? | results/phase13_webkit/v707e_ab_fill_variant_e_20261029.txt |
-| 2026-10-29 | v707f | - | - | ? | results/phase13_webkit/v707f_ab_fill_variant_f_20261029.txt |
-| 2026-10-29 | v707g | - | - | ? | results/phase13_webkit/v707g_ab_fill_variant_g_20261029.txt |
-| 2026-10-29 | v707h | - | - | ? | results/phase13_webkit/v707h_ab_fill_variant_h_20261029.txt |
-| 2026-11-03 | p588d | - | - | ? | results/phase13_webkit/p588d_v6_definitive_null_test_20261103.txt |
-| 2026-11-03 | p588d | - | - | ? | results/phase13_webkit/p588d_v7_trigger_sweep_20261103.txt |
-| 2026-11-03 | p588d | - | - | ? | results/phase13_webkit/p588d_v8b_engine_write_map_20261103.txt |
-| 2026-11-03 | p589 | - | - | ? | results/phase13_webkit/p589_alpha_fontfaceset_trigger_20261103.txt |
-| 2026-11-03 | p590 | - | - | ? | results/phase13_webkit/p590_two_uaf_test_20261103.txt |
-| 2026-11-05 | p629 | - | - | ? | results/phase13_webkit/p629_canvas2d_offset_map_20261105.txt |
-| 2026-11-05 | p630 | - | - | ? | results/phase13_webkit/p630_textbase_leak_survey_20261105.txt |
-| 2026-11-05 | p631 | - | - | ? | results/phase13_webkit/p631_webp_cve_2023_4863_20261105.txt |
-| 2026-11-05 | p632 | - | - | ? | results/phase13_webkit/p632_cve_2025_43529_dfg_storebarrier_20261105.txt |
-| 2026-11-05 | p633 | - | - | ? | results/phase13_webkit/p633_dom_stale_css_sidechannel_20261105.txt |
-| 2026-11-05 | p634 | - | - | ? | results/phase13_webkit/p634_cve_2018_4416_structureid_20261105.txt |
-| 2026-11-05 | p635 | - | - | ? | results/phase13_webkit/p635_cve_2026_43720_canvas_reentry_20261105.txt |
-| 2026-11-05 | p636 | - | - | ? | results/phase13_webkit/p636_isoheap_gigacage_jit_20261105.txt |
-| 2026-10-24~ | 168 | - | - | ? | results/phase21/168_page_reuse_summary.txt |
-| 2026-10-24~ | P3 | - | - | ? | results/phase22_dem9n101/P3_thr_create_console.txt |
-| 2026-10-26~ | 526a | - | - | ? | results/phase23_cve_2026/526a_scm_rights_deep_results.txt |
-| 2026-11-07 13:42 | 1335a | 622 entry check is on the size field: 0x100 rejects, 0x40 dispatches; status word, not ret, is the discriminator | 0x200 arg4=0x100 -> 0x800E0001; arg4=0x40 -> 0xFFFFFFFF | M | results/1335a_20261106_150315.txt |
-| 2026-11-07 14:21 | 55c_sys622_careful | void: every call passed arg4=0x100, rejected at the 622 entry check before dispatch | 0x800E0001 on all 402 reads, zero 0xFFFFFFFF, ret 0 in both shapes | V | results/phase14_final_push/55c_sys622_careful_20261018_095816.txt |
+| 2026-11-06 14:37 | 1331a | - | - | ? | results/1331a_20261106_143746.txt |
+| 2026-11-06 14:38 | 1332a | - | - | ? | results/1332a_20261106_143858.txt |
+| 2026-11-06 14:40 | 1334a | - | - | ? | results/1334a_20261106_144023.txt |
+| 2026-11-06 14:41 | 1334b | - | - | ? | results/1334b_20261106_144105.txt |
+| 2026-11-06 14:43 | 1334c | - | - | ? | results/1334c_20261106_144345.txt |
+| 2026-11-06 14:48 | 1334c | - | - | ? | results/1334c_20261106_144823.txt |
+| 2026-11-06 14:50 | 1334c | - | - | ? | results/1334c_20261106_145045.txt |
+| 2026-11-06 14:56 | 1335a | - | - | ? | results/1335a_20261106_145651.txt |
+| 2026-11-06 14:58 | 1335a | - | - | ? | results/1335a_20261106_145830.txt |
+| 2026-11-06 15:00 | 1335a | - | - | ? | results/1335a_20261106_150042.txt |
+| 2026-11-06 15:01 | 1335a | - | - | ? | results/1335a_20261106_150130.txt |
+| 2026-11-06 15:06 | 1336a | - | - | ? | results/1336a_20261106_150621.txt |
+| 2026-11-06 15:07 | 1337a | - | - | ? | results/1337a_20261106_150723.txt |
+| 2026-11-06 15:08 | 1337a | - | - | ? | results/1337a_20261106_150821.txt |
+| 2026-11-06 16:15 | 1338a | - | - | ? | results/1338a_20261106_161521.txt |
+| 2026-11-06 16:23 | 1338a | - | - | ? | results/1338a_20261106_162334.txt |
+| 2026-11-06 16:59 | 1339a | - | - | ? | results/1339a_20261106_165911.txt |
+| 2026-11-06 17:04 | 1339a | - | - | ? | results/1339a_20261106_170440.txt |
+| 2026-11-06 17:05 | 1339a | - | - | ? | results/1339a_20261106_170531.txt |
+| 2026-11-06 17:06 | 1339a | - | - | ? | results/1339a_20261106_170625.txt |
+| 2026-11-06 17:11 | 1339b | - | - | ? | results/1339b_diag_20261106_171149.txt |
+| 2026-11-06 17:13 | 1339b | - | - | ? | results/1339b_diag_20261106_171301.txt |
+| 2026-11-06 17:18 | 1339c | - | - | ? | results/1339c_single_20261106_171824.txt |
+| 2026-11-06 17:20 | 1339c | - | - | ? | results/1339c_single_20261106_172019.txt |
+| 2026-11-06 17:24 | 1339d | - | - | ? | results/1339d_r8test_20261106_172443.txt |
+| 2026-11-06 17:47 | 1339e | - | - | ? | results/1339e_r8only_20261106_174727.txt |
+| 2026-11-06 17:49 | 1339g | - | - | ? | results/1339g_opt25_child_20261106_174923.txt |
+| 2026-11-06 17:51 | 1339h | - | - | ? | results/1339h_gadget_search_20261106_175128.txt |
+| 2026-11-06 17:53 | 1339i | - | - | ? | results/1339i_r8_across_20261106_175341.txt |
+| 2026-11-06 17:56 | 1339j | - | - | ? | results/1339j_mass_race_20261106_175655.txt |
+| 2026-11-06 17:58 | 1339j | - | - | ? | results/1339j_mass_race_20261106_175852.txt |
+| 2026-11-06 18:06 | 1339j | - | - | ? | results/1339j_mass_race_20261106_180636.txt |
+| 2026-11-06 18:19 | 1339j | - | - | ? | results/1339j_mass_race_20261106_181929.txt |
+| 2026-11-06 18:22 | 1339j | - | - | ? | results/1339j_mass_race_20261106_182245.txt |
+| 2026-11-06 18:27 | 1339j | - | - | ? | results/1339j_mass_race_20261106_182744.txt |
+| 2026-11-06 18:41 | 1339j | - | - | ? | results/1339j_mass_race_20261106_184103.txt |
+| 2026-11-06 18:50 | 1339j | - | - | ? | results/1339j_mass_race_20261106_185021.txt |
+| 2026-11-06 19:44 | 1339k | - | - | ? | results/1339k_multi_child_20261106_194414.txt |
+| 2026-11-06 19:47 | 1339k | - | - | ? | results/1339k_multi_child_20261106_194739.txt |
+| 2026-11-06 19:48 | 1339k | - | - | ? | results/1339k_multi_child_20261106_194833.txt |
+| 2026-11-06 19:52 | 1339L | - | - | ? | results/1339L_parent_use_20261106_195201.txt |
+| 2026-11-06 19:54 | 1339m | - | - | ? | results/1339m_wide_race_20261106_195441.txt |
+| 2026-11-06 19:55 | 1339n | - | - | ? | results/1339n_cmsg_test_20261106_195556.txt |
+| 2026-11-06 19:59 | 1339m | - | - | ? | results/1339m_wide_race_20261106_195920.txt |
+| 2026-11-06 20:00 | 1339m | - | - | ? | results/1339m_wide_race_20261106_200054.txt |
+| 2026-11-06 20:07 | 1339p | - | - | ? | results/1339p_safe_race_20261106_200705.txt |
+| 2026-11-06 20:09 | 1339p | - | - | ? | results/1339p_safe_race_20261106_200932.txt |
+| 2026-11-06 20:11 | 1339p | - | - | ? | results/1339p_safe_race_20261106_201101.txt |
+| 2026-11-06 20:14 | 1339p | - | - | ? | results/1339p_safe_race_20261106_201403.txt |
+| 2026-11-06 20:20 | 1339q | - | - | ? | results/1339q_diag_20261106_202020.txt |
+| 2026-11-06 20:20 | 1339q | - | - | ? | results/1339q_diag_20261106_202041.txt |
+| 2026-11-06 20:22 | 1339r | - | - | ? | results/1339r_race_fresh_stacks_20261106_202250.txt |
+| 2026-11-06 20:32 | 1339s | - | - | ? | results/1339s_r8_persist_20261106_203218.txt |
+| 2026-11-06 20:35 | 1339s | - | - | ? | results/1339s_r8_persist_20261106_203507.txt |
+| 2026-11-06 20:35 | 1339s | - | - | ? | results/1339s_r8_persist_20261106_203555.txt |
+| 2026-11-06 20:59 | 1339t | - | - | ? | results/1339t_race_spray_20261106_205920.txt |
+| 2026-11-06 21:06 | 1339u | - | - | ? | results/1339u_symmetric_diag_20261106_210659.txt |
+| 2026-11-06 21:12 | 1339v | - | - | ? | results/1339v_fast_race_20261106_211253.txt |
+| 2026-11-06 21:19 | 1339v | - | - | ? | results/1339v_fast_race_20261106_211930.txt |
+| 2026-11-06 21:20 | 1339v | - | - | ? | results/1339v_fast_race_20261106_212041.txt |
+| 2026-11-06 21:21 | 1339v | - | - | ? | results/1339v_fast_race_20261106_212102.txt |
+| 2026-11-06 21:23 | 1339v | - | - | ? | results/1339v_fast_race_20261106_212336.txt |
+| 2026-11-06 21:29 | 1339w | - | - | ? | results/1339w_aggressive_20261106_212945.txt |
+| 2026-11-06 21:30 | 1339w | - | - | ? | results/1339w_aggressive_20261106_213039.txt |
+| 2026-11-06 21:31 | 1339w | - | - | ? | results/1339w_aggressive_20261106_213146.txt |
+| 2026-11-06 21:38 | 1339x | - | - | ? | results/1339x_pinned_20261106_213856.txt |
+| 2026-11-06 21:40 | 1339x | - | - | ? | results/1339x_pinned_20261106_214017.txt |
+| 2026-11-06 21:44 | 1339y | - | - | ? | results/1339y_exhaust_20261106_214417.txt |
+| 2026-11-06 22:03 | 1339z | - | - | ? | results/1339z_scatter_20261106_220300.txt |
+| 2026-11-06 22:03 | 1339z | - | - | ? | results/1339z_scatter_20261106_220332.txt |
+| 2026-11-06 22:03 | 1339z | - | - | ? | results/1339z_scatter_20261106_220349.txt |
+| 2026-11-06 22:04 | 1339z | - | - | ? | results/1339z_scatter_20261106_220450.txt |
+| 2026-11-06 22:09 | 1339z | - | - | ? | results/1339z_scatter_20261106_220926.txt |
+| 2026-11-06 22:12 | 1340a | - | - | ? | results/1340a_toctou_20261106_221226.txt |
+| 2026-11-06 22:14 | 1340b | - | - | ? | results/1340b_lean_20261106_221455.txt |
+| 2026-11-06 22:26 | 1340c | - | - | ? | results/1340c_pinned_spray_20261106_222630.txt |
+| 2026-11-06 22:37 | 1340d | - | - | ? | results/1340d_stagger_20261106_223731.txt |
+| 2026-11-06 22:43 | 1340e | - | - | ? | results/1340e_diagnostic_20261106_224319.txt |
+| 2026-11-06 22:46 | 1340e | - | - | ? | results/1340e_diagnostic_20261106_224614.txt |
+| 2026-11-06 23:06 | 1340f | - | - | ? | results/1340f_multiround_20261106_230627.txt |
+| 2026-11-06 23:16 | 1340f | - | - | ? | results/1340f_multiround_20261106_231621.txt |
+| 2026-11-06 23:19 | 1340f | - | - | ? | results/1340f_multiround_20261106_231918.txt |
+| 2026-11-06 23:24 | 1340f | - | - | ? | results/1340f_multiround_20261106_232418.txt |
+| 2026-11-07 17:02 | 1335a | 622 entry check is on the size field: 0x100 rejects, 0x40 dispatches; status word, not ret, is the discriminator | 0x200 arg4=0x100 -> 0x800E0001; arg4=0x40 -> 0xFFFFFFFF | M | results/1335a_20261106_150315.txt |
+| 2026-11-07 17:02 | 55c_sys622_careful | void: every call passed arg4=0x100, rejected at the 622 entry check before dispatch | 0x800E0001 on all 402 reads, zero 0xFFFFFFFF, ret 0 in both shapes | V | results/phase14_final_push/55c_sys622_careful_20261018_095816.txt |
+| 2026-11-07~ | 168 | - | - | ? | results/phase21/168_page_reuse_summary.txt |
+| 2026-11-07~ | 526a | - | - | ? | results/phase23_cve_2026/526a_scm_rights_deep_results.txt |
+| 2026-11-07~ | P3 | - | - | ? | results/phase22_dem9n101/P3_thr_create_console.txt |
+| 2026-11-09 09:14 | 361b | The /system_tmp sockets | === 361b DONE === | M | results/phase17_new_vectors/361b_socket_consumption_20261022_175443.txt |
+| 2026-11-09 09:14 | 377a | module .rodata (prot=0x1) is unreadable: eboot read at [A] succeeded, the first .sprx read kills past pcall | read ok=true len=256 first=2F6C6962; [B] regions: 317; died at libSceNpGameIntent.sprx 0x4E8000 prot=0x1 | M | results/phase17_new_vectors/377a_sprx_read_ladder_20261022_181129.txt |
+| 2026-11-09 09:14 | 376a | void: died before any result line; capture is a header plus a fault dump | 4 lines: header, '77', fault bytes | V | results/phase17_new_vectors/376a_module_strings_20261022_180910.txt |
+| 2026-11-09 09:14 | 156c | void: the capture named 156c holds probe 80d, not the thr_create/resolve test the bullet rests on | === PROBE 80d: thr_create CORRECT OFFSETS + SPIN === | V | results/phase17_new_vectors/156c_thr_create_correct_offsets_20261020_164129.txt |
+| 2026-11-09 09:14 | 353a | AIO (sys 661); The whole kld* family plus sysctlbyname; Ignore SIGSYS before probing a possibly-absent slot | === 353a DONE === | M | results/phase17_new_vectors/353a_sigsys_nosys_20261022_163648.txt |
+| 2026-11-09 09:14 | 30c | kqueue | [*] Received 1151 bytes total | M | results/phase4_ipc_network/30c_fcntl_bypass_20261015_201500.txt |
+| 2026-11-09 09:14 | 58a | msync via syscall 226; msync(MS_INVALIDATE) CVE-2026-49418 | === PROBE 58a COMPLETE === | M | results/phase15_native_sysent/58a_msync_reachability_20261024_135342.txt |
+| 2026-11-09 09:14 | 42a | void: kenv section header printed, no call result | last line '--- kenv ---' | V | results/phase8_live_network/42a_kernel_rw_20261016_001156.txt |
+| 2026-11-09 09:14 | 43a | void: stopped at the syscall-308 test header, no kldstat result | last line '--- Testing kldstat as syscall 308 ---' | V | results/43a_kldstat_kaslr_20261016_180703.txt |
+| 2026-11-09 09:14 | 262a | /dev/dmem0 physical memory | === PROBE 262a COMPLETE === | M | results/phase17_new_vectors/262a_dmem_partitions_20261021_154707.txt |
+| 2026-11-09 09:14 | 45c | ROP chain hijack / fn_addr redirect; W^X bypass via mtypeprotect + fn_addr | === PROBE 45c COMPLETE === | M | results/45c_execution_reality_check_20261016_192713.txt |
+| 2026-11-09 09:14 | 53b | AF_ROUTE KASLR (Relapse technique) | === PROBE 53b COMPLETE === | M | results/phase13_53batch/53b_afroute_retest_20261020_030901.txt |
+| 2026-11-09 09:14 | 43f | sysctl operations (43f) | === PROBE 43f COMPLETE === | M | results/43f_sysctl_write_20261016_180756.txt |
+| 2026-11-09 09:14 | 273a | ioctl via make_syscall | === PROBE 273a COMPLETE === | M | results/phase17_new_vectors/273a_pup_device_reach_20261022_094331.txt |
+| 2026-11-09 09:14 | 383a | thr_new via make_syscall | === 383a DONE === | M | results/phase17_new_vectors/383a_thr_new_20261022_182743.txt |
+| 2026-11-09 09:14 | 46a | sections A-E measured (620 struct: no kernel pointers); [F] neighbour sweep is void | 620 struct: no kernel pointers; capture ends at '[F] NEIGHBOR SWEEP 550-625' | M | results/46a_sony_syscall_deep_20261016_195704.txt |
+| 2026-11-09 09:14 | 55g | dword write at +0x20 reached, then a boundary; no post-call marker | MARKER_BEFORE_DIFFERENT_WRITE then fault dump | M | results/phase14_final_push/55g_cclosure_write_diagnostic_20261018_103406.txt |
+| 2026-11-09 09:14 | 48b | SCTP chunk fuzzing | === PROBE 48b COMPLETE === | M | results/48b_sctp_loopback_fuzz_20261016_202732.txt |
+| 2026-11-09 09:14 | 48c | IPv6 extension header fuzzing | === PROBE 48c COMPLETE === | M | results/48c_ipv6_exthdr_fuzz_20261016_202737.txt |
+| 2026-11-09 09:14 | 49a | TCP state machine injection | === PROBE 49a COMPLETE === | M | results/49a_tcp_inject_loopback_20261016_205919.txt |
+| 2026-11-09 09:14 | 49b | IPv6 fragment reassembly attacks | or any unexpected behavior between fragment pairs. | M | results/49b_ipv6_frag_reassembly_20261016_205926.txt |
+| 2026-11-09 09:14 | 50a | 86 exotic protocol packets, process survived | KEY: ... survived all 86 exotic protocol packets | M | results/50a_exotic_protocols_20261016_212850.txt |
+| 2026-11-09 09:14 | 54i | sys 572 VM info query | === PROBE 54i COMPLETE === | M | results/phase14_final_push/54i_sys572_buffer_exam_20261018_091303.txt |
+| 2026-11-09 09:14 | 54a2 | sys 626 RDMSR precise (cmd=1 + cmd=4) | === PROBE 54a2 COMPLETE === | M | results/phase14_final_push/54a2_rdmsr_precise_20261018_091308.txt |
+| 2026-11-09 09:14 | 54b | void: ends mid blocked-syscall list; no 629 jail call result in this capture | ends '90 dup2 ret=-1 buf[0]=0' | V | results/54b_jail_bypass_20261018_090446.txt |
+| 2026-11-09 09:14 | 54k | sys 626 RDMSR; sys 567 RDMSR read; sys 612 | === PROBE 54k COMPLETE === | M | results/54k_sys649_deep_and_rdmsr_20261018_090952.txt |
+| 2026-11-09 09:14 | 54f | sections A-F measured (598/639/638/net.route/593 scans); section G is void | 593(h=507) +0x150: 0xE8ED7E9B_97C07349; capture ends at '[G] AIO event subsystem' | M | results/54f_kaslr_deep_20261018_090603.txt |
+| 2026-11-09 09:14 | 55a | 643 accepts all 32 bits; mprotect(RWX) and fork still fail afterwards | fork: ret=4294967295 | M | results/phase14_final_push/55a_chicken_switches_20261018_094008.txt |
+| 2026-11-09 09:14 | 54d | sys 588 DMEM page attribute modify | === PROBE 54d COMPLETE === | M | results/54d_dmem_page_flip_20261018_091257.txt |
+| 2026-11-09 09:14 | 123a | void: boundary sweep ends at val=16; the qword write is not shown | val=16: ret=-1 (0xFFFFFFFF) | V | results/phase22_threaded_races/123a_sys637_kernel_write_20261022_182704.txt |
+| 2026-11-09 09:14 | 122a | physhm mmap returns a VA; the first read kills past pcall | base=0x000000031111C000 then fault dump at '[C] hex dump' | M | results/phase22_threaded_races/122a_physhm_hexdump_20261022_174827.txt |
+| 2026-11-09 09:14 | 50e2 | CVE-2026-49412 IPV6_MSFILTER UAF | === 50e2 COMPLETE === | M | results/phase23_cve_reachability/50e2_ipv6_msfilter_reach_20261022_194410.txt |
+| 2026-11-09 09:14 | 50f | CVE-2026-45257 KTLS page-cache overwrite | === 50f COMPLETE === | M | results/phase23_cve_reachability/50f_ktls_reach_20261022_194646.txt |
+| 2026-11-09 09:14 | 803d | sys 548 batch VM ops | [D] alive pid=140 | M | results/phase17_new_vectors/803d_548_op_matrix_20261026_115307.txt |
+| 2026-11-09 09:14 | 241a | 622 with the documented layout: cmd 0x100 -> 0x8002004E, cmd 0x200 -> 0xFFFFFFFF status | cmd=0x200 ret=0x0 buf[0]=0xFFFFFFFF buf[4]=0xDEADBEEF | M | results/phase17_new_vectors/241a_sys622_layout_20261021_211732.txt |
+| 2026-11-09 09:14 | 55d | void: cmd scan stops at 0x02, no 0x03/0x04 kill measured | 0x02: ret=-1 buf[0]=0 | V | results/phase14_final_push/55d_sys601_process_control_20261018_100435.txt |
+| 2026-11-09 09:14 | 55e | sys 674 VM map kernel pointer search; sys 672 dynlinker library list; sys 676 CPU mode update; sys 673 page remap; sys 675 reset global state; sys 587 credential metadata; sys 671 resource class query | === PROBE 55e COMPLETE === | M | results/phase14_final_push/55e_vm_cred_survey_20261018_100751.txt |
+| 2026-11-09 09:14 | 52a | 627-630 return PCALL-FAIL; the process dies at 631 | P1 num=631 calling now... (no return line) | M | results/phase13_52batch/52a_survey_627_676_20261018_103436.txt |
+| 2026-11-09 09:14 | 125a | sys 662 AIO batch delete | === 125a COMPLETE === | M | results/phase22_threaded_races/125a_sys662_kaslr_stackclash_20261022_192348.txt |
+| 2026-11-09 09:14 | 151a | void: op sweep stops at op=1; op 25 (SHM) never reached in this capture | op=1: ok=true ret=-1 | V | results/phase19_umtx_454/151a_umtx_shm_race_20261020_075419.txt |
+| 2026-11-09 09:14 | 353c | fstat(189) via make_syscall; AIO batch races (cancel, unmap, gen counter) | === 353c DONE === | M | results/phase17_new_vectors/353c_absent_or_rejecting_20261022_163852.txt |
+| 2026-11-09 09:14 | 334a | shape matrix: 572 answers with P00000=0*, the rest -1 | sys 572 000000=-1 P00000=0* 0P0000=-1 ... | M | results/phase17_new_vectors/334a_obj_family_shapes_20261022_124106.txt |
+| 2026-11-09 09:14 | 339a | void: three lines, dies at the first 637 call | 637(0, 0x10) = -1 | V | results/phase17_new_vectors/339a_637_598_659_20261022_124747.txt |
+| 2026-11-09 09:14 | 342a | Named evf/namedobj objects do not outlive their process | === 342a DONE === | M | results/phase17_new_vectors/342a_named_objects_after_relaunch_20261022_125458.txt |
+| 2026-11-09 09:14 | 223a | netcontrol(99) netevent queue UAF | === PROBE 223a COMPLETE === | M | results/phase17_new_vectors/223a_netcontrol_queue_scope_20261021_143212.txt |
+| 2026-11-09 09:14 | 251a | jitshm (533 jitshm_create, 534 jitshm_alias) | === PROBE 251a COMPLETE === | M | results/phase17_new_vectors/251a_jitshm_20261021_153538.txt |
+| 2026-11-09 09:14 | 252a | osem (549-556) | === PROBE 252a COMPLETE === | M | results/phase17_new_vectors/252a_osem_family_20261021_153559.txt |
+| 2026-11-09 09:14 | 254a | namedobj (557 namedobj_create, 558 namedobj_delete) | === PROBE 254a COMPLETE === | M | results/phase17_new_vectors/254a_namedobj_identity_20261021_153631.txt |
+| 2026-11-09 09:14 | 255a | 559 set_vm_container | === PROBE 255a COMPLETE === | M | results/phase17_new_vectors/255a_set_vm_container_20261021_153651.txt |
+| 2026-11-09 09:14 | 257a | 560(1)=0 opens nothing; the 561 section prints no result (the kill) | 560(16) -> -1 ... then '[B] 561 suspend_process / 562 resume_process' and stop | M | results/phase17_new_vectors/257a_process_pair_20261021_153735.txt |
+| 2026-11-09 09:14 | 348a | The GPU pool zeroes pages on allocation | === 348a DONE === | M | results/phase17_new_vectors/348a_gpu_pool_scan_20261022_154151.txt |
+| 2026-11-09 09:14 | 346b | sys 637's store is inert | === 346b DONE === | M | results/phase17_new_vectors/346b_fmem_ceiling_20261022_161726.txt |
+| 2026-11-09 09:14 | 266a | 661 with a real /dev/zero fd kills at the call | ends at '[B] 661(aiocb)' | M | results/phase17_new_vectors/266a_aio_real_fd_20261021_155530.txt |
+| 2026-11-09 09:14 | 269a | UMTX ops 18-21 (high ops) | === PROBE 269a COMPLETE === | M | results/phase17_new_vectors/269a_umtx_high_ops_20261021_160200.txt |
+| 2026-11-09 09:14 | 160f | void: ends mid round 1; the 5-7 round cascade is not in this capture | R1: C=0x0, waiting... | V | results/phase22_threaded_races/160f_pi_exit_cascade_20261023_063249.txt |
+| 2026-11-09 09:14 | 58d | CVE-2026-58093 TIOCSCTTY race UAF; CVE-2026-58099 kqueue fork race; CVE-2026-58090 unix socket receive UAF | === 58d COMPLETE === | M | results/phase26_cve_vectors/58d_tiocsctty_reachability_20261023_070440.txt |
+| 2026-11-09 09:14 | 353b | AIO fd-close race | === 353b DONE === | M | results/phase17_new_vectors/353b_lethal_reclassify_20261022_163752.txt |
+| 2026-11-09 09:14 | 410a | Object lifetimes hold at native speed | === 410a DONE === | M | results/phase17_new_vectors/410a_osem_race_20261022_225639.txt |
+| 2026-11-09 09:14 | 429a | Sys 532 handle forgery | === 429a DONE === | M | results/phase17_new_vectors/429a_sys532_user_pointer_20261022_234844.txt |
+| 2026-11-09 09:14 | 56e2 | NET_RT_DUMP kernel pointer search | === 56e2 COMPLETE === | M | results/phase13_53batch/56e2_rtdump_hexdump_20261023_095601.txt |
+| 2026-11-09 09:14 | 56e | CVE-2026-3038 sa_len=127 routing socket overflow | === 56e COMPLETE === | M | results/phase13_53batch/56e_routing_socket_deep_20261023_095248.txt |
+| 2026-11-09 09:14 | 56d5 | CClosure deep Lua stack read | === 56d5 COMPLETE === | M | results/phase13_53batch/56d5_deep_stack_read_20261023_094324.txt |
+| 2026-11-09 09:14 | 56f | sys 624 side channel | === 56f COMPLETE === | M | results/phase13_53batch/56f_624_side_channel_20261023_100614.txt |
+| 2026-11-09 09:14 | 56g3 | Sysctl deep scan | === 56g3 COMPLETE === | M | results/phase13_53batch/56g3_sysctl_deep_scan_20261023_100911.txt |
+| 2026-11-09 09:14 | 56h | void: capture is find_thrd_create, not the timing test the bullet rests on | ends 'native.get_lua_opt type=function' | V | results/phase14_cclosure_redirect/56h_find_thrd_create_20261020_090420.txt |
+| 2026-11-09 09:14 | 56m | void: op scan stops at op=1 | op= 1: ENOSYS(-1) | V | results/phase14_cclosure_redirect/56m_umtx_ops_and_thr_20261020_093600.txt |
+| 2026-11-09 09:14 | 56n | Thread ucontext kernel pointer scan; getsockopt kernel pointer scan | === 56n COMPLETE === | M | results/phase13_53batch/56n_ucontext_kptr_scan_20261023_110050.txt |
+| 2026-11-09 09:14 | 56o | Unix socket SCM_CREDS credential leak; sigaction struct kernel pointer scan; fstat deep scan + overcopy check; getdirentries kernel pointer scan | === PROBE 56o COMPLETE === | M | results/phase14_cclosure_redirect/56o_thr_create_minimal_20261020_094804.txt |
+| 2026-11-09 09:14 | 56p | getrusage padding scan; SO_TIMESTAMP / SO_BINTIME ancillary data; procctl(544) output scan; getrlimit overcopy + kptr scan | === PROBE 56p COMPLETE === | M | results/phase14_cclosure_redirect/56p_thr_create_refine_20261020_095417.txt |
+| 2026-11-09 09:14 | 56q | kevent output scan; SCM_RIGHTS fd passing WORKS; sendfile error path data leak; poll output overcopy | === PROBE 56q COMPLETE === | M | results/phase14_cclosure_redirect/56q_thr_mclen_20261020_100500.txt |
+| 2026-11-09 09:14 | 56r | Signal delivery frame (sendsig) kernel stack residue | === PROBE 56r COMPLETE === | M | results/phase14_cclosure_redirect/56r_thr_diagnostic_20261020_100748.txt |
+| 2026-11-09 09:14 | 271g | Eboot syscall instruction scan; Kqueue race condition (ZDI-26-784) | === 271g COMPLETE === | M | results/phase17_new_vectors/271g_child_thread_rop_kqueue_race_20261023_135621.txt |
+| 2026-11-09 09:14 | 275b | Sysent 679-734 | === 275b COMPLETE === | M | results/phase17_new_vectors/275b_sysent_tail_guarded_20261022_223712.txt |
+| 2026-11-09 09:14 | 56j | Syscalls 530/531/537 | === PROBE 56j COMPLETE === | M | results/phase14_cclosure_redirect/56j_native_functions_20261020_091908.txt |
+| 2026-11-09 09:14 | 56k | mprotect ret=0 on kernel/unmapped addresses | === PROBE 56k COMPLETE === | M | results/phase14_cclosure_redirect/56k_kernel_read_20261020_093127.txt |
+| 2026-11-09 09:14 | 387a | ioctl overcopy sweep: results through the camera node, zero bytes past declared length (partial, ends mid camera) | camera code=0x40084104 ret=22 mod=2 | M | results/phase17_new_vectors/387a_ioctl_overcopy_scan_20261023_150627.txt |
+| 2026-11-09 09:14 | 391a | shm_open+ftruncate+largepage mmap succeeds; capture ends at the sendfile section | largepage mmap: 0x3112A8000 *** LARGEPAGE OK *** | M | results/phase19_posixshm/391a_shm_open_retest_20261023_180734.txt |
+| 2026-11-09 09:14 | 392a | CVE-2026-49419 (jail refcount underflow); FatGid/setcred (CVE-2026-45250); CVE-2026-58094 (ZDI-26-785, FIOSSHMLPGCNF TOCTOU) | === 392a COMPLETE === | M | results/phase20_bsd_deep/392a_bsd_high_value_20261023_183045.txt |
+| 2026-11-09 09:14 | 388a | BSD-native syscall range (1-530) exhausted | === 388a COMPLETE === | M | results/phase18_bsd_native/388a_bsd_top5_exploration_20261023_161540.txt |
+| 2026-11-09 09:14 | 519a | Module data region "kernel pointers" are NaN-boxed Lua values | === DONE === | M | results/phase17_new_vectors/519a_libc_stub_bytes_20261024_134510.txt |
+| 2026-11-09 09:14 | 525a | SysV IPC completely absent | === PROBE 525a COMPLETE === | M | results/phase23_cve_2026/525a_sysv_ipc_presence_20261105_090149.txt |
+| 2026-11-09 09:14 | 524a | void: probe self-reports INCOMPLETE; capture shows 'no double delete observed', not the VM-op claim | [B] no double delete observed / === PROBE 524a INCOMPLETE === | V | results/phase17_new_vectors/524a_aio_double_delete_single_20261024_141445.txt |
+| 2026-11-09 09:14 | 435a | Object handles are predictable and generation-checked | === 435a DONE === | M | results/phase17_new_vectors/435a_kernel_gauge_20261023_001637.txt |
+| 2026-11-09 09:14 | 89a | CVE-2019-5607 ALL PATHS CLOSED | === PROBE 89a COMPLETE === | M | results/phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_165612.txt |
+| 2026-11-09 09:14 | 544a | sceKernelMapDirectMemory from main thread (544a-545g) | === PROBE 544a COMPLETE === | M | results/phase30_mapdirect_loader/544a_fcall_stub_layout_20261025_211235.txt |
+| 2026-11-09 09:14 | 546a | void: child launch ends in a fault dump, no ROP result | ends '[E] thr_create launch child' plus fault bytes | V | results/phase30_mapdirect_loader/546a_mapdm_child_20261026_090208.txt |
+| 2026-11-09 09:14 | 547a | dmem0 16GB physical memory scan for kernel; dmem0 as system RAM | === 547a DONE === | M | results/phase30_mapdirect_loader/547a_dmem0_low_phys_20261026_140353.txt |
+| 2026-11-09 09:14 | 547f | dmem1/dmem2/gc/dce/zero for kernel physical access | === 547f DONE === | M | results/phase30_mapdirect_loader/547f_dmem12_20261026_141012.txt |
+| 2026-11-09 09:14 | 548a | Sony syscall 596 (dynlib_do_copy_relocations); Sony syscall 604 (dl_get_metadata); Sony syscall 559 (set_vm_container) deep; Sony syscalls 615/613 with subcmd patterns | === 548a DONE === | M | results/phase31_sony_leak/548a_sony_leak_hunt_20261026_143900.txt |
+| 2026-11-09 09:14 | 528x | /dev/gc ioctl surface for GPU DMA | === 528x DONE === | M | results/phase27_phys_memory/528x_gpu_sdma_hunt_20261025_115659.txt |
+| 2026-11-09 09:14 | 65l | ★ AIO 662 double-free — THE BIGGEST DEAD END | === 65l COMPLETE === | M | results/phase16_kwrite/65l_aio_race_fixed_20261028_111549.txt |
+| 2026-11-09 09:14 | 68a | AIO R-object KASLR spray | === 68a DONE === | M | results/phase16_kwrite/68a_aio_uaf_readback_20261028_105844.txt |
+| 2026-11-09 09:14 | 75a | IPv6 RTHDR zone-128 spray (75a-75e) | === PROBE 75a COMPLETE === | M | results/phase16_kwrite/75a_dynlib_v2_kaslr_20261025_201254.txt |
+| 2026-11-09 09:14 | 824a | osem waiter-wake race | === PROBE 824a COMPLETE === | M | results/phase17_new_vectors/824a_osem_create_20261026_192653.txt |
+| 2026-11-09 09:14 | 803c | sys 548 W^X bypass attempt | [D] alive pid=140 | M | results/phase17_new_vectors/803c_mmap_548_protect_20261026_115236.txt |
+| 2026-11-09 09:14 | 813a | sigreturn privilege escalation | [*] alive pid=157 | M | results/phase17_new_vectors/813a_sigreturn_gate_20261026_122338.txt |
+| 2026-11-09 09:14 | 883b | thr_create child loader stub loop | [Z] alive pid=134 | M | results/phase17_new_vectors/883b_aio_padded_chain_single_20261027_001203.txt |
+| 2026-11-09 09:30 | 380a | GPU mapping read kills past pcall; the store before it reported ok | [A dump-area] write ok=true then fault bytes | M | results/phase17_new_vectors/380a_gpu_mapping_write_20261022_181716.txt |
+| 2026-11-09 09:30 | 381a | a store to an unmapped 0x7F0000000000 reports ok=true and the process stays alive — the write path swallows faults | [D unmapped] 0x7F0000000000 <- 0x44444444 ok=true / still alive | M | results/phase17_new_vectors/381a_gpu_write_control_20261022_181839.txt |
+| 2026-11-09 09:30 | 42g2 | void: dies at the kenv step header, no kenv result | --- STEP 1: KENV (syscall 390) --- | V | results/42g2_high_phys_decode_20261016_070600.txt |
+| 2026-11-09 09:30 | 152k | UMTX op 25 sub-ops answer without allocating: subop_0 ret=0, invalid op 99 ret=-1 | subop_0: ok=true ret=0x0 / invalid_op(99): ret=-1 | M | results/phase19_umtx_454/152k_shm_side_channel_20261020_104543.txt |
+| 2026-11-09 09:30 | 340a | 637 accepts a caller qword for id 0 (0x7FFFFFFF and 0xFFFFFFFF return 0) and refuses 0x0 and every foreign id | 637(0, 0xFFFFFFFF)=0 / 637(0, 0x0)=-1 / 637(1..5, 0xFFFFFFFF)=-1 | M | results/phase17_new_vectors/340a_dynlib_out_637_limit_20261022_125339.txt |
+| 2026-11-09 09:30 | 160i | void: rounds print uret=0 and the capture stops mid-run; no crash measured | R7: a=0x18A09 uret=0x0 m=0x0 | V | results/phase22_threaded_races/160i_pi_ownership_fraud_20261023_065002.txt |
+| 2026-11-09 09:30 | 160j | PI fraud diagnostic completes: gpu kptr clean, canary OK | gpu kptr: clean / canary=OK / === 160j COMPLETE === | M | results/phase22_threaded_races/160j_pi_fraud_diag_20261023_070221.txt |
+| 2026-11-09 09:30 | 160g | void: stops at the dead-owner lock step | [4] Main LOCKs mutex with dead child owner | V | results/phase22_threaded_races/160g_pi_exit_diag_20261023_063550.txt |
+| 2026-11-09 09:30 | 160h | dead-owner PI rescue completes cleanly | canary=OK / === 160h COMPLETE === | M | results/phase22_threaded_races/160h_dead_owner_rescue_20261023_064240.txt |
+| 2026-11-09 09:30 | 56i2 | mprotect timing on kernel addresses is flat across batches — noise, not signal | kern_FFFF 20817 20645 21869 20968 20696 20999 | M | results/phase13_53batch/56i2_timing_stability_20261023_101431.txt |
+| 2026-11-09 09:30 | 546d | void: fault dump during polling, no MapDM result | [F] Polling... then fault bytes | V | results/phase30_mapdirect_loader/546d_mapdm_fixed_20261026_134339.txt |
+| 2026-11-09 09:30 | 156d | child executes via marker write through make_syscall thr_create; the resolve() filter is not measured here | === PROBE 156d COMPLETE === | M | results/phase17_new_vectors/156d_thr_create_child_executes_20261025_125313.txt |
+| 2026-11-09 09:44 | 1331a | fault-oracle sweep: image mapped 0xFFFFFFFFC1000000-0xFFFFFFFFC6C00000 at 4MB resolution, stub alone at 0xFFFFFFFFC0000000; slide 0xC000000 from the 2026-11-06 boot | 25/512 present: C0000000 then C1000000..C6C00000 contiguous, spawned=512 failed=0 | M | results/1331a_20261109_094441.txt |
+| 2026-11-09 09:51 | 1341a | - | - | ? | results/phase35_dead_end_reruns/1341a_resolve_vs_raw_20261109_095129.txt |
+| 2026-11-09 09:52 | 1341a2 | syscall.resolve() installs any name->number pair (zzz20=20 became callable) and the named thr_new(455)/thr_create(430) calls return 0 with real TIDs, identical to make_syscall; the 'resolve() filter' is only the loader's 26-name registration list, while fork(2)/rfork(251) return -1 on both paths | thr_new raw/named=0 tid 0x18F0A/0x18F0B; thr_create raw/named=0 tid 0x18F0C/0x18F0D; fork/rfork=-1; table=26 names; canary OK | M | results/phase35_dead_end_reruns/1341a2_resolve_vs_raw_fixed_20261109_095214.txt |
+| 2026-11-09 09:53 | 1341b | Re-run of the uncaptured 524a surface: 645/647/648/654/655/658/660/667 all return -1 with no output written (zero kptr-shaped dwords), and 653 is the exception - 653(0) returns 22 (EINVAL) while 653(mapped, attr) returns -1, so the handler validates arg0 before the permission check | 645()=-1; 648/647/667 nothing written; 660 only echoes size; 654/655 all -1; 653(0)=22, 653(gpu,1/3/5/7/0x33)=-1; canary OK, 0.406s | M | results/phase35_dead_end_reruns/1341b_vm_ops_ordered_20261109_095307.txt |
+| 2026-11-09 09:55 | 1341c | kenv(390) called from a child thread with (0, 'kernel', buf, 0x100) never returns: the capture stops right after that child was spawned, and a fresh connection gets no script execution (a PING OK probe prints nothing), so the call blocks and wedges the loader thread | spawn(20) tid=0x18F0F; spawn(390) tid=0x18F10 then IDLE_TIMEOUT 26.4s; follow-up ping_loader: 0 bytes; child RAX unobserved | M | results/phase35_dead_end_reruns/1341c_kenv_390_child_20261109_095444.txt |
+| 2026-11-09 10:01 | 1341d | sys 601 cmd 0x04 terminates the whole process, not just the calling thread: the child faulted, the loader wrote its ucontext-shaped fault dump to the socket, the parent's own spawn line never printed, and 9026 then refused connections | last ASCII line is the [B] CALL banner, then 496 raw bytes starting 37 13 37 13; tail holds SS=0x3b, flags=0x480, type=0x10002, rflags=0x40e; ping afterwards CONNECTION_REFUSED | M | results/phase35_dead_end_reruns/1341d_sys601_cmd04_child_20261109_100048.txt |
+| 2026-11-09 10:05 | 1331a | kernel image base unchanged across the 1341c/1341d relaunches: same 25 present samples, stub alone at 0xFFFFFFFFC0000000 then a contiguous image 0xFFFFFFFFC1000000-0xFFFFFFFFC6C00000; the 512 faulting children also re-prove that an ordinary child fault is contained by the loader handler | 25/512 present, image 0xFFFFFFFFC1000000-0xFFFFFFFFC6C00000 (last present sample C6C00000), slide 0xC000000, spawned=512 failed=0 alive pid=92 | M | results/1331a_20261109_100517.txt |
+| 2026-11-09 10:06 | 1342a | sys 568 is lethal on both pointer classes: an absent arg1 kills the process just as a mapped one did, so 568 dies before it looks at its first argument | run stopped after the 'CALL 568 N' line; ping afterwards CONNECTION_REFUSED; sweep 590..676 left for the next run | M | results/phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_100539.txt |
+| 2026-11-09 10:10 | 1342a | - | - | ? | results/phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101034.txt |
+| 2026-11-09 10:11 | 1342a | - | - | ? | results/phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101145.txt |
+| 2026-11-09 10:12 | 1342a | with SIGSYS ignored the previous 'lethal' numbers are nosys slots: 568/569/589/590 plus 597/610/619/620 answer ENOSYS, so every U-pass kill at 568/569/589 was the nosys trampoline raising the signal, not a hostile handler; 568-620 also yields a full N-class map and the range's only real faulting handler is 622 | 48 calls, 568..620 minus 570/571/573/609/614/621; sigaction(12,SIG_IGN)=0; ENOSYS on 568,569,574-584,589,590,597,610,619,620; died at CALL 622 N | M | results/phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101208.txt |
+| 2026-11-09 10:14 | 1342a | arg1 pointer-class sweep completes 532-676 with no kernel read anywhere: 131 of 145 numbers measured, the K pass rejects every supervisor pointer, and only eight handlers branch on arg1 (538 and 557 mint an id, 563-566 invert, 572 and 653 flip) -- 1342a run 4 ran all three phases in one connection and survived | 157 calls, COMPLETE 0.109s, alive pid=113; N 623..676 + U 568..676 + K on 11; 27 ENOSYS stubs; no K call returned data | M | results/phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101254.txt |
+| 2026-11-09 10:18 | 1343b | - | - | ? | results/phase35_dead_end_reruns/1343b_outpage_scorer_20261109_101811.txt |
+| 2026-11-09 10:20 | 1343a | arg2 and arg3 are dereferenced by 20 and 10 handlers respectively; holding arg1 mapped and switching arg2/arg3 between mapped and absent changes the answer for those numbers, and 557 mints a different handle for every phase (16901/519/520) | 131 numbers x 3 phases, COMPLETE 0.359s, alive pid=113; 20 differ on arg2, 10 on arg3 | M | results/phase35_dead_end_reruns/1343a_arg23_classes_20261109_101720.txt |
+| 2026-11-09 10:20 | 1343b | seven syscalls write into the pages they are handed (547 region record, 592 handle list, 598 param, 638/639 time conversion, 657, 659) and none leaks a kernel pointer: every out-page holds userland addresses or small integers, and the end checkpoint was intact in all cases | 131 numbers, 7 writers, COMPLETE 34.14s, alive pid=113, no 0xFFFF8xxx value | M | results/phase35_dead_end_reruns/1343b_outpage_scorer_20261109_101855.txt |
+| 2026-11-09 10:28 | 1344a | arg2 and arg3 are class-checked by the same copyin/copyout as arg1: with the boot's kernel image base in either slot, every handler that touches the pointer answers EFAULT and none returns 0 while writing, so no call in 532-676 writes through a pointer it never validated | 131 numbers; 21 change with arg2=K, 10 with arg3=K, all EFAULT/EINVAL/ESRCH, alive pid=113 | M | results/phase35_dead_end_reruns/1344a_arg23_kernel_class_20261109_102818.txt |
+| 2026-11-09 10:28 | ping | - | - | ? | results/ping_loader_20261109_102815.txt |
+| 2026-11-09 10:30 | 1345a | no handler in 532-676 dereferences args four to six: with args 1-3 mapped and each of arg4/5/6 switched between a mapped page and zero, only 557's object id and 624's VM-op counter move, so the fourth-to-sixth positions are scalars everywhere in the range | 131 numbers x 4 phases, 2 differences (557 id 525-528, 624 counter 3480-3483), alive pid=113 | M | results/phase35_dead_end_reruns/1345a_arg456_classes_20261109_102955.txt |
+| 2026-11-09 10:46 | 1346a | sys 622 low dispatch table has a live entry at cmd 0x00 that kills with a null arg3. | died at cmd 0x00 before any post-call line; 110-byte capture | M | results/phase35_dead_end_reruns/1346a_sys622_low_commands_20261109_104306.txt |
+| 2026-11-09 10:46 | 1347a | 622 cmd 0x372 is auth-gated and cmd 0x520's callee refuses; low commands 0x01-0x0F kill. | 0x372 -> ret 0 buf 0x8002004E on all 32 subs; 0x520 -> -1 on all 32; died inside 0x01..0x0F | M | results/phase35_dead_end_reruns/1347a_sys622_low_resume_20261109_104444.txt |
+| 2026-11-09 10:46 | 1348a | A mapped zero page in arg3 does not rescue low cmd 0x01, so the kill is not a copyin from a bad pointer. | died at cmd 0x01; 130-byte capture | M | results/phase35_dead_end_reruns/1348a_sys622_low_page_20261109_104528.txt |
+| 2026-11-09 10:54 | 1351a | 622 cmd 0x01's process kill is not a catchable fatal signal: with SIG_IGN on 5/6/7/8/12/24-26/30/31 the call still ends the process. | sigaction readback handler=1 for sig 12; killed at the first 622(0x01) call, no canary line | M | results/phase35_dead_end_reruns/1351a_sys622_kill_signal_20261109_105100.txt |
+| 2026-11-09 11:00 | 1350a | - | - | ? | results/phase35_dead_end_reruns/1350a_sys622_kill_containment_20261109_110035.txt |
+| 2026-11-09 11:01 | 1349a | 622 cmd 0x01 kills with a self-referential page too, so the low-command kill is not a NULL deref of the supplied struct. | died in [A] before the canary; [B] and [C] never ran | M | results/phase35_dead_end_reruns/1349a_sys622_low_deref_20261109_105753.txt |
+| 2026-11-09 11:01 | 1350b | A 622 kill in a spawned Lua thread takes the whole process. | thread printed T-ENTER then the connection ended; main never printed MAIN-2 | M | results/phase35_dead_end_reruns/1350b_sys622_kill_containment_20261109_110109.txt |
+| 2026-11-09 11:01 | 1352a | 532 dispatches for a game process on exactly the codes its priv_check failure path allows. | 0x1E and 0x2F rv=0 status 0; 0x20 0x800D0219 at size 0x30 and 0x800D0208 elsewhere; 0x18/0x19 0x800D0203; 0x1F -1 | M | results/phase35_dead_end_reruns/1352a_sys532_unpriv_commands_20261109_105538.txt |
+| 2026-11-09 11:01 | 1353a | 532 cmd 0x2F zeroes its arg3 buffer, 0x1E returns 3 for any non-zero input, and the 0x18/0x19 lookup changes code with the first input dword. | 0x2F zeroed 12 dwords of input; 0x1E status 3 for zero-fill variants with a non-zero dword, 0 for all zeros; 0x18/0x19 in[0]!=0 -> 0x800D0204 | M | results/phase35_dead_end_reruns/1353a_sys532_low_step2_20261109_105622.txt |
+| 2026-11-09 11:01 | 1354a | 532 cmd 0x2F is a caller-length zero fill whose destination is validated. | size follows arg4 (0x30/0x40/0x100 -> 12/16/64 dwords); unmapped user 0x1000 and kernel 0xFFFFFFFFC1000000 both answer 0x800D0210 | M | results/phase35_dead_end_reruns/1354a_sys532_write_dest_20261109_105712.txt |
+| 2026-11-09 11:12 | 1355a | 601 cmd 0x12 returns -1 even with arg2 pointing at a mapped 0x20-byte block; the consumer sweep died at cmd 0x1B | 0x12 = -1 twice; died at 0x1B | M | results/phase35_dead_end_reruns/1355a_sys601_cmd12_shape_20261109_110324.txt |
+| 2026-11-09 11:12 | 1356a | 601 cmd 0x12 answers EFAULT for a mapped, an unmapped and a null arg2 alike (arg1 nonzero gives EINVAL), and cmd 0x0C wedges the loader until relaunch | 0x12 errno=14 x3, arg1=buf errno=22; 0x0C hang; connection idle-timeout at 30s | M | results/phase35_dead_end_reruns/1356a_sys601_eno_20261109_110852.txt |
+| 2026-11-09 11:21 | 1357a | 601 cmd 0x12 is live on 14.10: qword1!=0 returns ENOENT and qword1==0 returns EFAULT, exactly the 13.60 flag-clear path | 0x12 {0,1} -> -1 errno=2; {0,0} -> -1 errno=14; {0x1000,1} -> -1 errno=2; died at 0x11 | M | results/phase35_dead_end_reruns/1357a_sys601_cmd12_gate_20261109_111650.txt |
+| 2026-11-09 11:23 | 1331a | kernel image base for the 2026-11-09 11:23 boot is 0xFFFFFFFFC1000000, unchanged from the 09:44 measurement after the user rebooted the console | 25/512 present: stub C0000000 alone, image C1000000-C6C00000 on the 4MB grid, next absent C7000000 | M | results/1331a_20261109_112311.txt |
+| 2026-11-09 11:33 | 1359a | syscall 417 installs a caller-written trapframe verbatim: patching RIP to 0x10000 produced a SIGSEGV whose dumped frame carries RIP=0x10000, CS=0x43, SS=0x3B | signo=11, mcontext RIP=0x10000 CS=0x43 RFLAGS=0x10202 RSP=0x31111C868 SS=0x3B; loader died after the dump | M | results/phase35_dead_end_reruns/1359a_sys417_frame_ride_20261109_113019.txt |
+| 2026-11-09 11:33 | 1358a | 417 accepts an unchanged frame (ret=0) and dies when only CS is set to 0x08, the ring-0 code selector | B: 417 unchanged ret=0 and caller continued; C: CS=0x08 -> no further output | M | results/phase35_dead_end_reruns/1358a_sys417_selectors_20261109_112355.txt |
+| 2026-11-09 11:35 | 1360a | - | - | ? | results/phase35_dead_end_reruns/1360a_eboot_ring0_gadgets_20261109_113530.txt |
+| 2026-11-09 11:39 | 1361a | - | - | ? | results/phase35_dead_end_reruns/1361a_eboot_gadgets_dword_20261109_113907.txt |
+| 2026-11-09 11:39 | 1362a | - | - | ? | results/phase35_dead_end_reruns/1362a_sys547_record_shape_20261109_113946.txt |
+| 2026-11-09 11:40 | 1364a | - | - | ? | results/phase35_dead_end_reruns/1364a_eboot_gadgets_range_20261109_114043.txt |
+| 2026-11-09 11:41 | 1364a | - | - | ? | results/phase35_dead_end_reruns/1364a_eboot_gadgets_range_20261109_114123.txt |
+| 2026-11-09 11:42 | 1364a | - | - | ? | results/phase35_dead_end_reruns/1364a_eboot_gadgets_range_20261109_114214.txt |
+| 2026-11-09 11:47 | 1365a | - | - | ? | results/phase35_dead_end_reruns/1365a_chain_gadget_validate_20261109_114725.txt |
+| 2026-11-09 11:59 | 1367b | the ring-0 chain runs (dump RIP = the chain's own return-frame value) but the return is structurally broken: with CS=0x08 the kernel skips its swapgs, so userland resumes with GS = the kernel per-CPU base and libkernel's post-syscall code dies at si_addr 0x16 -- pointing rax/rsi/rdi at a self-referential page changes nothing | signo=SIGBUS, si_addr=0x16, mcontext RIP=0x81B6F8B5C (= resumed stub), CS=0x43, RFLAGS=0x202, RSP=0x311374868, SS=0x3B | M | results/phase35_dead_end_reruns/1367b_ring0_safe_return_20261109_115658.txt |
+| 2026-11-09 12:00 | 1367c | - | - | ? | results/phase35_dead_end_reruns/1367c_ring0_two_qword_dump_20261109_120047.txt |
+| 2026-11-09 12:29 | 1366a | VOID: 1366a did not reach CPL0 -- the dump's mcontext is the pre-417 user context (mc_rax=0x1A1=417, mc_rdi=the frame buffer, mc_err=2), which 1367d proved by installing a 0x10000 landmark and getting the pre-417 context back instead | signo=10, mc_rip=live post-syscall, mc_cs=0x43, mc_err=2 | V | results/phase35_dead_end_reruns/1366a_ring0_kernel_read_20261109_115002.txt |
+| 2026-11-09 12:29 | 1367d | 417 with a kernel CS faults inside the kernel and never installs the frame: a frame carrying CS=0x08 plus a 0x10000 landmark RIP produces the same pre-417 SIGBUS dump as the earlier chain probes, so no ring-0 code has ever executed on 14.10 | signo=10, mc_rip=0x83A2D4B5C (live), mc_cs=0x43, mc_err=2, mc_rax=0x1A1, no 0x10000 anywhere | M | results/phase35_dead_end_reruns/1367d_chain_reach_qword_20261109_122935.txt |
+| 2026-11-09 12:30 | 1369a | - | - | ? | results/phase35_dead_end_reruns/1369a_sys669_tail_leak_20261109_123052.txt |
+| 2026-11-09 12:32 | 1370a | sys 669's 16-byte destination write is deterministic per file offset (identical bytes across 8 calls at 0x1000, and 2 at 0x2000), so it is request payload, not uninitialised kernel memory -- the 4-byte over-copy in the 13.60 listing does not leak on 14.10 | offset 0x1000 -> 04936EDF 72609230 5F745831 E6C92398 eight times; offset 0x2000 -> 3E0FE1C5 ... twice; unmapped and null destination both ret=0 | D | results/phase35_dead_end_reruns/1370a_sys669_determinism_20261109_123204.txt |
+| 2026-11-09 12:33 | 1371a | - | - | ? | results/phase35_dead_end_reruns/1371a_sys601_writer_sweep_20261109_123328.txt |
+| 2026-11-09 12:41 | 1372a | sys 601 reaches at most a status word: 0x10 with a null arg2 writes nothing, 0x1C returns -1 with a null arg2 but kills the process when arg2 is a valid pointer, so the 0x1000-byte alloc-and-copyout block at ca0d6c is not 0x10 or 0x1C | 0x10 arg2=0 rv=-1 wrote=0; 0x1C arg2=0 rv=-1 wrote=0; 0x1C arg2=ptr -> process death, no further output | M | results/phase35_dead_end_reruns/1372a_sys601_high_commands_20261109_124039.txt |
+| 2026-11-09 12:42 | 1372b | no 601 command in 0x00-0x26 writes more than a status dword into arg1: 0x1D and 0x20 return 0 with no write under both arg2 shapes, 0x1E-0x1F and 0x21-0x26 return -1, so the 0x1000-byte alloc-and-copyout block at ca0d6c is not reachable as any non-lethal command | 0x1D rv=0 0x20 rv=0 (no write, both shapes); 0x1E,0x1F,0x21-0x26 rv=-1; process survived to COMPLETE | D | results/phase35_dead_end_reruns/1372b_sys601_high_null_20261109_124221.txt |
+| 2026-11-09 12:43 | 1373a | sys 601 moves no 0x1000-byte block through arg1 in any non-lethal command: the return value for 0x1C/0x10/0x1D/0x20/0x00/0x0E/0x1A/0x0D/0x13/0x14/0x19 is identical when arg1 has a 0x4000-byte run, an 8-byte tail or is unmapped, so the ca0d6c alloc-and-copyout block is not reachable in 0x00-0x26 and 601 is closed as a read surface (this also makes 1372b's direction-blind D verdict sound) | every command room=tail; only 0x00/0x0E/0x1A read arg1 (2/2/1 dwords, unmapped -> EFAULT) | M | results/phase35_dead_end_reruns/1373a_sys601_transfer_direction_20261109_124318.txt |
+| 2026-11-09 12:49 | 1374a | the arg1-class sweep over 1-531 hangs inside its baseline pass; sys 95 (fsync) is the only NO_OUTPUT number below the next progress mark, so it is the candidate and 95/432/530 are now skipped | 89 bytes: pid=261, sigign=10/10, then no output for 30 s | V | results/phase35_dead_end_reruns/1374a_arg1_classes_bsd_20261109_124849.txt |
+| 2026-11-09 12:57 | 1374a | second attempt with the three doc NO_OUTPUT numbers skipped hangs at syscall 93 instead, so the BSD range blocks in more than one place and cannot be swept in one thread | hung at marker Z93; 95/432/530 already skipped; loader accepts TCP and returns 0 bytes afterwards | V | results/phase35_dead_end_reruns/1374a_arg1_classes_bsd_20261109_125432.txt |
+| 2026-11-09 13:01 | 1375a | - | - | ? | results/phase35_dead_end_reruns/1375a_arg1_sweep_threaded_20261109_130102.txt |
+| 2026-11-09 13:03 | 1376a | arg1 = a mapped user page over 1-73: most of the BSD range is nosys (errno 78), the identity calls answer (getpid 278, getppid 54, getuid/geteuid/getegid/getgid 1), compat10.pipe returns 22, and mprotect (74) faults the caller on a mapped heap page with len 0 and prot 0 | n=2..73 measured; died inside 74 (mprotect); sigign 10/10 held | M | results/phase35_dead_end_reruns/1376a_arg1_user_sweep_20261109_130223.txt |
+| 2026-11-09 13:05 | 1376b | arg1 = mapped user page over 75-340 classifies the BSD range: 212 numbers are nosys (errno 78), 123 are real handlers with specific errnos (socket EAFNOSUPPORT, ioctl ENOTTY, kill ESRCH, madvise/mincore/mlock/msync/poll/sync return 0), and sigsuspend (341) blocks by design | 265 numbers measured, stopped at n=341 (sigsuspend); loader wedged | M | results/phase35_dead_end_reruns/1376b_arg1_user_sweep_75_20261109_130404.txt |
+| 2026-11-09 13:07 | 1376c | sigpending (343) copies out four zero dwords for a null sigset argument; sigtimedwait (345) blocks with a null timeout, so the wait family 346/359/363/402/429/441/522 and 417 are skipped | 342 ENOSYS, 343 rv=0 wrote 4 dwords, stopped at 345 | M | results/phase35_dead_end_reruns/1376c_arg1_user_sweep_342_20261109_130627.txt |
+| 2026-11-09 13:09 | 1376d | getcontext (421) is a working 280-byte context copyout to a caller buffer and ksem_init/ksem_open (404/405) accept a real pointer and write an id; thr_exit (431) ends the loader's own thread, so the threading family is skipped | 79 numbers measured 346-430, stopped at 431 (thr_exit) | M | results/phase35_dead_end_reruns/1376d_arg1_user_sweep_346_20261109_130840.txt |
+| 2026-11-09 13:25 | 1376e | 433-531 is entirely nosys: 433 is the last real handler (ESRCH) and every number above it is ENOSYS with SIGSYS ignored, so the BSD-native range has no handler past 430 | 88 numbers 433-531, 0 non-negative, all errno 78 | M | results/phase35_dead_end_reruns/1376e_arg1_user_sweep_433_20261109_132246.txt |
+| 2026-11-09 13:25 | 1377a | the five BSD copy-out handlers (116/343/404/405/421) answer EFAULT for a supervisor destination, so the destination predicate holds and the range holds no kernel read | 24 live rows, 12 identical, 5 EFAULT wrote=0, 65/75 EINVAL, 78 ENOMEM | M | results/phase35_dead_end_reruns/1377a_arg1_kernel_class_bsd_20261109_132333.txt |
+| 2026-11-09 13:27 | 1378a | - | - | ? | results/phase35_dead_end_reruns/1378a_sys677_sigign_20261109_132716.txt |
+| 2026-11-09 13:28 | 1379a | - | - | ? | results/phase35_dead_end_reruns/1379a_dev_write_gate_20261109_132830.txt |
+| 2026-11-09 13:29 | 1380a | - | - | ? | results/phase35_dead_end_reruns/1380a_dev_bt_camera_write_20261109_132901.txt |
+| 2026-11-09 13:30 | 1381a | - | - | ? | results/phase35_dead_end_reruns/1381a_hmd2_cmd_sweep_20261109_133040.txt |
+| 2026-11-09 13:31 | 1382a | - | - | ? | results/phase35_dead_end_reruns/1382a_hmd2_bc_ladder_20261109_133124.txt |
+| 2026-11-09 13:34 | 1383a | 601's 14.10 command table is reduced and gated: 0x00 arg1 is the output buffer, 0x01 copies 16 bytes from arg1 and answers EINVAL, 0x02/0x05/0x06 are ENOSYS, 0x0A is EPERM, and 0x0C blocks the caller forever rather than killing | 0x00 a1 rv=0 writes 0x100+0; 0x01 a1 EINVAL(22) / 0/0 EFAULT(14); 0x07,0x09,0x0B rv=0; 0x0C IDLE_TIMEOUT with the connection open | M | results/phase35_dead_end_reruns/1383a_sys601_shape_matrix_20261109_133353.txt |
+| 2026-11-09 14:00 | 1383b | 601's 14.10 table: 0x0D returns 0 silently, 0x0E writes two zero dwords only when arg1 is a buffer, 0x0F EPERM, 0x10 EINVAL, and 0x11 with arg2 non-null kills the process | 0x0D rv=0 all shapes; 0x0E 0/0 EFAULT(14) but a1 rv=0 wrote 2 dwords; 0x0F EPERM(1); 0x10 EINVAL(22); 0x11 0/0 EFAULT(14), a1 EINVAL(22), a2 -> CONNECTION_REFUSED after 8.8 s | M | results/phase35_dead_end_reruns/1383b_sys601_shape_matrix2_20261109_135948.txt |
+| 2026-11-09 14:00 | 1384a | - | - | ? | results/phase35_dead_end_reruns/1384a_sys601_cmd01_payload_20261109_140049.txt |
+| 2026-11-09 14:01 | 1384a | 601 cmd 0x01 is EINVAL for every flags word and every 16-byte struct shape tried, and its twin 0x24 is EPERM for all of them, so the 13.60 flags-word model does not reproduce on 14.10 | 32 flags x 24 struct shapes: 0x01 EINVAL(22) in every case, 0x24 EPERM(1) in every case; 0x12 with arg1=buffer arg2=0 is EINVAL(22) | M | results/phase35_dead_end_reruns/1384a_sys601_cmd01_payload_20261109_140135.txt |
+| 2026-11-09 14:02 | 1387a | - | - | ? | results/phase36_realargs/1387a_bsd_realargs_leak_sweep_20261109_140206.txt |
+| 2026-11-09 14:04 | 1385a | Opening every /dev node the process can open does not install the 601 attach object: 0x01-adjacent commands answer identically before, during and after | 0x00 rv=0 writes 0x100, 0x0A EPERM(1), 0x0E EFAULT(14), 0x12 EFAULT(14), 0x13 rv=0 - identical with 0, 14 and 2 descriptors open | M | results/phase35_dead_end_reruns/1385a_sys601_attach_by_open_20261109_140401.txt |
+| 2026-11-09 14:06 | 1387a | The real-descriptor sweep is still blocked by process-control numbers: 1 is exit and 2 is fork, both fatal to the loader, so the sweep now skips them | run 1 died at n=1, run 2 died at n=2 after 8.8 s; skip set now includes 0,1,2 plus the 1376a-1376e union | V | results/phase36_realargs/1387a_bsd_realargs_leak_sweep_20261109_140419.txt |
+| 2026-11-09 14:08 | 1388a | - | - | ? | results/phase35_dead_end_reruns/1388a_sys601_cmd12_consumer_20261109_140806.txt |
+| 2026-11-09 14:09 | 1389a | 601 cmd 0x12 is not reachable on 14.10 with any identifier-shaped 0x20-byte block, and its consumer sweep finds no writer beyond the known zero-dword 0x0E/0x1A paths | 12 identifier shapes + 4 pointer shapes: rv=-1 every time (EFAULT when block+8 is zero, ENOENT otherwise); consumer sweep 0x00/0x0E/0x1A write only zero dwords | M | results/phase35_dead_end_reruns/1389a_sys601_cmd12_ids_20261109_140845.txt |
+| 2026-11-09 14:10 | 1390a | The /dev read path is closed as well: only /dev/usb returns data (280 bytes of USB descriptors) and every other node answers ENOTTY or a Sony error, with fstat returning an ordinary 120-byte stat record | usb read rv=280 descriptor bytes; 17 nodes ENOTTY(19); hmd_cmd 0x81110106, hmd2_cmd 0x8a721006, camera 0x802e0010; fstat rv=0 with mode 0x000021A4-0x000021FF and no kernel qword | M | results/phase35_dead_end_reruns/1390a_dev_read_path_20261109_140949.txt |
+| 2026-11-09 14:10 | 1331a | - | - | ? | results/1331a_20261109_141053.txt |
+| 2026-11-09 14:12 | 1391a | No syscall in 532..676 treats an argument as a kernel pointer: a mapped supervisor page and an absent one produce identical returns, errnos and buffers everywhere | 131 numbers x 3 kernel classes: zero differences; 532(0x2F) copies only the constant status 0x800D0210 into a user out-pointer after a failed copyin | M | results/phase35_dead_end_reruns/1391a_kernel_arg_sweep_20261109_141210.txt |
+| 2026-11-09 14:13 | 1392a | A user struct whose contents are kernel addresses produces no kernel-band output anywhere in 532..676, so no handler feeds a struct-embedded pointer to an unchecked kernel read | 131 numbers x 2 patterns, zero kernel-band dwords; only 557 differs (handle 16901 vs 518); 532 dispatcher writes only its status word | M | results/phase35_dead_end_reruns/1392a_struct_smuggle_20261109_141321.txt |
+| 2026-11-09 14:14 | 1393a | - | - | ? | results/phase35_dead_end_reruns/1393a_sys601_cmd11_kernel_arg2_20261109_141450.txt |
+| 2026-11-09 14:15 | 1394a | - | - | ? | results/phase35_dead_end_reruns/1394a_sys601_cmd11_field_deref_20261109_141535.txt |
+| 2026-11-09 14:17 | 1395a | - | - | ? | results/phase35_dead_end_reruns/1395a_dev_mmap_offset_wrap_20261109_141728.txt |
+| 2026-11-09 14:18 | 1395a | Device mmap is bounded by offset and the address map, but /dev/gc and /dev/dmem0/1 do map pages a game process can read, and dmem0 at offset 0 exposes the GPU register block while /dev/gc reads all-ones | dmem0/dmem1 off=0 reads 80000000C0012800 80000000 80000000 C0001200... (GPU regs), off=0x1000 zeros, >=0x10000000 refused; /dev/gc off 0 and 0x1000 map and read 0xFFFFFFFF, larger offsets EINVAL; dmem2/dce refuse all; MAP_FIXED at kernel addrs EINVAL; wrapping lengths EINVAL | M | results/phase35_dead_end_reruns/1395a_dev_mmap_offset_wrap_20261109_141742.txt |
+| 2026-11-09 14:21 | 1396a | blockpool_open(653) mints live file descriptors for a game process on 14.10 -- fd 22 / 23 / 527 for flags 0 / 0x100000 / 0x400000, EMFILE for 0x500000, EINVAL outside the 0x100000\|0x400000 mask -- so every earlier '653(0) = 22 EINVAL' reading was a descriptor number misread as an errno | 653(0)=22 653(0x100000)=23 653(0x400000)=527 653(0x500000)=-1/EMFILE(24) 653(1\|0x200000\|0x1000\|0x10000000)=-1/EINVAL; fstat and mmap(0x40000,PROT_RW,SHARED,off 0) on each descriptor refuse EINVAL; 657(fd)=0 | M | results/phase36_realargs/1396a_blockpool_open_20261109_142118.txt |
+| 2026-11-09 14:22 | 1397a | - | - | ? | results/phase36_realargs/1397a_blockpool_map_probe_20261109_142241.txt |
+| 2026-11-09 14:23 | 1398a | - | - | ? | results/phase36_realargs/1398a_blockpool_type_hunt_20261109_142336.txt |
+| 2026-11-09 14:24 | 1399a | - | - | ? | results/phase36_realargs/1399a_blockpool_device_20261109_142445.txt |
+| 2026-11-09 14:36 | 1396b | dmem0/dmem1 are two descriptors on one writable backing store: a store at offset 0x1000 is visible through a second mapping and through dmem1 | store landed, both readers saw it; prot 3 at offsets 0 and 0x1000 | M | results/phase36_realargs/1396b_dev_map_writable_20261109_142603.txt |
+| 2026-11-09 14:36 | 1397b | every dmem0 offset 0..0x10000000 maps with both prot 1 and prot 3; 1395a's EINVAL was an argument-shape artifact | all rungs mapped; rung 0x1000 held the 1396b marker, rest zero | M | results/phase36_realargs/1397b_dmem_offset_ladder_20261109_142645.txt |
+| 2026-11-09 14:36 | 1397c | the prot=1 mapping of a dmem page faults on store, so the window is only writable with prot 3 | death on store into prot=1 map; capture tail is the loader mcontext dump | M | results/phase36_realargs/1397c_dmem_ladder_contents_20261109_142729.txt |
+| 2026-11-09 14:36 | 1397d | dmem0 offsets to 4 GiB map, 8 GiB and up give EACCES, single mappings to 2 GiB succeed, and page 0 is a structured table not flat registers | 0x100000000 mapped, 0x200000000 EACCES(13); 48 records at 0x800 stride 0x14 | M | results/phase36_realargs/1397d_dmem_extent_regs_20261109_142819.txt |
+| 2026-11-09 14:36 | 1397e | dmem offsets are contiguous 4 KiB rungs of one allocation and page 0 is a static header, not live metadata for the window | marker written at rung 0x2000 appeared at second mapping +0x1000; page 0 unchanged | M | results/phase36_realargs/1397e_dmem_page0_liveness_20261109_142921.txt |
+| 2026-11-09 14:36 | 1397f | only 12 of the first 256 dmem pages are non-zero, and a 16 MiB-granular scan of the whole 4 GiB finds exactly one populated rung (offset 0) | pages 0x000, 0x001-0x004 our markers, 0x00F, 0x011-0x016; 1 of 256 rungs non-zero | M | results/phase36_realargs/1397f_dmem_content_map_20261109_143000.txt |
+| 2026-11-09 14:36 | 1397g | the populated dmem block at 0xF000 holds BEEB03FF records plus the ASCII string 'OrbisMemory ONION', and page 0x17000 faults even inside a mapping that spans it | structure at 0xF000/0x103C0/0x11000; fault on 0x17000 read | M | results/phase36_realargs/1397g_dmem_f000_dump_20261109_143115.txt |
+| 2026-11-09 14:36 | 1397h | the block-liveness probe died in its own diff loop before producing a comparison, so it carries no measurement | Lua error: attempt to index field '?' (a number value) at line 101 | V | results/phase36_realargs/1397h_dmem_block_liveness_20261109_143213.txt |
+| 2026-11-09 14:36 | 1397i | the populated dmem block is byte-identical across a 1.5 s sleep, and the pages this session wrote are zero again after the process changed, so the allocation is per-process while the populated structures are kernel-initialised | 0 of 23 pages changed; markers from 1396b gone at pid 357 | M | results/phase36_realargs/1397i_dmem_block_checksum_20261109_143254.txt |
+| 2026-11-09 14:36 | 1397j | page 0 of the dmem window is ordinary writable RAM: a store into its zero tail lands, survives 500 ms, and is visible through a fresh mapping while the populated records stay untouched | +0xBF0 AAAA5555/11112222 read back through a second mapping; page 16 +0xF00 BBBB6666 | M | results/phase36_realargs/1397j_dmem_page0_write_20261109_143351.txt |
+| 2026-11-09 14:36 | 1397k | the dmem 0x800 record table is descriptive only: rewriting record[0].addr and remapping leaves offset 0x000 unchanged, and the table ends at record 47 | offset 0x000 still C0012800/80000000 after C0038000->C0039000 and ->0; last non-zero record 47 | M | results/phase36_realargs/1397k_dmem_record_steer_20261109_143442.txt |
+| 2026-11-09 14:36 | 1397l | the records do not steer the 0xF000 window: pointing record[0] at the next physical chunk or at zero changes nothing after munmap/mmap | 0xF000 reads BEEB03FF... before, after C0039000, after 0x00000000, and after restore | M | results/phase36_realargs/1397l_dmem_steer_f000_20261109_143526.txt |
+| 2026-11-09 14:42 | 1400a | 601 cmd 0x11 kills the process even with an all-zero struct, so its body dereferences a field the caller cannot supply safely: every shape tried is lethal | death after 'calling 601(0x11,0,page)' with a zeroed page; 184-byte capture | M | results/phase36_realargs/1400a_sys601_cmd11_struct_20261109_144119.txt |
+| 2026-11-09 15:18 | 1401a | - | - | ? | results/phase36_realargs/1401a_sys601_cmd12_errno_20261109_151844.txt |
+| 2026-11-09 15:23 | 1401a | 601 cmd 0x12 on 14.10: a null arg1 answers EFAULT, a mapped arg1 answers EINVAL, so a content-independent gate sits after the pointer check | 12(0,x)=EFAULT(14); 12(addr,x)=EINVAL(22); copyin bounds exact at addr+0x10000-0x08 | M | results/phase36_realargs/1401a_sys601_cmd12_errno_20261109_151911.txt |
+| 2026-11-09 15:23 | 1402a | 601 cmd 0x12's EINVAL does not depend on any single struct qword or on arg2, so the gate reads process state rather than caller data | 60 shapes, all EINVAL(22); q1-q3 over {1..0xFFFFFFFF}; arg2 over {0,1,8,0x100,0x4000,page} | M | results/phase36_realargs/1402a_sys601_cmd12_field_gate_20261109_152003.txt |
+| 2026-11-09 15:23 | 1403a | 601 errno map for 22 commands plus the discovery that 0x12(0,mapped) answers ENOENT, so EFAULT comes from the destination and EINVAL is a range rejection of arg1 | 0x12(0,out)=ENOENT(2) ch=0; 0x0A/0x0F/0x18=EPERM; 0x02/0x05/0x06/0x16/0x17=ENOSYS; 0x10/0x15=EINVAL; died at cmd 0x1C | M | results/phase36_realargs/1403a_sys601_write_dest_map_20261109_152155.txt |
+| 2026-11-09 15:25 | 1404a | - | - | ? | results/phase36_realargs/1404a_sys601_cmd12_index_20261109_152525.txt |
+| 2026-11-09 15:25 | 1405a | - | - | ? | results/phase36_realargs/1405a_sys601_cmd12_field_20261109_152556.txt |
+| 2026-11-09 15:26 | 1406a | - | - | ? | results/phase36_realargs/1406a_sys601_cmd12_qword8_20261109_152629.txt |
+| 2026-11-09 15:26 | 1407a | - | - | ? | results/phase36_realargs/1407a_sys601_cmd12_key_class_20261109_152658.txt |
+| 2026-11-09 15:27 | 1408a | - | - | ? | results/phase36_realargs/1408a_sys601_producer_map_20261109_152747.txt |
+| 2026-11-09 15:29 | 1409a | - | - | ? | results/phase36_realargs/1409a_637_dmem_ceiling_20261109_152907.txt |
+| 2026-11-09 15:33 | 1413a | - | - | ? | results/phase36_realargs/1413a_dmem_ioctl_acl_20261109_153304.txt |
+| 2026-11-09 15:35 | 1409a | 637 does not move the dmem window: 637(0,0xFFFFFFFFFFFFF000) answers EINVAL and every offset keeps its previous answer | 637=-1 errno=22; offsets unchanged | M | results/phase36_realargs/1409a_637_dmem_ceiling_20261109_152941.txt |
+| 2026-11-09 15:35 | 1410a | the dmem offset space is two ACL windows, not a ceiling: 4 GiB contiguous plus a lone rung at exactly 0x1000000000 | 6 of 513 rungs map; first refusal 0x140000000 | M | results/phase36_realargs/1410a_dmem_offset_space_20261109_153054.txt |
+| 2026-11-09 15:35 | 1411a | dmem mmap validates offset+length, and the 64 GiB window is granted read-only (prot 0/1 only) | off=0,len=0x140000000 -> EACCES; 64 GiB prot=3 -> EACCES | M | results/phase36_realargs/1411a_dmem_range_check_20261109_153133.txt |
+| 2026-11-09 15:35 | 1412a | the 64 GiB dmem window is read-only, ~16-64 MiB wide, and reads as zeros except +0x120=2 | 1 of 256 dwords non-zero; prot 2/3/5/7/0x13 all EACCES | M | results/phase36_realargs/1412a_dmem_64g_window_20261109_153207.txt |
+| 2026-11-09 15:35 | 1413a | every /dev/dmem ioctl in the 0x80 group answers EPERM and no /dev/dmem/cntN node exists | 10 commands all -1 errno=1 | M | results/phase36_realargs/1413a_dmem_ioctl_acl_20261109_153310.txt |
+| 2026-11-09 15:35 | 1414a | the dmem node has no read or write path at all - pread/pwrite answer ENXIO at every offset including ones mmap refuses | rv=-1 errno=19 for 0/0x1000/0x120000000/0x1000000000 | M | results/phase36_realargs/1414a_dmem_readwrite_offsets_20261109_153451.txt |
+| 2026-11-09 15:36 | 1415a | - | - | ? | results/phase36_realargs/1415a_sys601_sequence_20261109_153605.txt |
+| 2026-11-09 15:43 | 1416a | - | - | ? | results/phase36_realargs/1416a_blockpool_open_20261109_154348.txt |
+| 2026-11-09 15:45 | 1417a | - | - | ? | results/phase36_realargs/1417a_blockpool_descriptor_20261109_154513.txt |
+| 2026-11-09 15:48 | 1418a | - | - | ? | results/phase36_realargs/1418a_sys673_remap_shape_20261109_154819.txt |
+| 2026-11-09 15:51 | 1419a | - | - | ? | results/phase36_realargs/1419a_sys628_container_sweep_20261109_155132.txt |
+| 2026-11-09 15:53 | 1420a | - | - | ? | results/phase36_realargs/1420a_cold_628_and_pool_fd_20261109_155321.txt |
+| 2026-11-09 15:55 | 1421a | - | - | ? | results/phase36_realargs/1421a_umtx_kernel_addr_20261109_155519.txt |
+| 2026-11-09 15:59 | 1422a | the 14.10 sysent ends at 676: every number 677-735 and every out-of-range value answers ENOSYS(78) with SIGSYS ignored, while 676 answers EINVAL, so 275b's 'sysent extends past 676' banner is wrong | 677-735 all -1/ENOSYS; 676 -1/EINVAL; controls 568 nosys, 596 rv=0, 557 rv=0x4205 | M | results/phase36_realargs/1422a_sysent_tail_errno_20261109_155915.txt |
+| 2026-11-09 16:01 | 1423a | the only socket families a game process can create are AF_UNIX, AF_INET, AF_ROUTE and AF_INET6 - families 3-27 and 29-45 all answer EAFNOSUPPORT(47) with type 1/2/3 | 1/2/17/28 open; AF_NETGRAPH(32) and every other family -1 EAFNOSUPPORT; family numbering per FreeBSD 11 sys/socket.h (28=INET6 not NATM) | M | results/phase36_realargs/1423a_af_space_20261109_160029.txt |
+| 2026-11-09 16:01 | 1424a | PF_KEY(27), bluetooth(36), ATM(30), netgraph(32), SDP(40/42) and AF_LINK(18) are all absent; a non-zero protocol does not open any of them, and AF_UNIX SOCK_SEQPACKET(5) does open | 20 family/proto pairs all -1 EAFNOSUPPORT(47); (1,5,0) fd=34 and fd=35; (1,4,0) EPROTOTYPE(41) | M | results/phase36_realargs/1424a_socket_family_matrix_20261109_160101.txt |
+| 2026-11-09 16:11 | 1426a | - | - | ? | results/phase36_realargs/1426a_range_predicate_wrap_20261109_161120.txt |
+| 2026-11-09 16:14 | 1426a | Address+length wraparound is rejected by the user-range predicate: every wrap shape returns EFAULT, so no read-only call can be aimed at a kernel address. | write 0xFFFFFFFFC1000000+0x3F000000 (sum 0) EFAULT; stub+0x40000000 EFAULT; sendto and kevent wrap EFAULT; getsockopt dest at kernel base EFAULT; controls copy 64 bytes | M | results/phase36_realargs/1426a_range_predicate_wrap_20261109_161403.txt |
+| 2026-11-09 16:20 | 1427a | - | - | ? | results/phase36_realargs/1427a_msfilter_readback_20261109_162035.txt |
+| 2026-11-09 16:21 | 1427a | - | - | ? | results/phase36_realargs/1427a_msfilter_readback_20261109_162121.txt |
+| 2026-11-09 16:22 | 1427a | - | - | ? | results/phase36_realargs/1427a_msfilter_readback_20261109_162242.txt |
+| 2026-11-09 16:25 | 1428a | - | - | ? | results/phase36_realargs/1428a_msfilter_readback_count_20261109_162551.txt |
+| 2026-11-09 16:26 | 1428a | - | - | ? | results/phase36_realargs/1428a_msfilter_readback_count_20261109_162620.txt |
+| 2026-11-09 16:26 | 1428a | - | - | ? | results/phase36_realargs/1428a_msfilter_readback_count_20261109_162635.txt |
+| 2026-11-09 16:27 | 1429a | - | - | ? | results/phase36_realargs/1429a_msfilter_overread_20261109_162726.txt |
+| 2026-11-09 16:39 | 1433a | - | - | ? | results/phase36_realargs/1433a_msfilter_ifindex_family_20261109_163942.txt |
+| 2026-11-09 16:40 | 1432a | the getsockopt(41,74) reply tail is a kernel zero-fill, not a recycled allocation: claim=128 on a 1-source group returns zeros even after 512 KiB of tagged 16 KiB filter blocks were freed into that size bucket | B: claim=128 on a 128-src group -> 127 populated entries (tags A0@1..); C: after shrink to 1 src -> numsrc=1, headers=0, nonzero=0; D: after 32x128-src churn + leave -> headers=0, nonzero=0; E control claim=1 -> 32 changed dwords | M | results/phase36_realargs/1432a_msfilter_tail_reuse_20261109_163702.txt |
+| 2026-11-09 16:40 | 1433a | IPV6_MSFILTER validates msfr_ifindex and both sockaddrs; no unchecked index and no cross-family confusion | GET/SET: only ifindex 1 returns 0, 2/3/4/0x10/0xFF/0xFFFF/0x10000/0x1000000/0x7FFFFFFF/0xFFFFFFFF all -1 with no crash; group family 28 + ss_len 28 -> 0, families 0/1/2/255 and ss_len 0/1/16/255 -> -1; source family 28 + ss_len 28 -> 0, all others -1 | M | results/phase36_realargs/1433a_msfilter_ifindex_family_20261109_163958.txt |
+| 2026-11-09 16:42 | 1434a | - | - | ? | results/phase36_realargs/1434a_ip_mcast_surface_20261109_164208.txt |
+| 2026-11-09 16:42 | 1434a | - | - | ? | results/phase36_realargs/1434a_ip_mcast_surface_20261109_164217.txt |
+| 2026-11-09 16:46 | 1436a | - | - | ? | results/phase36_realargs/1436a_mmap_dmem_phys_sweep_20261109_164602.txt |
+| 2026-11-09 16:49 | 1434a | The IPv4 multicast surface is live: ip_mreq join succeeds with an interface ADDRESS (0 or 127.0.0.1), not an index | join=0, second join EADDRINUSE(48), drop=0; IP_MSFILTER needs ifindex 3 | M | results/phase36_realargs/1434a_ip_mcast_surface_20261109_164244.txt |
+| 2026-11-09 16:49 | 1435a | IPv4 IP_MSFILTER works with msfr_ifindex=3: set and get answer 0, numsrc is exact and the reply is n*128 bytes | n=1/2/8/128 -> changed 32/64/256/4096 dwords, d0=0x00000210 | M | results/phase36_realargs/1435a_ip_msfilter_ifindex_20261109_164339.txt |
+| 2026-11-09 16:49 | 1436a | 628 mmap_dmem answers EBUSY for every container index 0..20 and EINVAL for 21+ | -1 errno=16 for idx 0..20, errno=22 for idx 21; no physical address maps | M | results/phase36_realargs/1436a_mmap_dmem_phys_sweep_20261109_164617.txt |
+| 2026-11-09 16:49 | 1437a | Opening and mapping /dev/dmem0/dmem1 does not change the 628 refusal: EBUSY is process-container state, not the descriptor | still -1 errno=16 for all phys and idx after open+mmap | M | results/phase36_realargs/1437a_mmap_dmem_descriptor_20261109_164725.txt |
+| 2026-11-09 16:49 | 1438a | dmem window writes do not survive the process: the 1397j markers are zeroed and the ONION header regenerates byte-identical | 0xBF0=0, 0x16F00=0, 0xF000=BEEB03FF 00000003 | M | results/phase36_realargs/1438a_dmem_marker_persistence_20261109_164756.txt |
+| 2026-11-09 16:49 | 1439a | The IPv4 msfilter set path validates before swapping: every rejected list leaves the previous group list intact | bad family EAFNOSUPPORT(47), bad len EINVAL(22), numsrc stays 2 after all seven shapes | M | results/phase36_realargs/1439a_ip_msfilter_bad_entry_20261109_164928.txt |
+| 2026-11-09 16:49 | 1439a | - | - | ? | results/phase36_realargs/1439a_ip_msfilter_bad_entry_20261109_164901.txt |
+| 2026-11-09 16:49 | 1439a | - | - | ? | results/phase36_realargs/1439a_ip_msfilter_bad_entry_20261109_164912.txt |
+| 2026-11-09 16:54 | 1440a | madvise is inert on device-pager pages: all nine advice codes and sub-page lengths leave every marker intact, so the CVE-2026-49418 page-removal path is not reachable through madvise either | 9/9 advice codes rv=0, 0 markers changed; whole-mapping DONTNEED intact=64 zeroed=0 | M | results/phase36_realargs/1440a_madvise_device_pager_20261109_165141.txt |
+| 2026-11-09 16:54 | 1441a | the 64 GiB dmem window is 2 pages wide and enforces read-only through mprotect (EACCES for prot 2/3/5/7), while the low window accepts a post-mmap mprotect to RW; a store to the read-only page faults and the loader's SIGSEGV handler catches it without killing the process | window = 64 GiB + {0, 0x1000000}; mprotect(3/2/5/7) = EACCES; low-window control mprotect(3) = 0 with store landing | M | results/phase36_realargs/1441a_mprotect_device_window_20261109_165212.txt |
+| 2026-11-09 16:54 | 1442a | the GPU MMIO aperture is not reachable through the dmem identity map: every page around 0x80000000 and 0xC0000000 reads zero, and 0x800000000 and above answer EACCES | 30 offsets mapped, nz=0 on all but the two control rungs; 3 offsets EACCES | M | results/phase36_realargs/1442a_dmem_mmio_aperture_20261109_165321.txt |
+| 2026-11-09 16:54 | 1443a | with the correct mmap shape /dev/gc still exposes exactly two pages (offset 0 and 0x1000, all 0xFFFFFFFF), /dev/dce exposes none and /dev/ajm refuses open | gc 2 offsets map, 13 EINVAL; dce 0 of 15; ajm open = -1 | M | results/phase36_realargs/1443a_graphics_node_offsets_20261109_165418.txt |
+| 2026-11-09 16:59 | 1444a | the 64 GiB read-only device window is at least 32 MiB of zeros with one non-zero dword (+0x120 = 2); it exposes no device state | mapped=128 of 128 samples at 256 KiB stride, 1 non-zero dword in the whole scan | M | results/phase36_realargs/1444a_high_window_scan_20261109_165553.txt |
+| 2026-11-09 17:06 | 1446a | - | - | ? | results/phase36_realargs/1446a_select_fdset_bound_20261109_170651.txt |
+| 2026-11-09 17:08 | 1446b | - | - | ? | results/phase36_realargs/1446b_select_fdset_guard_20261109_170830.txt |
+| 2026-11-09 17:13 | 1446a | select/pselect accept nfds and leave the fd_set untouched when the bitmap is all-set (EBADF first), and select(0xFFFFFFFFFFFFFFFF,...) returns 0 rather than EINVAL | EBADF on every nfds, changed=4 dwords (timeval only); select(8) and pselect(8) both 3 | M | results/phase36_realargs/1446a_select_fdset_bound_20261109_170718.txt |
+| 2026-11-09 17:13 | 1446b | V from munmap: the guard-page instrument was invalid because syscall 73 removes the whole mapping, so the bitmap page itself disappeared | EFAULT at every nfds; capture carries a raw mcontext dump | V | results/phase36_realargs/1446b_select_fdset_guard_20261109_170934.txt |
+| 2026-11-09 17:13 | 1446c | V: same invalid instrument, the mapping was gone before the first measurement line | binary mcontext dump, 0x13371337 then 0x0b (SIGSEGV) | V | results/phase36_realargs/1446c_select_fdset_len_20261109_171018.txt |
+| 2026-11-09 17:13 | 1446d | munmap(73) on 14.10 destroys the whole mmap region, not the requested page: after munmap(base+0x3000,0x1000) returns 0 a read at base faults | steps 1-11 all succeed, step 12 faults at base | M | results/phase36_realargs/1446d_instrument_selftest_20261109_171122.txt |
+| 2026-11-09 17:13 | 1446e | select(93)/pselect(522) do NOT clamp nfds to FD_SETSIZE: the fd_set copy length is nfds/8, measured by an EFAULT that appears exactly when nfds/8 exceeds the mapped region | 64KiB region: nfds<=524288 rv=0, nfds=1048576 and 4194304 EFAULT(14); 4MiB region: nfds=8388608 rv=0 | M | results/phase36_realargs/1446e_select_fdset_span_20261109_171239.txt |
+| 2026-11-09 17:13 | 1445a | AIO ids are 13-bit slot plus a 3-bit per-slot generation that increments on every reuse (slot 0x20C: gen 0 on first use, gen 1 after the delete) and concurrent submits get sequential slots, while a second 662 on the same ids returns 0x80020003 | 8 concurrent submits slots 517-524; 662 #1 all 0, 662 #2 all 0x80020003; reuse of 524 gave 0x220C | M | results/phase36_realargs/1445a_aio_id_generation_20261109_171255.txt |
+| 2026-11-09 17:28 | 1451a | - | - | ? | results/phase36_realargs/1451a_sys673_object_type_20261109_172807.txt |
+| 2026-11-09 17:28 | 1451a | - | - | ? | results/phase36_realargs/1451a_sys673_object_type_20261109_172818.txt |
+| 2026-11-09 17:29 | 1448a | probe 1448a called syscall 166 (rtprio) instead of 165 (sysarch) and the first call killed the process, so the sysarch family was never exercised | died at 166(128,struct); 166 is rtprio in docs/sysent-names-13.60.csv | V | results/phase36_realargs/1448a_sysarch_family_20261109_171956.txt |
+| 2026-11-09 17:29 | 1449a | sysarch(165) cmd 132 (GET_XFPUSTATE) takes a {addr,len} parms struct, copies at most 0x200 bytes then answers EINVAL; cms 128/129/130/131 behave and 133-140 are EINVAL | 132 len 0x40/0x200 rv=0 full write (xstate_bv 7), len 0x240+ EINVAL | M | results/phase36_realargs/1449a_sysarch_xfpustate_20261109_172134.txt |
+| 2026-11-09 17:29 | 1450a | munmap(73) removes the entire vm_map_entry that contains addr, not the requested sub-range; a partial munmap of one region leaves a neighbouring region intact | [A][B][C] all 4 pages unmapped after one-page munmap; [D] second region still mapped | M | results/phase36_realargs/1450a_munmap_semantics_20261109_172529.txt |
+| 2026-11-09 17:29 | 1451a | sys 673 rejects an anonymous, a /dev/zero and a /dev/dmem0 mapping with EINVAL for every 64 KiB-aligned shape, so its vm_object type-11 gate is unreachable from anything a game process can map | 6 shapes x 3 flavours, 0 accepted, all rv=-1 EINVAL(22) | M | results/phase36_realargs/1451a_sys673_object_type_20261109_172829.txt |
+| 2026-11-09 17:40 | 1453a | Writes through /dev/dmem0 land and read back at three offsets (0xF000+0x20 replacing 5362724F, page0+0xBF0, page16+0xF00), and the ONION header bytes are byte-identical to the pid-357 captures | 3/3 writes land; pid=439 | M | results/phase36_realargs/1453a_dmem_persist_write_20261109_174007.txt |
+| 2026-11-09 17:40 | 1454a | The 1453a signatures read back, but both runs report pid 439, so the loader did not spawn a new process and cross-process persistence is still unmeasured | 3/3 survived in the SAME pid; persistence test confounded | M | results/phase36_realargs/1454a_dmem_persist_read_20261109_174019.txt |
+| 2026-11-09 17:41 | 1452a | A loader Lua thread that faults on an unmapped address takes the whole process down: the handler dumps its mcontext to the socket and the connection then dies, so loader threads are not fault containers and no race can be built on a faulting child | MAIN-1 then a 216-byte truncated mcontext dump (sig 0x13371337, signo 0x0B, fault VA 0x7FFFFF000000, error word 5 = present supervisor) then CONNECTION_REFUSED | M | results/phase36_realargs/1452a_fault_teardown_race_20261109_174104.txt |
+| 2026-11-09 17:44 | 1455a | /dev/dmem0 is a per-process copy: after the loader pid changed 439 -> 446 every signature written by 1453a is gone and 0xF000+0x20 is back to the original 5362724F, so the window is not a cross-process write path | survived=0/3, pid 446 vs 439, 0xF000+0x20 back to 5362724F | M | results/phase36_realargs/1455a_dmem_persist_after_restart_20261109_174425.txt |
+| 2026-11-09 17:44 | 1456a | - | - | ? | results/phase36_realargs/1456a_kernel_readable_20261109_174438.txt |
+| 2026-11-09 17:45 | 1457a | - | - | ? | results/phase36_realargs/1457a_kernel_readable_thrcreate_20261109_174540.txt |
+| 2026-11-09 17:49 | 1457a | the thr_create(430) harness runs the ROP chain (control stored 0x41424344) but every spawn after that chained child ends the process, so the readability targets it was built to test are unmeasured | control marker 0x41424344, died at the first kernel target (C0000000) | M | results/phase36_realargs/1457a_kernel_readable_thrcreate_20261109_174702.txt |
+| 2026-11-09 17:49 | 1458a | a plain 1331a-style FETCH fault at 0xFFFFFFFFC0000000 ends the process when a chained child has already run in the same process, so the earlier containment was a property of the fault-only loop, not of faults in general | control OK 0x41424344; the 1331a repeat fetch fault produced a context dump and the process died | M | results/phase36_realargs/1458a_first_insn_data_fault_20261109_174839.txt |
+| 2026-11-09 17:49 | 1459a | - | - | ? | results/phase36_realargs/1459a_fault_poison_isolation_20261109_174957.txt |
+| 2026-11-09 17:52 | 1460a | 601 command 0x12 still answers EINVAL with the 13.60 magic 0xa0020102 in arg1, arg2 or neither, so the 14.10 gate sits before the magic compare and the caller-struct branch remains unreachable | 0x12 = -1 EINVAL for magic in arg1, byte-swapped, and struct-first; 0x11 also EINVAL; control 0x00 rv=0 writes 0x100 | M | results/phase36_realargs/1460a_sys601_magic_tag_20261109_175209.txt |
+| 2026-11-09 17:53 | 1461a | 601 commands 0x0D-0x10 answer without writing to the caller buffer (0x0D rv=0, 0x0E EFAULT, 0x0F EPERM, 0x10 EINVAL) and 0x11 kills the process whenever arg2 is a mapped user page, so 0x11 is lethal in every shape tried | 0x0D=0, 0x0E=-1 EFAULT, 0x0F=-1 EPERM, 0x10=-1 EINVAL, 0x11 = death (sweep stopped there) | M | results/phase36_realargs/1461a_sys601_matrix_tail_20261109_175249.txt |
+| 2026-11-09 17:54 | 1461a | the 601 tail sweep reaches 0x1C: 0x12 answers ENOENT where the old shape gave EINVAL, 0x13/0x14/0x19 return 0 with no write, 0x16/0x17 are ENOSYS, 0x15/0x10/0x0F keep their codes, and 0x1C kills the process | 0x12 ENOENT, 0x13=0, 0x14=0, 0x15 EINVAL, 0x16/0x17 ENOSYS, 0x18 EPERM, 0x19=0, 0x1A EFAULT, 0x1C death | M | results/phase36_realargs/1461a_sys601_matrix_tail_20261109_175346.txt |
+| 2026-11-09 17:55 | 1463a | mmap is refused with EINVAL by every device node except gc, dmem0, dmem1 and zero, so the readable device surface is exactly the three already mapped plus /dev/zero | hid/bt/camera/gic/dce EINVAL at 0/0x1000/0x10000; rng and ajm EACCES on open; usb EISDIR; dmem2 EACCES on mmap; gc/dmem0/dmem1/zero map | M | results/phase36_realargs/1463a_dev_mmap_census_20261109_175504.txt |
+| 2026-11-09 17:55 | 1462a | - | - | ? | results/phase36_realargs/1462a_sys601_cmd12_name_20261109_175525.txt |
+| 2026-11-09 17:56 | 1464a | sys 601 has no disclosure path: 0x00 writes only the dword 0x100 at +0, and 0x0D/0x13/0x14/0x19 write nothing into a 0x200-byte buffer in either the arg1 or the arg2 shape, in all cases with rv=0 | 1 non-zero dword total across 10 calls; buffer untouched for 8 of 10 | M | results/phase36_realargs/1464a_sys601_full_dump_20261109_175609.txt |
+| 2026-11-09 17:59 | 1466a | - | - | ? | results/phase36_realargs/1466a_sys673_flavours_20261109_175939.txt |
+| 2026-11-09 17:59 | 1466a | - | - | ? | results/phase36_realargs/1466a_sys673_flavours_20261109_175951.txt |
+| 2026-11-09 18:00 | 1465a | 653 blockpool_open is reachable: flags 0x400000 returns handle 0x324, 0x500000 then returns EMFILE(24) so the quota is one pool per process, and 0/0x100000 return 22/23 while 0x1/0xFFFFFFFF return EINVAL; 654 blockpool_map still refuses every 64 KiB-aligned address because the target entry must already be backed by a type-11 vm_object | 653(0x400000)=804; 653(0x500000)=-1 EMFILE; 654 all -1 EINVAL | M | results/phase36_realargs/1465a_blockpool_open_flags_20261109_175825.txt |
+| 2026-11-09 18:01 | 1467a | - | - | ? | results/phase36_realargs/1467a_blockpool_handle_532_20261109_180133.txt |
+| 2026-11-09 18:03 | 1468a | - | - | ? | results/phase36_realargs/1468a_dual_map_wx_20261109_180314.txt |
+| 2026-11-09 18:04 | 1468a | dual mapping does not bypass W^X: one shm object mapped three times at distinct VAs with prot 3, 5 and 7, the stub written through the prot-3 alias is present in the page, and a thr_create child fetched from the prot-5 alias faults with err 0x15 (P=1, I/D=1) at that exact address | RIP=0x3112A4000 err=0x150E faultaddr=0x3112A4000 marker unchanged | M | results/phase36_realargs/1468a_dual_map_wx_20261109_180339.txt |
+| 2026-11-09 18:04 | 1469a | the entry-scoped munmap does not free pages another mapping still owns: two MAP_SHARED aliases of one shm object share pages, unmapping one page of the first alias removes all four of its pages, the second alias keeps every page and its content through a 64-mapping spray, and MAP_FIXED over the middle of a live mapping is refused with -1 leaving the mapping intact | aliases share pages YES; B unchanged 11223344; MAP_FIXED -1 | M | results/phase36_realargs/1469a_munmap_shared_pages_20261109_180445.txt |
+| 2026-11-09 18:04 | 1469a | - | - | ? | results/phase36_realargs/1469a_munmap_shared_pages_20261109_180432.txt |
+| 2026-11-09 18:06 | 277a | mmap2(725) with the 477-known-good shape kills the process before the first result prints, so 725 is either absent on 14.10 or a handler that faults; the probe ran without SIGSYS ignored so the two cases cannot be separated yet | capture stops at the [A] header; CONNECTION_REFUSED after | M | results/phase17_new_vectors/277a_mmap2_realargs_20261109_180550.txt |
+| 2026-11-09 18:07 | 1470a | mmap2(725) is a nosys slot on 14.10: with SIGSYS ignored the 477-known-good shape returns -1 ENOSYS(78) where the identical 477 call returns a mapping, so the 277a kill was the signal, not a handler, and the tail reclassification holds for 725 | 725 -> -1 errno=78; 477 -> 0x310B4A000 | M | results/phase36_realargs/1470a_sys725_sigign_20261109_180703.txt |
+| 2026-11-09 18:08 | 1467a | 532 does not resolve the blockpool handle: 653 returns handle 698 (0x2BA) and 532 cmds 0x18/0x19/0x1A answer 0x800D0204 for in[0]=0x2BA exactly as for junk 0x125/0xFFFFFFFF, 0x800D0203 for 0, so the blockpool object is not addressable through 532 | 653=698; 532 0x18 in[0]=0x2BA -> 0x800D0204, in[0]=0 -> 0x800D0203 | M | results/phase36_realargs/1467a_blockpool_handle_532_20261109_180711.txt |
+| 2026-11-09 18:08 | 1471a | 671 modes 1 and 2 are the only accepted modes and each writes one dword then fails EFAULT (0x1800 and 0xA00), modes 3..0x40 all refuse, and 642 refuses every mode 0..0x40, so neither call exposes a page-table address or a record copy-out | mode 1 +00=00001800, mode 2 +00=00000A00, both rv=-1 EFAULT; 642 all -1 | M | results/phase36_realargs/1471a_stats_mode_sweep_20261109_180742.txt |
+| 2026-11-09 18:10 | 1447a | AIO classes 1/2/3 all submit and behave identically, and a stale id one generation behind a live object is rejected with 0x80020003, so 14.10 uses an equality check rather than the 13.60 gen < counter inequality | class1 id=0x4205 class2 0x6205 class3 0x8205, all poll 3 / del 0; four rounds stale-662 -> 0x80020003 | M | results/phase36_realargs/1447a_aio_stale_id_alias_20261109_180913.txt |
+| 2026-11-09 18:10 | 1472a | the AIO id generation is exactly three bits and wraps after eight poll/delete/submit cycles on one slot (id 0x212 reappears identically in cycle 9), so an id kept from eight cycles ago is indistinguishable from a live one; the probe's own stale-id test is confounded because the live id equals the cycle-1 id | gen 0..7 over cycles 1-8, cycle 9 id=0x00000212 again, slot 0x212 constant; [B] first_id == live_id | M | results/phase36_realargs/1472a_aio_gen_wrap_20261109_180953.txt |
+| 2026-11-09 18:10 | 1464a | 601 commands 0x00/0x0D/0x13/0x14/0x19 write nothing beyond the single size dword that 0x00 puts in arg1, for both buffer shapes, so none of them copies a structure out and none carries a kernel pointer | 0x00 -> 1 dword (0x100); 0x0D/0x13/0x14/0x19 untouched in both shapes | M | results/phase36_realargs/1464a_sys601_full_dump_20261109_181019.txt |
+| 2026-11-09 18:17 | 1475a | the /dev/dmem0 and /dev/gc pagers refuse every protection carrying PROT_EXEC (EACCES) where anonymous mmap accepts prot 5, so the device path cannot produce an executable page | prot 0/1/2/3 map at 0x310CFA000; prot 4/5/6/7 -> -1 EACCES(13); gc same; alive pid=518 | M | results/phase36_realargs/1475a_dev_pager_exec_20261109_181728.txt |
+| 2026-11-09 18:18 | 1473a | EVFILT_AIO is a no-op filter on 14.10: EV_ADD succeeds and returns ready for any identifier including ones that never existed, and it keeps firing after the AIO request is deleted, so it holds no reference and cannot prolong a request's lifetime | ident 0x4205 registers and fires; after 664 poll + 662 delete (state 0) it fires again; control idents 0x0FFF and 0 fire too; 8/8 stale events | M | results/phase36_realargs/1473a_evfilt_aio_lifetime_20261109_181742.txt |
+| 2026-11-09 18:20 | 1473b | EVFILT_AIO does not exist on 14.10 - the change-only kevent returns -1/EPERM, so 1473a's rv=1 readings were EV_ERROR echoes and its 'permanently ready filter' conclusion is withdrawn | change-only ident 0x8205 -> -1 errno=1 EPERM; the following receive-only kevent never returned (idle timeout), so the run ends at [1] | M | results/phase36_realargs/1473b_evfilt_aio_decoded_20261109_182033.txt |
+| 2026-11-09 19:27 | 1478a | the dmem cdev pager refuses offset+length wrap and ftruncate on the cdev returns 0 without moving the aperture | dmem0/dmem1 near-2^64 offsets EACCES(13), gc EINVAL(22), both-huge EINVAL; ftruncate 0 for 0x1000/0x400000000/0x1000000000/0x10000000000 with the EACCES boundary fixed at 0x120000000 | M | results/phase36_realargs/1478a_dev_mmap_wrap_ftruncate_20261109_192453.txt |
+| 2026-11-09 19:27 | 1479a | sys 548 is a batch VM call that executes for a game process: arg2=flag mask, arg3=0x20-byte entries, arg4=count, opcode at entry+0x1C, arg5=processed count, and op 2 with a zero entry succeeds | count=0 rv=0 processed=0; zero entry op=2 rv=0 processed=1; ops 0/1/3/4/5 EINVAL(22); flags 0x1/0x1000/0x20000000 EINVAL, 0x0/0x10000000 rv=0; arg1 ignored | M | results/phase36_realargs/1479a_sys548_batch_contract_20261109_192503.txt |
+| 2026-11-09 19:27 | 1479b | 548 entry byte sweep: +0x00/+0x01 and +0x10/+0x11 are validated fields, +0x02..+0x0F and +0x12 are inert, and +0x13=0xFF kills the caller | op=2 rv=0 processed=1 for every byte +0x02..+0x12, EINVAL at +0x00/+0x01/+0x10/+0x11, process died at +0x13 | M | results/phase36_realargs/1479b_sys548_field_map_20261109_192622.txt |
+| 2026-11-09 19:53 | 1479c | - | - | ? | results/phase36_realargs/1479c_sys548_protect_foreign_20261109_195337.txt |
+| 2026-11-09 19:54 | 1479d | - | - | ? | results/phase36_realargs/1479d_sys548_map_unmap_20261109_195406.txt |
+| 2026-11-09 19:56 | 1479e | - | - | ? | results/phase36_realargs/1479e_sys548_prot_matrix_20261109_195619.txt |
+| 2026-11-09 19:57 | 1479e | sys 548 op 2 is a working protection change on a page the process owns: the entry needs 16 KiB alignment (0x3fff mask), not 4 KiB, and 547 confirms prot 3 -> 1 | len 0x4000 -> rv=0 processed=1 547 prot=1; len 0x1000/0x2000 -> EINVAL(22); all 60 op x prot combinations with len 0x1000 -> EINVAL | M | results/phase36_realargs/1479e_sys548_prot_matrix_20261109_195636.txt |
+| 2026-11-09 20:04 | 1480a | sys 548 op 2 changes protections among 0-3 but refuses every value with bit 0x4 with EACCES(13): prot 1 and 3 round-trip on a page we own (547 confirms 3->1->3), prot 5 and prot 7 are refused on both an own page and on eboot text (0x69188000-0x6961C000, prot 5) | prot1 rv=0 547 prot=1; prot3 rv=0 547 prot=3; prot5 rv=-1 EACCES(13); prot7 rv=-1 EACCES(13); eboot prot7 rv=-1 EACCES(13). NOTE the probe's own 'at prot 5: W is NOT enforced' line is a false positive - that PROTECT had been refused, so the store ran on a prot-3 page | M | results/phase36_realargs/1480a_sys548_eboot_rwx_20261109_200355.txt |
+| 2026-11-09 20:05 | 1480b | sys 548 ops 0/1/3/4 return 0 with processed=1 for a 16 KiB-aligned entry on a page we own but change nothing (547 identical, marker intact), and op 0 at a 16 KiB-aligned unmapped address answers EBUSY(16) rather than EINVAL | op0/1/3/4 rv=0 processed=1, 547 unchanged; op0 at 0x0/0x10000/0x40000/0x100000/0x310000000 -> EBUSY(16); 0x1000 (unaligned) -> EINVAL(22) | M | results/phase36_realargs/1480b_sys548_low_map_20261109_200449.txt |
+| 2026-11-09 20:06 | 1480c | sys 548 op 2 moves the pre-existing device mappings from prot 0x33 to 3 and they then read: the GPU windows that always killed the process on read (SceGnmTrapCode/TrapData/AgcDdid/EopFifo/ShadowRegInfo/Cwsr/Misc/ACQRB, SceGnmDriver, SceGnmDingDong, the eboot.bin anon at 0xC80000000) are readable, while .sprx prot-4 text is refused with EACCES | 56 non-user mappings found; 19 moved to prot 3; reads 0xF00000000=BF800001, 0xFE0000000=C0012800, 0xFE0200000=FFFFFFFF, 0x211CE0000=AFAFAFAF; every prot-4 .sprx text refused EACCES(13); no crash, pid 87 before and after | M | results/phase36_realargs/1480c_sys548_device_prot_20261109_200528.txt |
+| 2026-11-09 20:08 | 1331a | reboot after the hard power-off moved KASLR again: stub C0000000 alone, image contiguous from CC800000 (24 present samples, last D2400000) | 2525 present, image 0xFFFFFFFFCC800000-0xFFFFFFFFD2400000+0x400000, span 0x5C00000, slide 0xCC800000 | M | results/1331a_20261109_200838.txt |
+| 2026-11-09 20:17 | 1481c | the GPU regions 548 makes readable are empty: 16 MiB Cwsr and 1.9 MiB ACQRB are all zero with no protect or read failures, so no kernel pointer and no driver data is exposed there | 0 image candidates, 0 other kernel-half values, 1 string (FOrbShdr in SceGnmTrapCode), 0 read fails, 0 protect fails, pid 87 | M | results/phase36_realargs/1481c_gpu_region_content_20261109_201653.txt |
+| 2026-11-09 20:17 | 1481a | the 19 device windows 548 moved to prot 3 stay readable for the process and split in 674 at the new boundary; contents are zeros except TrapCode, TrapData and SceGnmDriver, which mirrors the dmem0 page-0 register block | 19 windows, 4 kernel-shaped qwords all register pairs, 0 writes attempted | M | results/phase36_realargs/1481a_gpu_windows_scan_20261109_200632.txt |
+| 2026-11-09 20:17 | 1481b | - | - | ? | results/phase36_realargs/1481b_gpu_windows_write_20261109_201732.txt |
+| 2026-11-09 20:20 | 1481g | - | - | ? | results/phase36_realargs/1481g_sys548_prot_full_matrix_20261109_202017.txt |
+| 2026-11-09 20:21 | 1481f | 674 enumerates the complete 336-record map: 279 readable, module text prot 4, 11 prot-0 stack guards, a 4 GB prot-0x33 GPU pool, and every device window now at prot 3 | 336 records; 279 readable; SceKernelInternalMemory 16 MiB prot 3; SceGnmDumpArea 1 MiB zeros; eboot.bin windows 0xC80000000 prot 3 / 0xC80010000 prot 0x33 | M | results/phase36_realargs/1481f_full_map_dump_20261109_201845.txt |
+| 2026-11-09 20:21 | 1481e | the 0xC8000C000 device window is not an alias of executable memory: 0 of 5 offsets agree, and the executable view compared against was ld-elf, not eboot | 0/5 offsets equal; [D] skipped because no offset read zero in both; device dwords all zero | M | results/phase36_realargs/1481e_device_alias_test_20261109_201808.txt |
+| 2026-11-09 20:21 | 1481g | 548 op 2 accepts exactly the protections whose low nibble is 0,1,2 or 3 and refuses every value carrying bit 2 or bit 3, so the exec refusal is a filter and not max_prot; prot 0x10/0x20/0x33 are accepted on a device page but prot 0x10 kills the process on an anonymous page | device 0xF00004000: 0x0/0x1/0x3/0x10/0x20/0x33 taken, 0x4-0xF rv=-1; anon 0x31137C000: 0x0/0x1/0x3 taken, prot 0x2 silently becomes 3, 0x4 refused, prot 0x10 killed the process | M | results/phase36_realargs/1481g_sys548_prot_full_matrix_20261109_202102.txt |
+| 2026-11-09 20:33 | 1482a | - | - | ? | results/phase36_realargs/1482a_jitshm_contract_20261109_203354.txt |
+| 2026-11-09 20:38 | 1483a | SceGnmDriver and dmem0 page 0 hold the same GPU register-init table, not live MMIO; no kernel data in any device window | TrapCode 2442/4096 dwords shader, DumpArea 2 dwords, InternalMemory 0/256 | M | results/phase36_realargs/1483a_driver_window_content_20261109_203533.txt |
+| 2026-11-09 20:38 | 1484a | blockpool_open creates no mapping, so no type-11 vm_object exists and 673/654 stay unreachable | 653 -> handle 771, 674 diff shows only 5 SceLibcHeap growth entries; 673 and 654 all EINVAL | M | results/phase36_realargs/1484a_blockpool_mapping_20261109_203703.txt |
+| 2026-11-09 20:38 | 1485a | 548 cannot lower an execute-only entry: every prot-4 .sprx text and sigtramp_alias refuses prot 1/2/3 with EACCES, so module text stays unreadable | 8 entries tried plus sigtramp prot 2 and 1, all -1 errno 13 | M | results/phase36_realargs/1485a_protect_exec_only_entry_20261109_203825.txt |
+| 2026-11-09 20:39 | 1486a | 548 protects a whole 4 GB pool entry in one call; the complete pre-existing GPU pool is now readable and is empty except three allocation headers | 8 of 8 whole-entry protects rv=0 (largest 0xFE190000); 3 of 4372 sampled MiB rungs non-zero | M | results/phase36_realargs/1486a_gpu_pool_scan_20261109_203940.txt |
+| 2026-11-09 20:42 | 1487a | void: the probe's own sign handler dropped the high dword and mapped 0x310B40000 became 0x10B40000, so the read hit an unrelated address | va printed 0x10B40000, 547 -1, read at the truncated address killed the loader | V | results/phase36_realargs/1487a_physhm_548_20261109_204209.txt |
+| 2026-11-09 21:47 | 1487a | physhm installs no vm_map entry: 547 reports no mapping at the address 477 returned, the read faults with SIGSEGV, and 548 returns rv=0 processed=1 on the nonexistent entry so its return proves nothing | fd 22, va 0x310E1C000, 547 -1 at va, 548 prot 0 and prot 3 both rv=0 processed=1, read -> fault dump magic 0x13371337 signo 0x0B | M | results/phase36_realargs/1487a_physhm_548_20261109_214646.txt |
+| 2026-11-09 21:53 | 1488b | 548's op map is resolved: op 0 is the only op that takes a descriptor (entry+0x08) and it answers EINVAL for every fd including /dev/dmem0 and /dev/gc; op 3 maps anonymous memory at the requested 16 KiB slot and returns the address in rax with the fd field ignored | op0 -1 EINVAL(22), op1 rv=0 no-op, op2 protect, op3 rv=0x311220000 processed=1 creating start=0x311220000 end=0x311224000 prot=3, op4 -1 EOPNOTSUPP(45); same for fd 22/23/24/25 and -1 | M | results/phase36_realargs/1488b_sys548_map_desc_20261109_215258.txt |
+| 2026-11-09 21:55 | 1489a | 548 op 2 raises ./AOSharedState from prot 1 to prot 3 and restores it, so the only shared-flag entry in the map is read-only by policy and not by max_prot | 674: ./AOSharedState 0x310D80000 len 0x8000 prot=1 flags=0xC; op2(3) rv=0 processed=1 prot 1->3, op2(1) rv=0 prot 3->1 | M | results/phase36_realargs/1489a_ao_shared_prot_20261109_215505.txt |
+| 2026-11-09 21:55 | 1489b | a store into ./AOSharedState written while 548 has it at prot 3 is still there after the protection is restored to 1, so 548 turns the read-only shared region into ordinary writable memory | baseline at prot 1 +0x100 = 08000000 08000000; after op2(3), store DEAD1234/CAFEBABE/55667788/99AABBCC reads back; after op2(1) +0x100 still DEAD1234 and +0x108 still 55667788; an earlier run read back the original pattern so the pager re-fetch is not deterministic | M | results/phase36_realargs/1489b_ao_shared_write_20261109_215541.txt |
+| 2026-11-09 21:55 | 1489b | - | - | ? | results/phase36_realargs/1489b_ao_shared_write_20261109_215530.txt |
+| 2026-11-09 21:57 | 1489c | ./AOSharedState is regenerated per process: the marker written at +0x100 by 1489b is gone after the relaunch and the header is byte-identical, so the region gives no cross-process channel | pid 111 (was 106), ./AOSharedState moved 0x310D80000 -> 0x310534000, +0x100 = 08000000, header 00000000 C28C0000 0000003B 00000000 | M | results/phase36_realargs/1489c_ao_state_persist_20261109_215707.txt |
+| 2026-11-09 21:58 | 1490a | 548 cannot lower any executable entry to RW: all 41 prot-4 and prot-5 mappings answer EACCES(13) with the protection unchanged, so max_prot is exec-only for every module text and the W^X bypass is closed on this path too | 41 executable entries, 0 lowered; .executable/.libSceFios2.prx/.libc.prx at prot 5 and 37 .sprx texts at prot 4 all rv=-1 EACCES(13) processed=0; control op2 on an anon page rv=0 prot 3->1 | M | results/phase36_realargs/1490a_rx_to_rw_20261109_215813.txt |
+| 2026-11-09 22:00 | 1491a | the dmem read-only window above the 4 GiB ACL is read-only by max_prot, not by policy: it maps only prot 1 and 548 op 2 answers EACCES(13) for prot 3, so the ACL boundary cannot be lifted | off 0x120000000 and 0x140000000 EACCES for prot 1 and 3; off 0x1000000000 prot 1 maps at 0x3106DC000 and prot 3 EACCES; op2(3) rv=-1 EACCES processed=0, 547 stays 1 | M | results/phase36_realargs/1491a_dmem_ro_window_prot_20261109_215915.txt |
+| 2026-11-09 22:02 | 1494a | 560 debug_init does not install the mdbg context: 601 attach answers EINVAL/EFAULT exactly as before it, and commands 0x02/0x05/0x06 stay ENOSYS, so the 601 bitfield-setter family stays unreachable | 601(0x01) opt1 EFAULT opt2 EINVAL opt3 EFAULT opt4 EINVAL before AND after 560(1) rv=0 and after 643(0) rv=0; 0x02/0x05/0x06 ENOSYS(78); 0x00 control rv=0 writing 00000100 | M | results/phase36_realargs/1494a_debuginit_attach_20261109_220219.txt |
+| 2026-11-09 22:02 | 1493a | 548 op 3 ignores the entry+0x08 flags field: a proposed MAP_FIXED at the middle of a 64 MiB entry allocated a fresh address instead, so the flags-to-map-flags reading is wrong or 0x10 is not MAP_FIXED here | op3 at MID 0x3129C8000 returned 0x3149C8000; 547 at A/MID/END all 3; markers 1111AAAA/2222BBBB/3333CCCC intact; flags=0 at an occupied address returned -1 | M | results/phase36_realargs/1493a_mapfixed_scope_20261109_220131.txt |
+| 2026-11-09 22:02 | 1492a | 548 op 3 respects the same address ceiling mmap has, and without MAP_FIXED the start field is only a hint that is abandoned when the address is occupied | op3 refused all five high addresses (ENOMEM 12 at four, EINVAL 22 at 0x7FFFFFFFFFF000); op3 at an occupied anon page 0x3106E8000 returned 0x3106F0000 leaving the marker AABBCCDD intact | M | results/phase36_realargs/1492a_sys548_map_ceiling_20261109_220048.txt |
+| 2026-11-09 22:05 | 1495a | - | - | ? | results/phase36_realargs/1495a_named_shared_persist_20261109_220500.txt |
+| 2026-11-09 22:07 | 1496a | the 548 op-2 protection transform ((p>>1)&0xffffffc1)\|p turns a request for prot 6 into 7, but it cannot grant execution because mmap clamps max_prot: mmap(prot 7) comes back as prot 3 | mmap(prot 7) -> 0x310C04000, 547 prot 3; 548 op2 1 -> rv=0 547=1, 3 -> rv=0 547=3, 6 -> rv=-1 EACCES(13) processed=0, 547 stays 3 | M | results/phase36_realargs/1496a_sys548_prot6_exec_20261109_220652.txt |
+| 2026-11-09 22:08 | 1497a | 601 cmd 0x11 is not a caller-pointer primitive: a page filled with a valid mapped user address kills exactly like a zero fill and a kernel fill, so the body dereferences the absent mdbg context ([proc+0x568] is NULL) rather than anything we supplied | page filled with 0x310C08000 qwords, marker sentinelled A5A5A5A5; 601(0x00) control rv=0 writing 00000100; 601(0x11,0,page) ended the capture with no return line | M | results/phase36_realargs/1497a_sys601_cmd11_userptr_20261109_220733.txt |
+| 2026-11-09 22:08 | 1498a | - | - | ? | results/phase36_realargs/1498a_dev_entry_munmap_20261109_220807.txt |
+| 2026-11-09 22:13 | 1500a | 657 does not take a struct thread pointer from userland: the [rdi+8] dereference uses the original td because arg2 is never reloaded, and the only use of arg2 is a suword32 zero-dword write in the arg3!=0 path | 657(E,1,fake_thread,0) -> rv=-1 EINVAL(22) with every fake-page canary untouched, including M[+0x1c4]=0; control 657(E,0,...) -> 0 | M | results/phase36_realargs/1500a_sys657_thread_ptr_20261109_221321.txt |
+| 2026-11-09 22:15 | 1501a | the object table's generation counter is per slot and shared across families (namedobj 0x4205 slot 0x205 gen 2 freed, then the AIO request took slot 0x205 gen 3 as id 0x6205), but every family's delete and poll rejects a handle minted by another family, so the wrong-type free is closed | 557 -> 0x4205 slot 0x205 gen2; 669 -> 0x6205 slot 0x205 gen3 (SHARED); 558(0x6205) -> -1; 664 -> rv=0 state=0x2 still healthy; mirror 662 -> 0x80020010, 557 -> 0x206, 664(0x206) -> 0x80020003 | M | results/phase36_realargs/1501a_cross_family_handle_20261109_221511.txt |
+| 2026-11-09 22:15 | 1501a | - | - | ? | results/phase36_realargs/1501a_cross_family_handle_20261109_221501.txt |
+| 2026-11-09 22:17 | 1502a | - | - | ? | results/phase36_realargs/1502a_dmem_aperture_edge_20261109_221724.txt |
+| 2026-11-09 22:18 | 1502a | the dmem aperture tops out at 0x11FFF0000 (0x11FFC000 maps at prot 1, 0x11FFF0000 and everything above answers EACCES) and the lone 0x1000000000 rung maps at prot 1 but reads all zeros, so the aperture exposes no kernel data | off 0 reads C0012800 80000000 (register table); off 0x11FFC000 maps prot 1; off 0x11FFF0000/0x120000000/0x140000000/0x200000000/0x800000000 all EACCES(13); rung 0x1000000000 maps 547=0 prot=1 reads 16 zero dwords; +0x1000..+0x7000 also map and read zero | M | results/phase36_realargs/1502a_dmem_aperture_edge_20261109_221730.txt |
+| 2026-11-09 22:19 | 1503a | mincore(78) is a non-faulting residency oracle over the dmem pager: it reports 16 of 64 pages resident at phys 0 (0x0B for pages 00-0F, 0x00 for 10-3F) while an 8 MiB window at the pool base 0x100000000 is fully resident, so the 512 MiB of direct-memory pool inside the aperture can be scanned without risking a hole fault | mincore over phys 0 len 0x40000 rv=0 vec=0B x16 then 00 x48 -> 16/64 resident; over phys 0x100000000 len 0x800000 rv=0 -> 512/512 resident; phys 0 read back C0012800 80000000 80000000 C0001200 | M | results/phase36_realargs/1503a_mincore_aperture_20261109_221835.txt |
+| 2026-11-09 22:19 | 1504a | the direct-memory pool is almost entirely outside the aperture: 16 MiB from 0x100000000 maps but every offset from 0x110000000 up answers EACCES, and the 1024 resident pages of that 16 MiB are all zeros with no PTE-shaped qwords, so the GPU page tables are not reachable from userland and the GPU branch needs the command processor | map 0x100000000 len 0x1000000 prot 1 -> va ok, mincore 1024/4096 resident, dense pages 0, qwords with bits32-63==1 0; 0x110000000/0x118000000/0x11F000000 -> EACCES(13) | M | results/phase36_realargs/1504a_pool_content_20261109_221927.txt |
+| 2026-11-09 22:21 | 1505a | - | - | ? | results/phase36_realargs/1505a_clip_object_window_20261109_222116.txt |
+| 2026-11-09 22:26 | 1506a | profil(44) is armable and returns 0, but the first readout was stale: the zeroing loop stepped 0x1000 and wrote 2 bytes, so the two non-zero bytes survived a re-zero and appeared in the scale-0 control | 2 non-zero bytes at idx 0x4D9 in every arm incl. the control; not a measurement | V | results/phase36_realargs/1506a_profil_consumer_live_20261109_222347.txt |
+| 2026-11-09 22:26 | 1506b | profil(44) is LIVE on 14.10: with a clean baseline an arm at scale 1 / pr_off 0 collects 0x06A4 ticks on exactly ONE index (0x4D9), a re-zero returns 0, and pr_off 0x10000000 collects nothing, so the tick write is a fixed offset pr_base+0x9B2 | baseline 0, armed 1700 ticks at idx 0x4D9, re-zero 0, shifted-offset 0 | M | results/phase36_realargs/1506b_profil_clean_20261109_222420.txt |
+| 2026-11-09 22:26 | 1507a | the profil tick store is validated or masked, not a raw kernel store: arming pr_base=0x1000 (unmapped) returned rv=0 and the process survived, as did the kernel image base and kernel data arms | rv=0 on all three arms, pid 125 alive before and after, no panic | M | results/phase36_realargs/1507a_profil_kernel_write_20261109_222649.txt |
+| 2026-11-09 22:49 | 1508a | 548 op 3 DOES honour MAP_FIXED (flags bit 0x10, which has no bit in the 0xe0bffb6f batch mask): it deletes the vm_map entry covering the range and installs a fresh anonymous one, with no ownership or overlap check, including over a device window | flags 0x0 over a live entry: rv=0x31106C000 marker 11223344 intact; flags 0x10: rv=0x311065000 marker 00000000 (REPLACED); hole: mapped exactly at 0x311074000 writable; SceGnmTrapCode 0xF00000000 replaced, read 00000000 where it was 01008 0BF, no panic, pid 80 alive | M | results/phase36_realargs/1508a_sys548_map_fixed_20261109_224934.txt |
+| 2026-11-09 22:50 | 1505a | a 548 op2 sub-range protect over a double-mapped POSIX shm object, and over a /dev/dmem0 mapping, returns rv=0 processed=1 and leaves every marker intact in both aliases, so a forced clip does not visibly rewrite the shared object's window (547 reports the head entry only, so the split itself is unconfirmed) | A/B markers 11110000/22220001/33330002/44440003 all intact after the clip; dmem markers B2B20001/C3C30002/D4D40003 intact; 547 returns prot 3 at both aliases before and after | M | results/phase36_realargs/1505a_clip_object_window_20261109_225006.txt |
+| 2026-11-09 22:53 | 1509b | 548 op 3 does not refuse PROT_EXEC the way op 2 does, it silently STRIPS bit 0x4 and then applies write-implies-read, so an anonymous page can never be executable through this path either | op3 MAP_FIXED prot 0->547 0; 1->1 (store faults, not writable); 2->3; 3->3; 4->0; 5->1; 6->3; 7->3; every call rv=the requested address with processed=1; canary pid 80 alive | M | results/phase36_realargs/1509b_sys548_op3_exec_20261109_225307.txt |
+| 2026-11-09 22:54 | 1510a | 548 op 3 MAP_FIXED maps below the mmap floor: a writable 16 KiB page lands at 0x4000, while page 0 itself is refused, so op 3 bypasses mmap's floor and overlap checks and enforces only the ceiling plus the exec strip | 0x4000/0x10000/0x100000/0x1000000 all rv=the requested address, processed=1, 547 prot=3, store/read OK; 0x0 rv=-1 processed=0; plain mmap(0x0,...,MAP_ANON\|MAP_FIXED) rv=-1; mmap(NULL) -> 0x311088000 | M | results/phase36_realargs/1510a_low_address_ladder_20261109_225354.txt |
+| 2026-11-09 22:54 | 1509a | - | - | ? | results/phase36_realargs/1509a_graft_kernel_pages_20261109_225429.txt |
+| 2026-11-09 22:55 | 1509a | void: the 674 record qwords were read as single dwords, so every graft target was a 32-bit-truncated address; the third run grafted at those wrong addresses (e.g. SceGnmTrapData 'at 0x4000', /AOSharedState 'at 0x10CF0000') and killed the loader | runs 1 and 2 printed 'nothing grafted -- VERDICT VOID' because name_at read dwords where it needed bytes; run 3 (unsaved) grafted at truncated addresses and the next connection was CONNECTION_REFUSED | V | results/phase36_realargs/1509a_graft_kernel_pages_20261109_225436.txt |
+| 2026-11-09 22:58 | 1509a | grafting our own anonymous page over a live kernel-authored region is survivable at every target (SceGnmTrapData, /AOSharedState, the GPU pool, SceNpGlobalHeap, SceKernelInternalMemory) and nothing kernel-side writes into the replacement: 0 of 5 pages changed across three rounds of syscall driving | 5/5 grafts landed at the exact addresses (0xF00004000, 0x310920000, 0x211220000, 0x881F50000, 0x88170C000), sentinel 0xCCCCCCCC held, TOTAL changed dwords 0, canary pid 92 alive | M | results/phase36_realargs/1509a_graft_kernel_pages_20261109_225814.txt |
+| 2026-11-09 22:59 | 1511a | destroying device vm_map entries does not attack object lifetime: 200 rounds of mmap(/dev/dmem0) followed by a 548 op3 MAP_FIXED replacement over the returned address all succeeded, and the descriptor still maps, reads the register table and round-trips data afterwards | 200/200 rounds rv=the requested address processed=1 bad=0; after the loop mmap -> 0x3110A0000 reads AABBCCDD, offset 0 reads C0012800, second descriptor fd23 maps and round-trips 13572468; pid 92 alive | M | results/phase36_realargs/1511a_device_entry_churn_20261109_225908.txt |
+| 2026-11-09 23:03 | 1512a | 548 op 3 with MAP_FIXED SPLITS a larger vm_map entry instead of replacing it whole: a 16 MiB entry became 0x4000 head + 0x4000 carve + 0xFF8000 tail, twice, and every marker outside the carved page survived | rv=0x3110B0000 processed=1; entries after: [0x3110AC000,0x3110B0000) [0x3110B0000,0x3110B4000) [0x3110B4000,0x3120AC000); second carve at +0x800000 split again; alive pid=92 | M | results/phase36_realargs/1512a_sys548_op3_split_20261109_230244.txt |
+| 2026-11-09 23:05 | 1513a | 548 op 3 clips a MAP_SHARED vnode entry cleanly: the carve page becomes anonymous, the head and tail keep prot 1, and a second mapping of the same file is completely unaffected | rv=0x3110BC000 processed=1; segments 0x10000/0x4000/0x2C000; B (second mapping, len 0x40000 prot 1) byte-identical before and after; file unmodified after munmap | M | results/phase36_realargs/1513a_sys548_op3_vnode_clip_20261109_230353.txt |
+| 2026-11-09 23:05 | 1514a | 548 op 3 clip does NOT corrupt a vm_object shared by two entries: both mappings of one shm object keep propagating writes in both directions after the carve, with zero unreadable dwords | carve rv=0x3110BC000 processed=1; A->B and B->A propagation work after the carve; B sweep 0 odd dwords of 0x40000; second carve on B also clean; alive pid=92 | M | results/phase36_realargs/1514a_sys548_op3_shm_clip_20261109_230444.txt |
+| 2026-11-09 23:16 | 1515a | 548 op 3 raced against a user-thread read page disappeared from the map; the death was read as unresolved, but 1517a later showed a spawned Lua thread dies on its own without any op 3 call, so this capture never tested the race | 1515a: 200-round serial control clean (0 bad reads), racing phase spawned then the connection ended at 495 bytes | V | results/phase36_realargs/1515a_sys548_op3_fault_race_20261109_230554.txt |
+| 2026-11-09 23:16 | 1516a | 548 op 3 raced against a fault taken inside copyin (unmapped source returns EFAULT, so no signal is possible) still ended the process; 1517a's [C] control then showed a child-thread write loop dies with no op 3 at all, so the kernel race is untested | 1516a: control 200 rounds 0 failures; racing phase spawn=OK then the connection ended at 526 bytes; EFAULT self-validation passed | V | results/phase36_realargs/1516a_sys548_op3_kernel_fault_race_20261109_231009.txt |
+| 2026-11-09 23:16 | 1517a | a spawned Lua thread making repeated write() calls takes the whole process down by itself -- [C] ran 200000 child writes with NO 548 op 3 call and the loader died at spawn+7 s -- so every Lua-thread race probe in this tree has an invalid instrument | 1517a: [A] EFAULT from an unmapped source confirmed, [B] 300 serial op3 rounds replacement_failures=0, [C] spawn=OK then connection ended at 455 bytes, pid 106 | M | results/phase36_realargs/1517a_sys548_op3_race_bisect_20261109_231611.txt |
+| 2026-11-09 23:20 | 1518a | a spawned Lua thread running a syscall loop takes the whole process down even with no socket to fill and exactly one closure -- so every Lua-thread race probe in this tree is an invalid instrument; separately, write() to /dev/zero ignores its source pointer entirely, returning 4 for an unmapped buffer instead of EFAULT | 1518a: 200000 serial main-side writes OK (sum=800000); child with /dev/zero destination, one closure, spawn=OK then connection ended at 528 bytes, pid 113 | M | results/phase36_realargs/1518a_child_thread_stability_20261109_232028.txt |
+| 2026-11-09 23:39 | 1522a | - | - | ? | results/phase36_realargs/1522a_mapdm_fcall_sixarg_20261109_233917.txt |
+| 2026-11-09 23:39 | 1522a | - | - | ? | results/phase36_realargs/1522a_mapdm_fcall_sixarg_20261109_233942.txt |
+| 2026-11-09 23:45 | 1522b | the loader exposes native.fcall/fcall_with_rax (6 register args from the main thread); libkernel+0x15020 is sceKernelMapDirectMemory by behaviour (returns Sony status 0x80020016 for a zero-length request) and +0x17EF0 AllocateDirectMemory returns rv=0 phys=0x110010000, but the first real map (len 0x4000, prot 3, flags 0) still takes SIGSEGV 0x0b | identity call rv=0x80020016; alloc rv=0 phys=0x110010000; map -> SIGSEGV rip=0x7286e4c0 err=0x4 fault=0x310b847c7 | M | results/phase36_realargs/1522b_mapdm_fcall_offsets_20261109_234027.txt |
+| 2026-11-09 23:50 | 1523a | MapDirectMemory crashes with the payload's own prot/flags pair exactly as with prot 3/flags 0, so neither prot nor flags triggers it; the decoded fault RIP is eboot.bin+0x1BA4C0, inside the loader's own fcall ROP chain (near luaL_checklstring 0x1BA970 and luaL_optinteger 0x1BAD80), not in libkernel | identity rv=0x80020016; alloc rv=0 phys=0x110010000; first real map -> SIGSEGV rip=eboot+0x1BA4C0 err=0x4 fault=rsi+7 | M | results/phase36_realargs/1523a_mapdm_prot_matrix_20261109_234855.txt |
+| 2026-11-09 23:50 | 1523b | - | - | ? | results/phase36_realargs/1523b_mapdm_fault_attribution_20261109_235029.txt |
+| 2026-11-09 23:51 | 1523b | a real length alone breaks the MapDirectMemory call through native.fcall: map_fn(out, 0x4000, prot 0, flags 0, phys 0, align 0x4000) crashes exactly like the owned-phys shape, so the physical address is not the trigger and the fcall route to MapDirectMemory is unusable | identity len=0 -> 0x80020016; real len -> SIGSEGV, 2nd run rip=eboot+0x1AE841 err=0x4 fault=rsi+0x10 on the main stack | M | results/phase36_realargs/1523b_mapdm_fault_attribution_20261109_235053.txt |
+| 2026-11-10 10:18 | 1523c | pre-filling *out with a page we already own does not save the MapDirectMemory call: a real length still faults inside the loader's fcall chain at the same Lua-string-hash instruction (fault = r15+7, rdx=8), so the destination hint is not honoured and the fcall route to MapDirectMemory is unusable | identity 0x80020016; B2 (dest hint 0x310A18000, phys 0x110010000) -> SIGSEGV in the chain, fault=0x310876B67 | M | results/phase36_realargs/1523c_mapdm_fixed_addr_20261109_235204.txt |
+| 2026-11-10 10:18 | 1331a | kernel image base after the 2026-11-10 console reboot: image at 0xFFFFFFFFDDC00000-0xFFFFFFFFE3800000 (24 4MB samples, span 0x5C00000), stub alone at 0xFFFFFFFFC0000000 | 25/512 present; slide moved from 0xFFFFFFFFCC800000 | M | results/1331a_20261110_101848.txt |
+| 2026-11-10 10:19 | 1524a | - | - | ? | results/phase36_realargs/1524a_sys570_budget_get_20261110_101944.txt |
+| 2026-11-10 10:23 | 1525a | the MapDirectMemory SIGSEGVs are not caused by the length: with every other argument real and len=0 the call returns 0x80020016, a huge refused length returns 0, and len=0x4000/align=0x4000 returns rv=0 with the process alive -- the same shape that crashed 1523b | B len=0 prot 0x33 flags 0x400000 phys 0x110010000 -> 0x80020016; C len=0xFFFFFFFFFFFFF000 -> 0; D len=0x4000 -> 0, survived, COMPLETE | M | results/phase36_realargs/1525a_mapdm_length_discriminator_20261110_102146.txt |
+| 2026-11-10 10:23 | 1526a | a MapDirectMemory call that returns rv=0 leaves the loader's Lua state corrupted -- the very next connection's script died before printing its banner, inside the same eboot Lua string-hash code as the 1523a crash, so the fcall route to MapDirectMemory is unusable and the earlier SIGSEGVs are the same corruption reached sooner | 1525a completed but the following run's 280-byte capture is only the fault record: RIP 0x1AA7DE74F, err=0x04 user-read-not-present, fault=RSI+8=0x310F02338 on the heap (RSP 0x310F14580), zero script output | M | results/phase36_realargs/1526a_mapdm_round_trip_20261110_102226.txt |
+| 2026-11-10 10:26 | 1526a | - | - | ? | results/phase36_realargs/1526a_mapdm_round_trip_20261110_102643.txt |
+| 2026-11-10 10:27 | 1527a | - | - | ? | results/phase36_realargs/1527a_ao_regions_dump_20261110_102757.txt |
+| 2026-11-10 10:27 | t | - | - | ? | results/t_flush_20261110_102740.txt |
+| 2026-11-10 10:28 | 1527a | the /AO* family is 15 entries: one AOSharedState (0x8000, prot 1, 70 non-zero dwords of colour/format tables) and 14 /AOCtx_* or /AOP_* shared buffers that are already prot 3 and entirely zero, with zero kernel-shaped qwords anywhere in the 0x180 dwords sampled from each | 15/313 records match /AO; 674 rv=0; all unlocks rv=0 processed=1; only 0x200698000 holds data; 0 kernel-shaped qwords in all 15 | M | results/phase36_realargs/1527a_ao_regions_dump_20261110_102811.txt |
+| 2026-11-10 10:39 | 1528a | the native thr_new child-ROP chain works (catalog gadgets verify exactly: pop_rax 0x992, pop_rdi 0xC9DFE, pop_rsi 0xD77D, bare 0x42) and racing munmap(V,0x1000) from the child against 548 op-3 MAP_FIXED over the same address for 400 rounds produced zero placement failures, zero protection failures, zero non-zero reads before write, and no process death -- but only ONE collision landed because the child finished its 8000 munmaps inside the first few rounds, so the negative is thin | bad_place=0 bad_prot=0 nz=0/39 racy_unmapped=1 over 400 rounds; rv=V=0x3114E4000 every round; final 547 prot=3, mark round-trips, pid 108 alive | M | results/phase36_realargs/1528a_native_race_op3_munmap_20261110_103848.txt |
+| 2026-11-10 10:39 | 1528b | a sustained native child-ROP munmap loop racing 548 op-3 MAP_FIXED on the same 16 KiB address for 800 rounds produced 56 observed collisions (547 reports the entry already gone) and ZERO corruption: op 3 returned the requested address on all 800 rounds, every gated read-before-write returned zeros (24/24), no non-zero page residue, process alive -- the vm_map locking serialises entry delete/insert on this path and the op-3 UAF hypothesis is closed | spawned=101 spawn_fail=0 collisions=56 bad_place=0 nz=0/24 final 547=-1 (child won the last round) pid 108 alive | M | results/phase36_realargs/1528b_native_race_waves_20261110_103928.txt |
+| 2026-11-10 10:42 | 1529a | - | - | ? | results/phase36_realargs/1529a_copyin_race_op3_20261110_104244.txt |
+| 2026-11-10 10:45 | 1529a | the copyin race instrument is built and its oracle is validated (3328 bytes drained from the child's write(fd,V,0x100) were all zero, so any non-zero byte would be a stale page), and the fake-TCB preamble from 384b is REQUIRED for a child whose syscall fails (without it the stub faults at %fs:0 -> FAULT=0x10); the racing phase has not produced a measurement yet because two children shared one ROP stack and ran off its end into RIP=0, which killed the game | baseline naive: child SIGSEGV RIP in libkernel FAULT=0x10 (no TLS); with sysarch(165,&tcb) baseline clean bytes=3328 nonzero=0; race run died at RIP=0 after a successful write (RAX=0x100) from stack overlap | V | results/phase36_realargs/1529a_copyin_race_op3_20261110_104407.txt |
+| 2026-11-10 10:46 | 1529a | - | - | ? | results/phase36_realargs/1529a_copyin_race_op3_20261110_104611.txt |
+| 2026-11-10 10:48 | 1529b | - | - | ? | results/phase36_realargs/1529b_copyin_race_shm_20261110_104839.txt |
+| 2026-11-10 10:49 | 1529b | racing 100000 kernel copyin calls from V against 20000 sequential 548 op-3 MAP_FIXED replacements of V produced 25608192 bytes of copied data, all zero, with 0 placement failures and 0 rounds where V held a non-zero word -- the vm_map delete/insert is serialised against the page fault that the copyin needs, so no stale-page read is reachable | scanned=25608192 chunks_with_data=0 bad_place=0/20000 bad_prot=0/20000 pid 129 alive | M | results/phase36_realargs/1529b_copyin_race_shm_20261110_104907.txt |
+| 2026-11-10 10:51 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_105119.txt |
+| 2026-11-10 10:52 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_105204.txt |
+| 2026-11-10 10:52 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_105250.txt |
+| 2026-11-10 10:53 | 1530a | racing 12000 lseek+read(shmfd,V,0x1000) pairs against 3000 ftruncate-to-zero-and-regrow cycles returned 3000 samples of 0x1000 bytes with zero bytes outside {0x41,0x00}, and the positive control proved the child was really copying shm pages out -- the posixshm read path does not hand back pages the object has released | positive control true; samples=3000 foreign_bytes=0; child_tid=101357; pid 143 alive | M | results/phase36_realargs/1530a_shm_truncate_race_20261110_105303.txt |
+| 2026-11-10 10:55 | 1529b | rerun with a liveness counter: the child completed all 100000 writes (shared offset exactly 25600000), so the earlier clean scan covered the whole race window rather than a dead child, and 25608192 scanned bytes still held zero non-zero bytes | shared offset 25600000 = ITERS*CHUNK exactly; scanned=25608192 chunks_with_data=0; bad_place=0/20000; pid 143 alive | M | results/phase36_realargs/1529b_copyin_race_shm_20261110_105548.txt |
+| 2026-11-10 10:56 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_105601.txt |
+| 2026-11-10 10:56 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_105617.txt |
+| 2026-11-10 10:56 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_105630.txt |
+| 2026-11-10 10:56 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_105644.txt |
+| 2026-11-10 10:56 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_105658.txt |
+| 2026-11-10 10:58 | 1530a | the 0x42 dead-child stamp invalidated the earlier clean result: with a finite chain, 2815 of 3000 samples still held our own stamp, so the child had finished by round 185 and 94 percent of the run raced nothing | stale=2815/3000, foreign_bytes=182975 all our own 0x42, first foreign at round 186 | M | results/phase36_realargs/1530a_shm_truncate_race_20261110_105801.txt |
+| 2026-11-10 11:00 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_110027.txt |
+| 2026-11-10 11:06 | 1529b | - | - | ? | results/phase36_realargs/1529b_copyin_race_shm_20261110_110611.txt |
+| 2026-11-10 11:06 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_110657.txt |
+| 2026-11-10 11:08 | 1529b | with a discriminating oracle (V filled 0x41 before its page was replaced, scan restricted to log bytes after that replacement, child completed all 100000 writes) the copyin-vs-548-op3 race produced zero 0x41 across 25608192 scanned bytes | 0x41 count 0 of 25608192; shared offset 25600000 = ITERS*CHUNK; bad_place 0/20000; processed==1 every round | M | results/phase36_realargs/1529b_copyin_race_shm_20261110_110638.txt |
+| 2026-11-10 11:08 | 1530a | shm read vs ftruncate over 3000 cycles with a per-round fill byte and a dead-child stamp: 3 of 3000 samples were stale and none of the 2997 live samples carried a foreign byte | stale=3/3000, foreign_bytes=0, positive control exact on 0x1000 bytes | M | results/phase36_realargs/1530a_shm_truncate_race_20261110_110751.txt |
+| 2026-11-10 11:09 | 1530a | repeat run with the chain integrity check moved after the write (first and tail qwords both verified against the expected gadgets): same result, 2 of 3000 samples stale and zero foreign bytes | chain check first/tail match; stale=2/3000; foreign_bytes=0 | M | results/phase36_realargs/1530a_shm_truncate_race_20261110_110919.txt |
+| 2026-11-10 11:19 | 1529b | - | - | ? | results/phase36_realargs/1529b_copyin_race_shm_20261110_111941.txt |
+| 2026-11-10 11:20 | 1529b | - | - | ? | results/phase36_realargs/1529b_copyin_race_shm_20261110_112019.txt |
+| 2026-11-10 11:20 | 1529b | - | - | ? | results/phase36_realargs/1529b_copyin_race_shm_20261110_112043.txt |
+| 2026-11-10 11:41 | 1529b | - | - | ? | results/phase36_realargs/1529b_copyin_race_shm_20261110_114104.txt |
+| 2026-11-10 11:43 | 1529b | - | - | ? | results/phase36_realargs/1529b_copyin_race_shm_20261110_114338.txt |
+| 2026-11-10 11:44 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_114404.txt |
+| 2026-11-10 11:44 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_114424.txt |
+| 2026-11-10 11:44 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_114445.txt |
+| 2026-11-10 11:45 | 1529b | with the child lap-bounded and proven live by the shared offset taking 5 distinct values across the loop, 500 op-3 replacements of V's page produced no byte of the 0x41-filled page in 524288 bytes copied out | bad_place=0 bad_prot=0 dead=0 foreign=0 scanned=524288 distinct=5 pid 186 alive | M | results/phase36_realargs/1529b_copyin_race_shm_20261110_114359.txt |
+| 2026-11-10 11:45 | 1530a | with the oracle buffer cleared after the truncate releases page 1 and before the regrow recreates it, 120 samples from a child proven live in all four quarters found no stale page content | samples=120 dead=0 foreign_bytes=0 quarters 30/30/30/30 pid 186 alive | M | results/phase36_realargs/1530a_shm_truncate_race_20261110_114527.txt |
+| 2026-11-10 11:45 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_114507.txt |
+| 2026-11-10 11:48 | 1531a | - | - | ? | results/phase36_realargs/1531a_mlfs_truncate_race_20261110_114828.txt |
+| 2026-11-10 11:49 | 1531a | - | - | ? | results/phase36_realargs/1531a_mlfs_truncate_race_20261110_114906.txt |
+| 2026-11-10 11:49 | 1531a | - | - | ? | results/phase36_realargs/1531a_mlfs_truncate_race_20261110_114954.txt |
+| 2026-11-10 11:50 | 1531a | - | - | ? | results/phase36_realargs/1531a_mlfs_truncate_race_20261110_115016.txt |
+| 2026-11-10 11:50 | 1531a | - | - | ? | results/phase36_realargs/1531a_mlfs_truncate_race_20261110_115027.txt |
+| 2026-11-10 11:50 | 1531a | - | - | ? | results/phase36_realargs/1531a_mlfs_truncate_race_20261110_115054.txt |
+| 2026-11-10 11:51 | 1531a | the same read-vs-truncate race on an MLFS file (a different pager and zone from the shm object) found no stale page bytes, with every sample gated on the main thread first proving the regrown page reads zero | samples=120 dead=0 foreign_bytes=0 gate_control_nonzero=0 skipped=0 quarters 30/30/30/30 pid 186 alive | M | results/phase36_realargs/1531a_mlfs_truncate_race_20261110_115112.txt |
+| 2026-11-10 11:55 | 1529b | - | - | ? | results/phase36_realargs/1529b_copyin_race_shm_20261110_115515.txt |
+| 2026-11-10 11:55 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_115555.txt |
+| 2026-11-10 11:56 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_115620.txt |
+| 2026-11-10 11:56 | 1530a | - | - | ? | results/phase36_realargs/1530a_shm_truncate_race_20261110_115629.txt |
+| 2026-11-10 11:57 | 1529b | correction to the earlier row: the child now installs a fake TCB, the shm window is scanned every round instead of once at the end, and liveness requires the last two samples to differ -- 500 op-3 replacements still produced no byte of the released page | bad_place=0 bad_prot=0 stale_during_loop=0 scanned=524288 distinct=5 still_moving=true pid 186 alive | M | results/phase36_realargs/1529b_copyin_race_shm_20261110_115537.txt |
+| 2026-11-10 11:57 | 1530a | all three ftruncate returns are now checked per cycle and the verdict requires zero dead samples; the shm read-vs-truncate race is clean | samples=120 dead=0 truncate_fail=0 foreign_bytes=0 quarters 30/30/30/30 pid 186 alive | M | results/phase36_realargs/1530a_shm_truncate_race_20261110_115645.txt |
+| 2026-11-10 11:57 | 1531a | same hardening on the MLFS probe: truncate returns checked, verdict requires zero dead samples, oracle gated on the control read -- still no stale page | samples=120 dead=0 truncate_fail=0 gate_skipped=0 foreign_bytes=0 quarters 30/30/30/30 pid 186 alive | M | results/phase36_realargs/1531a_mlfs_truncate_race_20261110_115707.txt |
+| 2026-11-10 12:01 | 1531a | after the review's seven findings were applied the MLFS probe proves its own preconditions: page 1 is read back and must hold the marker before every release, all three ftruncate returns are checked, only the marker byte counts in the oracle channel, and the control read gates every sample -- 120 samples still found no byte of a released page | samples=120 dead=0 truncate_fail=0 arm_fail=0 otherbad=0 gate_skipped=0 foreign_bytes=0 control_nonzero=0 pid 193 alive | M | results/phase36_realargs/1531a_mlfs_truncate_race_20261110_120137.txt |
+| 2026-11-10 12:01 | 1531z | - | - | ? | results/phase36_realargs/1531z_mlfs_diag_20261110_120122.txt |
+| 2026-11-10 12:01 | 1531z | - | - | ? | results/phase36_realargs/1531z_mlfs_diag_20261110_120131.txt |
+| 2026-11-10 12:08 | 1531a | repeat of the hardened MLFS run reproduces the result exactly, and the per-quarter denominator is now correct (quart*CYCLES) after the review flagged it | samples=120 dead=0 truncate_fail=0 arm_fail=0 otherbad=0 foreign_bytes=0 control_nonzero=0 quarters 30/30/30/30 of 30 each pid 193 alive | M | results/phase36_realargs/1531a_mlfs_truncate_race_20261110_120847.txt |
+| 2026-11-10 12:13 | StatusArray | syscall 573 mdbg_call has a native body (thunk 0x8ac26360 -> 0x8b65c830 -> 0x8b163d80); the 'nosys trampoline' verdict came from the compat CSV row 0x265760 | 513/0x266360 native body present; 0x80-byte stack status array bounded at index 8 of 32; copyout <= 0x24 bytes | S | - |
+| 2026-11-10 12:32 | StrAudit | all 74 copyinstr sites are bounded; the helper charges its budget before each byte so the max write offset is len-1 and the NUL counts | 74/74 bounded; every 0x400 bound lands in a 0x408+ stack slot, an exact 0x400 alloc, a 0x400 zone item, or a 0x44000 kmem buffer | S | - |
+| 2026-11-10 13:37 | 548align | 548 op 2 gates on 16 KiB alignment of start and length BEFORE dispatch, so every earlier op-2 range test that passed len=0x1000 was void; the call does reach vm_map_protect once aligned | 13.60 body 0x8b47c0b7 test esi,0x3fff / 0x8b47c0ca test edx,0x3fff -> EINVAL(22) at 0x8b47c2b8; 1479b +0x12 (len 0xFF000000, aligned) reached the call and killed | S | - |
+| 2026-11-10 13:42 | 1533a | 548 op 2 is a working vm_map_protect for anonymous pages: it lowers 3->1 and 3->0, normalises WRITE to READ\|WRITE, and refuses PROT_EXEC with EACCES because the page's max_prot excludes it | prot 1 -> rv=0 processed=1 547=0x1; prot 2 -> 547=0x3; prot 0 -> 547=0x0; prot 7 -> rv=-1 13 Permission denied; misaligned start/len and prot 0x18 -> rv=-1 22; count=2 -> processed=2; device 0x33->1->0x33 all taken | M | results/phase36_realargs/1533a_sys548_16k_alignment_20261110_134214.txt |
+| 2026-11-10 14:12 | 1534b | 548 op 0 reaches the descriptor path with a 16 KiB-aligned position and returns EBUSY(16) at a free fixed address for every descriptor, while dmem0 at position 0x120000000 returns the same EACCES(13) that 477 does, so the fd is consumed; misaligned position and arg2 bit 0x400 give EINVAL(22) | EBUSY(16) for zero/eboot/dmem0/gc at pos 0, EACCES(13) for dmem0 pos 0x120000000, EINVAL(22) for pos 0x1000 and arg2 0x400, processed=0 throughout | M | results/phase36_realargs/1534b_sys548_op0_descriptor_map_20261110_141234.txt |
+| 2026-11-10 14:22 | 548ops | 548's five opcodes dispatch through an undumped table at 0x8e29bf54; the mmap helper 0x8b478430 maps an internal vm_map_find status to EBUSY(16) from its own table at 0x8c29bed0, and the munmap helper 0x8b478bb0 (vm_map_lock 0x8ac86480 + vm_map_delete 0x8ac89370) is reached by the body at 0x8b47c185, which neither op 1 nor op 4 reaches on 14.10 | op-to-case mapping unresolved (table undumped); op 3 returns 0 when the address is mapped and the address when it is free; op 0 the reverse | S | - |
+| 2026-11-10 14:25 | 1534c | 548 op 0 returns EBUSY(16) even on a live range the caller owns and created with op 3 - a valid descriptor does not change it - and op 1 on that same range returned 0/processed=1 after which the first read of the range faulted, so op 1 removed it | op 0: EBUSY(16) for /dev/zero, eboot, dmem0, physhm, fd 0 and a bogus fd on an op-3 range; arg2 0x12/0x20/0x40 -> EINVAL(22), 674 record count unchanged (318->318); dmem0 pos 0x120000000 -> EACCES(13); op 1 -> rv=0 processed=1 then SIGSEGV reading U | M | results/phase36_realargs/1534c_sys548_op0_on_live_range_20261110_142452.txt |
+| 2026-11-10 14:34 | 1535a | 548 op 2 refuses bit 0x4 on the device window exactly as it does on anonymous memory, so the mapping's max_prot excludes exec and W^X holds at the entry on the last mapping class a game process can reach | SceGnmTrapData 0xF00004000 prot 0x33 before; 0x37/0x7/0x5 all rv=-1 EACCES(13) processed=0 with 547 still reading 0x33; 0x33 re-applied rv=0 processed=1; the planted 48 89 07 EB FE wrote and read back, then was restored | M | results/phase36_realargs/1535a_gpu_window_exec_via_548_20261110_143418.txt |
+| 2026-11-10 14:34 | 1534c-correction | correction to the 1534c row: op 1 returning 0 with processed=1 followed by a faulting read is NOT proof that op 1 removed the mapping - 547 was never re-read between the call and the read, and 1480b has op 1 on a 477 mapping leaving the page mapped and readable, so the removal claim is an inference with one data point and a counterexample on another mapping class | measured: op 1 rv=0 processed=1 then SIGSEGV on the first read of U; not measured: 547 of U after op 1, and whether the fault is the mapping's removal or its object being detached | I | - |
+| 2026-11-10 14:41 | 601twostep | the attach-then-write composition for 601 was already measured by 1355a's consumer sweep, which called 0x01 (rv=-1) and then every command up to 0x1A before 0x1B killed the process, so a failed attach leaves no usable context on 14.10 and no probe needs to be spent on the two-step | 0x01 -1 ch=0 early in the same process; 0x07/0x09/0x0B/0x0D/0x13/0x14/0x19/0x1A all rv=0 writing nothing; capture ends at 'calling 0x1B ...' with no output after it | S | - |
+| 2026-11-10 14:56 | 548cases | the five 548 op cases sit at strictly ascending addresses and the two measured ops (2=protect, 3=map) pin the order, so op 0 is the gated elevated map, op 3 the MAP_ANON map, and the remaining two cases are the deferred-protect queue (0x8b47c088) and the direct munmap (0x8b47c185) | op order 0..4 = bff3/c088/c0b0/c11e/c185; op 1 queues via 0x8b47bf1a and applies through 0x8b47c3b0 -> 0x8ac8dc10, a different validator from op 2's vm_map_protect | S | - |
+| 2026-11-10 14:56 | 548race | the VM-map concurrency axis is not measurable from Lua: run_lua_code_in_new_thread is not reentrant and does not survive a syscall loop, and a helper death kills the process, so a 548 race probe cannot distinguish an anomaly from its own instrument | 496c/496d second-spawn death; 1517a/1518a loop deaths; probe abandoned unsent | D | - |
+| 2026-11-10 15:00 | 1480b-correction | 1480b's op=1 line never called op 1: its entry buffer still held set_entry(A,0,0x4000,3,2), so that rung repeated op 2 on A, and the corpus therefore contains exactly one op-1 measurement (1534c's fault) and no control showing op 1 leaves a range mapped | last set_entry before the rung is op 2 on A; capture shows A at prot 3, D untouched and still holding 33334444 | I | - |
+| 2026-11-10 15:05 | 1537a | 548 op 1 is munmap: on a 477 range, an op-3 range, a second fresh 477 range and a range with offset=0x1000, every call returned rv=0 processed=1 and the range then had no 547 record and no 674 record, so 1534c's post-call fault was a load from freshly unmapped memory and the offset field is ignored by op 1 | 4/4 ranges removed, 674 record counts 318->321->320, teardown found the U1 address re-mapped by the loader at 0x64KB | M | results/phase36_realargs/1537a_sys548_op1_removal_check_20261110_150521.txt |
+| 2026-11-10 15:10 | 548op4 | op 4 is the queueing case 0x8b47c088 by elimination: op 0/1/2/3 are pinned to 0x8b47bff3/0x8b47c185/0x8b47c0b0/0x8b47c11e, and the deferred applier 0x8ac8dc10 rejects any entry whose protection byte has bit 1,2,3,5 or 7 set (test r12b,0xae / sete), so it cannot grant WRITE or EXEC and is not a W^X path | 0x8ac8dcd9 cmp byte [rdx+0x21],0xa / 0x8ac8dce5 test r12b,0xae / 0x8ac8dce9 sete cl / 0x8ac8dcf1 jne reject | S | - |
+| 2026-11-10 15:14 | 1537b | 548 op 4 is a stub answering ENOTSUP(45) with processed=0 on both prot 3 and prot 1, op 0 is a stub answering EBUSY(16) with processed=0 even with a real dmem0 fd 23 or physhm fd 22, and op 1 splits a 256 KiB entry precisely around the middle page, so the five ops are 0=stub 1=munmap 2=mprotect 3=anon-map 4=stub | op4 rv=-1 45/processed=0 twice; op0 rv=-1 16/processed=0 twice; op1 rv=0 processed=1 leaving 0x310E54000-0x310E74000 and 0x310E78000-0x310E94000 around a removed middle page | M | results/phase36_realargs/1537b_sys548_op4_and_op0_semantics_20261110_151410.txt |
+| 2026-11-10 15:21 | 601attachlen | 601 cmd 0x01's arg3 is a length in qwords, not a flags word: the 13.60 case at 0x8b6611ce keeps only arg3 in [2,15] with cmp rax,-0xe/jb on arg3-0x10 and then copyin(arg2, stack, arg3*8) into a 0x78-byte buffer; the struct must begin {1, <3\|4>} | static: 0x8b6611ea lea rax,[r12-0x10] / 0x8b6611f5 cmp rax,-0xe / 0x8b6611f9 jb; 1384a passed flags words in that slot, so its uniform EINVAL was the length gate, not a credential gate | S | - |
+| 2026-11-10 15:43 | 1538b | 601 cmd 0x23 accepts {1,3,<name>} with arg3=3 and returns 0, then a second call on the same shape returns EPERM(1), so arg3 is a length and the call installs per-process state | len3 rv=0, len0 rv=-1 EINVAL(22), repeat len3 rv=-1 EPERM(1), len15 rv=-1 EPERM(1); 0x15 and 0x1F also shift with arg3 | M | results/phase36_realargs/1538b_sys601_length_owner_sweep_20261110_154233.txt |
+| 2026-11-10 16:06 | td578pair | 601 has an upload/download pair on td+0x578 (malloc 0x480 + copyin, then copyout + free), and two other cases let a caller qword be stored in that same slot | static: 0x8b660e63 / 0x8b661542 store caller qwords at td+0x578..+0x590; the download at 0x8b661b2c copies 0x480 bytes from that pointer to user then frees it via 0x8b5c8df0, a zone deallocator - read plus unchecked free in one call, never probe with a forged pointer | S | - |
+| 2026-11-10 16:11 | 1541a | 601 cmd 0x1B kills the process before returning even with a mapped 0x48-byte struct, a non-matching channel name and arg3=9 | CAPTURE ENDS AT '601(0x1B, buf, 9) ...'; 9026 then CONNECTION_REFUSED, so the game died - third consecutive kill for this command, now with a controlled shape | M | results/phase36_realargs/1541a_sys601_cmd1b_name_gate_20261110_161109.txt |
+| 2026-11-10 16:20 | 1542a | 601 cmd 0x1B kills with a mapped 0x1000 page in arg3 as well, so arg3 being a small integer is not the cause; five independent shapes now die there | pid 221: [A] 601(0x1B, buf, 0x310ff9700) printed then the capture ends, 9026 refused; no rv | M | results/phase36_realargs/1542a_sys601_cmd1b_arg3_pointer_20261110_161943.txt |
+| 2026-11-10 16:20 | 1404a-note | 1404a's 'idx=0x1B rv=-1 EINVAL' is NOT command 0x1B: the sweep passes the index in arg2 with arg1 fixed at 0x12, so that line names an index value, not a command, and must never be cited as 0x1B being safe | probes/phase36_realargs/1404a_sys601_cmd12_index.lua:89 sc601(uint64(0x12), uint64(i), uint64(OUT), ...) | S | - |
+| 2026-11-10 16:23 | 1543a | 601 cmd 0x1B kills with arg3=0 as well, so no argument value tested rescues it; five distinct arg3 values (0,9,0x100,0x1000,mapped page) all die, so 0x1B is an unconditional killer on 14.10 | pid 228: [A] 601(0x1B, 0x3116031c0, 0x0) printed then the capture ends; no rv | M | results/phase36_realargs/1543a_sys601_cmd1b_arg3_zero_20261110_162129.txt |
+| 2026-11-10 16:26 | 16kpages | 1450a/1446d/1469a measured with 4 KiB assumptions: mmap(0x4000) is ONE 16 KiB page, so the four addresses they call pages are all inside it and the 'munmap is entry-scoped' conclusion was never measured | kernel page size 0x4000 per 548 op 2's test esi,0x3fff gate and the munmap helper's rounding; 1469a's MAP_FIXED 'refusal' was a misaligned 0x1000 request | S | - |
+| 2026-11-10 16:29 | 1544a | syscall 73 splits a sixteen-page entry precisely, exactly like 548 op 1; the 0x4000 page size is directly measured by sixteen distinct sentinels at 0x4000 stride inside one 0x40000 547 record | 73(base+0x10000,0x4000)=0; 547 after: pages 0,1,2,3,5,14,15 prot 0x3, page 4 unmapped; baseline 0 bad; child fault after the spawn line ended the connection | M | results/phase36_realargs/1544a_munmap_pte_scope_20261110_162901.txt |
+| 2026-11-10 16:45 | 1503a-correction | RETRACTION of the mincore residency-oracle claim: a 0x40000 mincore writes only 16 bytes, because 0x40000/0x4000 = 16 pages of the 16 KiB kernel page size, and all 16 read 0x0B resident. The 0x00 bytes at 0x10..0x3F were never written by the kernel, so 16 of 64 is a counting artifact and the printed verdict is the opposite of the measurement. mincore reports every mapped page resident on the dmem pager and is NOT a hole-scanning oracle; the same capture's [C] arm (0x800000 -> 512 of 512) is already 16 KiB-correct and agrees | vec 0B x16 then 00 x48, i.e. 16 written bytes all 0x0B; len 0x40000 / 0x4000 = 16 | I | - |
+| 2026-11-10 16:45 | 1504a-correction | CORRECTION of the pool-coverage claim: len 0x1000000 is 1024 pages of 16 KiB, so mincore wrote 1024 bytes and reported all of them resident; the 3072 'non-resident pages skipped' is 4 KiB bookkeeping. [C] therefore read base+0 .. base+0x3FF000, the first 4 MiB of a 16 MiB map, and the 'the pool is all zeros' negative describes 4 MiB, not 16. The [D] EACCES negatives are separately sound | mincore 1024/4096 resident (len/0x4000 = 1024); 3072 skipped was artifact; 4 MiB read of 16 MiB | I | - |
+| 2026-11-10 16:57 | 1547a | Device frames round the offset DOWN to 0x4000, so a request that ends exactly at the dmem aperture limit maps a frame that also ends at the limit: the ACL straddle is structurally impossible, not merely unobserved | entry for len=0x1000 at dev 0x1000 is 0x3115E8000..0x3115EC000 (0x4000) with the mapped VA at +0x1000; SLIDE confirmed (A1+0 == A0+0x1000); aperture edge bisected to LIMIT=0x110010000 (not 0x120000000 or 0x140000000); [E] map off=LIMIT-0x1000 len=0x1000 accepted, entry ends at LIMIT, 547 refused at LIMIT; [E0] off=LIMIT-0x4000 len=0x4000 accepted; [E1] off=LIMIT-0x1000 len=0x4000 EACCES(13) | M | results/phase36_realargs/1547a_dmem_frame_straddle_20261110_165645.txt |
+| 2026-11-10 17:13 | 548maxprot | the W^X wall is a single mask on the object's max protection: 0xffffffff8b4789be and r9d,0x3f3 clears bit 0x4 (PROT_EXEC) and 0x8 for every file/device mapping, so no requested protection with X can survive the vm_map_find that follows | static: 0x8b47857a movzx r9d, word [rbp-0x72] / 0x8b47858e and r9d,0x3f3 / 0x8b4789d5 call 0xffffffff8b47ea20; anon takes 0x8b479f60 and is measured max_prot 3 (1480a) | S | - |
+| 2026-11-10 17:13 | 548maxprot-fix | address correction for row 548maxprot: the mask is at 0xffffffff8b4789be (helper 0xffffffff8b478430 + 0x58e), the maxprot load at 0xffffffff8b4789aa, the find at 0xffffffff8b4789d5, the descriptor resolve at 0xffffffff8b47896c | the earlier --result line printed offsets as if they were VAs (0x8b47858e); the helper base is 0x8b478430 so +0x58e is 0x8b4789be | S | - |
+| 2026-11-10 17:35 | 1548a | 548 op 3 MAP_FIXED carves a device-backed entry correctly: eight interior splits, all accepted at the requested address, boundary checks pass, 8 anon/8 device pages, carved page reads 0 while the uncarved neighbour still reads C0012800, and the device object still maps afterwards | carves=8 accepted=8 boundary-ok=8 anon=8 device=8 absent=0; munmap rv=0, 547 clean | M | results/phase36_realargs/1548a_map_fixed_over_device_entry_20261110_173458.txt |
+| 2026-11-10 17:40 | 548noretry | vm_map_protect takes the map lock exactly once and never releases it before the epilogue, so there is no unlock/relookup retry window and the protect-versus-munmap race cannot be built | 0xffffffff8ac8bdb0..0x8ac8d0fa: single call to the mutex helper 0x8b60bb20 at 0x8ac8be42 (rw arm 0x8ae86a00 at 0x8ac8be60), no backward branch to <= 0x8ac8be70 in 0x8ac8bdb0..0x8ac8d300, one ret at 0x8ac8d0fa | S | - |
+| 2026-11-10 17:40 | 601ioctl2 | 601's forwarder is the debugger stop-the-world, and its download path needs a registration bit no reachable command sets, so 601 has no pointer-store-then-read body at all | allowlist 0x8b65fae0 admits exactly 0xa002830e/f/0xa0028310/0xa002c315/0xa0020102/0xa0020311/0xa0020319; body sets [proc+0x560]\|=0x4000 and walks [proc+0x10] clearing bit 0x200 per thread; download case 0x8b661032 returns rv=2 when td+0x528 lacks 0x400 and no 1538b command returned 2 | S | - |
+| 2026-11-10 18:07 | voidaudit | the seven 'no complete capture' dead ends are all carried by a second capture; the only defect was a wrong attribution, not a missing measurement | kenv->1341c; kld*->353d (kldstat 0.81C/0x60/0x1C all -1, 307(0)=-1, 306(0)=-1); 601 0x03->323a (printed 0x00-0x02, died at 0x03), 0x04->324a (banner only, loop starts 0x04); 629 jail->54b phase 1; resolve()->1341a2; MapDM->546c/552a/552c/552e; VM ops->1341b not 524a (524a is an AIO probe with no VM-op section) | S | - |
+| 2026-11-10 18:13 | 1549a | syscall 601 command 0x03 terminates the process on the 323a shape, now measured with a pre-printed call instead of inferred from a loop's order | pid 249: `[A] CALL 601(0x03, 310A439E0, 100)` printed then EOF, no rv; 9026 then answered CONNECTION_REFUSED | M | results/phase36_realargs/1549a_sys601_cmd03_printed_20261110_181253.txt |
 | 2026-11-10 18:19 | 1199b | kernel image at 0xFFFFFFFFD5000000-0xFFFFFFFFDB1FFFFF (98MB, slide +0x55000000) on fresh 14.10 boot | TEXT=0xFFFFFFFFD5000000 DATA=0xFFFFFFFFD5CE0000 ALLPROC=0xFFFFFFFFD85B9EA0 | M | results/phase17_new_vectors/1199b_fault_oracle_upper_20261110_131841.txt |
+| 2026-11-10 19:01 | 1550a | pipe(42) works: it returns fd0 in rax with fildes[] left untouched, so the DEAD_ENDS 'returns fds 0,0' row is a probe artefact | rv=22 = fd0, pair 22/23, byte round-trip in both directions; fildes[] still 0xDEADBEEF | M | results/phase36_realargs/1550a_pipe_rdx_recovery_20261110_190107.txt |
+| 2026-11-10 19:01 | 1552a | 548 op 2 grants WRITE on a MAP_PRIVATE vnode entry and COW still breaks correctly - the store goes to a private copy, the page cache and other mappings are untouched | op2 1->3 rv=0 processed=1, 547=3, store landed 0x5C, V2 read 0xA7, fresh V3 read 0xA7 | M | results/phase36_realargs/1552a_cow_break_via_548_op2_20261110_190131.txt |
+| 2026-11-10 19:21 | 1553a | a native child storing into page P faulted on its first store after 548 op1 unmapped P, then the loader died before any verdict printed; the fault is the correct-kernel signature but nothing was measured about a stale PTE | child RIP=0x2C152C67 (store gadget), rdi=0x31084C000 (P), RSP walked 0x16B70 bytes (about 1938 store pairs) then faulted; no [D] lines, no heartbeat, 9026 CONNECTION_REFUSED after | V | results/phase36_realargs/1553a_munmap_vs_store_race_20261110_192006.txt |
+| 2026-11-10 19:24 | 1556a | a single thr_create(430) child faulting on an unmapped user VA takes the whole loader down; the parent never printed again | child RIP=0x2E856C67 (store gadget) rdi=0x200000000 (unmapped) rsp=0x3111BC000 untouched (first instruction faulted), rax=0x0011223344556677; no [A] thr_create line after, 9026 CONNECTION_REFUSED | M | results/phase36_realargs/1556a_child_fault_survivability_20261110_192412.txt |
+| 2026-11-10 19:26 | 1534c-pte | after 548 op1 returns rv=0 processed=1, the very next read of the removed range faults and ends the run, so vm_map_delete has zapped the PTEs before it returns in the non-racy case | 1534c [G]: op1 on U(0x500004000) rv=0 processed=1 then immediate fault dump with no further line; 1537a is the control (four op1 calls, process survived and printed), 1556a proves a user-space fault ends the run | M | - |
+| 2026-11-10 19:28 | 1557a | a native child storing continuously into a page that 548 op1 unmaps faults on its next store; no store survived the unmap, so vm_map_delete leaves no PTE a racing user store can reach | arm check P=H=MARKER, child faulted at RIP=0x1A792C67 (store gadget) rdi=0x3109A8000 (P) rsp=0x310C3D9F0 (1.2 MB into the 8 MiB fill, about 25k periods after the arm check); [A] control op1 rv=0 processed=1 547=-1 and the process lived | M | results/phase36_realargs/1557a_unmap_pte_removal_20261110_192806.txt |
+| 2026-11-10 19:35 | 1555a | memory.write_qword, write_dword and write_buffer all land on a 477 anon page; but to_num() on a read-back uint64 loses low bits (0x11223344556677 read back as 0x1122334455666C), so 64-bit round-trips must be printed with %X on the raw uint64, never through tonumber | pid 284 P=0x311244000; [A] write_qword lands; [B] 4096 write_dword calls zero the page; [D] write_buffer zeroes it; [C]/[E] sentinels (0xAAAAAAAAAAAAAAAA, MARK) came back with corrupted low bits - the same corruption as 1554a's 'H reads MARKER before the child ran' | M | results/phase36_realargs/1555a_memory_write_paths_20261110_193430.txt |
+| 2026-11-10 19:37 | 1554a | VOID: [B] never called prep(Pv), so fire() re-sent the entry still describing the already-unmapped control page; op1 answered rv=0 processed=1 while 547(P) still read 3, and the heartbeat probe correctly refused to call that a stale PTE | capture 1554a_unmap_vs_first_touch_fault_20261110_193651.txt: ctx=0x3104C0020 no overlap, op1 rv=0 processed=1, 547(P) after=3, h1=h2=0xDEADBEEF, VOID branch taken | V | results/phase36_realargs/1554a_unmap_vs_first_touch_fault_20261110_193651.txt |
+| 2026-11-10 19:37 | 1559a | string.format('%X', <raw uint64 table>) raises 'bad argument #3 to format (number expected, got table)', so a 64-bit value must be converted with to_num before printing, and every arm check in the race probes compares through that conversion | capture 1559a_marker_precision_20261110_193629.txt: pid 298, died at line 70 in show() with that error | M | results/phase36_realargs/1559a_marker_precision_20261110_193629.txt |
+| 2026-11-10 19:39 | 1554a | first-touch fault: the child's initial store into a fresh 477 page is serviced normally and the process survives; it then ran 23,445 store periods until 548 op1 unmapped the page, at which point the next store faulted with no stale PTE (same clean result as 1557a) | capture 1554a_unmap_vs_first_touch_fault_20261110_193914.txt pid 305: all staged H reads 0x0 before thr_create, H=0xDEADBEEF read immediately after spawn (so P was already writable), dump RIP=0x4DF96C67 STORE rdi=0x310C0C000 (=P) rsp=0x310E56C00 = 0x112C00 into the fill = 23,445 periods | M | results/phase36_realargs/1554a_unmap_vs_first_touch_fault_20261110_193914.txt |
+| 2026-11-10 19:42 | 1562a | 548 op2 on a 16 KiB sub-range does not leak max_prot: adding EXEC to a single device page answers EACCES(13) exactly like the whole-window call, and a carved anon page still refuses 0x7, so the check is applied per entry and W^X cannot be reopened by splitting | capture 1562a_sys548_subrange_maxprot_20261110_194204.txt pid 312: [B] op2(MID,0x4000,0x33) rv=0 processed=1 547=51; [C] op2(MID,0x4000,0x37) rv=-1 processed=0 547=51; [D] op3 MAP_FIXED carved 0xF0000C000 as anon prot 3; [E] op2(CARVE,0x4000,0x7) rv=-1 processed=0 547=3; [F] restored 51 | M | results/phase36_realargs/1562a_sys548_subrange_maxprot_20261110_194204.txt |
+| 2026-11-10 19:44 | 1563a | 674 writes min(map-entries, arg3) records of arg2 bytes at an attacker-chosen base with no buffer-length argument: 400/4000 both wrote 316*72=0x58E0 bytes into a 0x10000 region, and the limit truncates exactly (8 -> 0x240, 1 -> 0x48, 0 -> nothing), so the count is bounded by the map and by arg3 only, never by the caller's buffer | capture 1563a_sys674_record_bound_20261110_194414.txt pid 312: [A] rv=0 count=316 furthest=0x58DC; [B] lim 8 -> 0x23C, 1 -> 0x44, 0 -> nothing; [C] lim 4000 -> same 0x58DC; [D] void (filled 0xEEEEEEEE, span() looks for 0xA5A5A5A5) | M | results/phase36_realargs/1563a_sys674_record_bound_20261110_194414.txt |
+| 2026-11-10 19:47 | 1564a | VOID by my own defect: the probe sized the 674 record buffer at 0x4000 while asking for 400 records, so the kernel wrote 316*72=22752 bytes over the Lua heap and killed the loader before any test ran -- an incidental confirmation of 1563a's no-buffer-length property | capture 1564a_sys548_map_fixed_boundary_20261110_194737.txt: prints [0] pid=312 then EOF; 9026 answers CONNECTION_REFUSED; buf was memory.alloc(0x4000), needed 0x58E0 | V | results/phase36_realargs/1564a_sys548_map_fixed_boundary_20261110_194737.txt |
+| 2026-11-10 19:52 | 1564a-run | 548 op3 MAP_FIXED across a boundary between an anon page and a device entry replaces BOTH cleanly: after carving 0x8000 at 0xF00000000 spanning the SceGnmTrapData entry [0xF00004000,0xF00008000), both pages read back the 0xCAFEBABE we stored and 547 reports one record at prot 3, so the delete path clips both entries and no pager object survives the remap | capture 1564a_sys548_map_fixed_boundary_20261110_195243.txt pid 319: [A] 674 count=316 named SceGnmTrapData 0xF00004000; [C] carve at 0xF00008000 took, device neighbour read 0xF00144000; [D] mmap 0x8000 at 0xF00000000 -> rv=0xF00000000; [E] both pages 0xCAFEBABE; [F] 547 one record [0xF00000000,0xF00008000) prot 3 | M | - |
+| 2026-11-10 19:54 | 1565a | 674's record copyout respects the user page write bit: pointing the buffer at a READ-ONLY executable page (eboot 'executable' segment 0x78420000, target inside it) returns rv=-1 with zero of sixteen dwords changed, so a kernel copyout cannot write into a code page and 674 is not a W^X bypass | capture 1565a_sys674_writebit_bypass_20261110_195359.txt pid 319: [A] 674 count=315, largest prot-5 range name='executable' [0x78420000,0x788B4000); [B] before C0FFFBD1 F875FB85 0F6696EB 0000441F; [C] 674(T=0x7866A000,72,1,cnt) rv=-1; [D] changed dwords=0 of 16 (errno not printed) | M | results/phase36_realargs/1565a_sys674_writebit_bypass_20261110_195359.txt |
+| 2026-11-10 20:07 | vmfaulthold | the fault-time map race is closed by construction, which is why 1552a/1554a/1557a all measured clean: vm_fault_hold drops the map lock only at 0x8b0c75ab/0x8b0c7ab7 (vm_map_lookup_done), re-acquires with _sx_try_slock at 0x8b0c7e76, then gates pmap_enter behind a map->timestamp compare at 0x8b0c7e97 and, if it changed, a second full vm_map_lookup at 0x8b0c7ecc with object/pindex equality at 0x8b0c802f/0x8b0c803f; a racing vm_map_delete must take the exclusive lock, which bumps timestamp at 0x8ac864cc, so the stale entry is never used | static from .local/ktext_ins.pkl: vm_fault 0x8b0c69e0, vm_fault_hold 0x8b0c6b40 size 0x1e3f, RetryFault 0x8b0c6c18, pmap_enter 0x8b2a2760 called only at 0x8b0c6f8c (pre-drop) and 0x8b0c86f8 (behind all three gates) | S | - |
+| 2026-11-10 20:11 | 1566a | /dev/dce's real ioctl words are not the 16-bit numbers the earlier sweeps fired: the 13.60 dispatcher compares the command register against thirteen 32-bit constants (group 0x82), and the first two tested on 14.10 diverge -- 0x9CE88210 returns -1 while 0x80208217 BLOCKS the calling thread forever, wedging the loader exactly like 0xC0048125 on /dev/gc | capture 1566a_dce_real_ioctl_words_20261110_201038.txt pid 319 fd=22: [A] 0x80088209 rv=0; [B] 0x9CE88210 rv=-1; [B] 0x80208217 never returned (IDLE_TIMEOUT 30s, then CONNECT_TIMEOUT) | M | results/phase36_realargs/1566a_dce_real_ioctl_words_20261110_201038.txt |
 | 2026-11-10 20:47 | 1199b_fault_oracle_upper | KASLR re-verified same boot: kernel at 0xFFFFFFFFD5000000, 98MB, slide +0x55000000 | 50 mapped pages, stub at C0000000 | M | results/phase17_new_vectors/1199b_fault_oracle_upper_20261110_153847.txt |
+| 2026-11-11 20:26 | 1567a | /dev/dce 0x40D08214 (IOC_OUT, 0xd0 bytes) is inert on 14.10: rv=-1 and the buffer is untouched, so the credential gate in front of it refuses a game process before any copyout | capture 1567a_dce_word_out_d0_20261110_203720.txt pid 81 fd 22: control 0x80088209 rv=0, 0x40D08214 rv=-1 buf[0]=0x0, closed | M | results/phase36_realargs/1567a_dce_word_out_d0_20261110_203720.txt |
+| 2026-11-11 20:26 | 1568a | /dev/dce 0xC008820B (8-byte IN) is also inert on 14.10: rv=-1 with an untouched buffer, so the generic handler 0x8b225380 the four 0x82 words share refuses at its entry rather than entering the driver | capture 1568a_dce_word_in_8_20261110_203803.txt pid 81 fd 22: control 0x80088209 rv=0, 0xC008820B rv=-1 buf[0]=0x0 | M | results/phase36_realargs/1568a_dce_word_in_8_20261110_203727.txt |
+| 2026-11-11 20:26 | 1569a | SECOND CONSOLE-FATAL word: /dev/dce 0x80288208 (group 0x82 function 0x08, 0x28 bytes) blocks the calling thread forever and the whole console dies -- every unmeasured dce word that actually reaches a handler has done this (0x80208217, now 0x80288208), while the three that returned -1 are gate or no-case paths | capture 1569a_dce_word_inout28_20261110_204058.txt (no text received): IDLE_TIMEOUT 30s after the pre-call header, ping then CONNECT_TIMEOUT, console dead before 1570a | M | results/phase36_realargs/1569a_dce_word_inout28_20261111_202545.txt |
+| 2026-11-09 20:41 | p690 | - | - | ? | results/phase13_webkit/p690_walk_forge_oracle_20261109_204155.txt |
+| 2026-11-09 23:54 | p691 | - | - | ? | results/phase13_webkit/p691_walk_forge_fixed_20261109_235425.txt |
+| 2026-11-10 01:32 | p710 | - | - | ? | results/phase13_webkit/p710_base_discovery_20261110_013236.txt |
+| 2026-11-10 04:11 | p803 | - | - | ? | results/phase14_kernel_read/p803_procfs_auxv_20261110_041157.txt |
+| 2026-11-10 13:16 | 1199a | - | - | ? | results/phase17_new_vectors/1199a_fault_oracle_kaslr_20261110_131652.txt |
+| 2026-11-10 13:42 | 1400a | - | - | ? | results/phase17_new_vectors/1400a_ipv6_pktopts_race_20261110_134201.txt |
+| 2026-11-10 13:42 | 1400a | - | - | ? | results/phase17_new_vectors/1400a_ipv6_pktopts_race_20261110_134213.txt |
+| 2026-11-10 13:44 | 1401a | - | - | ? | results/phase17_new_vectors/1401a_ipv6_child_race_20261110_134453.txt |
+| 2026-11-10 13:45 | 1400a | - | - | ? | results/phase17_new_vectors/1400a_ipv6_pktopts_race_20261110_134516.txt |
+| 2026-11-10 13:51 | 1401b | - | - | ? | results/phase17_new_vectors/1401b_ipv6_child_race_v2_20261110_135105.txt |
+| 2026-11-10 13:52 | 1401c | - | - | ? | results/phase17_new_vectors/1401c_ipv6_child_race_v3_20261110_135249.txt |
+| 2026-11-10 14:16 | 1199b | - | - | ? | results/phase17_new_vectors/1199b_fault_oracle_upper_20261110_141647.txt |
+| 2026-11-10 15:38 | 1199a | - | - | ? | results/phase17_new_vectors/1199a_fault_oracle_kaslr_20261110_153801.txt |
+| 2026-11-10 15:39 | 1405a | - | - | ? | results/phase17_new_vectors/1405a_race_orchestrator_20261110_153931.txt |
+| 2026-11-10 16:21 | 01 | - | - | ? | results/phase1_identity_layout/01_identity_20261110_162113.txt |
+| 2026-11-10 19:33 | 1554a | - | - | ? | results/phase36_realargs/1554a_unmap_vs_first_touch_fault_20261110_193300.txt |
+| 2026-11-10 19:35 | 1554a | - | - | ? | results/phase36_realargs/1554a_unmap_vs_first_touch_fault_20261110_193528.txt |
+| 2026-11-10 19:52 | 1564a | - | - | ? | results/phase36_realargs/1564a_sys548_map_fixed_boundary_20261110_195243.txt |
+| 2026-11-10 19:53 | 1565a | - | - | ? | results/phase36_realargs/1565a_sys674_writebit_bypass_20261110_195350.txt |
+| 2026-11-10 20:35 | 1331a | - | - | ? | results/1331a_20261110_203553.txt |

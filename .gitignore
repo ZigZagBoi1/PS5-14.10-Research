@@ -52,3 +52,15 @@ tools/runner/supervisor.lock
 tools/runner/supervisor.pause
 tools/runner/supervisor.stop
 tools/runner/_prompt_*
+results/webkit/
+work/
+.tmp_*
+all_callgraph_forward.json
+caller_of.json
+edges_e8.json
+*.pkl
+malloc_call_sites.json
+site_syscalls.json
+syscall_map.json
+tools/_own.bin
+docs/_mg_*.json

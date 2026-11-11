@@ -1,0 +1,14 @@
+{
+  "id": "p692-base-scan",
+  "name": "p692 WebProcess Base Scanner",
+  "description": "FontFace walk chain + backward ELF scan to find WebProcess text base. Uses CSS escape decode fix.",
+  "probe_path": "probes/phase13_webkit/p692-base-scan.html",
+  "probe_type": "webkit",
+  "crash_class": "HIGH",
+  "opt_in": true,
+  "max_retries": 3,
+  "timeout": 120,
+  "stop_on_success": true,
+  "success_markers": ["DONE", "BASE=", "RVA="],
+  "notes": "Requires: nginx DNS redirect active, PS5 browser on manuals.playstation.net, telemetry server on 8081. CSS escape decode fix applied 2026-11-10."
+}

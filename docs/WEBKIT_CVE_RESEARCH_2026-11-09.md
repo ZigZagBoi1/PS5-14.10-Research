@@ -193,7 +193,12 @@ These were ALL present in Safari 17.0 (605.1.15) and fixed later. PS5 14.10 ship
 - Fixed in Safari 17.1.2 (Nov 30, 2023), meaning it was **present in Safari 17.0**
 - PS5 14.10 ships WebKit 605.1.15 / Safari 17.0 -- **LIKELY VULNERABLE**
 - Apple describes: "An out-of-bounds read was addressed with improved input validation"
-- **Red Hat confirms: "related to the JIT code"** -- PS5 has DFG JIT active (p602)
+- **Red Hat confirms: "related to the JIT code"** -- [ERRATUM 2026-11-10: this doc's
+  "PS5 has DFG JIT active (p602)" premise is retracted. `ENABLE_JIT` is PRIVATE OFF
+  (`OptionsPlayStation.cmake:206`) and baseline codegen is gated by `ENABLE(JIT)` itself
+  (`CodeBlock.cpp:269/:321/:414/:762` in the 616-era tree — no separate baseline tier
+  exists), so the engine is LLInt-only and the p602 49ms timing cannot name a tier.
+  CVE-2023-42916's JIT-code path is unreachable on this build.]
 - WebKit Bugzilla: 265041
 - CWE-125 (Out-of-bounds Read)
 - Used as the **info-leak stage** alongside CVE-2023-42917 (code execution stage) in
@@ -239,10 +244,13 @@ Common DFG JIT OOB read patterns in WebKit 605.1.15:
 4. **GetByVal on TypedArray with incorrect length** -- JIT caches a stale length
    after resize/detach and reads past the end
 
-Since PS5 has DFG JIT active (p602: 5M loop in 49ms) but NO FTL and NO WebAssembly,
-the vulnerable code path must be in the DFG tier. The "input validation" fix suggests
-the trigger involves user-controlled input that reaches the JIT without proper bounds
-checking -- likely an array index or TypedArray offset.
+[ERRATUM 2026-11-10 — the "PS5 has DFG JIT active" premise is retracted: the engine is
+LLInt-only (`ENABLE_JIT` PRIVATE OFF, baseline included), so a DFG-tier trigger is
+unreachable on this build. Kept for the record:] Since PS5 has DFG JIT active (p602: 5M
+loop in 49ms) but NO FTL and NO WebAssembly, the vulnerable code path must be in the DFG
+tier. The "input validation" fix suggests the trigger involves user-controlled input
+that reaches the JIT without proper bounds checking -- likely an array index or
+TypedArray offset.
 
 **Probe strategy (requires console access):**
 - p680: DFG array bounds elimination -- force DFG compilation with predictable indices,

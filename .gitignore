@@ -45,3 +45,10 @@ results/phase22_threaded_races/92d_pktinfo_race_verify_20261021_195127.txt
 
 # search index database (rebuilt locally)
 tools/research.db
+tools/runner/tasks.db
+tools/runner/runs.jsonl
+tools/runner/supervisor.pid
+tools/runner/supervisor.lock
+tools/runner/supervisor.pause
+tools/runner/supervisor.stop
+tools/runner/_prompt_*

@@ -1,0 +1,32 @@
+{
+  "supervisor": {
+    "max_concurrent_tasks": 1,
+    "max_parallel_subagents": 2,
+    "session_timeout_minutes": 30,
+    "max_retries_per_task": 2,
+    "retry_backoff_seconds": 60,
+    "checkpoint_interval_tasks": 1,
+    "pause_between_tasks_seconds": 5,
+    "max_consecutive_failures": 3,
+    "watchdog_interval_seconds": 30
+  },
+  "budget": {
+    "max_tasks_per_run": 20,
+    "max_runtime_minutes": 120,
+    "max_errors_before_pause": 5,
+    "cooldown_after_rate_limit_seconds": 300
+  },
+  "safety": {
+    "no_console_probes": true,
+    "no_destructive_git": true,
+    "no_force_push": true,
+    "read_only_external": true,
+    "require_evidence_for_claims": true
+  },
+  "paths": {
+    "task_db": "tools/runner/tasks.db",
+    "run_log": "tools/runner/runs.jsonl",
+    "pid_file": "tools/runner/supervisor.pid",
+    "lock_file": "tools/runner/supervisor.lock"
+  }
+}

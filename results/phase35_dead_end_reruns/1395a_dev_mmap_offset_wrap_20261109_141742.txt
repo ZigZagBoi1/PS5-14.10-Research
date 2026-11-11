@@ -1,0 +1,128 @@
+=== PROBE 1395a: DEVICE MMAP OFFSET WRAP ===
+[0] pid=350
+[0] SIG_IGN attempt done
+
+[A] device mmap at large and wrapping offsets
+  /dev/dmem0     open fd=22
+    -> mmap(len=0x2000, off=0x0)
+    <- addr=0x311314000 nonzero=7  C0012800 80000000 80000000 C0001200 00000000 C0055800 2EC47FC0 FFFFFFFF
+    -> mmap(len=0x2000, off=0x1000)
+    <- addr=0x311315000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0x10000000)
+    <- addr=0x311314000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0x80000000)
+    <- addr=0x311314000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0x100000000)
+    <- addr=0x311314000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFF00000)
+    <- rv=-1 13 Permission denied
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFF000)
+    <- rv=-1 13 Permission denied
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFFFFF)
+    <- rv=-1 13 Permission denied
+  /dev/dmem1     open fd=22
+    -> mmap(len=0x2000, off=0x0)
+    <- addr=0x311314000 nonzero=7  C0012800 80000000 80000000 C0001200 00000000 C0055800 2EC47FC0 FFFFFFFF
+    -> mmap(len=0x2000, off=0x1000)
+    <- addr=0x311315000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0x10000000)
+    <- addr=0x311314000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0x80000000)
+    <- addr=0x311314000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0x100000000)
+    <- addr=0x311314000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFF00000)
+    <- rv=-1 13 Permission denied
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFF000)
+    <- rv=-1 13 Permission denied
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFFFFF)
+    <- rv=-1 13 Permission denied
+  /dev/dmem2     open fd=22
+    -> mmap(len=0x2000, off=0x0)
+    <- rv=-1 13 Permission denied
+    -> mmap(len=0x2000, off=0x1000)
+    <- rv=-1 13 Permission denied
+    -> mmap(len=0x2000, off=0x10000000)
+    <- rv=-1 13 Permission denied
+    -> mmap(len=0x2000, off=0x80000000)
+    <- rv=-1 13 Permission denied
+    -> mmap(len=0x2000, off=0x100000000)
+    <- rv=-1 13 Permission denied
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFF00000)
+    <- rv=-1 13 Permission denied
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFF000)
+    <- rv=-1 13 Permission denied
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFFFFF)
+    <- rv=-1 13 Permission denied
+  /dev/gc        open fd=22
+    -> mmap(len=0x2000, off=0x0)
+    <- addr=0x311314000 nonzero=8  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+    -> mmap(len=0x2000, off=0x1000)
+    <- addr=0x311315000 nonzero=8  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+    -> mmap(len=0x2000, off=0x10000000)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0x80000000)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0x100000000)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFF00000)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFF000)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFFFFF)
+    <- rv=-1 22 Invalid argument
+  /dev/dce       open fd=22
+    -> mmap(len=0x2000, off=0x0)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0x1000)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0x10000000)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0x80000000)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0x100000000)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFF00000)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFF000)
+    <- rv=-1 22 Invalid argument
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFFFFF)
+    <- rv=-1 22 Invalid argument
+  /dev/zero      open fd=22
+    -> mmap(len=0x2000, off=0x0)
+    <- addr=0x311314000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0x1000)
+    <- addr=0x311315000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0x10000000)
+    <- addr=0x311314000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0x80000000)
+    <- addr=0x311314000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0x100000000)
+    <- addr=0x311314000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFF00000)
+    <- addr=0x311314000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFF000)
+    <- addr=0x311317000 nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    -> mmap(len=0x2000, off=0xFFFFFFFFFFFFFFFF)
+    <- addr=0x311317FFF nonzero=0  00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+
+[B] mmap with MAP_FIXED at a kernel address and at the top of user space
+    -> anon MAP_FIXED at 0xFFFFFFFFC0000000 (kernel stub)
+    <- rv=-1 22 Invalid argument
+    -> anon MAP_FIXED at 0xFFFFFFFFC1000000 (kernel image)
+    <- rv=-1 22 Invalid argument
+    -> anon MAP_FIXED at 0xFFFFFFFFD0000000 (kern absent)
+    <- rv=-1 22 Invalid argument
+    -> anon MAP_FIXED at 0x7FFFFFFF0000 (top user)
+    <- rv=-1 22 Invalid argument
+    -> anon MAP_FIXED at 0x7FFFFFFFFFF000 (top user -pg)
+    <- rv=-1 22 Invalid argument
+
+[C] mmap with a length that wraps the address computation
+    -> anon len=0xFFFFFFFFFFFFF000 at 0
+    <- rv=-1 22 Invalid argument
+    -> anon len=0xFFFFFFFFFFFFFFFF at 0
+    <- rv=-1 22 Invalid argument
+    -> anon len=0x7FFFFFFFFFFFF000 at 0
+    <- rv=-1 12 Cannot allocate memory
+=== PROBE 1395a COMPLETE ===

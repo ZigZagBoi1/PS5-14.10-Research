@@ -1,0 +1,73 @@
+=== PROBE 1381a: /dev/hmd2_cmd FULL-SPACE IOCTL SWEEP ===
+[0] pid=300
+[1] open /dev/hmd2_cmd O_RDWR fd=27
+--- dir=0xC0000000 len=0x4
+  [running] total=65536 generic=65536 errno=0 hits=0
+--- dir=0xC0000000 len=0x8
+  [running] total=131072 generic=131072 errno=0 hits=0
+--- dir=0xC0000000 len=0x10
+  [running] total=196608 generic=196608 errno=0 hits=0
+--- dir=0xC0000000 len=0x18
+  [running] total=262144 generic=262144 errno=0 hits=0
+--- dir=0xC0000000 len=0x20
+  [running] total=327680 generic=327680 errno=0 hits=0
+--- dir=0xC0000000 len=0x28
+  [running] total=393216 generic=393216 errno=0 hits=0
+--- dir=0xC0000000 len=0x40
+  [running] total=458752 generic=458752 errno=0 hits=0
+--- dir=0x80000000 len=0x4
+  HIT cmd=0x8004BC08 rv=-1972240380(0x8A720004) wrote=0
+  HIT cmd=0x8004BC1D rv=0(0x0) wrote=0
+  HIT cmd=0x8004BC23 rv=-2146631165(0x800D0203) wrote=0
+  [running] total=524288 generic=524285 errno=0 hits=3
+--- dir=0x80000000 len=0x8
+  HIT cmd=0x8008BC01 rv=-1972240380(0x8A720004) wrote=0
+  HIT cmd=0x8008BC04 rv=-1972240380(0x8A720004) wrote=0
+  HIT cmd=0x8008BC09 rv=-1972240380(0x8A720004) wrote=0
+  HIT cmd=0x8008BC0C rv=-1972236279(0x8A721009) wrote=0
+  HIT cmd=0x8008BC0D rv=-1972236279(0x8A721009) wrote=0
+  HIT cmd=0x8008BC0E rv=-1972236279(0x8A721009) wrote=0
+  HIT cmd=0x8008BC0F rv=-1972240375(0x8A720009) wrote=0
+  HIT cmd=0x8008BC10 rv=-1972240380(0x8A720004) wrote=0
+  HIT cmd=0x8008BC15 rv=-1972240380(0x8A720004) wrote=0
+  HIT cmd=0x8008BC17 rv=-1972240380(0x8A720004) wrote=0
+  HIT cmd=0x8008BC18 rv=-1972240380(0x8A720004) wrote=0
+  HIT cmd=0x8008BC1E rv=-1972236280(0x8A721008) wrote=0
+  HIT cmd=0x8008BC22 rv=-1972240380(0x8A720004) wrote=0
+  HIT cmd=0x8008BC24 rv=-2146631165(0x800D0203) wrote=0
+  HIT cmd=0x8008BC2E rv=-2146631165(0x800D0203) wrote=0
+  HIT cmd=0x8008BC33 rv=-1972240380(0x8A720004) wrote=0
+  [running] total=589824 generic=589805 errno=0 hits=19
+--- dir=0x80000000 len=0x10
+  HIT cmd=0x8010BC05 rv=-1972240375(0x8A720009) wrote=0
+  HIT cmd=0x8010BC07 rv=-1972240375(0x8A720009) wrote=0
+  HIT cmd=0x8010BC21 rv=-1972240375(0x8A720009) wrote=0
+  [running] total=655360 generic=655337 errno=1 hits=22
+--- dir=0x80000000 len=0x18
+  HIT cmd=0x8018BC02 rv=-1972240380(0x8A720004) wrote=0
+  [running] total=720896 generic=720872 errno=1 hits=23
+--- dir=0x80000000 len=0x20
+  [running] total=786432 generic=786408 errno=1 hits=23
+--- dir=0x80000000 len=0x28
+  [running] total=851968 generic=851944 errno=1 hits=23
+--- dir=0x80000000 len=0x40
+  HIT cmd=0x8040BC1F rv=-1972240375(0x8A720009) wrote=0
+  HIT cmd=0x8040BC20 rv=-1972240375(0x8A720009) wrote=0
+  [running] total=917504 generic=917478 errno=1 hits=25
+--- dir=0x40000000 len=0x4
+  HIT cmd=0x4004667A rv=0(0x0) wrote=1[ 00000000]
+  [running] total=983040 generic=983013 errno=1 hits=26
+--- dir=0x40000000 len=0x8
+  [running] total=1048576 generic=1048549 errno=1 hits=26
+--- dir=0x40000000 len=0x10
+  [running] total=1114112 generic=1114085 errno=1 hits=26
+--- dir=0x40000000 len=0x18
+  [running] total=1179648 generic=1179621 errno=1 hits=26
+--- dir=0x40000000 len=0x20
+  [running] total=1245184 generic=1245157 errno=1 hits=26
+--- dir=0x40000000 len=0x28
+  [running] total=1310720 generic=1310693 errno=1 hits=26
+--- dir=0x40000000 len=0x40
+  [running] total=1376256 generic=1376229 errno=1 hits=26
+[Z] total=1376256 generic=1376229 errno=1 hits=26
+=== PROBE 1381a COMPLETE ===

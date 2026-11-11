@@ -2,6 +2,10 @@
 
 Loaded on demand, not in every session. Last extracted: 2026-11-11 from CLAUDE.md
 
+## Evidence Corrections
+
+- **The "umtx" probes called syscall 557, not `_umtx_op(454)** (2026-10-19): phase-1/2 probes 04/10-13 and the first revision of 82a bound `sc_umtx_op` to 557 (namedobj_create in the 13.60 capture). 56i2's section [F] is the only saved 454 execution (ops 5/21 ret=0, op 5 wrote a TID-shaped owner word). UMTX_OP_SHM(25) and UMTX_OP_ROBUST_LISTS(26) were never exercised on 454, and FreeBSD 11 reads their key/params pointer from uaddr1. Do not treat probe 10's SHM/robust findings as umtx evidence. Probe 110a prepared; see docs/UMTX_454_EVIDENCE.md.
+
 ## Known Dead Ends (Don't Repeat These)
 
 - **The /system_tmp sockets** — `GnmCompositorRestricted`, `VrTracker2DomainSock` and `AgcCompositorSppSocket` accept a connection from the game's jail; the other four refuse on a fresh boot. The compositor protocol is `{u32 size; u32 command; ...}` in a message of at least 0x30 bytes, one request per connection, answered by `{u32 type=1; u32 flags; u32 payload_len; u32 status; payload}` for commands 0-6 (`0x80FF` for 7+); command 1 is the only one without `0x80D40009`, and nothing in the header except its size and the command word changes a reply. **Writing 8 KiB to a compositor socket stops the daemon listening until the game restarts and blacks the screen** (a loader relaunch with no console reboot brings them back) — an unprivileged DoS, no crash address and nothing reclaimed (361b-362b). Library `.rodata` is `p=0x1` and a read at `libSceNpGameIntent.sprx 0x4E8000` kills the process, so the client cannot be found and the rest of the protocol cannot be recovered (374a-377a). See `docs/SYSTEM_SOCKETS_14_10.md`.

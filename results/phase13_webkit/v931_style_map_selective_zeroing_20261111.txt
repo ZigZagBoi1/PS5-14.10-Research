@@ -5,7 +5,7 @@ comprehensively — no partial overwrite possible through this channel.
 ================================================================================
 Probe:    probes/phase13_webkit/v931_style_map.html
 Target:   PS5 14.22 retail (base)
-Date:     2026-11-11 10:29Z
+Date:     2026-11-11 10:29 (bench clock UTC+1; true UTC ~09:29)
 Source:   tools/browser_runner/beacon_logs/beacons_20261111_102913.log
 
 === RESULTS (160 carriers, alternating italic/oblique/normal) ===
@@ -55,7 +55,7 @@ never-loaded face).
    their correct values pre-free but are NOT part of the reclaim
    experiment — they're the harness validation.
 
-=== ERA CLOSE: THE FONTFACE PARTIAL-OVERWRITE HYPOTHESIS IS FALSIFIED ===
+=== ERA CLOSE: THE FONTFACE PARTIAL-OVERWRITE HYPOTHESIS IS FALSIFIED-FOR-THIS-CHANNEL ===
 
 The last remaining escalation lane on the FontFace surface — partial
 overwrite of a carrier field via the engine's post-free status write —

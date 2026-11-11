@@ -5,7 +5,7 @@ First impl-scale corruption witness WITHOUT any address
 ================================================================================
 Probe:    probes/phase13_webkit/v930_repaired_census.html
 Target:   PS5 14.22 retail (base)
-Date:     2026-11-11 10:23Z
+Date:     2026-11-11 10:23 (bench clock UTC+1; true UTC ~09:23)
 Source:   tools/browser_runner/beacon_logs/ (10:23:15-10:23:17 session)
 
 === RESULTS ===

@@ -1,11 +1,11 @@
 # Research Checkpoint
 
 ## Last Updated
-2026-11-11T14:00:00Z
+2026-11-11T15:00:00Z
 
 ## Phase
 Phase 0 — Repository Overhaul (Priority A) — COMMITTED
-Phase 1 — PR Review (Priority C) — READY
+Phase 1 — PR Review (Priority C) — COMPLETE
 
 ## Completed
 - [x] CLAUDE.md: 581→162 lines, 26.5K→1.6K tokens (94% reduction)
@@ -25,8 +25,11 @@ Phase 1 — PR Review (Priority C) — READY
 | 245 | jsrkamal2002 | docs(index): flag config-silent |
 | 243 | jsrkamal2002 | docs: post-#240 corrections + serve.py |
 
+## PR Review Complete
+See docs/PR_DECISION_LEDGER.md. #264/#263 recommended for merge, #243/#245 for close, #246/#250 blocked.
+
 ## Next Action
-1. Review/merge open PRs
+1. Push commits + merge #264/#263 (needs owner approval or gh CLI)
 2. Build search index (SQLite FTS5)
 3. Evidence reconstruction (capability graph)
 4. External research audit

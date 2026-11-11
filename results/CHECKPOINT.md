@@ -1,33 +1,40 @@
 # Research Checkpoint
 
 ## Last Updated
-2026-11-11T18:15:00Z
+2026-11-11T18:45:00Z
 
 ## Phase
-Phase 0 — Repository Overhaul (Priority A) — COMPLETE
-Phase 1 — PR Resolution (Priority C) — COMPLETE
-Phase 2 — Search & Evidence (Priority B/D) — NEXT
+Phases 0-3 COMPLETE. Ready for research sprint.
 
-## Completed
-- [x] CLAUDE.md slimmed 94%, reference docs extracted
-- [x] serve.py regression fixed
+## Completed This Session
+- [x] CLAUDE.md slimmed 94% (26.5K→1.6K tokens)
+- [x] serve.py regression fixed (P686-P807 STATE vars restored)
 - [x] GitHub CLI installed (gh 2.103.3), authenticated as ZigZagBoi1
-- [x] Integration PR #265 created, CI 6/6 pass, MERGED
-- [x] PR #264 merged, PR #263 merged
-- [x] PR #243 closed, PR #245 closed, PR #246 closed (cherry-picked)
-- [x] PR #250 commented with remaining blockers (p704 naming, 29 zero-byte logs)
+- [x] All 6 PRs resolved: #264/#263 merged, #243/#245/#246 closed, #250 commented
+- [x] Integration PR #265 merged, CI 6/6 pass
+- [x] SQLite FTS5 search index (8,271 files, tools/search_index.py)
+- [x] Capability evidence graph (16 capabilities, docs/CAPABILITY_GRAPH.md)
+- [x] Progressive context loader (4 tiers, tools/context.py)
+- [x] External research audit — all 4 dimensions CONSISTENT
 
 ## Open PRs
 | # | Status | Title |
 |---|--------|-------|
 | 250 | BLOCKED (author) | Research v919/v929 campaign |
 
-## Next Action
-1. Build search index (SQLite FTS5) — Priority B continuity
-2. Evidence reconstruction: capability graph — Priority D
-3. External research audit — Priority D
-4. Context optimization: progressive loading — Priority B
+## New Tools
+- `python tools/search_index.py build|search|stats` — FTS5 corpus search
+- `python tools/context.py 0|1|2|3` — progressive context loading
+- `python tools/state.py show|set|row|check` — session state management
 
-## Git State
-- Branch: master, merged with integration PR #265
-- All CI passing
+## Next Action (when console available)
+1. Run 1407a ktimer CLOCK_TAI leak (SA-26:51)
+2. Run 1408a sysvsem OOB (SA-26:54)
+3. Run 1409a kevent ext[] leak
+4. WebKit probes p692/p693/p800 when browser visits
+
+## Remaining Master Prompt Phases
+- Offline kernel lab (Priority E)
+- Multi-agent workflow infrastructure (Priority E)
+- Persistent unattended runner (Priority F)
+- Focused research sprint (Priority F)

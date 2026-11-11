@@ -35,6 +35,33 @@ then `python tools/state.py set last_probe=... next_action=...`
 - `docs/FINDINGS.md` — detailed technical findings
 - `docs/ATTACK_SURFACE.md` — complete syscall status map
 - `docs/PROBE_INDEX.md` — every probe with status
+- `docs/VM_LAYER_14_10.md` — batch VM contract (547/548), 16 KiB page facts
+- `docs/DEVICE_IOCTL_14_10.md` — measured `/dev` words and the console-fatal list
+
+## Measured on this bench (2026-11-09 .. 2026-11-10)
+
+Numbers below are 14.10 measurements taken on the authoring console; each has a
+capture in `results/` and a row in `results/INDEX.md`.
+
+- **Kernel page is 16 KiB, not 4 KiB** (`1544a`): one `0x40000` mmap is one `547`
+  record and sixteen `0x4000`-stride addresses each read a distinct sentinel, so the
+  fault oracle resolves 16 KiB even though it samples at `0x4000`
+  (`docs/FAULT_ORACLE_KASLR_14_10.md`).
+- **Sys 548 is the batch VM call** (`sceKernelBatchMap2`): `arg2` is a flag mask tested
+  against `0xe0bffb6f`, `arg3` an array of `0x20`-byte entries
+  `{start, offset, length, prot, op @ +0x1C}`, `arg4` the count, `arg5` a 4-byte
+  processed count. Ops: 0/4 stub, 1 precise munmap, 2 `vm_map_protect` clamped to the
+  mapping's creation protection (so the exec bit cannot be added), 3 anonymous map
+  honouring `MAP_FIXED`. `docs/VM_LAYER_14_10.md` §15.
+- **Sys 601**: `0x1B` is an unconditional killer for every `arg3` shape tried, and
+  `0x03` terminates the process. `docs/MDBG_601_COMMAND_MAP_14_10.md`.
+- **Sys 674 takes a record bound, not a buffer length**: it writes
+  `min(count, entries) * 0x48` bytes of 0x48-byte records.
+- **The measured sysent ends at 676**; 677 and up kill the caller.
+- **Driver ioctls are console-fatal until measured**: `/dev/gc 0xC0048125`,
+  `/dev/dce 0x80208217` and `0x80288208` block the calling thread forever and take the
+  whole console down, so an unmeasured command word is never sent from the loader
+  thread. `docs/DEVICE_IOCTL_14_10.md`.
 
 ## Continuation System
 

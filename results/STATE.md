@@ -12,12 +12,14 @@ were measured; they are measurements, not truths.
 - allproc: 0xFFFFFFFFD85B9EA0
 - security_flags: 0xFFFFFFFFD6A84064
 - rootvnode: 0xFFFFFFFFD8E3B510
-- last_probe: 1405a_race_orchestrator (crashed child test, fn_addr bug fixed)
-- active_question: kernel R/W — Lua-side EXHAUSTED, WebKit is sole path
+- last_probe: p809v25e36 (GOT-DENSE dead end, ext-ptr scan dead end, slab heap pairs confirmed)
+- active_question: kernel R/W — WebKit vtable hijack via UAF write + known VSLOT RVAs
 - race_assessment: ALL DEAD: PKTINFO=embedded struct, SNDBUF=mbuf logical overflow, close+setsockopt=fget blocks, 16 CVEs blocked. See docs/KERNEL_RACE_OFFLINE_ASSESSMENT_2026-11-10.md
 - cve_assessment: 16 FreeBSD kernel CVEs (2019-2026) checked; ALL blocked on 14.10 (feature removal, missing prereqs, zone isolation, existing locks). See docs/CVE_KERNEL_RW_ASSESSMENT_2026-11-10.md
 - cve_2020_7457: SA-20:20 patch adds INP_WLOCK only around ip6_pcbopts (2292 path). PKTINFO already locked in ip6_ctloutput. Sony blocked 2292 entirely. 91d/92c tested PKTINFO race to 11K+ calls = clean.
-- next_action: Run autonomous runner: 51 analysis tasks queued. Console probes (1407a/1408a/1409a/p800) need game relaunch first.
+- next_action: E37 pivot — vtable hijack: scan .rodata for gadgets using known VSLOT RVAs (0x4001750, 0x5793400, 0x5b3cfb0 cluster), or direct vtable corruption with fake vtable in controlled heap
+- webkit_assets: BASE per-pipeline, rodata=BASE+0x68E0000, 4 distinct VSLOT code RVAs, VP known, heap R/W via snap2, JS string reading via FO graph
+- e36_verdict: GOT-DENSE=DEAD (all zeros), ext-ptr scan=DEAD (all slab heap pairs), A2W=GC-movable. Library ID via UAF not viable.
 - queued_probes: 1407a (ktimer TAI leak), 1408a (sysvsem OOB), 1409a (kevent leak), p800 (TransformStream typeconf)
 - notes: all kernel addresses valid this boot only; if rebooted re-measure with fault oracle first
 - ipv6_options: 2292PKTOPTIONS(6)=BLOCKED, PKTINFO(46)=OK, TCLASS(61)=OK, RTHDR(51)=partial, DSTOPTS/HOPOPTS=BLOCKED

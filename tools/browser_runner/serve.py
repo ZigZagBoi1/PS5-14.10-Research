@@ -38,7 +38,15 @@ PROJECT = ROOT.parent.parent
 
 STATIC = {
     '/': ROOT / 'redirect.html',
+    '/p809': PROJECT / 'probes' / 'phase13_webkit' / 'p809-elf-got-reader.html',
+    '/p809v24b.html': PROJECT / 'probes' / 'phase13_webkit' / 'p809v24b.html',
+    '/p809v24b': PROJECT / 'probes' / 'phase13_webkit' / 'p809v24b.html',
+    '/p809v25d.html': PROJECT / 'probes' / 'phase13_webkit' / 'p809v25d.html',
+    '/p809v25d': PROJECT / 'probes' / 'phase13_webkit' / 'p809v25d.html',
+    '/p809v25e.html': PROJECT / 'probes' / 'phase13_webkit' / 'p809v25e.html',
+    '/p809v25e': PROJECT / 'probes' / 'phase13_webkit' / 'p809v25e.html',
     '/p804': PROJECT / 'probes' / 'phase13_webkit' / 'p804-vtable-verify.html',
+    '/p808': PROJECT / 'probes' / 'phase13_webkit' / 'p808-gadget-scan.html',
     '/p807': PROJECT / 'probes' / 'phase13_webkit' / 'p807-base-discovery.html',
     '/p691': PROJECT / 'probes' / 'phase13_webkit' / 'p691-walk-forge-fixed.html',
     '/p690': PROJECT / 'probes' / 'phase13_webkit' / 'p690-walk-forge-oracle.html',
@@ -273,6 +281,7 @@ class CaptureHTTPServer(http.server.HTTPServer):
         self.first_error = None
         self.secondary_error = None
         self.response_error = None
+        self.allow_reuse_address = True
         super().__init__(address, handler)
 
     def handle_error(self, request, client_address):

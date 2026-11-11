@@ -1,1848 +1,1856 @@
 # All Probe Results — PS5 14.10 Research
 
 Archive of all probe result captures, concatenated for large-context ingestion.
-Regenerated 2026-11-08 by `tools/regen_archives.py` — deterministic, do not hand-edit.
+Regenerated 2026-11-11 by `tools/regen_archives.py` — deterministic, do not hand-edit.
 
-**Files in this archive: 2953** (496 skipped: binary content)
+**Files in this archive: 2975** (497 skipped: binary content)
 
 ## Index
 
-- `01_identity_20261018_083215.txt` (6521 bytes)
+- `01_identity_20261018_083215.txt` (6826 bytes)
+- `1199a_20261105_213431.txt` (1406 bytes)
+- `1331a_20261109_094441.txt` (14614 bytes)
+- `1331a_20261109_100517.txt` (14614 bytes)
+- `1335a_20261106_150315.txt` (4814 bytes)
 - `160a_boot1_20261020_173454.txt` (0 bytes)
-- `160a_kaslr_fingerprint_boot1_20261020_172345.txt` (163 bytes)
+- `160a_kaslr_fingerprint_boot1_20261020_172345.txt` (170 bytes)
 - `160a_kaslr_fingerprint_boot1_20261020_172423.txt` (0 bytes)
 - `160a_kaslr_fingerprint_boot1_20261020_172811.txt` (0 bytes)
-- `160a_kaslr_fingerprint_boot1_20261020_173247.txt` (163 bytes)
-- `161a_boot1_20261020_173947.txt` (1308 bytes)
-- `161a_boot2_20261020_174434.txt` (1310 bytes)
-- `161a_boot3_20261020_175830.txt` (1312 bytes)
-- `162a_leak_hunt_20261020_180523.txt` (672 bytes)
-- `164a_165a_sysctl_summary_20261020_181240.txt` (709 bytes)
-- `42f2_fast_phys_scan_20261016_070400.txt` (158 bytes)
-- `42g2_high_phys_decode_20261016_070600.txt` (84 bytes)
-- `42g_rop_kptr_leak_20261016_070509.txt` (804 bytes)
-- `42h2_rop_exploit2_20261016_070945.txt` (1601 bytes)
-- `42i_chain_analysis_20261016_071113.txt` (5365 bytes)
-- `43a_kldstat_kaslr_20261016_180703.txt` (139 bytes)
-- `43b_kldsym_resolve_20261016_180719.txt` (111 bytes)
-- `43c_sysarch_gsbase_20261016_180744.txt` (393 bytes)
-- `43d_kinfo_proc_full_20261016_180723.txt` (2028 bytes)
-- `43f_sysctl_write_20261016_180756.txt` (488 bytes)
-- `43g_sony_syscall_sweep_20261016_180802.txt` (111 bytes)
-- `43h_mtypeprotect_wxbypass_20261016_180808.txt` (1012 bytes)
-- `43i_fn_redirect_20261016_180730.txt` (884 bytes)
-- `43j_msgbuf_full_read_20261016_180815.txt` (718 bytes)
-- `43l_mincore_kaslr_20261016_180845.txt` (2208 bytes)
-- `43m_sockopt_overflow_20261016_180851.txt` (2202 bytes)
-- `43n_hid_ioctl_20261016_180856.txt` (1619 bytes)
-- `43o_afroute_kaslr_20261016_180647.txt` (1099 bytes)
-- `43p_aio_bypass_20261016_180656.txt` (314 bytes)
-- `44a_mtypeprotect_exec_20261016_182522.txt` (1166 bytes)
-- `44b_sony557_deep_20261016_182531.txt` (1184 bytes)
-- `44c_sockopt_heap_corrupt_20261016_182537.txt` (1361 bytes)
-- `44d_kaslr_creative_20261016_182544.txt` (2402 bytes)
-- `45a_native_exec_kaslr_20261016_185642.txt` (1364 bytes)
-- `45b_shellcode_write_diag_20261016_191357.txt` (2338 bytes)
-- `45c_execution_reality_check_20261016_192713.txt` (6324 bytes)
-- `46a_sony_syscall_deep_20261016_194741.txt` (1626 bytes)
-- `46a_sony_syscall_deep_20261016_195704.txt` (1873 bytes)
-- `46b_loader_dispatch_20261016_194751.txt` (5445 bytes)
-- `46c_ip_options_listener_20261016_201355.txt` (1057 bytes)
-- `46d_socket_bypass_20261016_194839.txt` (2672 bytes)
-- `47a_dispatch_deep_20261016_195632.txt` (18044 bytes)
-- `47b_cclosure_hijack_20261016_200432.txt` (1624 bytes)
-- `47b_cclosure_hijack_20261016_200459.txt` (11499 bytes)
-- `48a_sctp_ipv6_icmp_20261016_201145.txt` (7308 bytes)
-- `48b_sctp_loopback_fuzz_20261016_202732.txt` (3265 bytes)
-- `48c_ipv6_exthdr_fuzz_20261016_202737.txt` (4666 bytes)
-- `49a_tcp_inject_loopback_20261016_205847.txt` (293 bytes)
-- `49a_tcp_inject_loopback_20261016_205919.txt` (7438 bytes)
-- `49b_ipv6_frag_reassembly_20261016_205926.txt` (2926 bytes)
-- `50a_exotic_protocols_20261016_212850.txt` (2488 bytes)
-- `50b_timer_manipulation_20261016_212925.txt` (463 bytes)
-- `50c_resource_exhaustion_20261016_213603.txt` (254 bytes)
-- `51a_sony_syscall_survey_20261016_214814.txt` (3674 bytes)
-- `51a_sony_syscall_survey_20261016_220811.txt` (1244 bytes)
-- `51b_accessible_syscall_deep_20261016_214832.txt` (2563 bytes)
-- `51b_dynlib_cluster_fuzz_20261016_230416.txt` (135 bytes)
-- `51c_sony_survey_part2_20261016_215838.txt` (206 bytes)
-- `53b_afroute_retest_20261018_091237.txt` (1667 bytes)
-- `53b_afroute_retest_20261018_091257.txt` (1667 bytes)
-- `53d_cclosure_retest_20261018_091303.txt` (1321 bytes)
-- `54a2_rdmsr_precise_20261018_091308.txt` (3339 bytes)
-- `54a_dsp_access_check_20261018_032250.txt` (378 bytes)
-- `54a_dsp_access_check_20261018_032254.txt` (453 bytes)
-- `54b_jail_bypass_20261018_090446.txt` (1225 bytes)
-- `54c_aio_full_attack_20261018_090527.txt` (184 bytes)
-- `54d_dmem_page_flip_20261018_091257.txt` (1529 bytes)
-- `54e_device_fuzz_20261018_091240.txt` (354 bytes)
-- `54e_device_fuzz_20261018_091259.txt` (354 bytes)
-- `54f_kaslr_deep_20261018_090603.txt` (14969 bytes)
-- `54i_sys567_pmc_read_20261018_083439.txt` (1496 bytes)
-- `54i_sys572_buffer_exam_20261018_091303.txt` (2042 bytes)
-- `54j_sys572_vm_deep_20261018_083604.txt` (2807 bytes)
-- `54j_sys624_oracle_20261018_083648.txt` (1237 bytes)
-- `54k_sys649_deep_and_rdmsr_20261018_090952.txt` (4044 bytes)
-- `54l_rwx_verify_20261018_091853.txt` (1122 bytes)
-- `54m_cclosure_redirect_20261018_092047.txt` (1365 bytes)
-- `54o_cfunc_redirect_controlled_20261018_092721.txt` (487 bytes)
-- `54p_redirect_minimal_20261018_093008.txt` (394 bytes)
-- `83b_race_v2_20261021_133536.txt` (413 bytes)
+- `160a_kaslr_fingerprint_boot1_20261020_173247.txt` (170 bytes)
+- `161a_boot1_20261020_173947.txt` (1343 bytes)
+- `161a_boot2_20261020_174434.txt` (1345 bytes)
+- `161a_boot3_20261020_175830.txt` (1347 bytes)
+- `162a_leak_hunt_20261020_180523.txt` (696 bytes)
+- `164a_165a_sysctl_summary_20261020_181240.txt` (727 bytes)
+- `42f2_fast_phys_scan_20261016_070400.txt` (167 bytes)
+- `42g2_high_phys_decode_20261016_070600.txt` (88 bytes)
+- `42g_rop_kptr_leak_20261016_070509.txt` (823 bytes)
+- `42h2_rop_exploit2_20261016_070945.txt` (1650 bytes)
+- `42i_chain_analysis_20261016_071113.txt` (5526 bytes)
+- `43a_kldstat_kaslr_20261016_180703.txt` (145 bytes)
+- `43b_kldsym_resolve_20261016_180719.txt` (116 bytes)
+- `43c_sysarch_gsbase_20261016_180744.txt` (411 bytes)
+- `43d_kinfo_proc_full_20261016_180723.txt` (2113 bytes)
+- `43f_sysctl_write_20261016_180756.txt` (513 bytes)
+- `43g_sony_syscall_sweep_20261016_180802.txt` (117 bytes)
+- `43h_mtypeprotect_wxbypass_20261016_180808.txt` (1046 bytes)
+- `43i_fn_redirect_20261016_180730.txt` (916 bytes)
+- `43j_msgbuf_full_read_20261016_180815.txt` (750 bytes)
+- `43l_mincore_kaslr_20261016_180845.txt` (2265 bytes)
+- `43m_sockopt_overflow_20261016_180851.txt` (2264 bytes)
+- `43n_hid_ioctl_20261016_180856.txt` (1675 bytes)
+- `43o_afroute_kaslr_20261016_180647.txt` (1139 bytes)
+- `43p_aio_bypass_20261016_180656.txt` (323 bytes)
+- `44a_mtypeprotect_exec_20261016_182522.txt` (1208 bytes)
+- `44b_sony557_deep_20261016_182531.txt` (1240 bytes)
+- `44c_sockopt_heap_corrupt_20261016_182537.txt` (1410 bytes)
+- `44d_kaslr_creative_20261016_182544.txt` (2488 bytes)
+- `45a_native_exec_kaslr_20261016_185642.txt` (1417 bytes)
+- `45b_shellcode_write_diag_20261016_191357.txt` (2415 bytes)
+- `45c_execution_reality_check_20261016_192713.txt` (6531 bytes)
+- `46a_sony_syscall_deep_20261016_194741.txt` (1682 bytes)
+- `46a_sony_syscall_deep_20261016_195704.txt` (1949 bytes)
+- `46b_loader_dispatch_20261016_194751.txt` (5608 bytes)
+- `46c_ip_options_listener_20261016_201355.txt` (1092 bytes)
+- `46d_socket_bypass_20261016_194839.txt` (2754 bytes)
+- `47a_dispatch_deep_20261016_195632.txt` (18665 bytes)
+- `47b_cclosure_hijack_20261016_200432.txt` (1663 bytes)
+- `47b_cclosure_hijack_20261016_200459.txt` (11762 bytes)
+- `48a_sctp_ipv6_icmp_20261016_201145.txt` (7562 bytes)
+- `48b_sctp_loopback_fuzz_20261016_202732.txt` (3350 bytes)
+- `48c_ipv6_exthdr_fuzz_20261016_202737.txt` (4777 bytes)
+- `49a_tcp_inject_loopback_20261016_205847.txt` (303 bytes)
+- `49a_tcp_inject_loopback_20261016_205919.txt` (7678 bytes)
+- `49b_ipv6_frag_reassembly_20261016_205926.txt` (3020 bytes)
+- `50a_exotic_protocols_20261016_212850.txt` (2572 bytes)
+- `50b_timer_manipulation_20261016_212925.txt` (480 bytes)
+- `50c_resource_exhaustion_20261016_213603.txt` (263 bytes)
+- `51a_sony_syscall_survey_20261016_214814.txt` (3735 bytes)
+- `51a_sony_syscall_survey_20261016_220811.txt` (1279 bytes)
+- `51b_accessible_syscall_deep_20261016_214832.txt` (2630 bytes)
+- `51b_dynlib_cluster_fuzz_20261016_230416.txt` (142 bytes)
+- `51c_sony_survey_part2_20261016_215838.txt` (214 bytes)
+- `53b_afroute_retest_20261018_091237.txt` (1698 bytes)
+- `53b_afroute_retest_20261018_091257.txt` (1698 bytes)
+- `53d_cclosure_retest_20261018_091303.txt` (1344 bytes)
+- `54a2_rdmsr_precise_20261018_091308.txt` (3401 bytes)
+- `54a_dsp_access_check_20261018_032250.txt` (385 bytes)
+- `54a_dsp_access_check_20261018_032254.txt` (462 bytes)
+- `54b_jail_bypass_20261018_090446.txt` (1255 bytes)
+- `54c_aio_full_attack_20261018_090527.txt` (190 bytes)
+- `54d_dmem_page_flip_20261018_091257.txt` (1580 bytes)
+- `54e_device_fuzz_20261018_091240.txt` (370 bytes)
+- `54e_device_fuzz_20261018_091259.txt` (370 bytes)
+- `54f_kaslr_deep_20261018_090603.txt` (15257 bytes)
+- `54i_sys567_pmc_read_20261018_083439.txt` (1528 bytes)
+- `54i_sys572_buffer_exam_20261018_091303.txt` (2085 bytes)
+- `54j_sys572_vm_deep_20261018_083604.txt` (2870 bytes)
+- `54j_sys624_oracle_20261018_083648.txt` (1293 bytes)
+- `54k_sys649_deep_and_rdmsr_20261018_090952.txt` (4119 bytes)
+- `54l_rwx_verify_20261018_091853.txt` (1164 bytes)
+- `54m_cclosure_redirect_20261018_092047.txt` (1411 bytes)
+- `54o_cfunc_redirect_controlled_20261018_092721.txt` (500 bytes)
+- `54p_redirect_minimal_20261018_093008.txt` (411 bytes)
+- `83b_race_v2_20261021_133536.txt` (426 bytes)
 - `89a_B_20261020_164441.txt` (0 bytes)
 - `89a_sys625_msr_controller_B_20261020_164517.txt` (0 bytes)
-- `89a_sys625_msr_controller_B_20261020_171912.txt` (2576 bytes)
+- `89a_sys625_msr_controller_B_20261020_171912.txt` (2644 bytes)
 - `92a_D_20261020_164446.txt` (0 bytes)
-- `92a_pmu_hardware_exploit_D_20261020_171914.txt` (595 bytes)
-- `92a_run_b_20261020_151718.txt` (939 bytes)
-- `92a_run_c_20261020_151753.txt` (825 bytes)
-- `93a_A_20261020_164434.txt` (1228 bytes)
-- `94a_run_b_20261020_151814.txt` (973 bytes)
-- `94a_run_c_20261020_151821.txt` (1182 bytes)
-- `96a_A_20261020_164436.txt` (813 bytes)
-- `96a_handle_namespace_uaf_B_20261020_171916.txt` (299 bytes)
-- `98a_B_20261020_152620.txt` (886 bytes)
-- `98a_gpu_pte_wxbypass_C_20261020_171918.txt` (838 bytes)
-- `99a_B_20261020_152730.txt` (557 bytes)
-- `_selftest_watchdog_log.txt` (218 bytes)
+- `92a_pmu_hardware_exploit_D_20261020_171914.txt` (627 bytes)
+- `92a_run_b_20261020_151718.txt` (976 bytes)
+- `92a_run_c_20261020_151753.txt` (858 bytes)
+- `93a_A_20261020_164434.txt` (1270 bytes)
+- `94a_run_b_20261020_151814.txt` (1011 bytes)
+- `94a_run_c_20261020_151821.txt` (1226 bytes)
+- `96a_A_20261020_164436.txt` (848 bytes)
+- `96a_handle_namespace_uaf_B_20261020_171916.txt` (313 bytes)
+- `98a_B_20261020_152620.txt` (920 bytes)
+- `98a_gpu_pte_wxbypass_C_20261020_171918.txt` (873 bytes)
+- `99a_B_20261020_152730.txt` (586 bytes)
+- `_selftest_watchdog_log.txt` (220 bytes)
 - `autonomous/100a_kernel_table_modlist_20261019_231428.txt` (0 bytes)
 - `autonomous/100a_kernel_table_modlist_20261019_232205.txt` (0 bytes)
-- `autonomous/100a_kernel_table_modlist_20261019_232421.txt` (1439 bytes)
+- `autonomous/100a_kernel_table_modlist_20261019_232421.txt` (1484 bytes)
 - `autonomous/101a_sys628_mmap_variant_20261019_232441.txt` (0 bytes)
 - `autonomous/102a_chicken_combined_chain_20261019_231621.txt` (0 bytes)
 - `autonomous/102a_chicken_combined_chain_20261019_232500.txt` (0 bytes)
 - `autonomous/103a_sys588_rwx_cclosure_exec_20261019_232519.txt` (0 bytes)
-- `autonomous/104a_dispatch_internals_20261019_232741.txt` (282 bytes)
+- `autonomous/104a_dispatch_internals_20261019_232741.txt` (293 bytes)
 - `autonomous/105a_evfilt_proc_kptr_leak_20261019_232800.txt` (0 bytes)
 - `autonomous/106a_sigreturn_srop_20261019_232820.txt` (0 bytes)
 - `autonomous/107a_syscall_addr_finder_20261019_232839.txt` (0 bytes)
-- `autonomous/108a_scm_rights_fd_lifecycle_20261019_233040.txt` (1658 bytes)
+- `autonomous/108a_scm_rights_fd_lifecycle_20261019_233040.txt` (1720 bytes)
 - `autonomous/108b_mini_test_20261019_233059.txt` (0 bytes)
-- `hello_20261022_050346.txt` (10 bytes)
-- `hello_20261022_051056.txt` (6 bytes)
-- `hello_probe_20261020_144853.txt` (134 bytes)
-- `ipsec_spray_20261028_101836.txt` (770 bytes)
-- `overlap_663_20261028_101221.txt` (1688 bytes)
-- `overlap_detect_20261028_101112.txt` (330 bytes)
-- `p572_browser_scan_20261105_152941.txt` (1378 bytes)
-- `p575_lua_api_scan_20261105_153822.txt` (96735 bytes)
-- `p576_dlsym_browser_20261105_153926.txt` (4945 bytes)
-- `p577_raw_dlsym_20261105_154021.txt` (2578 bytes)
-- `p578_kernel_rw_check_20261105_154052.txt` (1767 bytes)
-- `p579_ipv6_exploit_20261105_154129.txt` (7212 bytes)
-- `p581_ofiles_setup_20261105_154259.txt` (2332 bytes)
-- `p582_page_walk_20261105_154401.txt` (1816 bytes)
-- `p583_kernel_lua_dump_20261105_154827.txt` (5063 bytes)
-- `p584_full_kernel_lua_20261105_154921.txt` (15488 bytes)
-- `p585_find_exploit_20261105_155031.txt` (22085 bytes)
-- `p586_launch_browser_20261105_155203.txt` (7928 bytes)
-- `p587_ipv6_race_20261105_155414.txt` (561 bytes)
-- `pending_overlap_20261028_101326.txt` (1013 bytes)
-- `phase11_network_attacks/50e_ipv6_msfilter_reach_20261019_185428.txt` (914 bytes)
-- `phase11_network_attacks/50e_ipv6_msfilter_reach_20261019_185451.txt` (1119 bytes)
-- `phase11_network_attacks/50e_ipv6_msfilter_reach_20261022_183623.txt` (1119 bytes)
-- `phase11_network_attacks/50e_ipv6_msfilter_reach_20261028_190701.txt` (914 bytes)
-- `phase11_network_attacks/50e_ipv6_msfilter_reach_20261028_190737.txt` (949 bytes)
-- `phase11_network_attacks/50f_ipv6_msfilter_aligned_20261022_183727.txt` (675 bytes)
-- `phase11_network_attacks/50g_ipv6_msfilter_source_sizes_20261022_184026.txt` (358 bytes)
-- `phase11_network_attacks/50h_ipv6_msfilter_child_control_20261022_184128.txt` (225 bytes)
-- `phase11_network_attacks/50h_ipv6_msfilter_child_control_20261022_184413.txt` (302 bytes)
-- `phase11_network_attacks/50i_ipv6_msfilter_leave_overlap_20261022_184502.txt` (1089 bytes)
-- `phase11_network_attacks/50j_ipv6_msfilter_gated_overlap_20261022_184602.txt` (213 bytes)
-- `phase11_network_attacks/50k_ipv6_msfilter_pipe_gated_20261022_184659.txt` (193 bytes)
-- `phase11_network_attacks/50k_ipv6_msfilter_pipe_gated_20261022_184723.txt` (1475 bytes)
-- `phase11_network_attacks/50l_ipv6_msfilter_dual_child_20261022_185015.txt` (2756 bytes)
-- `phase11_network_attacks/50m_ipv6_msfilter_shared_gate_20261022_185043.txt` (2805 bytes)
-- `phase11_network_attacks/50n_cpuset_affinity_read_20261022_185119.txt` (400 bytes)
-- `phase11_network_attacks/50o_ipv6_msfilter_sustained_race_20261022_185346.txt` (142 bytes)
-- `phase11_network_attacks/50o_ipv6_msfilter_sustained_race_20261022_194955.txt` (1151 bytes)
-- `phase11_network_attacks/50p_ipv6_msfilter_long_race_20261022_195014.txt` (3388 bytes)
-- `phase11_network_attacks/50q_ipv6_msfilter_return_census_20261022_195332.txt` (2325 bytes)
-- `phase11_network_attacks/50r_ipv6_msfilter_repeat_control_20261022_195346.txt` (343 bytes)
-- `phase11_network_attacks/50s_ipv6_msfilter_rejoin_control_20261022_195400.txt` (316 bytes)
-- `phase11_network_attacks/50t_ipv6_msfilter_child_repeat_control_20261022_195411.txt` (468 bytes)
-- `phase11_network_attacks/50u_ipv6_msfilter_rcx_restore_control_20261022_195435.txt` (467 bytes)
-- `phase11_network_attacks/50v_ipv6_msfilter_full_register_restore_20261022_195505.txt` (466 bytes)
-- `phase11_network_attacks/50w_ipv6_msfilter_valid_call_race_20261022_195515.txt` (2334 bytes)
-- `phase11_network_attacks/50x_ipv6_msfilter_long_no_parent_20261022_195650.txt` (473 bytes)
-- `phase11_network_attacks/954d_ipv6_sendmsg_plain_20261028_194127.txt` (630 bytes)
-- `phase11_network_attacks/954e_ipv6_opt_map_20261028_194207.txt` (535 bytes)
-- `phase11_network_attacks/954g_ipv6_cmsg_correct_20261028_194441.txt` (2000 bytes)
-- `phase11_network_attacks/954h_ipv6_2292_cmsg_20261028_194513.txt` (986 bytes)
-- `phase11_network_attacks/954i_ipv6_sticky_2292_20261028_194547.txt` (1015 bytes)
-- `phase12_kernel_analysis/p588-constant-drain-lk-lc_20261103_110854.txt` (4848 bytes)
-- `phase12_kernel_analysis/p588-constant-drain-lk-lc_20261103_111208.txt` (3145 bytes)
-- `phase12_kernel_analysis/p589-find-libkernel-drain_20261103_111730.txt` (3878 bytes)
+- `hello_20261022_050346.txt` (11 bytes)
+- `hello_20261022_051056.txt` (7 bytes)
+- `hello_probe_20261020_144853.txt` (140 bytes)
+- `ipsec_spray_20261028_101836.txt` (797 bytes)
+- `overlap_663_20261028_101221.txt` (1733 bytes)
+- `overlap_detect_20261028_101112.txt` (346 bytes)
+- `p572_browser_scan_20261105_152941.txt` (1413 bytes)
+- `p575_lua_api_scan_20261105_153822.txt` (99536 bytes)
+- `p576_dlsym_browser_20261105_153926.txt` (5082 bytes)
+- `p577_raw_dlsym_20261105_154021.txt` (2655 bytes)
+- `p578_kernel_rw_check_20261105_154052.txt` (1812 bytes)
+- `p579_ipv6_exploit_20261105_154129.txt` (7442 bytes)
+- `p581_ofiles_setup_20261105_154259.txt` (2392 bytes)
+- `p582_page_walk_20261105_154401.txt` (1874 bytes)
+- `p583_kernel_lua_dump_20261105_154827.txt` (5215 bytes)
+- `p584_full_kernel_lua_20261105_154921.txt` (15967 bytes)
+- `p585_find_exploit_20261105_155031.txt` (22820 bytes)
+- `p586_launch_browser_20261105_155203.txt` (8250 bytes)
+- `p587_ipv6_race_20261105_155414.txt` (583 bytes)
+- `pending_overlap_20261028_101326.txt` (1038 bytes)
+- `phase11_network_attacks/50e_ipv6_msfilter_reach_20261019_185428.txt` (934 bytes)
+- `phase11_network_attacks/50e_ipv6_msfilter_reach_20261019_185451.txt` (1151 bytes)
+- `phase11_network_attacks/50e_ipv6_msfilter_reach_20261022_183623.txt` (1151 bytes)
+- `phase11_network_attacks/50e_ipv6_msfilter_reach_20261028_190701.txt` (934 bytes)
+- `phase11_network_attacks/50e_ipv6_msfilter_reach_20261028_190737.txt` (981 bytes)
+- `phase11_network_attacks/50f_ipv6_msfilter_aligned_20261022_183727.txt` (694 bytes)
+- `phase11_network_attacks/50g_ipv6_msfilter_source_sizes_20261022_184026.txt` (373 bytes)
+- `phase11_network_attacks/50h_ipv6_msfilter_child_control_20261022_184128.txt` (234 bytes)
+- `phase11_network_attacks/50h_ipv6_msfilter_child_control_20261022_184413.txt` (314 bytes)
+- `phase11_network_attacks/50i_ipv6_msfilter_leave_overlap_20261022_184502.txt` (1110 bytes)
+- `phase11_network_attacks/50j_ipv6_msfilter_gated_overlap_20261022_184602.txt` (219 bytes)
+- `phase11_network_attacks/50k_ipv6_msfilter_pipe_gated_20261022_184659.txt` (199 bytes)
+- `phase11_network_attacks/50k_ipv6_msfilter_pipe_gated_20261022_184723.txt` (1496 bytes)
+- `phase11_network_attacks/50l_ipv6_msfilter_dual_child_20261022_185015.txt` (2778 bytes)
+- `phase11_network_attacks/50m_ipv6_msfilter_shared_gate_20261022_185043.txt` (2827 bytes)
+- `phase11_network_attacks/50n_cpuset_affinity_read_20261022_185119.txt` (407 bytes)
+- `phase11_network_attacks/50o_ipv6_msfilter_sustained_race_20261022_185346.txt` (146 bytes)
+- `phase11_network_attacks/50o_ipv6_msfilter_sustained_race_20261022_194955.txt` (1167 bytes)
+- `phase11_network_attacks/50p_ipv6_msfilter_long_race_20261022_195014.txt` (3428 bytes)
+- `phase11_network_attacks/50q_ipv6_msfilter_return_census_20261022_195332.txt` (2354 bytes)
+- `phase11_network_attacks/50r_ipv6_msfilter_repeat_control_20261022_195346.txt` (358 bytes)
+- `phase11_network_attacks/50s_ipv6_msfilter_rejoin_control_20261022_195400.txt` (330 bytes)
+- `phase11_network_attacks/50t_ipv6_msfilter_child_repeat_control_20261022_195411.txt` (477 bytes)
+- `phase11_network_attacks/50u_ipv6_msfilter_rcx_restore_control_20261022_195435.txt` (476 bytes)
+- `phase11_network_attacks/50v_ipv6_msfilter_full_register_restore_20261022_195505.txt` (475 bytes)
+- `phase11_network_attacks/50w_ipv6_msfilter_valid_call_race_20261022_195515.txt` (2363 bytes)
+- `phase11_network_attacks/50x_ipv6_msfilter_long_no_parent_20261022_195650.txt` (482 bytes)
+- `phase11_network_attacks/954d_ipv6_sendmsg_plain_20261028_194127.txt` (652 bytes)
+- `phase11_network_attacks/954e_ipv6_opt_map_20261028_194207.txt` (558 bytes)
+- `phase11_network_attacks/954g_ipv6_cmsg_correct_20261028_194441.txt` (2048 bytes)
+- `phase11_network_attacks/954h_ipv6_2292_cmsg_20261028_194513.txt` (1014 bytes)
+- `phase11_network_attacks/954i_ipv6_sticky_2292_20261028_194547.txt` (1046 bytes)
+- `phase12_kernel_analysis/p588-constant-drain-lk-lc_20261103_110854.txt` (4944 bytes)
+- `phase12_kernel_analysis/p588-constant-drain-lk-lc_20261103_111208.txt` (3217 bytes)
+- `phase12_kernel_analysis/p589-find-libkernel-drain_20261103_111730.txt` (3998 bytes)
 - `phase12_kernel_analysis/p589-find-libkernel-drain_20261103_111814.txt` (4955 bytes)
-- `phase12_kernel_analysis/p591-lk-remaining-drain_20261103_124431.txt` (1127 bytes)
-- `phase12_kernel_analysis/p591c-thr-exit-only_20261103_120201.txt` (262 bytes)
-- `phase12_kernel_analysis/p591d-native-multiarg_20261103_123533.txt` (311 bytes)
-- `phase13_52batch/52a_survey_627_676_20261018_103436.txt` (512 bytes)
-- `phase13_52batch/52b_624_oracle_20261018_103451.txt` (4360 bytes)
-- `phase13_53batch/53b_afroute_retest_20261018_091257.txt` (1667 bytes)
-- `phase13_53batch/53b_afroute_retest_20261020_030812.txt` (1667 bytes)
-- `phase13_53batch/53b_afroute_retest_20261020_030848.txt` (1667 bytes)
-- `phase13_53batch/53b_afroute_retest_20261020_030901.txt` (3268 bytes)
-- `phase13_53batch/53d_cclosure_retest_20261018_091303.txt` (1321 bytes)
-- `phase13_53batch/56d2_cclosure_gadget_safe_20261023_092733.txt` (779 bytes)
-- `phase13_53batch/56d3_cclosure_retcount_20261023_093302.txt` (154 bytes)
-- `phase13_53batch/56d3_cclosure_retcount_20261023_093451.txt` (335 bytes)
-- `phase13_53batch/56d3_cclosure_retcount_20261023_093625.txt` (297 bytes)
-- `phase13_53batch/56d3_cclosure_retcount_20261023_093736.txt` (2358 bytes)
-- `phase13_53batch/56d4_find_ret1_gadget_20261023_094040.txt` (837 bytes)
-- `phase13_53batch/56d5_deep_stack_read_20261023_094324.txt` (636 bytes)
-- `phase13_53batch/56d6_wide_gadget_scan_20261023_094541.txt` (649 bytes)
-- `phase13_53batch/56d7_rax678_stack_leak_20261023_094622.txt` (2651 bytes)
-- `phase13_53batch/56d_cclosure_gadget_redirect_20261023_075937.txt` (561 bytes)
-- `phase13_53batch/56e2_rtdump_hexdump_20261023_095601.txt` (11002 bytes)
-- `phase13_53batch/56e_routing_socket_deep_20261023_095248.txt` (4178 bytes)
-- `phase13_53batch/56f_624_side_channel_20261023_100614.txt` (4639 bytes)
-- `phase13_53batch/56g2_module_list_20261023_100809.txt` (1193 bytes)
-- `phase13_53batch/56g3_sysctl_deep_scan_20261023_100911.txt` (530 bytes)
-- `phase13_53batch/56g_libkernel_symbol_scan_20261023_100744.txt` (238 bytes)
-- `phase13_53batch/56h2_timing_kaslr_20261023_101231.txt` (2607 bytes)
-- `phase13_53batch/56h_rdtsc_gadget_20261023_101119.txt` (2652 bytes)
-- `phase13_53batch/56i2_timing_stability_20261023_101431.txt` (980 bytes)
-- `phase13_53batch/56i_thread_timer_kaslr_20261023_101400.txt` (1183 bytes)
-- `phase13_53batch/56j_untested_530_531_537_20261023_101932.txt` (997 bytes)
-- `phase13_53batch/56k_mprotect_kernel_anomaly_20261023_102031.txt` (2374 bytes)
-- `phase13_53batch/56l_thr_new_real_20261023_103230.txt` (339 bytes)
-- `phase13_53batch/56l_thr_new_real_20261023_103255.txt` (369 bytes)
-- `phase13_53batch/56m_ioctl_overcopy_scan_20261023_105857.txt` (578 bytes)
-- `phase13_53batch/56n_ucontext_kptr_scan_20261023_110050.txt` (1233 bytes)
-- `phase13_53batch/56o_unix_creds_signal_frame_20261023_110512.txt` (1737 bytes)
-- `phase13_53batch/56o_unix_creds_signal_frame_20261023_110625.txt` (1954 bytes)
-- `phase13_53batch/56p_getrusage_timestamp_procctl_20261023_110958.txt` (1283 bytes)
-- `phase13_53batch/56p_getrusage_timestamp_procctl_20261023_111455.txt` (2119 bytes)
-- `phase13_53batch/56q_kevent_scm_rights_sendfile_20261023_111737.txt` (507 bytes)
-- `phase13_53batch/56r_sigframe_kptr_scan_20261023_121340.txt` (2215 bytes)
-- `phase13_53batch/56s_eboot_syscall_scan_20261023_121306.txt` (710 bytes)
-- `phase13_53batch/56s_eboot_syscall_scan_20261023_121428.txt` (1759 bytes)
-- `phase13_webkit/p550_canvas_uaf_transform_leak_20261026.txt` (2010 bytes)
-- `phase13_webkit/p551_canvas_uaf_variants_20261026.txt` (3515 bytes)
-- `phase13_webkit/p552_canvas_uaf_desync_exploit_20261026.txt` (2626 bytes)
-- `phase13_webkit/p553_canvas_uaf_rw_20261104_194910.txt` (3200 bytes)
-- `phase13_webkit/p553_canvas_uaf_write_confirm_20261026.txt` (3849 bytes)
-- `phase13_webkit/p554_canvas_crosstype_offsetmap_20261026.txt` (1535 bytes)
-- `phase13_webkit/p554b_crosstype_lean_20261026.txt` (476 bytes)
-- `phase13_webkit/p554c_crosstype_safe_20261026.txt` (523 bytes)
-- `phase13_webkit/p554d_sametype_deep_20261026.txt` (2660 bytes)
-- `phase13_webkit/p555_reentrancy_timing_20261027.txt` (2629 bytes)
-- `phase13_webkit/p556_rab_offset_race_20261026.txt` (2103 bytes)
-- `phase13_webkit/p557_ssv_desync_test_20261027.txt` (1443 bytes)
-- `phase13_webkit/p558_rab_escalation_20261027.txt` (2970 bytes)
-- `phase13_webkit/p559_rab_oob_values_20261027.txt` (2626 bytes)
-- `phase13_webkit/p560_sort_oob_write_20261027.txt` (2638 bytes)
-- `phase13_webkit/p561_transfer_sort_uaf_20261028.txt` (2378 bytes)
-- `phase13_webkit/p562_double_detach_uaf_20261028.txt` (1585 bytes)
-- `phase13_webkit/p563_canvas_crosstype_reclaim_20261028.txt` (2255 bytes)
-- `phase13_webkit/p564_canvas_force_reclaim_20261028.txt` (2267 bytes)
-- `phase13_webkit/p565_canvas_offset128_20261028.txt` (968 bytes)
-- `phase13_webkit/p566_canvas_full_reclaim_20261028.txt` (2558 bytes)
-- `phase13_webkit/p588-route-d-discriminator_20261103_133624.txt` (151 bytes)
-- `phase13_webkit/p588b-route-d-null-table_20261103_133856.txt` (3192 bytes)
-- `phase13_webkit/p588c-second-walk-diag_20261103_134800.txt` (722 bytes)
-- `phase13_webkit/p588d_v6_definitive_null_test_20261103.txt` (3217 bytes)
-- `phase13_webkit/p588d_v7_trigger_sweep_20261103.txt` (3146 bytes)
-- `phase13_webkit/p588d_v8b_engine_write_map_20261103.txt` (5222 bytes)
-- `phase13_webkit/p589_alpha_fontfaceset_trigger_20261103.txt` (6214 bytes)
-- `phase13_webkit/p590_two_uaf_test_20261103.txt` (2160 bytes)
-- `phase13_webkit/p595-apng-overread_20261104_220908.txt` (6011 bytes)
-- `phase13_webkit/p598v7-layout-probe_20261104_023708.txt` (3506 bytes)
-- `phase13_webkit/p598v8-zero-seed_20261104_033947.txt` (3080 bytes)
-- `phase13_webkit/p599v1v2-gc-destructor_20261104_040100.txt` (4233 bytes)
-- `phase13_webkit/p599v4-gc-destructor-forge_20261104_050000.txt` (7894 bytes)
-- `phase13_webkit/p599v4f-two-phase-uaf_20261104_051500.txt` (8050 bytes)
-- `phase13_webkit/p599v4i-null-spray-test_20261104_054400.txt` (6335 bytes)
-- `phase13_webkit/p600-butterfly-gigacage_20261104_062300.txt` (3484 bytes)
-- `phase13_webkit/p601-dataview-overflow-wasm_20261104_063643.txt` (3739 bytes)
-- `phase13_webkit/p602-jit-flattendict_20261104_064226.txt` (3043 bytes)
-- `phase13_webkit/p602b-aggressive-flatten_20261104_064444.txt` (2710 bytes)
-- `phase13_webkit/p604-dfg-nan-confusion_20261104_070408.txt` (3828 bytes)
-- `phase13_webkit/p605-dfg-type-confusion_20261104_071039.txt` (3099 bytes)
-- `phase13_webkit/p606-cve-2024-23222-race_20261104_072900.txt` (3643 bytes)
-- `phase13_webkit/p607-dfg-race-fine_20261104_073800.txt` (3618 bytes)
-- `phase13_webkit/p608h_fine_iteration_20261104_082316.txt` (2169 bytes)
-- `phase13_webkit/p608i_ultra_fine_20261104_082631.txt` (1403 bytes)
-- `phase13_webkit/p608j_single_iteration_20261104_082857.txt` (1501 bytes)
-- `phase13_webkit/p608k_gc_force_20261104_083056.txt` (1452 bytes)
-- `phase13_webkit/p608l_gc_timing_20261104_083243.txt` (1744 bytes)
-- `phase13_webkit/p608m_accum_threshold_20261104_083458.txt` (1594 bytes)
-- `phase13_webkit/p608n_burst_vs_count_20261104_083956.txt` (838 bytes)
-- `phase13_webkit/p608o_single_function_20261104_084251.txt` (1415 bytes)
-- `phase13_webkit/p608p_no_dfg_20261104_085200.txt` (488 bytes)
-- `phase13_webkit/p608q_no_dfg_fine_20261104_085200.txt` (1192 bytes)
-- `phase13_webkit/p608r_resizable_vs_normal_20261104_085500.txt` (1676 bytes)
-- `phase13_webkit/p608s_corruption_detect_20261104_090400.txt` (1812 bytes)
-- `phase13_webkit/p609_webp_vuln_test_20261104_094700.txt` (4421 bytes)
-- `phase13_webkit/p609b_webp_oom_discriminate_20261104_095945.txt` (3000 bytes)
-- `phase13_webkit/p610_png_heap_read_20261104_101400.txt` (3208 bytes)
-- `phase13_webkit/p611_svg_filter_overread_20261104_103510.txt` (5016 bytes)
-- `phase13_webkit/p612_t_determinism_20261104_113237.txt` (3669 bytes)
-- `phase13_webkit/p620-crash-backtrace_20261104_230750.txt` (762 bytes)
-- `phase13_webkit/p621-cve-2024-44308_20261104_225617.txt` (2346 bytes)
-- `phase13_webkit/p622-cve-2023-41993_20261104_224917.txt` (566 bytes)
-- `phase13_webkit/p629_canvas2d_offset_map_20261105.txt` (3905 bytes)
-- `phase13_webkit/p630_textbase_leak_survey_20261105.txt` (6262 bytes)
-- `phase13_webkit/p631_webp_cve_2023_4863_20261105.txt` (1418 bytes)
-- `phase13_webkit/p632_cve_2025_43529_dfg_storebarrier_20261105.txt` (1516 bytes)
-- `phase13_webkit/p633_dom_stale_css_sidechannel_20261105.txt` (2378 bytes)
-- `phase13_webkit/p634_cve_2018_4416_structureid_20261105.txt` (1787 bytes)
-- `phase13_webkit/p635_cve_2026_43720_canvas_reentry_20261105.txt` (2970 bytes)
-- `phase13_webkit/p636_isoheap_gigacage_jit_20261105.txt` (4116 bytes)
-- `phase13_webkit/p637_cve_2025_31277_regexp_habt_20261105_074954.txt` (2834 bytes)
-- `phase13_webkit/p638_cve_2025_31277_escalate_20261105_075839.txt` (4092 bytes)
-- `phase13_webkit/p639_habt_hole_write_discriminator_20261105_080658.txt` (3638 bytes)
-- `phase13_webkit/p640_cross_realm_double_habt_20261105_080944.txt` (4401 bytes)
-- `phase13_webkit/p641_canvas2d_uaf_stale_read_20261105_083402.txt` (2423 bytes)
-- `phase13_webkit/p642_relapse_primitives_test_20261105_083113.txt` (3840 bytes)
-- `phase13_webkit/p643_cve_2018_4233_createthis_20261105_084145.txt` (2432 bytes)
-- `phase13_webkit/p643v2_cve_2018_4233_createthis_v2_20261105_084820.txt` (2854 bytes)
-- `phase13_webkit/p644_cve_2021_1789_enumerator_oob_20261105_084312.txt` (1939 bytes)
-- `phase13_webkit/p645_cve_2020_9802_arithnegate_oob_20261105_085056.txt` (3094 bytes)
-- `phase13_webkit/p646_cve_2019_8623_licm_uninit_20261105_085344.txt` (2651 bytes)
-- `phase13_webkit/v674_canvas_api_info_leak_20261029.txt` (1967 bytes)
-- `phase13_webkit/v674b_apng_decoder_overread_20261029.txt` (1965 bytes)
-- `phase13_webkit/v675_same_type_alias_baseline_20261029.txt` (1467 bytes)
-- `phase13_webkit/v676_ab_spray_miss_20261029.txt` (841 bytes)
-- `phase13_webkit/v677_gc_pressure_free_20261029.txt` (1463 bytes)
-- `phase13_webkit/v677b_gc_pressure_variant_b_20261029.txt` (626 bytes)
-- `phase13_webkit/v677c_gc_pressure_variant_c_20261029.txt` (568 bytes)
-- `phase13_webkit/v677d_gc_pressure_variant_d_20261029.txt` (1231 bytes)
-- `phase13_webkit/v678_staged_alloc_gc_20261029.txt` (1078 bytes)
-- `phase13_webkit/v679_aslr_spray_probabilistic_20261029.txt` (1273 bytes)
-- `phase13_webkit/v679b_aslr_spray_1gb_20261029.txt` (1396 bytes)
-- `phase13_webkit/v680_address_space_mapper_20261029.txt` (1368 bytes)
-- `phase13_webkit/v681_aslr_zero_spray_20261029.txt` (1341 bytes)
-- `phase13_webkit/v682_aslr_low_range_20261029.txt` (1272 bytes)
-- `phase13_webkit/v683_oob_state_stack_20261029.txt` (2415 bytes)
-- `phase13_webkit/v684_weakref_ab_scan_20261029.txt` (1379 bytes)
-- `phase13_webkit/v685_opaque_root_gc_dead_20261029.txt` (2331 bytes)
-- `phase13_webkit/v700b_string_crosstype_768_20261028.txt` (2629 bytes)
-- `phase13_webkit/v700c_string_payload_dead_20261028.txt` (1705 bytes)
-- `phase13_webkit/v701_sametype_state_grow_20261028.txt` (2275 bytes)
-- `phase13_webkit/v702_gc_free_variant_a_20261028.txt` (1836 bytes)
-- `phase13_webkit/v703_gc_free_variant_b_20261028.txt` (1856 bytes)
-- `phase13_webkit/v704_ab768_direct_reclaim_20261028.txt` (672 bytes)
-- `phase13_webkit/v705_property_survival_scan_20261028.txt` (1025 bytes)
-- `phase13_webkit/v706_factory_method_scan_20261028.txt` (785 bytes)
-- `phase13_webkit/v707_ab_fill_pattern_20261028.txt` (1057 bytes)
-- `phase13_webkit/v707b_ab_fill_variant_b_20261028.txt` (715 bytes)
-- `phase13_webkit/v707c_ab_fill_variant_c_20261028.txt` (1361 bytes)
-- `phase13_webkit/v707e_ab_fill_variant_e_20261029.txt` (552 bytes)
-- `phase13_webkit/v707f_ab_fill_variant_f_20261029.txt` (922 bytes)
-- `phase13_webkit/v707g_ab_fill_variant_g_20261029.txt` (881 bytes)
-- `phase13_webkit/v707h_ab_fill_variant_h_20261029.txt` (607 bytes)
-- `phase14_cclosure_redirect/56h_find_thrd_create_20261020_090420.txt` (1125 bytes)
-- `phase14_cclosure_redirect/56i_native_register_20261020_091741.txt` (493 bytes)
-- `phase14_cclosure_redirect/56j_native_functions_20261020_091908.txt` (19463 bytes)
+- `phase12_kernel_analysis/p591-lk-remaining-drain_20261103_124431.txt` (1171 bytes)
+- `phase12_kernel_analysis/p591c-thr-exit-only_20261103_120201.txt` (283 bytes)
+- `phase12_kernel_analysis/p591d-native-multiarg_20261103_123533.txt` (329 bytes)
+- `phase13_52batch/52a_survey_627_676_20261018_103436.txt` (527 bytes)
+- `phase13_52batch/52b_624_oracle_20261018_103451.txt` (4429 bytes)
+- `phase13_53batch/53b_afroute_retest_20261018_091257.txt` (1698 bytes)
+- `phase13_53batch/53b_afroute_retest_20261020_030812.txt` (1698 bytes)
+- `phase13_53batch/53b_afroute_retest_20261020_030848.txt` (1698 bytes)
+- `phase13_53batch/53b_afroute_retest_20261020_030901.txt` (3326 bytes)
+- `phase13_53batch/53d_cclosure_retest_20261018_091303.txt` (1344 bytes)
+- `phase13_53batch/56d2_cclosure_gadget_safe_20261023_092733.txt` (801 bytes)
+- `phase13_53batch/56d3_cclosure_retcount_20261023_093302.txt` (161 bytes)
+- `phase13_53batch/56d3_cclosure_retcount_20261023_093451.txt` (353 bytes)
+- `phase13_53batch/56d3_cclosure_retcount_20261023_093625.txt` (314 bytes)
+- `phase13_53batch/56d3_cclosure_retcount_20261023_093736.txt` (2416 bytes)
+- `phase13_53batch/56d4_find_ret1_gadget_20261023_094040.txt` (865 bytes)
+- `phase13_53batch/56d5_deep_stack_read_20261023_094324.txt` (666 bytes)
+- `phase13_53batch/56d6_wide_gadget_scan_20261023_094541.txt` (680 bytes)
+- `phase13_53batch/56d7_rax678_stack_leak_20261023_094622.txt` (2732 bytes)
+- `phase13_53batch/56d_cclosure_gadget_redirect_20261023_075937.txt` (580 bytes)
+- `phase13_53batch/56e2_rtdump_hexdump_20261023_095601.txt` (11182 bytes)
+- `phase13_53batch/56e_routing_socket_deep_20261023_095248.txt` (4271 bytes)
+- `phase13_53batch/56f_624_side_channel_20261023_100614.txt` (4732 bytes)
+- `phase13_53batch/56g2_module_list_20261023_100809.txt` (1214 bytes)
+- `phase13_53batch/56g3_sysctl_deep_scan_20261023_100911.txt` (555 bytes)
+- `phase13_53batch/56g_libkernel_symbol_scan_20261023_100744.txt` (247 bytes)
+- `phase13_53batch/56h2_timing_kaslr_20261023_101231.txt` (2655 bytes)
+- `phase13_53batch/56h_rdtsc_gadget_20261023_101119.txt` (2733 bytes)
+- `phase13_53batch/56i2_timing_stability_20261023_101431.txt` (1002 bytes)
+- `phase13_53batch/56i_thread_timer_kaslr_20261023_101400.txt` (1218 bytes)
+- `phase13_53batch/56j_untested_530_531_537_20261023_101932.txt` (1038 bytes)
+- `phase13_53batch/56k_mprotect_kernel_anomaly_20261023_102031.txt` (2432 bytes)
+- `phase13_53batch/56l_thr_new_real_20261023_103230.txt` (356 bytes)
+- `phase13_53batch/56l_thr_new_real_20261023_103255.txt` (389 bytes)
+- `phase13_53batch/56m_ioctl_overcopy_scan_20261023_105857.txt` (618 bytes)
+- `phase13_53batch/56n_ucontext_kptr_scan_20261023_110050.txt` (1281 bytes)
+- `phase13_53batch/56o_unix_creds_signal_frame_20261023_110512.txt` (1820 bytes)
+- `phase13_53batch/56o_unix_creds_signal_frame_20261023_110625.txt` (2047 bytes)
+- `phase13_53batch/56p_getrusage_timestamp_procctl_20261023_110958.txt` (1335 bytes)
+- `phase13_53batch/56p_getrusage_timestamp_procctl_20261023_111455.txt` (2204 bytes)
+- `phase13_53batch/56q_kevent_scm_rights_sendfile_20261023_111737.txt` (533 bytes)
+- `phase13_53batch/56r_sigframe_kptr_scan_20261023_121340.txt` (2302 bytes)
+- `phase13_53batch/56s_eboot_syscall_scan_20261023_121306.txt` (736 bytes)
+- `phase13_53batch/56s_eboot_syscall_scan_20261023_121428.txt` (1811 bytes)
+- `phase13_webkit/p550_canvas_uaf_transform_leak_20261026.txt` (2060 bytes)
+- `phase13_webkit/p551_canvas_uaf_variants_20261026.txt` (3599 bytes)
+- `phase13_webkit/p552_canvas_uaf_desync_exploit_20261026.txt` (2700 bytes)
+- `phase13_webkit/p553_canvas_uaf_rw_20261104_194910.txt` (3265 bytes)
+- `phase13_webkit/p553_canvas_uaf_write_confirm_20261026.txt` (4390 bytes)
+- `phase13_webkit/p554_canvas_crosstype_offsetmap_20261026.txt` (1570 bytes)
+- `phase13_webkit/p554b_crosstype_lean_20261026.txt` (497 bytes)
+- `phase13_webkit/p554c_crosstype_safe_20261026.txt` (546 bytes)
+- `phase13_webkit/p554d_sametype_deep_20261026.txt` (2731 bytes)
+- `phase13_webkit/p555_reentrancy_timing_20261027.txt` (2692 bytes)
+- `phase13_webkit/p556_rab_offset_race_20261026.txt` (2181 bytes)
+- `phase13_webkit/p557_ssv_desync_test_20261027.txt` (1480 bytes)
+- `phase13_webkit/p558_rab_escalation_20261027.txt` (3043 bytes)
+- `phase13_webkit/p559_rab_oob_values_20261027.txt` (5203 bytes)
+- `phase13_webkit/p560_sort_oob_write_20261027.txt` (9879 bytes)
+- `phase13_webkit/p561_transfer_sort_uaf_20261028.txt` (2438 bytes)
+- `phase13_webkit/p562_double_detach_uaf_20261028.txt` (1650 bytes)
+- `phase13_webkit/p563_canvas_crosstype_reclaim_20261028.txt` (2345 bytes)
+- `phase13_webkit/p564_canvas_force_reclaim_20261028.txt` (2336 bytes)
+- `phase13_webkit/p565_canvas_offset128_20261028.txt` (1003 bytes)
+- `phase13_webkit/p566_canvas_full_reclaim_20261028.txt` (2628 bytes)
+- `phase13_webkit/p588-route-d-discriminator_20261103_133624.txt` (154 bytes)
+- `phase13_webkit/p588b-route-d-null-table_20261103_133856.txt` (3226 bytes)
+- `phase13_webkit/p588c-second-walk-diag_20261103_134800.txt` (735 bytes)
+- `phase13_webkit/p588d_v6_definitive_null_test_20261103.txt` (3289 bytes)
+- `phase13_webkit/p588d_v7_trigger_sweep_20261103.txt` (3213 bytes)
+- `phase13_webkit/p588d_v8b_engine_write_map_20261103.txt` (5336 bytes)
+- `phase13_webkit/p589_alpha_fontfaceset_trigger_20261103.txt` (6345 bytes)
+- `phase13_webkit/p590_two_uaf_test_20261103.txt` (2197 bytes)
+- `phase13_webkit/p595-apng-overread_20261104_220908.txt` (6075 bytes)
+- `phase13_webkit/p598v7-layout-probe_20261104_023708.txt` (3608 bytes)
+- `phase13_webkit/p598v8-zero-seed_20261104_033947.txt` (3150 bytes)
+- `phase13_webkit/p599v1v2-gc-destructor_20261104_040100.txt` (4329 bytes)
+- `phase13_webkit/p599v4-gc-destructor-forge_20261104_050000.txt` (8061 bytes)
+- `phase13_webkit/p599v4f-two-phase-uaf_20261104_051500.txt` (8225 bytes)
+- `phase13_webkit/p599v4i-null-spray-test_20261104_054400.txt` (6483 bytes)
+- `phase13_webkit/p600-butterfly-gigacage_20261104_062300.txt` (3553 bytes)
+- `phase13_webkit/p601-dataview-overflow-wasm_20261104_063643.txt` (3830 bytes)
+- `phase13_webkit/p602-jit-flattendict_20261104_064226.txt` (3118 bytes)
+- `phase13_webkit/p602b-aggressive-flatten_20261104_064444.txt` (2772 bytes)
+- `phase13_webkit/p604-dfg-nan-confusion_20261104_070408.txt` (3908 bytes)
+- `phase13_webkit/p605-dfg-type-confusion_20261104_071039.txt` (3185 bytes)
+- `phase13_webkit/p606-cve-2024-23222-race_20261104_072900.txt` (3736 bytes)
+- `phase13_webkit/p607-dfg-race-fine_20261104_073800.txt` (3709 bytes)
+- `phase13_webkit/p608h_fine_iteration_20261104_082316.txt` (2246 bytes)
+- `phase13_webkit/p608i_ultra_fine_20261104_082631.txt` (1453 bytes)
+- `phase13_webkit/p608j_single_iteration_20261104_082857.txt` (1557 bytes)
+- `phase13_webkit/p608k_gc_force_20261104_083056.txt` (1494 bytes)
+- `phase13_webkit/p608l_gc_timing_20261104_083243.txt` (1784 bytes)
+- `phase13_webkit/p608m_accum_threshold_20261104_083458.txt` (1636 bytes)
+- `phase13_webkit/p608n_burst_vs_count_20261104_083956.txt` (861 bytes)
+- `phase13_webkit/p608o_single_function_20261104_084251.txt` (1448 bytes)
+- `phase13_webkit/p608p_no_dfg_20261104_085200.txt` (504 bytes)
+- `phase13_webkit/p608q_no_dfg_fine_20261104_085200.txt` (1222 bytes)
+- `phase13_webkit/p608r_resizable_vs_normal_20261104_085500.txt` (1712 bytes)
+- `phase13_webkit/p608s_corruption_detect_20261104_090400.txt` (1854 bytes)
+- `phase13_webkit/p609_webp_vuln_test_20261104_094700.txt` (4495 bytes)
+- `phase13_webkit/p609b_webp_oom_discriminate_20261104_095945.txt` (3055 bytes)
+- `phase13_webkit/p610_png_heap_read_20261104_101400.txt` (3268 bytes)
+- `phase13_webkit/p611_svg_filter_overread_20261104_103510.txt` (5099 bytes)
+- `phase13_webkit/p612_t_determinism_20261104_113237.txt` (3748 bytes)
+- `phase13_webkit/p620-crash-backtrace_20261104_230750.txt` (774 bytes)
+- `phase13_webkit/p621-cve-2024-44308_20261104_225617.txt` (2380 bytes)
+- `phase13_webkit/p622-cve-2023-41993_20261104_224917.txt` (573 bytes)
+- `phase13_webkit/p629_canvas2d_offset_map_20261105.txt` (3995 bytes)
+- `phase13_webkit/p630_textbase_leak_survey_20261105.txt` (6411 bytes)
+- `phase13_webkit/p631_webp_cve_2023_4863_20261105.txt` (1452 bytes)
+- `phase13_webkit/p632_cve_2025_43529_dfg_storebarrier_20261105.txt` (1549 bytes)
+- `phase13_webkit/p633_dom_stale_css_sidechannel_20261105.txt` (2424 bytes)
+- `phase13_webkit/p634_cve_2018_4416_structureid_20261105.txt` (1827 bytes)
+- `phase13_webkit/p635_cve_2026_43720_canvas_reentry_20261105.txt` (3026 bytes)
+- `phase13_webkit/p636_isoheap_gigacage_jit_20261105.txt` (4217 bytes)
+- `phase13_webkit/p637_cve_2025_31277_regexp_habt_20261105_074954.txt` (2881 bytes)
+- `phase13_webkit/p638_cve_2025_31277_escalate_20261105_075839.txt` (4190 bytes)
+- `phase13_webkit/p639_habt_hole_write_discriminator_20261105_080658.txt` (3729 bytes)
+- `phase13_webkit/p640_cross_realm_double_habt_20261105_080944.txt` (4502 bytes)
+- `phase13_webkit/p641_canvas2d_uaf_stale_read_20261105_083402.txt` (2480 bytes)
+- `phase13_webkit/p642_relapse_primitives_test_20261105_083113.txt` (3928 bytes)
+- `phase13_webkit/p643_cve_2018_4233_createthis_20261105_084145.txt` (2493 bytes)
+- `phase13_webkit/p643v2_cve_2018_4233_createthis_v2_20261105_084820.txt` (2921 bytes)
+- `phase13_webkit/p644_cve_2021_1789_enumerator_oob_20261105_084312.txt` (1991 bytes)
+- `phase13_webkit/p645_cve_2020_9802_arithnegate_oob_20261105_085056.txt` (3173 bytes)
+- `phase13_webkit/p646_cve_2019_8623_licm_uninit_20261105_085344.txt` (2723 bytes)
+- `phase13_webkit/p690_walk_forge_oracle_20261109_204155.txt` (5556 bytes)
+- `phase13_webkit/p691_walk_forge_fixed_20261109_235425.txt` (8448 bytes)
+- `phase13_webkit/p710_base_discovery_20261110_013236.txt` (5525 bytes)
+- `phase13_webkit/v674_canvas_api_info_leak_20261029.txt` (2023 bytes)
+- `phase13_webkit/v674b_apng_decoder_overread_20261029.txt` (2040 bytes)
+- `phase13_webkit/v675_same_type_alias_baseline_20261029.txt` (1514 bytes)
+- `phase13_webkit/v676_ab_spray_miss_20261029.txt` (880 bytes)
+- `phase13_webkit/v677_gc_pressure_free_20261029.txt` (1524 bytes)
+- `phase13_webkit/v677b_gc_pressure_variant_b_20261029.txt` (655 bytes)
+- `phase13_webkit/v677c_gc_pressure_variant_c_20261029.txt` (593 bytes)
+- `phase13_webkit/v677d_gc_pressure_variant_d_20261029.txt` (1281 bytes)
+- `phase13_webkit/v678_staged_alloc_gc_20261029.txt` (1120 bytes)
+- `phase13_webkit/v679_aslr_spray_probabilistic_20261029.txt` (1324 bytes)
+- `phase13_webkit/v679b_aslr_spray_1gb_20261029.txt` (1447 bytes)
+- `phase13_webkit/v680_address_space_mapper_20261029.txt` (1417 bytes)
+- `phase13_webkit/v681_aslr_zero_spray_20261029.txt` (1394 bytes)
+- `phase13_webkit/v682_aslr_low_range_20261029.txt` (1325 bytes)
+- `phase13_webkit/v683_oob_state_stack_20261029.txt` (2470 bytes)
+- `phase13_webkit/v684_weakref_ab_scan_20261029.txt` (1422 bytes)
+- `phase13_webkit/v685_opaque_root_gc_dead_20261029.txt` (2389 bytes)
+- `phase13_webkit/v700b_string_crosstype_768_20261028.txt` (2704 bytes)
+- `phase13_webkit/v700c_string_payload_dead_20261028.txt` (1766 bytes)
+- `phase13_webkit/v701_sametype_state_grow_20261028.txt` (2359 bytes)
+- `phase13_webkit/v702_gc_free_variant_a_20261028.txt` (1903 bytes)
+- `phase13_webkit/v703_gc_free_variant_b_20261028.txt` (1936 bytes)
+- `phase13_webkit/v704_ab768_direct_reclaim_20261028.txt` (701 bytes)
+- `phase13_webkit/v705_property_survival_scan_20261028.txt` (1070 bytes)
+- `phase13_webkit/v706_factory_method_scan_20261028.txt` (820 bytes)
+- `phase13_webkit/v707_ab_fill_pattern_20261028.txt` (1104 bytes)
+- `phase13_webkit/v707b_ab_fill_variant_b_20261028.txt` (748 bytes)
+- `phase13_webkit/v707c_ab_fill_variant_c_20261028.txt` (1420 bytes)
+- `phase13_webkit/v707e_ab_fill_variant_e_20261029.txt` (577 bytes)
+- `phase13_webkit/v707f_ab_fill_variant_f_20261029.txt` (969 bytes)
+- `phase13_webkit/v707g_ab_fill_variant_g_20261029.txt` (919 bytes)
+- `phase13_webkit/v707h_ab_fill_variant_h_20261029.txt` (634 bytes)
+- `phase14_cclosure_redirect/56h_find_thrd_create_20261020_090420.txt` (1157 bytes)
+- `phase14_cclosure_redirect/56i_native_register_20261020_091741.txt` (513 bytes)
+- `phase14_cclosure_redirect/56j_native_functions_20261020_091908.txt` (20040 bytes)
 - `phase14_cclosure_redirect/56k_kernel_read_20261020_092058.txt` (111 bytes)
-- `phase14_cclosure_redirect/56k_kernel_read_20261020_092112.txt` (107 bytes)
-- `phase14_cclosure_redirect/56m_umtx_ops_and_thr_20261020_093600.txt` (125 bytes)
-- `phase14_cclosure_redirect/56o_thr_create_minimal_20261020_094804.txt` (595 bytes)
-- `phase14_cclosure_redirect/56p_thr_create_refine_20261020_095417.txt` (1221 bytes)
-- `phase14_cclosure_redirect/56q_thr_mclen_20261020_100500.txt` (2249 bytes)
-- `phase14_cclosure_redirect/56r_thr_diagnostic_20261020_100748.txt` (1280 bytes)
-- `phase14_cclosure_redirect/56s_thr_errno_20261020_101531.txt` (715 bytes)
-- `phase14_final_push/54a2_rdmsr_precise_20261018_091308.txt` (3339 bytes)
-- `phase14_final_push/54i_sys572_buffer_exam_20261018_091303.txt` (2042 bytes)
-- `phase14_final_push/54l_rwx_verify_20261018_091853.txt` (1122 bytes)
-- `phase14_final_push/54m_cclosure_redirect_20261018_092047.txt` (1365 bytes)
-- `phase14_final_push/54o_cfunc_redirect_controlled_20261018_092721.txt` (487 bytes)
+- `phase14_cclosure_redirect/56k_kernel_read_20261020_092112.txt` (113 bytes)
+- `phase14_cclosure_redirect/56m_umtx_ops_and_thr_20261020_093600.txt` (132 bytes)
+- `phase14_cclosure_redirect/56o_thr_create_minimal_20261020_094804.txt` (620 bytes)
+- `phase14_cclosure_redirect/56p_thr_create_refine_20261020_095417.txt` (1259 bytes)
+- `phase14_cclosure_redirect/56q_thr_mclen_20261020_100500.txt` (2311 bytes)
+- `phase14_cclosure_redirect/56r_thr_diagnostic_20261020_100748.txt` (1335 bytes)
+- `phase14_cclosure_redirect/56s_thr_errno_20261020_101531.txt` (741 bytes)
+- `phase14_final_push/54a2_rdmsr_precise_20261018_091308.txt` (3401 bytes)
+- `phase14_final_push/54i_sys572_buffer_exam_20261018_091303.txt` (2085 bytes)
+- `phase14_final_push/54l_rwx_verify_20261018_091853.txt` (1164 bytes)
+- `phase14_final_push/54m_cclosure_redirect_20261018_092047.txt` (1411 bytes)
+- `phase14_final_push/54o_cfunc_redirect_controlled_20261018_092721.txt` (500 bytes)
 - `phase14_final_push/54p_redirect_minimal_20261018_093839.txt` (0 bytes)
 - `phase14_final_push/54p_redirect_minimal_20261018_094036.txt` (0 bytes)
 - `phase14_final_push/54p_redirect_minimal_20261018_094206.txt` (0 bytes)
-- `phase14_final_push/54p_redirect_minimal_20261018_094326.txt` (394 bytes)
-- `phase14_final_push/54q_cfunc_redirect_return1_20261018_094551.txt` (355 bytes)
-- `phase14_final_push/54r_cfunc_code_bytes_20261018_103421.txt` (4093 bytes)
-- `phase14_final_push/55a_chicken_switches_20261018_094008.txt` (541 bytes)
-- `phase14_final_push/55b_batch_vm_ops_20261018_094849.txt` (819 bytes)
-- `phase14_final_push/55c_sys622_careful_20261018_095816.txt` (19057 bytes)
-- `phase14_final_push/55d_sys601_process_control_20261018_100435.txt` (1571 bytes)
-- `phase14_final_push/55f_674_deep_dump_20261018_100958.txt` (10112 bytes)
-- `phase14_final_push/56a_controlled_redirect_20261018_104052.txt` (727 bytes)
-- `phase14_final_push/56a_controlled_redirect_20261018_104142.txt` (727 bytes)
-- `phase14_final_push/56a_controlled_redirect_20261018_104741.txt` (697 bytes)
-- `phase14_final_push/56b_redirect_minimal_20261018_110114.txt` (475 bytes)
-- `phase14_final_push/56b_redirect_minimal_20261018_111030.txt` (475 bytes)
-- `phase14_final_push/56c_redirect_nonvm_20261018_111606.txt` (1583 bytes)
-- `phase14_final_push/56c_redirect_nonvm_20261018_111610.txt` (1583 bytes)
-- `phase14_final_push/56d_gadget_redirect_20261018_112132.txt` (574 bytes)
-- `phase14_final_push/56d_gadget_redirect_20261018_112134.txt` (574 bytes)
-- `phase14_final_push/56e_clean_gadget_20261018_112542.txt` (1357 bytes)
-- `phase14_final_push/56f_controlled_return_20261018_112849.txt` (1333 bytes)
-- `phase14_final_push/56g_syscall_gadget_20261018_113423.txt` (4214 bytes)
-- `phase14_final_push/56g_syscall_gadget_20261018_113437.txt` (4213 bytes)
-- `phase14_final_push/56h2_kldsym_kaslr_20261018_114736.txt` (555 bytes)
-- `phase14_final_push/56h_kldstat_kaslr_20261018_114516.txt` (248 bytes)
-- `phase14_final_push/56i2_kaslr_auxv_stack_20261018_115541.txt` (479 bytes)
-- `phase14_final_push/56i3_kaslr_deep_scan_20261018_115832.txt` (595 bytes)
-- `phase14_final_push/56i4_vm_region_dump_20261018_120109.txt` (25940 bytes)
-- `phase14_final_push/56i5_kptr_investigate_20261018_120505.txt` (860 bytes)
-- `phase14_final_push/56i5_kptr_investigate_20261020_101653.txt` (6934 bytes)
+- `phase14_final_push/54p_redirect_minimal_20261018_094326.txt` (411 bytes)
+- `phase14_final_push/54q_cfunc_redirect_return1_20261018_094551.txt` (366 bytes)
+- `phase14_final_push/54r_cfunc_code_bytes_20261018_103421.txt` (4265 bytes)
+- `phase14_final_push/55a_chicken_switches_20261018_094008.txt` (562 bytes)
+- `phase14_final_push/55b_batch_vm_ops_20261018_094849.txt` (857 bytes)
+- `phase14_final_push/55c_sys622_careful_20261018_095816.txt` (19487 bytes)
+- `phase14_final_push/55d_sys601_process_control_20261018_100435.txt` (1632 bytes)
+- `phase14_final_push/55f_674_deep_dump_20261018_100958.txt` (10211 bytes)
+- `phase14_final_push/56a_controlled_redirect_20261018_104052.txt` (745 bytes)
+- `phase14_final_push/56a_controlled_redirect_20261018_104142.txt` (745 bytes)
+- `phase14_final_push/56a_controlled_redirect_20261018_104741.txt` (716 bytes)
+- `phase14_final_push/56b_redirect_minimal_20261018_110114.txt` (490 bytes)
+- `phase14_final_push/56b_redirect_minimal_20261018_111030.txt` (490 bytes)
+- `phase14_final_push/56c_redirect_nonvm_20261018_111606.txt` (1642 bytes)
+- `phase14_final_push/56c_redirect_nonvm_20261018_111610.txt` (1642 bytes)
+- `phase14_final_push/56d_gadget_redirect_20261018_112132.txt` (584 bytes)
+- `phase14_final_push/56d_gadget_redirect_20261018_112134.txt` (584 bytes)
+- `phase14_final_push/56e_clean_gadget_20261018_112542.txt` (1407 bytes)
+- `phase14_final_push/56f_controlled_return_20261018_112849.txt` (1380 bytes)
+- `phase14_final_push/56g_syscall_gadget_20261018_113423.txt` (4343 bytes)
+- `phase14_final_push/56g_syscall_gadget_20261018_113437.txt` (4342 bytes)
+- `phase14_final_push/56h2_kldsym_kaslr_20261018_114736.txt` (581 bytes)
+- `phase14_final_push/56h_kldstat_kaslr_20261018_114516.txt` (258 bytes)
+- `phase14_final_push/56i2_kaslr_auxv_stack_20261018_115541.txt` (505 bytes)
+- `phase14_final_push/56i3_kaslr_deep_scan_20261018_115832.txt` (631 bytes)
+- `phase14_final_push/56i4_vm_region_dump_20261018_120109.txt` (26478 bytes)
+- `phase14_final_push/56i5_kptr_investigate_20261018_120505.txt` (888 bytes)
+- `phase14_final_push/56i5_kptr_investigate_20261020_101653.txt` (7110 bytes)
 - `phase14_final_push/56i5b_ro_candidate_fingerprint_20261020_100603.txt` (0 bytes)
-- `phase14_final_push/56i5b_ro_candidate_fingerprint_20261020_101635.txt` (115 bytes)
-- `phase14_final_push/56i5b_ro_candidate_fingerprint_20261020_101756.txt` (565 bytes)
-- `phase14_final_push/56i6_kaslr_pivot_20261018_121034.txt` (5079 bytes)
-- `phase14_final_push/56i7_kptr_validate_20261018_121302.txt` (6420 bytes)
-- `phase14_final_push/56i8_eboot_data_kptr_20261018_121608.txt` (960 bytes)
-- `phase14_final_push/56i9_kaslr_bruteforce_20261018_121926.txt` (708 bytes)
-- `phase14_final_push/56j_timing_kaslr_20261018_122158.txt` (1296 bytes)
-- `phase14_final_push/56k4_kldstat_kaslr_20261018_133209.txt` (79 bytes)
-- `phase14_final_push/56k5_modsys_kaslr_20261018_133508.txt` (778 bytes)
-- `phase14_final_push/56k_kaslr_bruteforce_20261018_123645.txt` (310 bytes)
-- `phase14_final_push/56l_corrected_mib_probe_20261019_184914.txt` (797 bytes)
-- `phase14_kernel_read/1400a_microarch_gadget_scan_20261105_051931.txt` (736 bytes)
-- `phase14_kernel_read/1403c_child_rdtsc_v2_20261105_060202.txt` (287 bytes)
-- `phase14_kernel_read/1403c_child_rdtsc_v2_20261105_060408.txt` (303 bytes)
-- `phase14_kernel_read/1403d_child_diag_20261105_061451.txt` (1058 bytes)
-- `phase14_kernel_read/1403e_rdtsc_timing_20261105_061659.txt` (1472 bytes)
-- `phase14_kernel_read/1403h_gadget_scan_fast_20261105_062427.txt` (744 bytes)
-- `phase14_kernel_read/1403h_gadget_scan_fast_20261105_062908.txt` (655 bytes)
-- `phase14_kernel_read/1403j_check_gadgets_20261105_063316.txt` (2772 bytes)
-- `phase14_kernel_read/1403k_final_scan_20261105_063445.txt` (269 bytes)
-- `phase14_kernel_read/1403l_loop_gadgets_20261105_064236.txt` (369 bytes)
-- `phase14_kernel_read/1403m_timer_thread_20261105_064635.txt` (971 bytes)
+- `phase14_final_push/56i5b_ro_candidate_fingerprint_20261020_101635.txt` (119 bytes)
+- `phase14_final_push/56i5b_ro_candidate_fingerprint_20261020_101756.txt` (584 bytes)
+- `phase14_final_push/56i6_kaslr_pivot_20261018_121034.txt` (5207 bytes)
+- `phase14_final_push/56i7_kptr_validate_20261018_121302.txt` (6584 bytes)
+- `phase14_final_push/56i8_eboot_data_kptr_20261018_121608.txt` (1002 bytes)
+- `phase14_final_push/56i9_kaslr_bruteforce_20261018_121926.txt` (737 bytes)
+- `phase14_final_push/56j_timing_kaslr_20261018_122158.txt` (1346 bytes)
+- `phase14_final_push/56k4_kldstat_kaslr_20261018_133209.txt` (85 bytes)
+- `phase14_final_push/56k5_modsys_kaslr_20261018_133508.txt` (809 bytes)
+- `phase14_final_push/56k_kaslr_bruteforce_20261018_123645.txt` (324 bytes)
+- `phase14_final_push/56l_corrected_mib_probe_20261019_184914.txt` (828 bytes)
+- `phase14_kernel_read/1400a_microarch_gadget_scan_20261105_051931.txt` (776 bytes)
+- `phase14_kernel_read/1403c_child_rdtsc_v2_20261105_060202.txt` (306 bytes)
+- `phase14_kernel_read/1403c_child_rdtsc_v2_20261105_060408.txt` (322 bytes)
+- `phase14_kernel_read/1403d_child_diag_20261105_061451.txt` (1111 bytes)
+- `phase14_kernel_read/1403e_rdtsc_timing_20261105_061659.txt` (1523 bytes)
+- `phase14_kernel_read/1403h_gadget_scan_fast_20261105_062427.txt` (783 bytes)
+- `phase14_kernel_read/1403h_gadget_scan_fast_20261105_062908.txt` (690 bytes)
+- `phase14_kernel_read/1403j_check_gadgets_20261105_063316.txt` (2851 bytes)
+- `phase14_kernel_read/1403k_final_scan_20261105_063445.txt` (284 bytes)
+- `phase14_kernel_read/1403l_loop_gadgets_20261105_064236.txt` (387 bytes)
+- `phase14_kernel_read/1403m_timer_thread_20261105_064635.txt` (1015 bytes)
 - `phase14_kernel_read/1403n_read_gadgets_20261105_064837.txt` (89 bytes)
-- `phase14_kernel_read/1403n_read_gadgets_20261105_064911.txt` (396 bytes)
-- `phase14_kernel_read/1403p_minimal_reader_20261105_070251.txt` (402 bytes)
-- `phase14_kernel_read/1403q_rop_timing_20261105_070410.txt` (578 bytes)
-- `phase14_kernel_read/1403r_timing_stats_20261105_070811.txt` (509 bytes)
-- `phase14_kernel_read/1403r_timing_stats_20261105_070936.txt` (46 bytes)
-- `phase14_kernel_read/1404a_aio669_count_boundary_20261105_072539.txt` (1460 bytes)
-- `phase14_kernel_read/1404b_dev_read_survey_20261105_073324.txt` (951 bytes)
-- `phase14_kernel_read/1404c_dev_usb_deep_20261105_074013.txt` (1785 bytes)
-- `phase15_jailbreak/66a_sound_mmap_krw_20261023_122632.txt` (1529 bytes)
-- `phase15_jailbreak/67a_msync_devpager_uaf_20261023_123028.txt` (183 bytes)
-- `phase15_jailbreak/67b_poll_fd_uaf_20261023_184143.txt` (885 bytes)
-- `phase15_jailbreak/67c_msync_isolate_20261023_154556.txt` (143 bytes)
-- `phase15_native_sysent/57a_native_survey_677_734_20261019_195140.txt` (146 bytes)
-- `phase15_native_sysent/57c_kldsym_direct_20261019_194850.txt` (99 bytes)
-- `phase15_native_sysent/57d_loader_dispatch_hunt_20261019_184916.txt` (7167 bytes)
+- `phase14_kernel_read/1403n_read_gadgets_20261105_064911.txt` (421 bytes)
+- `phase14_kernel_read/1403p_minimal_reader_20261105_070251.txt` (422 bytes)
+- `phase14_kernel_read/1403q_rop_timing_20261105_070410.txt` (600 bytes)
+- `phase14_kernel_read/1403r_timing_stats_20261105_070811.txt` (525 bytes)
+- `phase14_kernel_read/1403r_timing_stats_20261105_070936.txt` (48 bytes)
+- `phase14_kernel_read/1404a_aio669_count_boundary_20261105_072539.txt` (1501 bytes)
+- `phase14_kernel_read/1404b_dev_read_survey_20261105_073324.txt` (970 bytes)
+- `phase14_kernel_read/1404c_dev_usb_deep_20261105_074013.txt` (1823 bytes)
+- `phase14_kernel_read/p803_procfs_auxv_20261110_041157.txt` (1090 bytes)
+- `phase15_jailbreak/66a_sound_mmap_krw_20261023_122632.txt` (1587 bytes)
+- `phase15_jailbreak/67a_msync_devpager_uaf_20261023_123028.txt` (191 bytes)
+- `phase15_jailbreak/67b_poll_fd_uaf_20261023_184143.txt` (917 bytes)
+- `phase15_jailbreak/67c_msync_isolate_20261023_154556.txt` (150 bytes)
+- `phase15_native_sysent/57a_native_survey_677_734_20261019_195140.txt` (153 bytes)
+- `phase15_native_sysent/57c_kldsym_direct_20261019_194850.txt` (104 bytes)
+- `phase15_native_sysent/57d_loader_dispatch_hunt_20261019_184916.txt` (7381 bytes)
 - `phase15_native_sysent/57e_jail_reachability_20261019_184919.txt` (0 bytes)
-- `phase15_native_sysent/57e_jail_reachability_20261019_184945.txt` (771 bytes)
-- `phase15_native_sysent/58a_msync_reachability_20261019_185431.txt` (404 bytes)
-- `phase15_native_sysent/58a_msync_reachability_20261022_044042.txt` (1215 bytes)
-- `phase15_native_sysent/58a_msync_reachability_20261022_100842.txt` (1215 bytes)
-- `phase15_native_sysent/58a_msync_reachability_20261022_120837.txt` (1213 bytes)
-- `phase15_native_sysent/58a_msync_reachability_20261022_192449.txt` (1213 bytes)
-- `phase15_native_sysent/58a_msync_reachability_20261024_135342.txt` (1215 bytes)
-- `phase15_native_sysent/58b_msync_anon_vs_device_20261022_034238.txt` (985 bytes)
-- `phase15_native_sysent/58b_msync_device_pager_20261022_044239.txt` (452 bytes)
-- `phase15_native_sysent/58b_msync_device_pager_20261024_135357.txt` (452 bytes)
+- `phase15_native_sysent/57e_jail_reachability_20261019_184945.txt` (796 bytes)
+- `phase15_native_sysent/58a_msync_reachability_20261019_185431.txt` (420 bytes)
+- `phase15_native_sysent/58a_msync_reachability_20261022_044042.txt` (1262 bytes)
+- `phase15_native_sysent/58a_msync_reachability_20261022_100842.txt` (1262 bytes)
+- `phase15_native_sysent/58a_msync_reachability_20261022_120837.txt` (1260 bytes)
+- `phase15_native_sysent/58a_msync_reachability_20261022_192449.txt` (1260 bytes)
+- `phase15_native_sysent/58a_msync_reachability_20261024_135342.txt` (1262 bytes)
+- `phase15_native_sysent/58b_msync_anon_vs_device_20261022_034238.txt` (1023 bytes)
+- `phase15_native_sysent/58b_msync_device_pager_20261022_044239.txt` (475 bytes)
+- `phase15_native_sysent/58b_msync_device_pager_20261024_135357.txt` (475 bytes)
 - `phase15_native_sysent/58b_msync_devpager_20261022_192601.txt` (94 bytes)
-- `phase15_native_sysent/58b_msync_devpager_20261022_192645.txt` (834 bytes)
-- `phase15_native_sysent/58d_shm_sendfile_reachability_20261019_185429.txt` (985 bytes)
-- `phase15_native_sysent/58e_msync_minimal_20261022_045849.txt` (112 bytes)
-- `phase15_native_sysent/58f_msync_dmem_20261022_045922.txt` (221 bytes)
-- `phase15_native_sysent/59a_linux_abi_detection_20261019_184946.txt` (1459 bytes)
-- `phase15_native_sysent/59b_thr_family_survey_20261019_194932.txt` (2429 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_182830.txt` (481 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_183119.txt` (410 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_183322.txt` (265 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_185359.txt` (1758 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_185415.txt` (235 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_190003.txt` (235 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_190202.txt` (527 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_190649.txt` (235 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_190943.txt` (235 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_193825.txt` (2017 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_194148.txt` (3923 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_200248.txt` (1197 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_200319.txt` (218 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_200753.txt` (233 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_201435.txt` (656 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_203523.txt` (233 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_205040.txt` (4562 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_205641.txt` (154 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_205654.txt` (154 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_210224.txt` (217 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_210647.txt` (713 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_213026.txt` (19533 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_224601.txt` (903 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261020_230242.txt` (1353 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261021_124747.txt` (1085 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261021_131039.txt` (1113 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261021_131806.txt` (596 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261021_133356.txt` (371 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261021_152457.txt` (533 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261022_152411.txt` (159 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261022_152712.txt` (235 bytes)
-- `phase15_native_sysent/syscall_isolation_sweep_20261022_153527.txt` (382 bytes)
-- `phase16_kwrite/65d_aio_multi_delete_race_20261023_214636.txt` (1060 bytes)
-- `phase16_kwrite/65e_aio_race_pending_20261023_214831.txt` (1225 bytes)
-- `phase16_kwrite/65f_aio_race_v3_20261023_215237.txt` (1013 bytes)
-- `phase16_kwrite/65g_aio_race_clean_20261023_215403.txt` (271 bytes)
-- `phase16_kwrite/65g_aio_race_clean_20261023_215555.txt` (271 bytes)
-- `phase16_kwrite/65h_aio_race_poll_20261023_215737.txt` (880 bytes)
-- `phase16_kwrite/65i_aio_race_2child_20261023_215920.txt` (779 bytes)
-- `phase16_kwrite/65j_aio_race_nosysarch_20261023_220145.txt` (769 bytes)
-- `phase16_kwrite/65k_aio_race_multi_20261023_220403.txt` (944 bytes)
-- `phase16_kwrite/65l_aio_race_fixed_20261023_220628.txt` (1833 bytes)
-- `phase16_kwrite/65l_aio_race_fixed_20261024_001504.txt` (610 bytes)
-- `phase16_kwrite/65l_aio_race_fixed_20261024_014840.txt` (610 bytes)
-- `phase16_kwrite/65l_aio_race_fixed_20261024_015417.txt` (1049 bytes)
-- `phase16_kwrite/65l_aio_race_fixed_20261027_223615.txt` (1189 bytes)
-- `phase16_kwrite/65l_aio_race_fixed_20261028_100717.txt` (784 bytes)
-- `phase16_kwrite/65l_aio_race_fixed_20261028_111549.txt` (891 bytes)
-- `phase16_kwrite/65m_aio_uaf_read_20261023_221528.txt` (1026 bytes)
-- `phase16_kwrite/65n_aio_object_size_20261023_222029.txt` (1131 bytes)
-- `phase16_kwrite/65o_concurrent_spray_20261023_222356.txt` (2242 bytes)
-- `phase16_kwrite/65p_aio_self_overlap_20261023_222656.txt` (1161 bytes)
-- `phase16_kwrite/65q_overlap_exploit_20261023_222916.txt` (710 bytes)
-- `phase16_kwrite/65r_fd_refcount_20261023_223423.txt` (2123 bytes)
-- `phase16_kwrite/65s_aio_overlap_reclaim_20261023_224749.txt` (637 bytes)
-- `phase16_kwrite/65s_aio_overlap_reclaim_20261023_225002.txt` (2118 bytes)
-- `phase16_kwrite/65t_aio_bigbatch_overlap_20261023_225417.txt` (1212 bytes)
-- `phase16_kwrite/65u_aio_mainthread_race_20261023_225722.txt` (1638 bytes)
-- `phase16_kwrite/65v_cross_subsystem_overlap_20261023_231444.txt` (813 bytes)
-- `phase16_kwrite/65w_fixed_cross_spray_20261023_232747.txt` (1223 bytes)
-- `phase16_kwrite/66a_dlsym_real_handles_20261023_231740.txt` (888 bytes)
-- `phase16_kwrite/66b_dynlib_info2_kptr_20261023_231820.txt` (1608 bytes)
-- `phase16_kwrite/66c_aio_crosstype_spray_20261023_231943.txt` (280 bytes)
-- `phase16_kwrite/66d_aio_overlap_detect_20261023_232132.txt` (820 bytes)
-- `phase16_kwrite/66e_aio_evf_overlap_20261023_232738.txt` (606 bytes)
-- `phase16_kwrite/66f_massive_spray_20261023_233354.txt` (406 bytes)
-- `phase16_kwrite/66g_669_count_limit_20261023_233607.txt` (651 bytes)
-- `phase16_kwrite/67a_aio_readback_663_666_667_20261023_235139.txt` (5457 bytes)
-- `phase16_kwrite/67a_aio_readback_663_666_667_20261023_235254.txt` (5458 bytes)
-- `phase16_kwrite/67b_cpupin_samecache_20261023_235515.txt` (776 bytes)
+- `phase15_native_sysent/58b_msync_devpager_20261022_192645.txt` (878 bytes)
+- `phase15_native_sysent/58d_shm_sendfile_reachability_20261019_185429.txt` (1025 bytes)
+- `phase15_native_sysent/58e_msync_minimal_20261022_045849.txt` (122 bytes)
+- `phase15_native_sysent/58f_msync_dmem_20261022_045922.txt` (239 bytes)
+- `phase15_native_sysent/59a_linux_abi_detection_20261019_184946.txt` (1515 bytes)
+- `phase15_native_sysent/59b_thr_family_survey_20261019_194932.txt` (2513 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_182830.txt` (492 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_183119.txt` (420 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_183322.txt` (272 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_185359.txt` (1786 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_185415.txt` (242 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_190003.txt` (242 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_190202.txt` (540 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_190649.txt` (242 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_190943.txt` (242 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_193825.txt` (2052 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_194148.txt` (3989 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_200248.txt` (1234 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_200319.txt` (224 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_200753.txt` (240 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_201435.txt` (670 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_203523.txt` (240 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_205040.txt` (4653 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_205641.txt` (159 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_205654.txt` (159 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_210224.txt` (223 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_210647.txt` (728 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_213026.txt` (19867 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_224601.txt` (920 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261020_230242.txt` (1379 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261021_124747.txt` (1105 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261021_131039.txt` (1138 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261021_131806.txt` (611 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261021_133356.txt` (381 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261021_152457.txt` (547 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261022_152411.txt` (164 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261022_152712.txt` (242 bytes)
+- `phase15_native_sysent/syscall_isolation_sweep_20261022_153527.txt` (394 bytes)
+- `phase16_kwrite/65d_aio_multi_delete_race_20261023_214636.txt` (1096 bytes)
+- `phase16_kwrite/65e_aio_race_pending_20261023_214831.txt` (1259 bytes)
+- `phase16_kwrite/65f_aio_race_v3_20261023_215237.txt` (1049 bytes)
+- `phase16_kwrite/65g_aio_race_clean_20261023_215403.txt` (282 bytes)
+- `phase16_kwrite/65g_aio_race_clean_20261023_215555.txt` (282 bytes)
+- `phase16_kwrite/65h_aio_race_poll_20261023_215737.txt` (910 bytes)
+- `phase16_kwrite/65i_aio_race_2child_20261023_215920.txt` (808 bytes)
+- `phase16_kwrite/65j_aio_race_nosysarch_20261023_220145.txt` (798 bytes)
+- `phase16_kwrite/65k_aio_race_multi_20261023_220403.txt` (984 bytes)
+- `phase16_kwrite/65l_aio_race_fixed_20261023_220628.txt` (1882 bytes)
+- `phase16_kwrite/65l_aio_race_fixed_20261024_001504.txt` (638 bytes)
+- `phase16_kwrite/65l_aio_race_fixed_20261024_014840.txt` (638 bytes)
+- `phase16_kwrite/65l_aio_race_fixed_20261024_015417.txt` (1085 bytes)
+- `phase16_kwrite/65l_aio_race_fixed_20261027_223615.txt` (1234 bytes)
+- `phase16_kwrite/65l_aio_race_fixed_20261028_100717.txt` (815 bytes)
+- `phase16_kwrite/65l_aio_race_fixed_20261028_111549.txt` (925 bytes)
+- `phase16_kwrite/65m_aio_uaf_read_20261023_221528.txt` (1070 bytes)
+- `phase16_kwrite/65n_aio_object_size_20261023_222029.txt` (1181 bytes)
+- `phase16_kwrite/65o_concurrent_spray_20261023_222356.txt` (2297 bytes)
+- `phase16_kwrite/65p_aio_self_overlap_20261023_222656.txt` (1195 bytes)
+- `phase16_kwrite/65q_overlap_exploit_20261023_222916.txt` (740 bytes)
+- `phase16_kwrite/65r_fd_refcount_20261023_223423.txt` (2177 bytes)
+- `phase16_kwrite/65s_aio_overlap_reclaim_20261023_224749.txt` (663 bytes)
+- `phase16_kwrite/65s_aio_overlap_reclaim_20261023_225002.txt` (2168 bytes)
+- `phase16_kwrite/65t_aio_bigbatch_overlap_20261023_225417.txt` (1248 bytes)
+- `phase16_kwrite/65u_aio_mainthread_race_20261023_225722.txt` (1676 bytes)
+- `phase16_kwrite/65v_cross_subsystem_overlap_20261023_231444.txt` (843 bytes)
+- `phase16_kwrite/65w_fixed_cross_spray_20261023_232747.txt` (1259 bytes)
+- `phase16_kwrite/66a_dlsym_real_handles_20261023_231740.txt` (920 bytes)
+- `phase16_kwrite/66b_dynlib_info2_kptr_20261023_231820.txt` (1656 bytes)
+- `phase16_kwrite/66c_aio_crosstype_spray_20261023_231943.txt` (294 bytes)
+- `phase16_kwrite/66d_aio_overlap_detect_20261023_232132.txt` (852 bytes)
+- `phase16_kwrite/66e_aio_evf_overlap_20261023_232738.txt` (638 bytes)
+- `phase16_kwrite/66f_massive_spray_20261023_233354.txt` (420 bytes)
+- `phase16_kwrite/66g_669_count_limit_20261023_233607.txt` (680 bytes)
+- `phase16_kwrite/67a_aio_readback_663_666_667_20261023_235139.txt` (5552 bytes)
+- `phase16_kwrite/67a_aio_readback_663_666_667_20261023_235254.txt` (5553 bytes)
+- `phase16_kwrite/67b_cpupin_samecache_20261023_235515.txt` (804 bytes)
 - `phase16_kwrite/67b_poll_aio_overlap_kaslr_20261024_000315.txt` (96 bytes)
-- `phase16_kwrite/67b_poll_aio_overlap_kaslr_20261024_000350.txt` (516 bytes)
-- `phase16_kwrite/67c_overlap_oracle_20261024_000729.txt` (4616 bytes)
-- `phase16_kwrite/67c_overlap_oracle_20261024_001237.txt` (464 bytes)
-- `phase16_kwrite/67d_overlap_readback_20261024_001504.txt` (247 bytes)
-- `phase16_kwrite/67d_overlap_readback_20261024_001534.txt` (261 bytes)
-- `phase16_kwrite/67d_overlap_readback_20261024_001712.txt` (2678 bytes)
-- `phase16_kwrite/67d_synced_race_20261024_002050.txt` (385 bytes)
-- `phase16_kwrite/67e_forced_reclaim_20261024_002242.txt` (1333 bytes)
-- `phase16_kwrite/67e_main_child_race_20261024_002327.txt` (506 bytes)
-- `phase16_kwrite/67f_crosszone_namedobj_20261024_003154.txt` (260 bytes)
-- `phase16_kwrite/67f_fresh_race_20261024_014938.txt` (381 bytes)
-- `phase16_kwrite/67g_highthroughput_race_20261024_015309.txt` (784 bytes)
-- `phase16_kwrite/67h_cross_cpu_delete_20261024_014630.txt` (236 bytes)
-- `phase16_kwrite/67h_cross_cpu_delete_20261024_014732.txt` (157 bytes)
-- `phase16_kwrite/67h_race_oracle_exploit_20261024_015638.txt` (2083 bytes)
-- `phase16_kwrite/67i2_gated_race_simple_20261024_015835.txt` (1082 bytes)
-- `phase16_kwrite/67j_gated_cross_cpu_20261024_020031.txt` (152 bytes)
-- `phase16_kwrite/67j_gated_cross_cpu_20261024_020317.txt` (135 bytes)
-- `phase16_kwrite/67j_gated_cross_cpu_20261024_020341.txt` (144 bytes)
-- `phase16_kwrite/67k_combined_20261024_020945.txt` (707 bytes)
-- `phase16_kwrite/67l_overlap_detect_20261024_022243.txt` (713 bytes)
-- `phase16_kwrite/67m_663_characterize_20261024_023236.txt` (344 bytes)
-- `phase16_kwrite/68a_aio_uaf_readback_20261028_105844.txt` (649 bytes)
-- `phase16_kwrite/68b_aio_spray_pipes_20261028_110601.txt` (210 bytes)
-- `phase16_kwrite/69a_aio_overlap_hexdump_20261025_154737.txt` (3084 bytes)
-- `phase16_kwrite/69d_kaslr_spray_20261025_192848.txt` (1350 bytes)
-- `phase16_kwrite/69d_r_reclaim_kaslr_20261025_154808.txt` (473 bytes)
-- `phase16_kwrite/69i_aio_cmd2_class_20261025_192959.txt` (1522 bytes)
-- `phase16_kwrite/69j_sioc_ioctl_kaslr_20261025_160700.txt` (3993 bytes)
-- `phase16_kwrite/69j_socket_ioctl_kaslr_20261025_192918.txt` (1346 bytes)
-- `phase16_kwrite/69k_dlsym_deep_sweep_20261025_160708.txt` (538 bytes)
-- `phase16_kwrite/69k_dlsym_sweep_20261025_192927.txt` (607 bytes)
-- `phase16_kwrite/69l_evf_object_size_20261025_160330.txt` (5341 bytes)
-- `phase16_kwrite/69l_evf_object_size_20261025_192201.txt` (5752 bytes)
+- `phase16_kwrite/67b_poll_aio_overlap_kaslr_20261024_000350.txt` (542 bytes)
+- `phase16_kwrite/67c_overlap_oracle_20261024_000729.txt` (4720 bytes)
+- `phase16_kwrite/67c_overlap_oracle_20261024_001237.txt` (487 bytes)
+- `phase16_kwrite/67d_overlap_readback_20261024_001504.txt` (261 bytes)
+- `phase16_kwrite/67d_overlap_readback_20261024_001534.txt` (276 bytes)
+- `phase16_kwrite/67d_overlap_readback_20261024_001712.txt` (2752 bytes)
+- `phase16_kwrite/67d_synced_race_20261024_002050.txt` (400 bytes)
+- `phase16_kwrite/67e_forced_reclaim_20261024_002242.txt` (1382 bytes)
+- `phase16_kwrite/67e_main_child_race_20261024_002327.txt` (530 bytes)
+- `phase16_kwrite/67f_crosszone_namedobj_20261024_003154.txt` (270 bytes)
+- `phase16_kwrite/67f_fresh_race_20261024_014938.txt` (395 bytes)
+- `phase16_kwrite/67g_highthroughput_race_20261024_015309.txt` (810 bytes)
+- `phase16_kwrite/67h_cross_cpu_delete_20261024_014630.txt` (248 bytes)
+- `phase16_kwrite/67h_cross_cpu_delete_20261024_014732.txt` (167 bytes)
+- `phase16_kwrite/67h_race_oracle_exploit_20261024_015638.txt` (2147 bytes)
+- `phase16_kwrite/67i2_gated_race_simple_20261024_015835.txt` (1119 bytes)
+- `phase16_kwrite/67j_gated_cross_cpu_20261024_020031.txt` (161 bytes)
+- `phase16_kwrite/67j_gated_cross_cpu_20261024_020317.txt` (143 bytes)
+- `phase16_kwrite/67j_gated_cross_cpu_20261024_020341.txt` (152 bytes)
+- `phase16_kwrite/67k_combined_20261024_020945.txt` (741 bytes)
+- `phase16_kwrite/67l_overlap_detect_20261024_022243.txt` (744 bytes)
+- `phase16_kwrite/67m_663_characterize_20261024_023236.txt` (357 bytes)
+- `phase16_kwrite/68a_aio_uaf_readback_20261028_105844.txt` (686 bytes)
+- `phase16_kwrite/68b_aio_spray_pipes_20261028_110601.txt` (221 bytes)
+- `phase16_kwrite/69a_aio_overlap_hexdump_20261025_154737.txt` (3131 bytes)
+- `phase16_kwrite/69d_kaslr_spray_20261025_192848.txt` (1401 bytes)
+- `phase16_kwrite/69d_r_reclaim_kaslr_20261025_154808.txt` (489 bytes)
+- `phase16_kwrite/69i_aio_cmd2_class_20261025_192959.txt` (1568 bytes)
+- `phase16_kwrite/69j_sioc_ioctl_kaslr_20261025_160700.txt` (4067 bytes)
+- `phase16_kwrite/69j_socket_ioctl_kaslr_20261025_192918.txt` (1394 bytes)
+- `phase16_kwrite/69k_dlsym_deep_sweep_20261025_160708.txt` (563 bytes)
+- `phase16_kwrite/69k_dlsym_sweep_20261025_192927.txt` (633 bytes)
+- `phase16_kwrite/69l_evf_object_size_20261025_160330.txt` (5455 bytes)
+- `phase16_kwrite/69l_evf_object_size_20261025_192201.txt` (5872 bytes)
 - `phase16_kwrite/69m_read_gadget_scan_20261025_160405.txt` (4384 bytes)
-- `phase16_kwrite/69m_read_gadget_scan_20261025_192313.txt` (4104 bytes)
-- `phase16_kwrite/69n_663_mode_sweep_20261025_160649.txt` (3900 bytes)
-- `phase16_kwrite/69n_663_mode_sweep_20261025_192936.txt` (3899 bytes)
-- `phase16_kwrite/69q1_624_doublefree_oracle_20261025_160715.txt` (2001 bytes)
-- `phase16_kwrite/69t1_666_667_semantics_20261025_160641.txt` (3358 bytes)
-- `phase16_kwrite/70a_generation_wraparound_20261025_154511.txt` (3795 bytes)
-- `phase16_kwrite/70a_small_alloc_sizing_20261025_162637.txt` (1483 bytes)
+- `phase16_kwrite/69m_read_gadget_scan_20261025_192313.txt` (4189 bytes)
+- `phase16_kwrite/69n_663_mode_sweep_20261025_160649.txt` (3997 bytes)
+- `phase16_kwrite/69n_663_mode_sweep_20261025_192936.txt` (3996 bytes)
+- `phase16_kwrite/69q1_624_doublefree_oracle_20261025_160715.txt` (2051 bytes)
+- `phase16_kwrite/69t1_666_667_semantics_20261025_160641.txt` (3470 bytes)
+- `phase16_kwrite/70a_generation_wraparound_20261025_154511.txt` (3891 bytes)
+- `phase16_kwrite/70a_small_alloc_sizing_20261025_162637.txt` (1536 bytes)
 - `phase16_kwrite/70b_aio_self_reclaim_kaslr_20261025_162649.txt` (92 bytes)
-- `phase16_kwrite/70c_refcount_underflow_20261025_162848.txt` (1765 bytes)
-- `phase16_kwrite/70d_666_field_mapping_20261025_162835.txt` (1225 bytes)
-- `phase16_kwrite/70e_race_refcount_impact_20261025_163942.txt` (1351 bytes)
-- `phase16_kwrite/71a_aio_id_reuse_3thread_20261025_165001.txt` (3215 bytes)
-- `phase16_kwrite/71b_3thread_uaf_mainc_20261025_165409.txt` (1231 bytes)
-- `phase16_kwrite/71c_3thread_fixed_timing_20261025_165604.txt` (235 bytes)
-- `phase16_kwrite/71d_3thread_lean_20261025_170045.txt` (615 bytes)
-- `phase16_kwrite/71e_665_668_real_args_20261025_170230.txt` (151 bytes)
-- `phase16_kwrite/71f2_668_first_20261025_173819.txt` (94 bytes)
-- `phase16_kwrite/71f_665_662shape_20261025_172836.txt` (144 bytes)
-- `phase16_kwrite/71g_child_669_test_20261025_182022.txt` (611 bytes)
-- `phase16_kwrite/71h_663_behavior_20261025_181957.txt` (1285 bytes)
-- `phase16_kwrite/72a_663_662_race_20261025_182929.txt` (1486 bytes)
-- `phase16_kwrite/72b_663_662_race_v2_20261025_183507.txt` (2152 bytes)
-- `phase16_kwrite/72c_663_662_gate_20261025_191219.txt` (1923 bytes)
-- `phase16_kwrite/72d_663_qword_output_20261025_192827.txt` (1479 bytes)
-- `phase16_kwrite/73b_module_data_kptr_scan_20261025_193758.txt` (181451 bytes)
-- `phase16_kwrite/73c_kptr_verify_20261025_194117.txt` (5754 bytes)
-- `phase16_kwrite/74a_ipoptions_proper_20261025_195838.txt` (6043 bytes)
-- `phase16_kwrite/74a_ipoptions_proper_20261025_200005.txt` (6044 bytes)
-- `phase16_kwrite/74a_ipv6_exthdr_spray_20261028_095721.txt` (895 bytes)
-- `phase16_kwrite/74a_ipv6_exthdr_spray_20261028_100726.txt` (895 bytes)
-- `phase16_kwrite/74b_669_ids_overcopy_20261025_195815.txt` (3077 bytes)
+- `phase16_kwrite/70c_refcount_underflow_20261025_162848.txt` (1829 bytes)
+- `phase16_kwrite/70d_666_field_mapping_20261025_162835.txt` (1280 bytes)
+- `phase16_kwrite/70e_race_refcount_impact_20261025_163942.txt` (1389 bytes)
+- `phase16_kwrite/71a_aio_id_reuse_3thread_20261025_165001.txt` (3309 bytes)
+- `phase16_kwrite/71b_3thread_uaf_mainc_20261025_165409.txt` (1262 bytes)
+- `phase16_kwrite/71c_3thread_fixed_timing_20261025_165604.txt` (245 bytes)
+- `phase16_kwrite/71d_3thread_lean_20261025_170045.txt` (638 bytes)
+- `phase16_kwrite/71e_665_668_real_args_20261025_170230.txt` (160 bytes)
+- `phase16_kwrite/71f2_668_first_20261025_173819.txt` (100 bytes)
+- `phase16_kwrite/71f_665_662shape_20261025_172836.txt` (151 bytes)
+- `phase16_kwrite/71g_child_669_test_20261025_182022.txt` (636 bytes)
+- `phase16_kwrite/71h_663_behavior_20261025_181957.txt` (1329 bytes)
+- `phase16_kwrite/72a_663_662_race_20261025_182929.txt` (1525 bytes)
+- `phase16_kwrite/72b_663_662_race_v2_20261025_183507.txt` (2198 bytes)
+- `phase16_kwrite/72c_663_662_gate_20261025_191219.txt` (1969 bytes)
+- `phase16_kwrite/72d_663_qword_output_20261025_192827.txt` (1533 bytes)
+- `phase16_kwrite/73b_module_data_kptr_scan_20261025_193758.txt` (184969 bytes)
+- `phase16_kwrite/73c_kptr_verify_20261025_194117.txt` (5885 bytes)
+- `phase16_kwrite/74a_ipoptions_proper_20261025_195838.txt` (6251 bytes)
+- `phase16_kwrite/74a_ipoptions_proper_20261025_200005.txt` (6252 bytes)
+- `phase16_kwrite/74a_ipv6_exthdr_spray_20261028_095721.txt` (941 bytes)
+- `phase16_kwrite/74a_ipv6_exthdr_spray_20261028_100726.txt` (941 bytes)
+- `phase16_kwrite/74b_669_ids_overcopy_20261025_195815.txt` (3153 bytes)
 - `phase16_kwrite/74b_eboot_got_kptr_20261025_200415.txt` (7075 bytes)
-- `phase16_kwrite/74c_669_ids_overcopy_20261025_200633.txt` (2263 bytes)
-- `phase16_kwrite/74c_eboot_got_scan_20261025_195908.txt` (844 bytes)
-- `phase16_kwrite/74c_got_plt_scan_20261025_200256.txt` (1608 bytes)
-- `phase16_kwrite/74d_669_ids_overcopy_20261025_200257.txt` (1137 bytes)
-- `phase16_kwrite/74d_evf_spray_test_20261028_221645.txt` (1784 bytes)
-- `phase16_kwrite/74d_socket_buffer_spray_20261025_200117.txt` (1225 bytes)
-- `phase16_kwrite/74d_socket_buffer_spray_20261025_200140.txt` (1225 bytes)
-- `phase16_kwrite/74e_module_kptr_verify_20261025_200649.txt` (2847 bytes)
-- `phase16_kwrite/74e_module_kptr_verify_20261025_200701.txt` (2847 bytes)
-- `phase16_kwrite/74e_verify_module_kptrs_20261025_200742.txt` (6440 bytes)
-- `phase16_kwrite/75a_coixao_spray_oracle_20261028_111124.txt` (330 bytes)
-- `phase16_kwrite/75a_dynlib_v2_kaslr_20261025_201209.txt` (1203 bytes)
-- `phase16_kwrite/75a_dynlib_v2_kaslr_20261025_201254.txt` (1390 bytes)
-- `phase16_kwrite/75b_572_598_659_deep_20261025_201714.txt` (1635 bytes)
-- `phase16_kwrite/75b_ipv6_spray_size_sweep_20261028_111954.txt` (1822 bytes)
-- `phase16_kwrite/75c_572_deep_dump_20261025_201834.txt` (1973 bytes)
-- `phase16_kwrite/75c_zone128_spray_oracle_20261028_113341.txt` (536 bytes)
-- `phase16_kwrite/75d_zone128_spray_cpupin_20261028_114234.txt` (651 bytes)
-- `phase16_kwrite/75e_zone128_more_frees_20261028_115212.txt` (1016 bytes)
+- `phase16_kwrite/74c_669_ids_overcopy_20261025_200633.txt` (2329 bytes)
+- `phase16_kwrite/74c_eboot_got_scan_20261025_195908.txt` (877 bytes)
+- `phase16_kwrite/74c_got_plt_scan_20261025_200256.txt` (1655 bytes)
+- `phase16_kwrite/74d_669_ids_overcopy_20261025_200257.txt` (1171 bytes)
+- `phase16_kwrite/74d_evf_spray_test_20261028_221645.txt` (1832 bytes)
+- `phase16_kwrite/74d_socket_buffer_spray_20261025_200117.txt` (1273 bytes)
+- `phase16_kwrite/74d_socket_buffer_spray_20261025_200140.txt` (1273 bytes)
+- `phase16_kwrite/74e_module_kptr_verify_20261025_200649.txt` (2938 bytes)
+- `phase16_kwrite/74e_module_kptr_verify_20261025_200701.txt` (2938 bytes)
+- `phase16_kwrite/74e_verify_module_kptrs_20261025_200742.txt` (6584 bytes)
+- `phase16_kwrite/75a_coixao_spray_oracle_20261028_111124.txt` (343 bytes)
+- `phase16_kwrite/75a_dynlib_v2_kaslr_20261025_201209.txt` (1248 bytes)
+- `phase16_kwrite/75a_dynlib_v2_kaslr_20261025_201254.txt` (1438 bytes)
+- `phase16_kwrite/75b_572_598_659_deep_20261025_201714.txt` (1693 bytes)
+- `phase16_kwrite/75b_ipv6_spray_size_sweep_20261028_111954.txt` (1874 bytes)
+- `phase16_kwrite/75c_572_deep_dump_20261025_201834.txt` (2046 bytes)
+- `phase16_kwrite/75c_zone128_spray_oracle_20261028_113341.txt` (564 bytes)
+- `phase16_kwrite/75d_zone128_spray_cpupin_20261028_114234.txt` (683 bytes)
+- `phase16_kwrite/75e_zone128_more_frees_20261028_115212.txt` (1060 bytes)
 - `phase16_kwrite/76a_ipv6_rthdr_64b_roundtrip_20261025_212543.txt` (0 bytes)
-- `phase16_kwrite/76a_ipv6_rthdr_64b_roundtrip_20261025_212858.txt` (407 bytes)
-- `phase16_kwrite/76b_ipv6_rthdr_pattern_readback_20261025_212943.txt` (148 bytes)
-- `phase16_kwrite/76c_ipv6_rthdr_volume_20261025_213024.txt` (100 bytes)
-- `phase16_kwrite/77a_prolapse_spray_test_20261027_220838.txt` (1405 bytes)
-- `phase16_kwrite/77b_prolapse_race_spray_20261027_221100.txt` (792 bytes)
-- `phase16_kwrite/77c_prolapse_drain_spray_20261027_221708.txt` (401 bytes)
-- `phase16_kwrite/77d_prolapse_race_then_spray_20261027_221841.txt` (1230 bytes)
-- `phase16_kwrite/77e_prolapse_same_type_reclaim_20261027_222015.txt` (364 bytes)
-- `phase16_kwrite/77e_prolapse_same_type_reclaim_20261027_222038.txt` (364 bytes)
-- `phase16_kwrite/77e_prolapse_same_type_reclaim_20261027_222147.txt` (364 bytes)
-- `phase16_kwrite/77e_prolapse_same_type_reclaim_20261027_222425.txt` (364 bytes)
-- `phase16_kwrite/77f_prolapse_full_chain_20261027_223403.txt` (419 bytes)
-- `phase16_kwrite/77f_prolapse_full_chain_20261028_100937.txt` (908 bytes)
-- `phase16_kwrite/77f_prolapse_full_chain_20261028_111636.txt` (927 bytes)
-- `phase16_kwrite/77f_prolapse_full_chain_20261028_221736.txt` (1234 bytes)
-- `phase16_kwrite/77g_prolapse_evf_cross_20261028_221925.txt` (510 bytes)
-- `phase16_kwrite/overlap_detect2_20261028_120720.txt` (343 bytes)
-- `phase16_thr_create_crash/58e_thr_create_reachability_20261019_084825.txt` (1017 bytes)
-- `phase16_thr_create_crash/58e_thr_create_ucontext_20261019_084859.txt` (1593 bytes)
-- `phase16_thr_create_crash/76c_thr_create_safe_longjmp_20261019_085609.txt` (313 bytes)
+- `phase16_kwrite/76a_ipv6_rthdr_64b_roundtrip_20261025_212858.txt` (415 bytes)
+- `phase16_kwrite/76b_ipv6_rthdr_pattern_readback_20261025_212943.txt` (152 bytes)
+- `phase16_kwrite/76c_ipv6_rthdr_volume_20261025_213024.txt` (104 bytes)
+- `phase16_kwrite/77a_prolapse_spray_test_20261027_220838.txt` (1444 bytes)
+- `phase16_kwrite/77b_prolapse_race_spray_20261027_221100.txt` (821 bytes)
+- `phase16_kwrite/77c_prolapse_drain_spray_20261027_221708.txt` (422 bytes)
+- `phase16_kwrite/77d_prolapse_race_then_spray_20261027_221841.txt` (1271 bytes)
+- `phase16_kwrite/77e_prolapse_same_type_reclaim_20261027_222015.txt` (385 bytes)
+- `phase16_kwrite/77e_prolapse_same_type_reclaim_20261027_222038.txt` (385 bytes)
+- `phase16_kwrite/77e_prolapse_same_type_reclaim_20261027_222147.txt` (385 bytes)
+- `phase16_kwrite/77e_prolapse_same_type_reclaim_20261027_222425.txt` (385 bytes)
+- `phase16_kwrite/77f_prolapse_full_chain_20261027_223403.txt` (443 bytes)
+- `phase16_kwrite/77f_prolapse_full_chain_20261028_100937.txt` (947 bytes)
+- `phase16_kwrite/77f_prolapse_full_chain_20261028_111636.txt` (967 bytes)
+- `phase16_kwrite/77f_prolapse_full_chain_20261028_221736.txt` (1284 bytes)
+- `phase16_kwrite/77g_prolapse_evf_cross_20261028_221925.txt` (531 bytes)
+- `phase16_kwrite/overlap_detect2_20261028_120720.txt` (351 bytes)
+- `phase16_thr_create_crash/58e_thr_create_reachability_20261019_084825.txt` (1045 bytes)
+- `phase16_thr_create_crash/58e_thr_create_ucontext_20261019_084859.txt` (1636 bytes)
+- `phase16_thr_create_crash/76c_thr_create_safe_longjmp_20261019_085609.txt` (324 bytes)
 - `phase16_thr_create_crash/76c_thr_create_safe_longjmp_20261019_085651.txt` (0 bytes)
-- `phase16_thr_create_crash/76d_thr_create_exit_only_20261019_090357.txt` (272 bytes)
+- `phase16_thr_create_crash/76d_thr_create_exit_only_20261019_090357.txt` (281 bytes)
 - `phase16_thr_create_crash/76d_thr_create_exit_only_20261019_090422.txt` (0 bytes)
-- `phase16_thr_create_crash/76d_thr_create_exit_only_20261019_090657.txt` (272 bytes)
-- `phase16_thr_create_crash/76e_thr_create_exit_wait_20261019_091202.txt` (67 bytes)
-- `phase17_new_vectors/1000a_fault_scan_20261103_164605.txt` (459 bytes)
-- `phase17_new_vectors/1006a_kernel_read_probe_20261103_170042.txt` (533 bytes)
-- `phase17_new_vectors/100a_kernel_table_modlist_20261019_184946.txt` (1439 bytes)
-- `phase17_new_vectors/100a_kernel_table_modlist_sectionB_20261019_185355.txt` (845 bytes)
-- `phase17_new_vectors/100a_kernel_table_modlist_sectionC_20261019_185356.txt` (669 bytes)
+- `phase16_thr_create_crash/76d_thr_create_exit_only_20261019_090657.txt` (281 bytes)
+- `phase16_thr_create_crash/76e_thr_create_exit_wait_20261019_091202.txt` (69 bytes)
+- `phase17_new_vectors/1000a_fault_scan_20261103_164605.txt` (474 bytes)
+- `phase17_new_vectors/1006a_kernel_read_probe_20261103_170042.txt` (544 bytes)
+- `phase17_new_vectors/100a_kernel_table_modlist_20261019_184946.txt` (1484 bytes)
+- `phase17_new_vectors/100a_kernel_table_modlist_sectionB_20261019_185355.txt` (871 bytes)
+- `phase17_new_vectors/100a_kernel_table_modlist_sectionC_20261019_185356.txt` (698 bytes)
 - `phase17_new_vectors/100a_kernel_table_modlist_sectionC_20261020_101957.txt` (0 bytes)
-- `phase17_new_vectors/100a_kernel_table_modlist_sectionD_20261019_185356.txt` (855 bytes)
-- `phase17_new_vectors/101a_sys628_mmap_variant_20261019_184947.txt` (1083 bytes)
-- `phase17_new_vectors/101a_sys628_mmap_variant_sectionB_20261019_185404.txt` (1247 bytes)
-- `phase17_new_vectors/101a_sys628_mmap_variant_sectionC_20261019_185405.txt` (1810 bytes)
-- `phase17_new_vectors/101a_sys628_mmap_variant_sectionD_20261019_185405.txt` (361 bytes)
-- `phase17_new_vectors/104a_dispatch_internals_20261019_184947.txt` (282 bytes)
-- `phase17_new_vectors/105a_evfilt_proc_kptr_leak_20261028_191128.txt` (694 bytes)
-- `phase17_new_vectors/105a_evfilt_proc_kptr_leak_20261028_191810.txt` (694 bytes)
-- `phase17_new_vectors/106a_sigreturn_srop_20261021_212215.txt` (1002 bytes)
-- `phase17_new_vectors/108a_scm_rights_fd_lifecycle_20261019_194427.txt` (1658 bytes)
+- `phase17_new_vectors/100a_kernel_table_modlist_sectionD_20261019_185356.txt` (891 bytes)
+- `phase17_new_vectors/101a_sys628_mmap_variant_20261019_184947.txt` (1114 bytes)
+- `phase17_new_vectors/101a_sys628_mmap_variant_sectionB_20261019_185404.txt` (1280 bytes)
+- `phase17_new_vectors/101a_sys628_mmap_variant_sectionC_20261019_185405.txt` (1855 bytes)
+- `phase17_new_vectors/101a_sys628_mmap_variant_sectionD_20261019_185405.txt` (376 bytes)
+- `phase17_new_vectors/104a_dispatch_internals_20261019_184947.txt` (293 bytes)
+- `phase17_new_vectors/105a_evfilt_proc_kptr_leak_20261028_191128.txt` (725 bytes)
+- `phase17_new_vectors/105a_evfilt_proc_kptr_leak_20261028_191810.txt` (725 bytes)
+- `phase17_new_vectors/106a_sigreturn_srop_20261021_212215.txt` (1046 bytes)
+- `phase17_new_vectors/108a_scm_rights_fd_lifecycle_20261019_194427.txt` (1720 bytes)
 - `phase17_new_vectors/108a_scm_rights_fd_lifecycle_20261019_194507.txt` (0 bytes)
 - `phase17_new_vectors/108a_scm_rights_fd_lifecycle_20261019_194610.txt` (0 bytes)
-- `phase17_new_vectors/108a_scm_rights_fd_lifecycle_20261019_194758.txt` (1731 bytes)
-- `phase17_new_vectors/108a_scm_rights_fd_lifecycle_20261019_210852.txt` (1658 bytes)
-- `phase17_new_vectors/108a_scm_rights_fd_lifecycle_20261028_190816.txt` (1657 bytes)
-- `phase17_new_vectors/108b_mini_test_20261019_212218.txt` (187 bytes)
-- `phase17_new_vectors/108b_mini_test_20261019_213428.txt` (171 bytes)
-- `phase17_new_vectors/108c_scm_rights_cmsg_isolated_20261020_025803.txt` (719 bytes)
-- `phase17_new_vectors/109a_kernel_infoleak_sweep_20261019_185105.txt` (7067 bytes)
-- `phase17_new_vectors/109a_kernel_infoleak_sweep_20261028_191850.txt` (7065 bytes)
-- `phase17_new_vectors/109b_fstat_kqueue_isolated_20261020_024019.txt` (2909 bytes)
-- `phase17_new_vectors/109c_fstat_only_no_close_20261020_024225.txt` (537 bytes)
-- `phase17_new_vectors/109c_fstat_only_no_close_20261020_025129.txt` (537 bytes)
-- `phase17_new_vectors/109d_fstat_fd0_control_20261020_024359.txt` (179 bytes)
-- `phase17_new_vectors/109e_local_peercred_20261020_025504.txt` (600 bytes)
-- `phase17_new_vectors/109e_local_peercred_20261020_025512.txt` (1016 bytes)
-- `phase17_new_vectors/109f_unix_sockaddr_20261020_025628.txt` (683 bytes)
-- `phase17_new_vectors/109g_getsockopt_isolated_20261020_030002.txt` (1584 bytes)
-- `phase17_new_vectors/109h_kevent_filters_isolated_20261020_030055.txt` (1020 bytes)
-- `phase17_new_vectors/109i_fstat_fd_classes_20261020_030517.txt` (3814 bytes)
+- `phase17_new_vectors/108a_scm_rights_fd_lifecycle_20261019_194758.txt` (1796 bytes)
+- `phase17_new_vectors/108a_scm_rights_fd_lifecycle_20261019_210852.txt` (1720 bytes)
+- `phase17_new_vectors/108a_scm_rights_fd_lifecycle_20261028_190816.txt` (1719 bytes)
+- `phase17_new_vectors/108b_mini_test_20261019_212218.txt` (194 bytes)
+- `phase17_new_vectors/108b_mini_test_20261019_213428.txt` (178 bytes)
+- `phase17_new_vectors/108c_scm_rights_cmsg_isolated_20261020_025803.txt` (743 bytes)
+- `phase17_new_vectors/109a_kernel_infoleak_sweep_20261019_185105.txt` (7287 bytes)
+- `phase17_new_vectors/109a_kernel_infoleak_sweep_20261028_191850.txt` (7285 bytes)
+- `phase17_new_vectors/109b_fstat_kqueue_isolated_20261020_024019.txt` (2988 bytes)
+- `phase17_new_vectors/109c_fstat_only_no_close_20261020_024225.txt` (574 bytes)
+- `phase17_new_vectors/109c_fstat_only_no_close_20261020_025129.txt` (574 bytes)
+- `phase17_new_vectors/109d_fstat_fd0_control_20261020_024359.txt` (190 bytes)
+- `phase17_new_vectors/109e_local_peercred_20261020_025504.txt` (637 bytes)
+- `phase17_new_vectors/109e_local_peercred_20261020_025512.txt` (1085 bytes)
+- `phase17_new_vectors/109f_unix_sockaddr_20261020_025628.txt` (722 bytes)
+- `phase17_new_vectors/109g_getsockopt_isolated_20261020_030002.txt` (1631 bytes)
+- `phase17_new_vectors/109h_kevent_filters_isolated_20261020_030055.txt` (1052 bytes)
+- `phase17_new_vectors/109i_fstat_fd_classes_20261020_030517.txt` (3935 bytes)
 - `phase17_new_vectors/110a_vm_page_manipulation_20261019_185544.txt` (0 bytes)
-- `phase17_new_vectors/110a_vm_page_manipulation_20261019_194310.txt` (2228 bytes)
-- `phase17_new_vectors/110a_vm_page_manipulation_sectionD4_20261019_194349.txt` (192 bytes)
-- `phase17_new_vectors/110a_vm_page_manipulation_sectionE1_20261019_194354.txt` (296 bytes)
-- `phase17_new_vectors/110a_vm_page_manipulation_sectionE2_20261019_194358.txt` (117 bytes)
-- `phase17_new_vectors/110b_standard_copyout_20261020_031208.txt` (511 bytes)
-- `phase17_new_vectors/111a_heap_feng_shui_20261019_194806.txt` (769 bytes)
-- `phase17_new_vectors/111a_heap_feng_shui_sectionB_20261019_194822.txt` (222 bytes)
-- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_20261019_194911.txt` (2856 bytes)
-- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_20261023_135724.txt` (2856 bytes)
-- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_sectionB_20261019_194917.txt` (1395 bytes)
-- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_sectionC_20261019_194921.txt` (761 bytes)
-- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_sectionD_20261019_194924.txt` (2230 bytes)
-- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_sectionE_20261019_194926.txt` (638 bytes)
-- `phase17_new_vectors/112b_sys605_whitelist_gate_20261022_201455.txt` (390 bytes)
-- `phase17_new_vectors/113a_untested_handler_trio_20261019_184749.txt` (1003 bytes)
-- `phase17_new_vectors/113a_untested_handler_trio_sectionB_20261019_184806.txt` (1167 bytes)
-- `phase17_new_vectors/113a_untested_handler_trio_sectionC_20261019_184808.txt` (991 bytes)
-- `phase17_new_vectors/113a_untested_handler_trio_sectionD_20261019_184810.txt` (1254 bytes)
-- `phase17_new_vectors/117a_gadget_redirect_clean_20261019_195553.txt` (2239 bytes)
-- `phase17_new_vectors/117a_gadget_redirect_clean_20261019_195949.txt` (2239 bytes)
-- `phase17_new_vectors/118a_eboot_syscall_scanner_20261019_185114.txt` (266 bytes)
-- `phase17_new_vectors/118a_eboot_syscall_scanner_20261019_200023.txt` (266 bytes)
+- `phase17_new_vectors/110a_vm_page_manipulation_20261019_194310.txt` (2289 bytes)
+- `phase17_new_vectors/110a_vm_page_manipulation_sectionD4_20261019_194349.txt` (201 bytes)
+- `phase17_new_vectors/110a_vm_page_manipulation_sectionE1_20261019_194354.txt` (308 bytes)
+- `phase17_new_vectors/110a_vm_page_manipulation_sectionE2_20261019_194358.txt` (121 bytes)
+- `phase17_new_vectors/110b_standard_copyout_20261020_031208.txt` (533 bytes)
+- `phase17_new_vectors/111a_heap_feng_shui_20261019_194806.txt` (796 bytes)
+- `phase17_new_vectors/111a_heap_feng_shui_sectionB_20261019_194822.txt` (231 bytes)
+- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_20261019_194911.txt` (2930 bytes)
+- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_20261023_135724.txt` (2930 bytes)
+- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_sectionB_20261019_194917.txt` (1432 bytes)
+- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_sectionC_20261019_194921.txt` (786 bytes)
+- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_sectionD_20261019_194924.txt` (2273 bytes)
+- `phase17_new_vectors/112a_sys605_gpu_rw_flag_or_sectionE_20261019_194926.txt` (654 bytes)
+- `phase17_new_vectors/112b_sys605_whitelist_gate_20261022_201455.txt` (401 bytes)
+- `phase17_new_vectors/113a_untested_handler_trio_20261019_184749.txt` (1038 bytes)
+- `phase17_new_vectors/113a_untested_handler_trio_sectionB_20261019_184806.txt` (1199 bytes)
+- `phase17_new_vectors/113a_untested_handler_trio_sectionC_20261019_184808.txt` (1025 bytes)
+- `phase17_new_vectors/113a_untested_handler_trio_sectionD_20261019_184810.txt` (1303 bytes)
+- `phase17_new_vectors/117a_gadget_redirect_clean_20261019_195553.txt` (2311 bytes)
+- `phase17_new_vectors/117a_gadget_redirect_clean_20261019_195949.txt` (2311 bytes)
+- `phase17_new_vectors/118a_eboot_syscall_scanner_20261019_185114.txt` (275 bytes)
+- `phase17_new_vectors/118a_eboot_syscall_scanner_20261019_200023.txt` (275 bytes)
 - `phase17_new_vectors/1198b_dynlib_get_info_ex_fixed_20261104_231800.txt` (7009 bytes)
 - `phase17_new_vectors/119a_evfilt_proc_leak_20261019_185117.txt` (0 bytes)
-- `phase17_new_vectors/119a_evfilt_proc_leak_20261019_185223.txt` (494 bytes)
-- `phase17_new_vectors/119a_evfilt_proc_leak_20261019_200000.txt` (492 bytes)
-- `phase17_new_vectors/119a_evfilt_proc_leak_no_self_signal_20261019_185317.txt` (1352 bytes)
-- `phase17_new_vectors/120a_pdfork_capsicum_20261019_185541.txt` (119 bytes)
-- `phase17_new_vectors/120a_pdfork_capsicum_20261019_195932.txt` (118 bytes)
+- `phase17_new_vectors/119a_evfilt_proc_leak_20261019_185223.txt` (511 bytes)
+- `phase17_new_vectors/119a_evfilt_proc_leak_20261019_200000.txt` (509 bytes)
+- `phase17_new_vectors/119a_evfilt_proc_leak_no_self_signal_20261019_185317.txt` (1398 bytes)
+- `phase17_new_vectors/120a_pdfork_capsicum_20261019_185541.txt` (126 bytes)
+- `phase17_new_vectors/120a_pdfork_capsicum_20261019_195932.txt` (125 bytes)
 - `phase17_new_vectors/121a_procctl_comprehensive_20261019_185226.txt` (0 bytes)
-- `phase17_new_vectors/121a_procctl_comprehensive_20261019_185317.txt` (1247 bytes)
-- `phase17_new_vectors/121a_procctl_comprehensive_20261019_195926.txt` (1246 bytes)
-- `phase17_new_vectors/122a_syscall_finder_targeted_20261019_200151.txt` (449 bytes)
-- `phase17_new_vectors/122b_syscall_scan_chunk2_20261019_200353.txt` (1614 bytes)
-- `phase17_new_vectors/123h_compound_scan_safe_20261019_204448.txt` (175 bytes)
-- `phase17_new_vectors/123i_fast_compound_scan_20261019_204548.txt` (203 bytes)
-- `phase17_new_vectors/123j_micro_compound_scan_20261019_204954.txt` (236 bytes)
-- `phase17_new_vectors/123k_aligned_compound_only_20261019_205258.txt` (192 bytes)
-- `phase17_new_vectors/123l_upper_eboot_scan_20261019_205452.txt` (151 bytes)
-- `phase17_new_vectors/123m_stack_pivot_scan_20261019_205605.txt` (3123 bytes)
-- `phase17_new_vectors/123n_compound_test_20261019_205746.txt` (278 bytes)
-- `phase17_new_vectors/123o_xor_ret_context_20261019_205920.txt` (3913 bytes)
-- `phase17_new_vectors/125a_ipv6_krw_init_20261020_034735.txt` (1536 bytes)
-- `phase17_new_vectors/125b_read_kernel_lua_20261020_034758.txt` (23333 bytes)
-- `phase17_new_vectors/125d_fcall_safe_20261020_035259.txt` (1175 bytes)
-- `phase17_new_vectors/125e_fcall_getpid_real_20261020_035331.txt` (217 bytes)
-- `phase17_new_vectors/125f_read_native_source_20261020_035856.txt` (21915 bytes)
-- `phase17_new_vectors/125g_addrofs_and_fcall_20261020_035930.txt` (588 bytes)
-- `phase17_new_vectors/125g_addrofs_and_fcall_20261020_035940.txt` (2120 bytes)
-- `phase17_new_vectors/125h_read_main_20261020_040014.txt` (9208 bytes)
-- `phase17_new_vectors/125i_read_all_sources_20261020_040030.txt` (31968 bytes)
-- `phase17_new_vectors/125j_fcall_via_wrapper_20261020_040329.txt` (4151 bytes)
-- `phase17_new_vectors/125k_read_misc_and_bypass_20261020_040418.txt` (17829 bytes)
-- `phase17_new_vectors/125l_ropchain_syscall_20261020_040609.txt` (3389 bytes)
-- `phase17_new_vectors/125m_heap_kptr_scan_20261020_040708.txt` (396 bytes)
-- `phase17_new_vectors/126a_thr_create_ropchain_20261020_041031.txt` (854 bytes)
-- `phase17_new_vectors/126b_read_ropchain_source_20261020_041048.txt` (4700 bytes)
-- `phase17_new_vectors/126c_thr_create_fixed_20261020_041143.txt` (1151 bytes)
-- `phase17_new_vectors/126d_live_thread_20261020_041252.txt` (839 bytes)
-- `phase17_new_vectors/126e_thr_correct_offsets_20261020_041430.txt` (430 bytes)
-- `phase17_new_vectors/126f_thr_mclen_20261020_041526.txt` (794 bytes)
-- `phase17_new_vectors/126g_thrd_create_20261020_041700.txt` (603 bytes)
-- `phase17_new_vectors/126h_thread_exec_20261020_041814.txt` (2198 bytes)
-- `phase17_new_vectors/129b_native_test_20261020_064157.txt` (14688 bytes)
-- `phase17_new_vectors/139a_sysent_677_734_20261020_084616.txt` (100 bytes)
-- `phase17_new_vectors/145a_kaslr_spray_oracle_20261020_064552.txt` (486 bytes)
-- `phase17_new_vectors/147a_safe_ipv6_race_20261020_065601.txt` (648 bytes)
-- `phase17_new_vectors/148a_threaded_sockopt_race_20261020_065817.txt` (606 bytes)
-- `phase17_new_vectors/150a_dump_kernel_lua_20261020_075120.txt` (56253 bytes)
-- `phase17_new_vectors/156a_thr_create_spin_observable_20261020_163827.txt` (1128 bytes)
-- `phase17_new_vectors/156b_ucontext_layout_20261020_163929.txt` (2305 bytes)
-- `phase17_new_vectors/156c_thr_create_correct_offsets_20261020_164129.txt` (1029 bytes)
-- `phase17_new_vectors/156d_thr_create_child_executes_20261020_164412.txt` (998 bytes)
-- `phase17_new_vectors/156d_thr_create_child_executes_20261025_125313.txt` (1003 bytes)
+- `phase17_new_vectors/121a_procctl_comprehensive_20261019_185317.txt` (1290 bytes)
+- `phase17_new_vectors/121a_procctl_comprehensive_20261019_195926.txt` (1289 bytes)
+- `phase17_new_vectors/122a_syscall_finder_targeted_20261019_200151.txt` (461 bytes)
+- `phase17_new_vectors/122b_syscall_scan_chunk2_20261019_200353.txt` (1651 bytes)
+- `phase17_new_vectors/123h_compound_scan_safe_20261019_204448.txt` (181 bytes)
+- `phase17_new_vectors/123i_fast_compound_scan_20261019_204548.txt` (210 bytes)
+- `phase17_new_vectors/123j_micro_compound_scan_20261019_204954.txt` (243 bytes)
+- `phase17_new_vectors/123k_aligned_compound_only_20261019_205258.txt` (198 bytes)
+- `phase17_new_vectors/123l_upper_eboot_scan_20261019_205452.txt` (156 bytes)
+- `phase17_new_vectors/123m_stack_pivot_scan_20261019_205605.txt` (3266 bytes)
+- `phase17_new_vectors/123n_compound_test_20261019_205746.txt` (286 bytes)
+- `phase17_new_vectors/123o_xor_ret_context_20261019_205920.txt` (3978 bytes)
+- `phase17_new_vectors/125a_ipv6_krw_init_20261020_034735.txt` (1571 bytes)
+- `phase17_new_vectors/125b_read_kernel_lua_20261020_034758.txt` (24106 bytes)
+- `phase17_new_vectors/125d_fcall_safe_20261020_035259.txt` (1220 bytes)
+- `phase17_new_vectors/125e_fcall_getpid_real_20261020_035331.txt` (226 bytes)
+- `phase17_new_vectors/125f_read_native_source_20261020_035856.txt` (22639 bytes)
+- `phase17_new_vectors/125g_addrofs_and_fcall_20261020_035930.txt` (600 bytes)
+- `phase17_new_vectors/125g_addrofs_and_fcall_20261020_035940.txt` (2204 bytes)
+- `phase17_new_vectors/125h_read_main_20261020_040014.txt` (9548 bytes)
+- `phase17_new_vectors/125i_read_all_sources_20261020_040030.txt` (32933 bytes)
+- `phase17_new_vectors/125j_fcall_via_wrapper_20261020_040329.txt` (4277 bytes)
+- `phase17_new_vectors/125k_read_misc_and_bypass_20261020_040418.txt` (18497 bytes)
+- `phase17_new_vectors/125l_ropchain_syscall_20261020_040609.txt` (3502 bytes)
+- `phase17_new_vectors/125m_heap_kptr_scan_20261020_040708.txt` (412 bytes)
+- `phase17_new_vectors/126a_thr_create_ropchain_20261020_041031.txt` (883 bytes)
+- `phase17_new_vectors/126b_read_ropchain_source_20261020_041048.txt` (4819 bytes)
+- `phase17_new_vectors/126c_thr_create_fixed_20261020_041143.txt` (1204 bytes)
+- `phase17_new_vectors/126d_live_thread_20261020_041252.txt` (874 bytes)
+- `phase17_new_vectors/126e_thr_correct_offsets_20261020_041430.txt` (453 bytes)
+- `phase17_new_vectors/126f_thr_mclen_20261020_041526.txt` (817 bytes)
+- `phase17_new_vectors/126g_thrd_create_20261020_041700.txt` (627 bytes)
+- `phase17_new_vectors/126h_thread_exec_20261020_041814.txt` (2260 bytes)
+- `phase17_new_vectors/129b_native_test_20261020_064157.txt` (15187 bytes)
+- `phase17_new_vectors/139a_sysent_677_734_20261020_084616.txt` (106 bytes)
+- `phase17_new_vectors/145a_kaslr_spray_oracle_20261020_064552.txt` (509 bytes)
+- `phase17_new_vectors/147a_safe_ipv6_race_20261020_065601.txt` (680 bytes)
+- `phase17_new_vectors/148a_threaded_sockopt_race_20261020_065817.txt` (634 bytes)
+- `phase17_new_vectors/150a_dump_kernel_lua_20261020_075120.txt` (58190 bytes)
+- `phase17_new_vectors/156a_thr_create_spin_observable_20261020_163827.txt` (1156 bytes)
+- `phase17_new_vectors/156b_ucontext_layout_20261020_163929.txt` (2385 bytes)
+- `phase17_new_vectors/156c_thr_create_correct_offsets_20261020_164129.txt` (1056 bytes)
+- `phase17_new_vectors/156d_thr_create_child_executes_20261020_164412.txt` (1024 bytes)
+- `phase17_new_vectors/156d_thr_create_child_executes_20261025_125313.txt` (1029 bytes)
 - `phase17_new_vectors/157a_syscall_loop_thread_20261020_171137.txt` (0 bytes)
 - `phase17_new_vectors/157a_syscall_loop_thread_20261020_171313.txt` (131 bytes)
-- `phase17_new_vectors/157a_syscall_loop_thread_20261020_171551.txt` (489 bytes)
-- `phase17_new_vectors/157a_syscall_loop_thread_20261020_171737.txt` (709 bytes)
-- `phase17_new_vectors/157a_syscall_loop_thread_20261020_172142.txt` (644 bytes)
-- `phase17_new_vectors/157a_syscall_loop_thread_20261020_172245.txt` (793 bytes)
+- `phase17_new_vectors/157a_syscall_loop_thread_20261020_171551.txt` (504 bytes)
+- `phase17_new_vectors/157a_syscall_loop_thread_20261020_171737.txt` (727 bytes)
+- `phase17_new_vectors/157a_syscall_loop_thread_20261020_172142.txt` (657 bytes)
+- `phase17_new_vectors/157a_syscall_loop_thread_20261020_172245.txt` (810 bytes)
 - `phase17_new_vectors/157b_memory_readback_shape_20261020_171837.txt` (0 bytes)
-- `phase17_new_vectors/158a_thread_rop_syscall_20261020_174216.txt` (232 bytes)
-- `phase17_new_vectors/158a_thread_rop_syscall_20261020_174615.txt` (475 bytes)
-- `phase17_new_vectors/158a_thread_rop_syscall_20261020_175327.txt` (697 bytes)
-- `phase17_new_vectors/158a_thread_rop_syscall_20261020_175502.txt` (793 bytes)
-- `phase17_new_vectors/158b_thread_syscall_args_20261020_175611.txt` (761 bytes)
-- `phase17_new_vectors/158c_thread_syscall_number_20261020_175955.txt` (398 bytes)
-- `phase17_new_vectors/159a_syscall_path_control_20261020_180533.txt` (642 bytes)
-- `phase17_new_vectors/160a_thread_umtx_return_20261020_180702.txt` (660 bytes)
+- `phase17_new_vectors/158a_thread_rop_syscall_20261020_174216.txt` (238 bytes)
+- `phase17_new_vectors/158a_thread_rop_syscall_20261020_174615.txt` (486 bytes)
+- `phase17_new_vectors/158a_thread_rop_syscall_20261020_175327.txt` (715 bytes)
+- `phase17_new_vectors/158a_thread_rop_syscall_20261020_175502.txt` (811 bytes)
+- `phase17_new_vectors/158b_thread_syscall_args_20261020_175611.txt` (778 bytes)
+- `phase17_new_vectors/158c_thread_syscall_number_20261020_175955.txt` (407 bytes)
+- `phase17_new_vectors/159a_syscall_path_control_20261020_180533.txt` (657 bytes)
+- `phase17_new_vectors/160a_thread_umtx_return_20261020_180702.txt` (673 bytes)
 - `phase17_new_vectors/161a_umtx_op_enumeration_20261020_180927.txt` (126 bytes)
-- `phase17_new_vectors/161a_umtx_op_enumeration_20261020_181142.txt` (2652 bytes)
-- `phase17_new_vectors/162a_umtx_arg_validation_20261020_181434.txt` (1898 bytes)
-- `phase17_new_vectors/163a_umtx_timeout_pointer_20261020_181458.txt` (1090 bytes)
-- `phase17_new_vectors/164a_umtx_contended_timeout_20261020_181521.txt` (1176 bytes)
-- `phase17_new_vectors/164a_umtx_contended_timeout_20261020_181543.txt` (761 bytes)
-- `phase17_new_vectors/165a_umtx_block_wake_20261020_181724.txt` (1103 bytes)
-- `phase17_new_vectors/165a_umtx_block_wake_20261020_181736.txt` (1103 bytes)
-- `phase17_new_vectors/165a_umtx_block_wake_20261020_181810.txt` (1257 bytes)
-- `phase17_new_vectors/166a_umtx_pointer_args_20261020_182031.txt` (1014 bytes)
-- `phase17_new_vectors/167a_umtx_unlock_candidate_20261020_182310.txt` (1065 bytes)
-- `phase17_new_vectors/168a_umtx_unlock_val_20261020_182344.txt` (975 bytes)
-- `phase17_new_vectors/169a_sys_668_argument_shape_20261020_183349.txt` (122 bytes)
-- `phase17_new_vectors/170a_sys_670_side_effects_20261020_183724.txt` (284 bytes)
-- `phase17_new_vectors/171a_kldsym_lookup_20261020_183815.txt` (81 bytes)
-- `phase17_new_vectors/172a_sysctlbyname_20261020_184210.txt` (74 bytes)
-- `phase17_new_vectors/173a_unimplemented_syscall_slot_20261020_184436.txt` (86 bytes)
-- `phase17_new_vectors/174a_present_aio_handlers_20261020_185216.txt` (1093 bytes)
-- `phase17_new_vectors/175a_aio_layout_sweep_20261020_185233.txt` (5946 bytes)
-- `phase17_new_vectors/175a_aio_layout_sweep_20261020_185250.txt` (306 bytes)
-- `phase17_new_vectors/176a_thread_absent_syscall_20261020_190459.txt` (169 bytes)
-- `phase17_new_vectors/176b_563_buffer_writes_20261020_190630.txt` (1054 bytes)
-- `phase17_new_vectors/177a_563_564_selector_20261020_190922.txt` (6269 bytes)
-- `phase17_new_vectors/177b_opmc_establish_20261020_191252.txt` (2883 bytes)
-- `phase17_new_vectors/177c_opmc_value_surface_20261020_191711.txt` (4288 bytes)
-- `phase17_new_vectors/177d_opmc_state_20261020_191735.txt` (1130 bytes)
+- `phase17_new_vectors/161a_umtx_op_enumeration_20261020_181142.txt` (2677 bytes)
+- `phase17_new_vectors/162a_umtx_arg_validation_20261020_181434.txt` (1942 bytes)
+- `phase17_new_vectors/163a_umtx_timeout_pointer_20261020_181458.txt` (1121 bytes)
+- `phase17_new_vectors/164a_umtx_contended_timeout_20261020_181521.txt` (1200 bytes)
+- `phase17_new_vectors/164a_umtx_contended_timeout_20261020_181543.txt` (782 bytes)
+- `phase17_new_vectors/165a_umtx_block_wake_20261020_181724.txt` (1126 bytes)
+- `phase17_new_vectors/165a_umtx_block_wake_20261020_181736.txt` (1126 bytes)
+- `phase17_new_vectors/165a_umtx_block_wake_20261020_181810.txt` (1289 bytes)
+- `phase17_new_vectors/166a_umtx_pointer_args_20261020_182031.txt` (1043 bytes)
+- `phase17_new_vectors/167a_umtx_unlock_candidate_20261020_182310.txt` (1091 bytes)
+- `phase17_new_vectors/168a_umtx_unlock_val_20261020_182344.txt` (1001 bytes)
+- `phase17_new_vectors/169a_sys_668_argument_shape_20261020_183349.txt` (126 bytes)
+- `phase17_new_vectors/170a_sys_670_side_effects_20261020_183724.txt` (292 bytes)
+- `phase17_new_vectors/171a_kldsym_lookup_20261020_183815.txt` (84 bytes)
+- `phase17_new_vectors/172a_sysctlbyname_20261020_184210.txt` (77 bytes)
+- `phase17_new_vectors/173a_unimplemented_syscall_slot_20261020_184436.txt` (89 bytes)
+- `phase17_new_vectors/174a_present_aio_handlers_20261020_185216.txt` (1120 bytes)
+- `phase17_new_vectors/175a_aio_layout_sweep_20261020_185233.txt` (6112 bytes)
+- `phase17_new_vectors/175a_aio_layout_sweep_20261020_185250.txt` (316 bytes)
+- `phase17_new_vectors/176a_thread_absent_syscall_20261020_190459.txt` (173 bytes)
+- `phase17_new_vectors/176b_563_buffer_writes_20261020_190630.txt` (1073 bytes)
+- `phase17_new_vectors/177a_563_564_selector_20261020_190922.txt` (6347 bytes)
+- `phase17_new_vectors/177b_opmc_establish_20261020_191252.txt` (2916 bytes)
+- `phase17_new_vectors/177c_opmc_value_surface_20261020_191711.txt` (4357 bytes)
+- `phase17_new_vectors/177d_opmc_state_20261020_191735.txt` (1153 bytes)
 - `phase17_new_vectors/179a_debug_rwmem_args_20261020_194237.txt` (87 bytes)
-- `phase17_new_vectors/179a_debug_rwmem_args_20261020_194248.txt` (532 bytes)
-- `phase17_new_vectors/179a_debug_rwmem_args_20261020_194254.txt` (912 bytes)
-- `phase17_new_vectors/179a_debug_rwmem_args_20261020_194308.txt` (1843 bytes)
-- `phase17_new_vectors/180a_opmc_hw_20261020_194332.txt` (3287 bytes)
-- `phase17_new_vectors/181a_opmc_set_hw_surface_20261020_194345.txt` (1267 bytes)
-- `phase17_new_vectors/182a_opmc_get_hw_surface_20261020_194358.txt` (57550 bytes)
-- `phase17_new_vectors/182a_opmc_get_hw_surface_20261020_194411.txt` (67710 bytes)
-- `phase17_new_vectors/182a_opmc_get_hw_surface_20261020_194421.txt` (230 bytes)
-- `phase17_new_vectors/183a_blockpool_20261020_194445.txt` (1361 bytes)
-- `phase17_new_vectors/184a_blockpool_batch_20261020_194508.txt` (1357 bytes)
-- `phase17_new_vectors/185a_telemetry_buffers_20261020_194653.txt` (2280 bytes)
-- `phase17_new_vectors/186a_count_and_aio_structs_20261020_194723.txt` (955 bytes)
-- `phase17_new_vectors/187a_sys94_wedge_20261020_205430.txt` (697 bytes)
-- `phase17_new_vectors/188a_sys94_repeat_20261020_210214.txt` (1000 bytes)
-- `phase17_new_vectors/189a_cs_selector_mask_20261020_210825.txt` (655 bytes)
-- `phase17_new_vectors/190a_blockpool_fd_semantics_20261021_113658.txt` (1094 bytes)
-- `phase17_new_vectors/191a_blockpool_descriptor_20261021_113741.txt` (435 bytes)
-- `phase17_new_vectors/191a_blockpool_descriptor_20261021_114008.txt` (1694 bytes)
-- `phase17_new_vectors/192a_stateful_abi_20261021_115932.txt` (4492 bytes)
-- `phase17_new_vectors/193a_handle_lifecycle_20261021_120012.txt` (898 bytes)
-- `phase17_new_vectors/194a_evf_argument_order_20261021_120042.txt` (1492 bytes)
-- `phase17_new_vectors/195a_evf_mask_mode_20261021_120109.txt` (857 bytes)
-- `phase17_new_vectors/197a_handle_class_confusion_20261021_120244.txt` (754 bytes)
-- `phase17_new_vectors/198a_query_memory_record_20261021_120317.txt` (577 bytes)
-- `phase17_new_vectors/199a_rwmem_statistics_20261021_120407.txt` (1064 bytes)
-- `phase17_new_vectors/199a_rwmem_statistics_20261021_120421.txt` (2012 bytes)
-- `phase17_new_vectors/200a_evf_wait_blocking_20261021_120516.txt` (701 bytes)
-- `phase17_new_vectors/201a_evf_delete_under_wait_20261021_120547.txt` (719 bytes)
-- `phase17_new_vectors/202a_evf_wait_layout_20261021_120645.txt` (406 bytes)
+- `phase17_new_vectors/179a_debug_rwmem_args_20261020_194248.txt` (542 bytes)
+- `phase17_new_vectors/179a_debug_rwmem_args_20261020_194254.txt` (932 bytes)
+- `phase17_new_vectors/179a_debug_rwmem_args_20261020_194308.txt` (1881 bytes)
+- `phase17_new_vectors/180a_opmc_hw_20261020_194332.txt` (3339 bytes)
+- `phase17_new_vectors/181a_opmc_set_hw_surface_20261020_194345.txt` (1296 bytes)
+- `phase17_new_vectors/182a_opmc_get_hw_surface_20261020_194358.txt` (58832 bytes)
+- `phase17_new_vectors/182a_opmc_get_hw_surface_20261020_194411.txt` (68992 bytes)
+- `phase17_new_vectors/182a_opmc_get_hw_surface_20261020_194421.txt` (242 bytes)
+- `phase17_new_vectors/183a_blockpool_20261020_194445.txt` (1404 bytes)
+- `phase17_new_vectors/184a_blockpool_batch_20261020_194508.txt` (1384 bytes)
+- `phase17_new_vectors/185a_telemetry_buffers_20261020_194653.txt` (2333 bytes)
+- `phase17_new_vectors/186a_count_and_aio_structs_20261020_194723.txt` (975 bytes)
+- `phase17_new_vectors/187a_sys94_wedge_20261020_205430.txt` (721 bytes)
+- `phase17_new_vectors/188a_sys94_repeat_20261020_210214.txt` (1031 bytes)
+- `phase17_new_vectors/189a_cs_selector_mask_20261020_210825.txt` (673 bytes)
+- `phase17_new_vectors/190a_blockpool_fd_semantics_20261021_113658.txt` (1128 bytes)
+- `phase17_new_vectors/191a_blockpool_descriptor_20261021_113741.txt` (458 bytes)
+- `phase17_new_vectors/191a_blockpool_descriptor_20261021_114008.txt` (1747 bytes)
+- `phase17_new_vectors/192a_stateful_abi_20261021_115932.txt` (4602 bytes)
+- `phase17_new_vectors/193a_handle_lifecycle_20261021_120012.txt` (928 bytes)
+- `phase17_new_vectors/194a_evf_argument_order_20261021_120042.txt` (1540 bytes)
+- `phase17_new_vectors/195a_evf_mask_mode_20261021_120109.txt` (898 bytes)
+- `phase17_new_vectors/197a_handle_class_confusion_20261021_120244.txt` (782 bytes)
+- `phase17_new_vectors/198a_query_memory_record_20261021_120317.txt` (591 bytes)
+- `phase17_new_vectors/199a_rwmem_statistics_20261021_120407.txt` (1093 bytes)
+- `phase17_new_vectors/199a_rwmem_statistics_20261021_120421.txt` (2053 bytes)
+- `phase17_new_vectors/200a_evf_wait_blocking_20261021_120516.txt` (722 bytes)
+- `phase17_new_vectors/201a_evf_delete_under_wait_20261021_120547.txt` (745 bytes)
+- `phase17_new_vectors/202a_evf_wait_layout_20261021_120645.txt` (414 bytes)
 - `phase17_new_vectors/203a_evf_deadline_timer_20261021_121034.txt` (131 bytes)
-- `phase17_new_vectors/203a_evf_deadline_timer_20261021_121044.txt` (747 bytes)
-- `phase17_new_vectors/204a_evf_clock_20261021_121111.txt` (1270 bytes)
-- `phase17_new_vectors/205a_evf_deadline_clock_20261021_121124.txt` (587 bytes)
-- `phase17_new_vectors/205a_evf_deadline_clock_20261021_121135.txt` (563 bytes)
-- `phase17_new_vectors/206a_evf_timeout_unit_20261021_121433.txt` (626 bytes)
-- `phase17_new_vectors/207a_evf_timeout_corners_20261021_121507.txt` (411 bytes)
-- `phase17_new_vectors/209a_evf_waiter_across_reuse_20261021_121811.txt` (517 bytes)
-- `phase17_new_vectors/210a_evf_generation_wrap_20261021_121823.txt` (923 bytes)
-- `phase17_new_vectors/211a_evf_generation_sequence_20261021_121831.txt` (521 bytes)
-- `phase17_new_vectors/212a_evf_stale_handle_20261021_121844.txt` (691 bytes)
-- `phase17_new_vectors/213a_evf_class_blind_20261021_121853.txt` (625 bytes)
-- `phase17_new_vectors/216a_evf_name_bound_20261021_122014.txt` (391 bytes)
-- `phase17_new_vectors/218a_netcontrol_abi_20261021_140851.txt` (1459 bytes)
-- `phase17_new_vectors/219a_netcontrol_close_registered_20261021_141946.txt` (660 bytes)
-- `phase17_new_vectors/220a_netcontrol_trigger_20261021_141952.txt` (607 bytes)
-- `phase17_new_vectors/221a_netcontrol_stale_registration_20261021_142008.txt` (804 bytes)
-- `phase17_new_vectors/222a_netcontrol_clean_trigger_20261021_143149.txt` (276 bytes)
-- `phase17_new_vectors/222a_netcontrol_clean_trigger_20261022_145135.txt` (498 bytes)
-- `phase17_new_vectors/223a_netcontrol_queue_scope_20261021_143212.txt` (402 bytes)
-- `phase17_new_vectors/224a_netcontrol_ifindex_scope_20261021_143238.txt` (376 bytes)
-- `phase17_new_vectors/225a_netcontrol_clean_index_trigger_20261021_143255.txt` (540 bytes)
-- `phase17_new_vectors/226a_netcontrol_queue_capacity_20261021_143323.txt` (478 bytes)
-- `phase17_new_vectors/227a_netcontrol_wedge_scope_20261021_143826.txt` (201 bytes)
-- `phase17_new_vectors/228a_netcontrol_orphan_timing_20261021_143507.txt` (752 bytes)
-- `phase17_new_vectors/229a_netcontrol_orphan_type_20261021_143937.txt` (1011 bytes)
-- `phase17_new_vectors/230a_netcontrol_index_orphan_20261021_144041.txt` (555 bytes)
-- `phase17_new_vectors/231a_netcontrol_socket_poison_20261021_144127.txt` (549 bytes)
-- `phase17_new_vectors/232a_netcontrol_ref_or_pointer_20261021_144610.txt` (477 bytes)
-- `phase17_new_vectors/233a_netcontrol_peer_state_20261021_144705.txt` (554 bytes)
-- `phase17_new_vectors/234a_netcontrol_ref_release_20261021_144722.txt` (531 bytes)
-- `phase17_new_vectors/235a_recovered_contracts_20261021_210325.txt` (1650 bytes)
-- `phase17_new_vectors/235a_ucontext_live_tid_20261021_145605.txt` (800 bytes)
-- `phase17_new_vectors/236a_blockpool_batch_write_20261021_145629.txt` (1053 bytes)
-- `phase17_new_vectors/237a_aio_ids_and_protection_20261021_210420.txt` (631 bytes)
-- `phase17_new_vectors/237a_aio_ids_and_protection_20261021_210525.txt` (827 bytes)
-- `phase17_new_vectors/237a_aio_ids_and_protection_20261021_210533.txt` (3064 bytes)
-- `phase17_new_vectors/237a_query_protection_oracle_20261021_145710.txt` (4248 bytes)
-- `phase17_new_vectors/237b_mprotect_oracle_20261021_210838.txt` (1031 bytes)
-- `phase17_new_vectors/238a_548_657_first_arg_20261021_211117.txt` (9931 bytes)
-- `phase17_new_vectors/239a_aio_id_slots_20261021_211151.txt` (977 bytes)
-- `phase17_new_vectors/240a_660_module_handles_20261021_211236.txt` (274 bytes)
-- `phase17_new_vectors/241a_evf_cancel_parked_20261021_150126.txt` (792 bytes)
-- `phase17_new_vectors/241a_sys622_layout_20261021_211732.txt` (1961 bytes)
-- `phase17_new_vectors/242a_sys622_commands_20261021_211852.txt` (2498 bytes)
-- `phase17_new_vectors/242a_thread_capacity_parked_20261021_150245.txt` (1358 bytes)
-- `phase17_new_vectors/242a_thread_capacity_parked_20261021_150422.txt` (1358 bytes)
-- `phase17_new_vectors/243a_sys622_arg3_20261021_212019.txt` (199 bytes)
-- `phase17_new_vectors/243a_thread_slot_reclaim_20261021_151141.txt` (880 bytes)
-- `phase17_new_vectors/243a_thread_slot_reclaim_20261023_102230.txt` (1110 bytes)
-- `phase17_new_vectors/244a_evf_waiter_pair_20261021_151611.txt` (1136 bytes)
-- `phase17_new_vectors/244a_sys622_400_size_20261021_212220.txt` (80 bytes)
-- `phase17_new_vectors/245a_sys622_400_size1_20261021_212411.txt` (430 bytes)
-- `phase17_new_vectors/245a_thread_spawn_trace_20261021_151853.txt` (1140 bytes)
-- `phase17_new_vectors/246a_dynlib_libdbg_20261021_152056.txt` (2017 bytes)
-- `phase17_new_vectors/246a_sys622_copy_size_20261021_212514.txt` (371 bytes)
-- `phase17_new_vectors/247a_dynlib_size_field_20261021_152128.txt` (2116 bytes)
-- `phase17_new_vectors/247a_sys622_copy_size_20261021_212549.txt` (758 bytes)
-- `phase17_new_vectors/248a_dynlib_zeroed_20261021_152141.txt` (1410 bytes)
-- `phase17_new_vectors/249a_evf_set_vs_cancel_20261021_152445.txt` (942 bytes)
-- `phase17_new_vectors/251a_jitshm_20261021_153538.txt` (1059 bytes)
-- `phase17_new_vectors/252a_osem_family_20261021_153559.txt` (667 bytes)
-- `phase17_new_vectors/253a_osem_namedobj_name_20261021_153612.txt` (598 bytes)
-- `phase17_new_vectors/254a_namedobj_identity_20261021_153631.txt` (1061 bytes)
-- `phase17_new_vectors/255a_set_vm_container_20261021_153651.txt` (1220 bytes)
-- `phase17_new_vectors/256a_vm_container_accept_20261021_153708.txt` (1061 bytes)
-- `phase17_new_vectors/257a_process_pair_20261021_153735.txt` (392 bytes)
-- `phase17_new_vectors/258a_debug_init_effect_20261021_154044.txt` (895 bytes)
-- `phase17_new_vectors/259a_dev_listing_20261021_154548.txt` (3261 bytes)
-- `phase17_new_vectors/260a_open_return_shape_20261021_154621.txt` (1110 bytes)
-- `phase17_new_vectors/261a_device_ioctl_reach_20261021_154649.txt` (2920 bytes)
-- `phase17_new_vectors/262a_dmem_partitions_20261021_154707.txt` (1776 bytes)
-- `phase17_new_vectors/263a_dmem_read_prot_20261021_154812.txt` (1432 bytes)
-- `phase17_new_vectors/264a_ioctl_sweep_20261021_155109.txt` (251 bytes)
-- `phase17_new_vectors/265a_dce_ioctl_buffer_20261021_155514.txt` (305 bytes)
-- `phase17_new_vectors/266a_aio_real_fd_20261021_155530.txt` (134 bytes)
-- `phase17_new_vectors/267a_ioctl_control_20261021_155811.txt` (706 bytes)
-- `phase17_new_vectors/268a_device_fd_reality_20261021_155843.txt` (931 bytes)
-- `phase17_new_vectors/269a_umtx_high_ops_20261021_160200.txt` (711 bytes)
-- `phase17_new_vectors/270a_umtx_sentinel_20261021_160225.txt` (557 bytes)
-- `phase17_new_vectors/271a_ioctl_catalog_matrix_20261023_123200.txt` (10811 bytes)
-- `phase17_new_vectors/271b_camera_ioctl_deep_20261023_123353.txt` (2434 bytes)
-- `phase17_new_vectors/271c_ioctl_group_discovery_20261023_123543.txt` (866 bytes)
-- `phase17_new_vectors/271d_ioctl_3dir_sweep_20261023_123708.txt` (472 bytes)
+- `phase17_new_vectors/203a_evf_deadline_timer_20261021_121044.txt` (766 bytes)
+- `phase17_new_vectors/204a_evf_clock_20261021_121111.txt` (1297 bytes)
+- `phase17_new_vectors/205a_evf_deadline_clock_20261021_121124.txt` (598 bytes)
+- `phase17_new_vectors/205a_evf_deadline_clock_20261021_121135.txt` (577 bytes)
+- `phase17_new_vectors/206a_evf_timeout_unit_20261021_121433.txt` (641 bytes)
+- `phase17_new_vectors/207a_evf_timeout_corners_20261021_121507.txt` (421 bytes)
+- `phase17_new_vectors/209a_evf_waiter_across_reuse_20261021_121811.txt` (536 bytes)
+- `phase17_new_vectors/210a_evf_generation_wrap_20261021_121823.txt` (956 bytes)
+- `phase17_new_vectors/211a_evf_generation_sequence_20261021_121831.txt` (539 bytes)
+- `phase17_new_vectors/212a_evf_stale_handle_20261021_121844.txt` (714 bytes)
+- `phase17_new_vectors/213a_evf_class_blind_20261021_121853.txt` (649 bytes)
+- `phase17_new_vectors/216a_evf_name_bound_20261021_122014.txt` (405 bytes)
+- `phase17_new_vectors/218a_netcontrol_abi_20261021_140851.txt` (1513 bytes)
+- `phase17_new_vectors/219a_netcontrol_close_registered_20261021_141946.txt` (685 bytes)
+- `phase17_new_vectors/220a_netcontrol_trigger_20261021_141952.txt` (629 bytes)
+- `phase17_new_vectors/221a_netcontrol_stale_registration_20261021_142008.txt` (838 bytes)
+- `phase17_new_vectors/222a_netcontrol_clean_trigger_20261021_143149.txt` (286 bytes)
+- `phase17_new_vectors/222a_netcontrol_clean_trigger_20261022_145135.txt` (519 bytes)
+- `phase17_new_vectors/223a_netcontrol_queue_scope_20261021_143212.txt` (420 bytes)
+- `phase17_new_vectors/224a_netcontrol_ifindex_scope_20261021_143238.txt` (392 bytes)
+- `phase17_new_vectors/225a_netcontrol_clean_index_trigger_20261021_143255.txt` (561 bytes)
+- `phase17_new_vectors/226a_netcontrol_queue_capacity_20261021_143323.txt` (500 bytes)
+- `phase17_new_vectors/227a_netcontrol_wedge_scope_20261021_143826.txt` (208 bytes)
+- `phase17_new_vectors/228a_netcontrol_orphan_timing_20261021_143507.txt` (788 bytes)
+- `phase17_new_vectors/229a_netcontrol_orphan_type_20261021_143937.txt` (1049 bytes)
+- `phase17_new_vectors/230a_netcontrol_index_orphan_20261021_144041.txt` (581 bytes)
+- `phase17_new_vectors/231a_netcontrol_socket_poison_20261021_144127.txt` (572 bytes)
+- `phase17_new_vectors/232a_netcontrol_ref_or_pointer_20261021_144610.txt` (498 bytes)
+- `phase17_new_vectors/233a_netcontrol_peer_state_20261021_144705.txt` (576 bytes)
+- `phase17_new_vectors/234a_netcontrol_ref_release_20261021_144722.txt` (554 bytes)
+- `phase17_new_vectors/235a_recovered_contracts_20261021_210325.txt` (1687 bytes)
+- `phase17_new_vectors/235a_ucontext_live_tid_20261021_145605.txt` (825 bytes)
+- `phase17_new_vectors/236a_blockpool_batch_write_20261021_145629.txt` (1094 bytes)
+- `phase17_new_vectors/237a_aio_ids_and_protection_20261021_210420.txt` (644 bytes)
+- `phase17_new_vectors/237a_aio_ids_and_protection_20261021_210525.txt` (847 bytes)
+- `phase17_new_vectors/237a_aio_ids_and_protection_20261021_210533.txt` (3100 bytes)
+- `phase17_new_vectors/237a_query_protection_oracle_20261021_145710.txt` (4296 bytes)
+- `phase17_new_vectors/237b_mprotect_oracle_20261021_210838.txt` (1053 bytes)
+- `phase17_new_vectors/238a_548_657_first_arg_20261021_211117.txt` (10080 bytes)
+- `phase17_new_vectors/239a_aio_id_slots_20261021_211151.txt` (998 bytes)
+- `phase17_new_vectors/240a_660_module_handles_20261021_211236.txt` (286 bytes)
+- `phase17_new_vectors/241a_evf_cancel_parked_20261021_150126.txt` (822 bytes)
+- `phase17_new_vectors/241a_sys622_layout_20261021_211732.txt` (1988 bytes)
+- `phase17_new_vectors/242a_sys622_commands_20261021_211852.txt` (2528 bytes)
+- `phase17_new_vectors/242a_thread_capacity_parked_20261021_150245.txt` (1389 bytes)
+- `phase17_new_vectors/242a_thread_capacity_parked_20261021_150422.txt` (1389 bytes)
+- `phase17_new_vectors/243a_sys622_arg3_20261021_212019.txt` (207 bytes)
+- `phase17_new_vectors/243a_thread_slot_reclaim_20261021_151141.txt` (906 bytes)
+- `phase17_new_vectors/243a_thread_slot_reclaim_20261023_102230.txt` (1141 bytes)
+- `phase17_new_vectors/244a_evf_waiter_pair_20261021_151611.txt` (1164 bytes)
+- `phase17_new_vectors/244a_sys622_400_size_20261021_212220.txt` (84 bytes)
+- `phase17_new_vectors/245a_sys622_400_size1_20261021_212411.txt` (441 bytes)
+- `phase17_new_vectors/245a_thread_spawn_trace_20261021_151853.txt` (1155 bytes)
+- `phase17_new_vectors/246a_dynlib_libdbg_20261021_152056.txt` (2047 bytes)
+- `phase17_new_vectors/246a_sys622_copy_size_20261021_212514.txt` (385 bytes)
+- `phase17_new_vectors/247a_dynlib_size_field_20261021_152128.txt` (2145 bytes)
+- `phase17_new_vectors/247a_sys622_copy_size_20261021_212549.txt` (773 bytes)
+- `phase17_new_vectors/248a_dynlib_zeroed_20261021_152141.txt` (1434 bytes)
+- `phase17_new_vectors/249a_evf_set_vs_cancel_20261021_152445.txt` (971 bytes)
+- `phase17_new_vectors/251a_jitshm_20261021_153538.txt` (1087 bytes)
+- `phase17_new_vectors/252a_osem_family_20261021_153559.txt` (686 bytes)
+- `phase17_new_vectors/253a_osem_namedobj_name_20261021_153612.txt` (613 bytes)
+- `phase17_new_vectors/254a_namedobj_identity_20261021_153631.txt` (1089 bytes)
+- `phase17_new_vectors/255a_set_vm_container_20261021_153651.txt` (1250 bytes)
+- `phase17_new_vectors/256a_vm_container_accept_20261021_153708.txt` (1087 bytes)
+- `phase17_new_vectors/257a_process_pair_20261021_153735.txt` (404 bytes)
+- `phase17_new_vectors/258a_debug_init_effect_20261021_154044.txt` (923 bytes)
+- `phase17_new_vectors/259a_dev_listing_20261021_154548.txt` (3355 bytes)
+- `phase17_new_vectors/260a_open_return_shape_20261021_154621.txt` (1136 bytes)
+- `phase17_new_vectors/261a_device_ioctl_reach_20261021_154649.txt` (2971 bytes)
+- `phase17_new_vectors/262a_dmem_partitions_20261021_154707.txt` (1810 bytes)
+- `phase17_new_vectors/263a_dmem_read_prot_20261021_154812.txt` (1461 bytes)
+- `phase17_new_vectors/264a_ioctl_sweep_20261021_155109.txt` (265 bytes)
+- `phase17_new_vectors/265a_dce_ioctl_buffer_20261021_155514.txt` (318 bytes)
+- `phase17_new_vectors/266a_aio_real_fd_20261021_155530.txt` (143 bytes)
+- `phase17_new_vectors/267a_ioctl_control_20261021_155811.txt` (729 bytes)
+- `phase17_new_vectors/268a_device_fd_reality_20261021_155843.txt` (950 bytes)
+- `phase17_new_vectors/269a_umtx_high_ops_20261021_160200.txt` (730 bytes)
+- `phase17_new_vectors/270a_umtx_sentinel_20261021_160225.txt` (578 bytes)
+- `phase17_new_vectors/271a_ioctl_catalog_matrix_20261023_123200.txt` (10947 bytes)
+- `phase17_new_vectors/271b_camera_ioctl_deep_20261023_123353.txt` (2533 bytes)
+- `phase17_new_vectors/271c_ioctl_group_discovery_20261023_123543.txt` (898 bytes)
+- `phase17_new_vectors/271d_ioctl_3dir_sweep_20261023_123708.txt` (493 bytes)
 - `phase17_new_vectors/271e_gc_cmd_sweep_20261023_124018.txt` (90 bytes)
-- `phase17_new_vectors/271e_gc_cmd_sweep_20261023_124121.txt` (572 bytes)
-- `phase17_new_vectors/271f_untested_devices_ioctl_20261023_124953.txt` (1689 bytes)
-- `phase17_new_vectors/271g_child_thread_rop_kqueue_race_20261023_135157.txt` (45 bytes)
-- `phase17_new_vectors/271g_child_thread_rop_kqueue_race_20261023_135410.txt` (225 bytes)
-- `phase17_new_vectors/271g_child_thread_rop_kqueue_race_20261023_135621.txt` (839 bytes)
-- `phase17_new_vectors/271h_kqueue_race_data_20261023_140045.txt` (837 bytes)
-- `phase17_new_vectors/271i_kqueue_diag_timer_race_20261023_140319.txt` (989 bytes)
-- `phase17_new_vectors/272a_multiarg_gadget_scan_20261023_141312.txt` (125 bytes)
-- `phase17_new_vectors/272a_multiarg_gadget_scan_20261023_141340.txt` (95 bytes)
-- `phase17_new_vectors/272a_multiarg_gadget_scan_20261023_141512.txt` (2680 bytes)
-- `phase17_new_vectors/272a_thr_create_recipe_20261022_093002.txt` (469 bytes)
-- `phase17_new_vectors/273a_pup_device_reach_20261022_094331.txt` (623 bytes)
-- `phase17_new_vectors/274a_dce_ioctl_sweep_20261022_094658.txt` (1491 bytes)
-- `phase17_new_vectors/275a_dce_ioctl_encoding_20261022_094845.txt` (12785 bytes)
-- `phase17_new_vectors/275a_sysent_tail_realargs_20261022_223604.txt` (95 bytes)
-- `phase17_new_vectors/275b_sysent_tail_guarded_20261022_223712.txt` (2980 bytes)
-- `phase17_new_vectors/275c_sysent_tail_realargs2_20261022_223925.txt` (1712 bytes)
-- `phase17_new_vectors/275d_sysent_child_bypass_20261022_224149.txt` (502 bytes)
-- `phase17_new_vectors/276a_dce_command_ownership_20261022_095620.txt` (3013 bytes)
+- `phase17_new_vectors/271e_gc_cmd_sweep_20261023_124121.txt` (595 bytes)
+- `phase17_new_vectors/271f_untested_devices_ioctl_20261023_124953.txt` (1737 bytes)
+- `phase17_new_vectors/271g_child_thread_rop_kqueue_race_20261023_135157.txt` (47 bytes)
+- `phase17_new_vectors/271g_child_thread_rop_kqueue_race_20261023_135410.txt` (237 bytes)
+- `phase17_new_vectors/271g_child_thread_rop_kqueue_race_20261023_135621.txt` (872 bytes)
+- `phase17_new_vectors/271h_kqueue_race_data_20261023_140045.txt` (867 bytes)
+- `phase17_new_vectors/271i_kqueue_diag_timer_race_20261023_140319.txt` (1027 bytes)
+- `phase17_new_vectors/272a_multiarg_gadget_scan_20261023_141312.txt` (130 bytes)
+- `phase17_new_vectors/272a_multiarg_gadget_scan_20261023_141340.txt` (99 bytes)
+- `phase17_new_vectors/272a_multiarg_gadget_scan_20261023_141512.txt` (2743 bytes)
+- `phase17_new_vectors/272a_thr_create_recipe_20261022_093002.txt` (481 bytes)
+- `phase17_new_vectors/273a_pup_device_reach_20261022_094331.txt` (641 bytes)
+- `phase17_new_vectors/274a_dce_ioctl_sweep_20261022_094658.txt` (1531 bytes)
+- `phase17_new_vectors/275a_dce_ioctl_encoding_20261022_094845.txt` (13020 bytes)
+- `phase17_new_vectors/275a_sysent_tail_realargs_20261022_223604.txt` (98 bytes)
+- `phase17_new_vectors/275b_sysent_tail_guarded_20261022_223712.txt` (3040 bytes)
+- `phase17_new_vectors/275c_sysent_tail_realargs2_20261022_223925.txt` (1767 bytes)
+- `phase17_new_vectors/275d_sysent_child_bypass_20261022_224149.txt` (518 bytes)
+- `phase17_new_vectors/276a_dce_command_ownership_20261022_095620.txt` (3096 bytes)
 - `phase17_new_vectors/277a_dce_command_shape_20261022_095718.txt` (108 bytes)
-- `phase17_new_vectors/277a_dce_command_shape_20261022_095959.txt` (1259 bytes)
-- `phase17_new_vectors/277g_netcontrol_dead_clear_slot_test_20261022_200623.txt` (449 bytes)
-- `phase17_new_vectors/278a_node_ioctl_sweep_20261022_100205.txt` (1670 bytes)
-- `phase17_new_vectors/279a_node_ioc_sweep_20261022_100333.txt` (1430 bytes)
-- `phase17_new_vectors/280a_gc_command_table_20261022_100852.txt` (137380 bytes)
-- `phase17_new_vectors/281a_gc_command_writes_20261022_101056.txt` (592 bytes)
-- `phase17_new_vectors/282a_gc_table_tail_20261022_101510.txt` (899 bytes)
-- `phase17_new_vectors/283a_gc_pointer_contents_20261022_101729.txt` (1884 bytes)
-- `phase17_new_vectors/284a_gc_full_length_field_20261022_101936.txt` (191007 bytes)
-- `phase17_new_vectors/285a_gc_big_command_20261022_102228.txt` (417 bytes)
-- `phase17_new_vectors/286a_gc_sweep_remainder_20261022_102717.txt` (4164 bytes)
-- `phase17_new_vectors/287a_gc_struct_commands_20261022_102913.txt` (943 bytes)
-- `phase17_new_vectors/288a_node_ioctl_groups_20261022_104212.txt` (4359 bytes)
-- `phase17_new_vectors/289a_msdosfs_dirent_pad_20261022_110700.txt` (245 bytes)
-- `phase17_new_vectors/290a_fs_roots_20261022_110740.txt` (549 bytes)
-- `phase17_new_vectors/292a_ugen_commands_20261022_111332.txt` (1750 bytes)
-- `phase17_new_vectors/293a_ugen_argument_shapes_20261022_111458.txt` (1233 bytes)
-- `phase17_new_vectors/294a_jail_layout_20261022_111606.txt` (1873 bytes)
-- `phase17_new_vectors/295a_jail_inventory_20261022_111637.txt` (4302 bytes)
-- `phase17_new_vectors/296a_system_sockets_20261022_111702.txt` (1193 bytes)
-- `phase17_new_vectors/297a_socket_framing_20261022_111933.txt` (716 bytes)
-- `phase17_new_vectors/298a_dbggc_sweep_20261022_112208.txt` (385 bytes)
-- `phase17_new_vectors/299a_node_ioc_sweep_20261022_113426.txt` (966 bytes)
-- `phase17_new_vectors/300a_camera_commands_20261022_115356.txt` (1611 bytes)
-- `phase17_new_vectors/301a_thread_state_calls_20261022_115421.txt` (791 bytes)
-- `phase17_new_vectors/302a_thread_state_ids_20261022_115439.txt` (638 bytes)
-- `phase17_new_vectors/303a_thread_state_bounds_20261022_115509.txt` (698 bytes)
-- `phase17_new_vectors/303a_thread_state_bounds_20261022_115517.txt` (353 bytes)
-- `phase17_new_vectors/304a_camera_ret_meaning_20261022_115641.txt` (326 bytes)
-- `phase17_new_vectors/305a_sys622_unauth_20261022_120414.txt` (4026 bytes)
-- `phase17_new_vectors/306a_sys622_device_index_20261022_120435.txt` (2766 bytes)
-- `phase17_new_vectors/307a_sys532_argument_map_20261022_120556.txt` (1824 bytes)
-- `phase17_new_vectors/308a_sys532_handle_forge_20261022_120629.txt` (985 bytes)
-- `phase17_new_vectors/308a_sys532_handle_forge_20261022_120652.txt` (955 bytes)
-- `phase17_new_vectors/309a_sys532_handless_commands_20261022_120715.txt` (1186 bytes)
-- `phase17_new_vectors/310a_sys653_value_map_20261022_121050.txt` (2469 bytes)
-- `phase17_new_vectors/311a_sys654_range_op_20261022_121159.txt` (1605 bytes)
-- `phase17_new_vectors/312a_sys654_region_scan_20261022_121245.txt` (96 bytes)
-- `phase17_new_vectors/313a_physhm_open_20261022_121511.txt` (770 bytes)
-- `phase17_new_vectors/314a_physhm_open_sweep_20261022_121523.txt` (807 bytes)
-- `phase17_new_vectors/319a_physhm_fd_ops_20261022_121950.txt` (325 bytes)
-- `phase17_new_vectors/320a_physhm_prot_20261022_122005.txt` (220 bytes)
-- `phase17_new_vectors/320a_physhm_prot_20261022_122014.txt` (220 bytes)
-- `phase17_new_vectors/322a_sys601_commands_20261022_122315.txt` (1228 bytes)
-- `phase17_new_vectors/323a_sys601_sweep_20261022_122329.txt` (296 bytes)
-- `phase17_new_vectors/324a_sys601_sweep2_20261022_122438.txt` (64 bytes)
-- `phase17_new_vectors/325a_thr_ucontext_20261022_122754.txt` (217 bytes)
-- `phase17_new_vectors/325a_thr_ucontext_20261022_122833.txt` (552 bytes)
-- `phase17_new_vectors/326a_thr_set_ucontext_20261022_122915.txt` (123 bytes)
-- `phase17_new_vectors/326a_thr_set_ucontext_20261022_122928.txt` (156 bytes)
-- `phase17_new_vectors/326a_thr_set_ucontext_20261022_122948.txt` (482 bytes)
-- `phase17_new_vectors/327a_opmc_scope_20261022_123153.txt` (421 bytes)
-- `phase17_new_vectors/330a_dmem_open_20261022_123604.txt` (349 bytes)
-- `phase17_new_vectors/330a_dmem_open_20261022_123616.txt` (567 bytes)
-- `phase17_new_vectors/331a_mmap_dmem_matrix_20261022_123630.txt` (1480 bytes)
-- `phase17_new_vectors/332a_authid_gates_20261022_123643.txt` (413 bytes)
-- `phase17_new_vectors/333a_cred_foreign_pid_20261022_123655.txt` (497 bytes)
-- `phase17_new_vectors/334a_obj_family_shapes_20261022_124106.txt` (1565 bytes)
-- `phase17_new_vectors/335a_info_family_shapes_20261022_124546.txt` (2908 bytes)
-- `phase17_new_vectors/336a_evf_handle_20261022_124514.txt` (685 bytes)
-- `phase17_new_vectors/337a_mdbg_minimal_20261022_124437.txt` (64 bytes)
-- `phase17_new_vectors/338a_evf_handle_space_20261022_124527.txt` (1427 bytes)
-- `phase17_new_vectors/339a_637_598_659_20261022_124747.txt` (89 bytes)
-- `phase17_new_vectors/340a_dynlib_out_637_limit_20261022_125339.txt` (702 bytes)
-- `phase17_new_vectors/341a_named_objects_create_20261022_125357.txt` (472 bytes)
-- `phase17_new_vectors/342a_named_objects_after_relaunch_20261022_125458.txt` (454 bytes)
-- `phase17_new_vectors/343a_fmem_limit_effect_20261022_125753.txt` (537 bytes)
-- `phase17_new_vectors/344a_fmem_limit_gpu_20261022_125834.txt` (751 bytes)
-- `phase17_new_vectors/345a_fmem_raise_20261022_130203.txt` (686 bytes)
-- `phase17_new_vectors/346a_fmem_headroom_20261022_161448.txt` (533 bytes)
-- `phase17_new_vectors/346b_fmem_ceiling_20261022_161726.txt` (207 bytes)
-- `phase17_new_vectors/347a_handle_family_confusion_20261022_130431.txt` (954 bytes)
-- `phase17_new_vectors/348a_gpu_pool_scan_20261022_154151.txt` (464 bytes)
-- `phase17_new_vectors/348a_gpu_pool_scan_20261022_155156.txt` (478 bytes)
-- `phase17_new_vectors/349a_osem_family_20261022_155250.txt` (857 bytes)
-- `phase17_new_vectors/349b_osem_order_20261022_155726.txt` (596 bytes)
-- `phase17_new_vectors/349c_osem_wait_20261022_160530.txt` (800 bytes)
-- `phase17_new_vectors/349d_osem_timeout_ptr_20261022_161833.txt` (471 bytes)
-- `phase17_new_vectors/350a_blockpool_batch_20261022_160542.txt` (686 bytes)
-- `phase17_new_vectors/352a_aio_batch_20261022_160559.txt` (974 bytes)
-- `phase17_new_vectors/352c_aio_bisect_20261022_160738.txt` (353 bytes)
-- `phase17_new_vectors/352d_aio_edges_20261022_160838.txt` (610 bytes)
-- `phase17_new_vectors/352e_aio_results_20261022_160848.txt` (1342 bytes)
-- `phase17_new_vectors/352f_aio_repeat_20261022_160902.txt` (614 bytes)
-- `phase17_new_vectors/352h_aio_slots_20261022_161248.txt` (1852 bytes)
-- `phase17_new_vectors/352j_aio_hostile_20261022_161504.txt` (845 bytes)
-- `phase17_new_vectors/352k_aio_commands_20261022_161843.txt` (961 bytes)
-- `phase17_new_vectors/352l_aio_write_source_20261022_162420.txt` (549 bytes)
-- `phase17_new_vectors/352m_aio_write_file_20261022_162444.txt` (149 bytes)
-- `phase17_new_vectors/352n_aio_write_socket_20261022_162740.txt` (288 bytes)
-- `phase17_new_vectors/352n_aio_write_socket_20261022_163000.txt` (535 bytes)
-- `phase17_new_vectors/352o_aio_targets_20261022_163033.txt` (1091 bytes)
-- `phase17_new_vectors/352p_aio_generation_20261022_163108.txt` (537 bytes)
-- `phase17_new_vectors/353a_aio_async_detect_20261023_071045.txt` (1479 bytes)
-- `phase17_new_vectors/353a_sigsys_nosys_20261022_163648.txt` (617 bytes)
-- `phase17_new_vectors/353b_aio_fd_close_race_20261023_071305.txt` (541 bytes)
-- `phase17_new_vectors/353b_lethal_reclassify_20261022_163752.txt` (540 bytes)
-- `phase17_new_vectors/353c_absent_or_rejecting_20261022_163852.txt` (619 bytes)
-- `phase17_new_vectors/353c_aio_cancel_race_20261023_074144.txt` (1247 bytes)
-- `phase17_new_vectors/353d2_aio_unmap_clean_20261023_074717.txt` (1407 bytes)
-- `phase17_new_vectors/353d_aio_unmap_race_20261023_074303.txt` (576 bytes)
-- `phase17_new_vectors/353d_fstat_kldstat_20261022_163923.txt` (795 bytes)
-- `phase17_new_vectors/353e_aio_gen_collision_20261023_074822.txt` (693 bytes)
-- `phase17_new_vectors/354a_unexplained_kills_20261022_164235.txt` (755 bytes)
-- `phase17_new_vectors/354b_range_under_sigign_20261022_164419.txt` (190 bytes)
-- `phase17_new_vectors/354b_range_under_sigign_20261022_164915.txt` (157 bytes)
-- `phase17_new_vectors/354c_bisect_451_20261022_164947.txt` (217 bytes)
-- `phase17_new_vectors/354d_range_456_20261022_165436.txt` (203 bytes)
+- `phase17_new_vectors/277a_dce_command_shape_20261022_095959.txt` (1311 bytes)
+- `phase17_new_vectors/277g_netcontrol_dead_clear_slot_test_20261022_200623.txt` (468 bytes)
+- `phase17_new_vectors/278a_node_ioctl_sweep_20261022_100205.txt` (1707 bytes)
+- `phase17_new_vectors/279a_node_ioc_sweep_20261022_100333.txt` (1464 bytes)
+- `phase17_new_vectors/280a_gc_command_table_20261022_100852.txt` (144574 bytes)
+- `phase17_new_vectors/281a_gc_command_writes_20261022_101056.txt` (607 bytes)
+- `phase17_new_vectors/282a_gc_table_tail_20261022_101510.txt` (924 bytes)
+- `phase17_new_vectors/283a_gc_pointer_contents_20261022_101729.txt` (1911 bytes)
+- `phase17_new_vectors/284a_gc_full_length_field_20261022_101936.txt` (197173 bytes)
+- `phase17_new_vectors/285a_gc_big_command_20261022_102228.txt` (437 bytes)
+- `phase17_new_vectors/286a_gc_sweep_remainder_20261022_102717.txt` (4280 bytes)
+- `phase17_new_vectors/287a_gc_struct_commands_20261022_102913.txt` (982 bytes)
+- `phase17_new_vectors/288a_node_ioctl_groups_20261022_104212.txt` (4489 bytes)
+- `phase17_new_vectors/289a_msdosfs_dirent_pad_20261022_110700.txt` (255 bytes)
+- `phase17_new_vectors/290a_fs_roots_20261022_110740.txt` (563 bytes)
+- `phase17_new_vectors/292a_ugen_commands_20261022_111332.txt` (1799 bytes)
+- `phase17_new_vectors/293a_ugen_argument_shapes_20261022_111458.txt` (1258 bytes)
+- `phase17_new_vectors/294a_jail_layout_20261022_111606.txt` (1907 bytes)
+- `phase17_new_vectors/295a_jail_inventory_20261022_111637.txt` (4325 bytes)
+- `phase17_new_vectors/296a_system_sockets_20261022_111702.txt` (1211 bytes)
+- `phase17_new_vectors/297a_socket_framing_20261022_111933.txt` (738 bytes)
+- `phase17_new_vectors/298a_dbggc_sweep_20261022_112208.txt` (398 bytes)
+- `phase17_new_vectors/299a_node_ioc_sweep_20261022_113426.txt` (1018 bytes)
+- `phase17_new_vectors/300a_camera_commands_20261022_115356.txt` (1636 bytes)
+- `phase17_new_vectors/301a_thread_state_calls_20261022_115421.txt` (808 bytes)
+- `phase17_new_vectors/302a_thread_state_ids_20261022_115439.txt` (655 bytes)
+- `phase17_new_vectors/303a_thread_state_bounds_20261022_115509.txt` (714 bytes)
+- `phase17_new_vectors/303a_thread_state_bounds_20261022_115517.txt` (366 bytes)
+- `phase17_new_vectors/304a_camera_ret_meaning_20261022_115641.txt` (339 bytes)
+- `phase17_new_vectors/305a_sys622_unauth_20261022_120414.txt` (4088 bytes)
+- `phase17_new_vectors/306a_sys622_device_index_20261022_120435.txt` (2832 bytes)
+- `phase17_new_vectors/307a_sys532_argument_map_20261022_120556.txt` (1878 bytes)
+- `phase17_new_vectors/308a_sys532_handle_forge_20261022_120629.txt` (1015 bytes)
+- `phase17_new_vectors/308a_sys532_handle_forge_20261022_120652.txt` (983 bytes)
+- `phase17_new_vectors/309a_sys532_handless_commands_20261022_120715.txt` (1215 bytes)
+- `phase17_new_vectors/310a_sys653_value_map_20261022_121050.txt` (2498 bytes)
+- `phase17_new_vectors/311a_sys654_range_op_20261022_121159.txt` (1652 bytes)
+- `phase17_new_vectors/312a_sys654_region_scan_20261022_121245.txt` (100 bytes)
+- `phase17_new_vectors/313a_physhm_open_20261022_121511.txt` (804 bytes)
+- `phase17_new_vectors/314a_physhm_open_sweep_20261022_121523.txt` (844 bytes)
+- `phase17_new_vectors/319a_physhm_fd_ops_20261022_121950.txt` (337 bytes)
+- `phase17_new_vectors/320a_physhm_prot_20261022_122005.txt` (227 bytes)
+- `phase17_new_vectors/320a_physhm_prot_20261022_122014.txt` (227 bytes)
+- `phase17_new_vectors/322a_sys601_commands_20261022_122315.txt` (1249 bytes)
+- `phase17_new_vectors/323a_sys601_sweep_20261022_122329.txt` (300 bytes)
+- `phase17_new_vectors/324a_sys601_sweep2_20261022_122438.txt` (65 bytes)
+- `phase17_new_vectors/325a_thr_ucontext_20261022_122754.txt` (225 bytes)
+- `phase17_new_vectors/325a_thr_ucontext_20261022_122833.txt` (571 bytes)
+- `phase17_new_vectors/326a_thr_set_ucontext_20261022_122915.txt` (128 bytes)
+- `phase17_new_vectors/326a_thr_set_ucontext_20261022_122928.txt` (162 bytes)
+- `phase17_new_vectors/326a_thr_set_ucontext_20261022_122948.txt` (499 bytes)
+- `phase17_new_vectors/327a_opmc_scope_20261022_123153.txt` (438 bytes)
+- `phase17_new_vectors/330a_dmem_open_20261022_123604.txt` (361 bytes)
+- `phase17_new_vectors/330a_dmem_open_20261022_123616.txt` (584 bytes)
+- `phase17_new_vectors/331a_mmap_dmem_matrix_20261022_123630.txt` (1509 bytes)
+- `phase17_new_vectors/332a_authid_gates_20261022_123643.txt` (432 bytes)
+- `phase17_new_vectors/333a_cred_foreign_pid_20261022_123655.txt` (517 bytes)
+- `phase17_new_vectors/334a_obj_family_shapes_20261022_124106.txt` (1589 bytes)
+- `phase17_new_vectors/335a_info_family_shapes_20261022_124546.txt` (2984 bytes)
+- `phase17_new_vectors/336a_evf_handle_20261022_124514.txt` (710 bytes)
+- `phase17_new_vectors/337a_mdbg_minimal_20261022_124437.txt` (66 bytes)
+- `phase17_new_vectors/338a_evf_handle_space_20261022_124527.txt` (1461 bytes)
+- `phase17_new_vectors/339a_637_598_659_20261022_124747.txt` (93 bytes)
+- `phase17_new_vectors/340a_dynlib_out_637_limit_20261022_125339.txt` (728 bytes)
+- `phase17_new_vectors/341a_named_objects_create_20261022_125357.txt` (488 bytes)
+- `phase17_new_vectors/342a_named_objects_after_relaunch_20261022_125458.txt` (468 bytes)
+- `phase17_new_vectors/343a_fmem_limit_effect_20261022_125753.txt` (556 bytes)
+- `phase17_new_vectors/344a_fmem_limit_gpu_20261022_125834.txt` (773 bytes)
+- `phase17_new_vectors/345a_fmem_raise_20261022_130203.txt` (706 bytes)
+- `phase17_new_vectors/346a_fmem_headroom_20261022_161448.txt` (552 bytes)
+- `phase17_new_vectors/346b_fmem_ceiling_20261022_161726.txt` (215 bytes)
+- `phase17_new_vectors/347a_handle_family_confusion_20261022_130431.txt` (974 bytes)
+- `phase17_new_vectors/348a_gpu_pool_scan_20261022_154151.txt` (480 bytes)
+- `phase17_new_vectors/348a_gpu_pool_scan_20261022_155156.txt` (494 bytes)
+- `phase17_new_vectors/349a_osem_family_20261022_155250.txt` (877 bytes)
+- `phase17_new_vectors/349b_osem_order_20261022_155726.txt` (614 bytes)
+- `phase17_new_vectors/349c_osem_wait_20261022_160530.txt` (823 bytes)
+- `phase17_new_vectors/349d_osem_timeout_ptr_20261022_161833.txt` (486 bytes)
+- `phase17_new_vectors/350a_blockpool_batch_20261022_160542.txt` (704 bytes)
+- `phase17_new_vectors/352a_aio_batch_20261022_160559.txt` (999 bytes)
+- `phase17_new_vectors/352c_aio_bisect_20261022_160738.txt` (371 bytes)
+- `phase17_new_vectors/352d_aio_edges_20261022_160838.txt` (625 bytes)
+- `phase17_new_vectors/352e_aio_results_20261022_160848.txt` (1369 bytes)
+- `phase17_new_vectors/352f_aio_repeat_20261022_160902.txt` (642 bytes)
+- `phase17_new_vectors/352h_aio_slots_20261022_161248.txt` (1898 bytes)
+- `phase17_new_vectors/352j_aio_hostile_20261022_161504.txt` (865 bytes)
+- `phase17_new_vectors/352k_aio_commands_20261022_161843.txt` (983 bytes)
+- `phase17_new_vectors/352l_aio_write_source_20261022_162420.txt` (564 bytes)
+- `phase17_new_vectors/352m_aio_write_file_20261022_162444.txt` (154 bytes)
+- `phase17_new_vectors/352n_aio_write_socket_20261022_162740.txt` (296 bytes)
+- `phase17_new_vectors/352n_aio_write_socket_20261022_163000.txt` (552 bytes)
+- `phase17_new_vectors/352o_aio_targets_20261022_163033.txt` (1126 bytes)
+- `phase17_new_vectors/352p_aio_generation_20261022_163108.txt` (552 bytes)
+- `phase17_new_vectors/353a_aio_async_detect_20261023_071045.txt` (1520 bytes)
+- `phase17_new_vectors/353a_sigsys_nosys_20261022_163648.txt` (638 bytes)
+- `phase17_new_vectors/353b_aio_fd_close_race_20261023_071305.txt` (556 bytes)
+- `phase17_new_vectors/353b_lethal_reclassify_20261022_163752.txt` (554 bytes)
+- `phase17_new_vectors/353c_absent_or_rejecting_20261022_163852.txt` (637 bytes)
+- `phase17_new_vectors/353c_aio_cancel_race_20261023_074144.txt` (1277 bytes)
+- `phase17_new_vectors/353d2_aio_unmap_clean_20261023_074717.txt` (1432 bytes)
+- `phase17_new_vectors/353d_aio_unmap_race_20261023_074303.txt` (595 bytes)
+- `phase17_new_vectors/353d_fstat_kldstat_20261022_163923.txt` (815 bytes)
+- `phase17_new_vectors/353e_aio_gen_collision_20261023_074822.txt` (721 bytes)
+- `phase17_new_vectors/354a_unexplained_kills_20261022_164235.txt` (779 bytes)
+- `phase17_new_vectors/354b_range_under_sigign_20261022_164419.txt` (197 bytes)
+- `phase17_new_vectors/354b_range_under_sigign_20261022_164915.txt` (162 bytes)
+- `phase17_new_vectors/354c_bisect_451_20261022_164947.txt` (226 bytes)
+- `phase17_new_vectors/354d_range_456_20261022_165436.txt` (211 bytes)
 - `phase17_new_vectors/354e_bisect_501_20261022_165614.txt` (121 bytes)
-- `phase17_new_vectors/354e_bisect_501_20261022_165626.txt` (625 bytes)
-- `phase17_new_vectors/354f_range_523_20261022_165635.txt` (578 bytes)
-- `phase17_new_vectors/354g_range_623_20261022_165716.txt` (676 bytes)
-- `phase17_new_vectors/355a_aio_class_20261022_165716.txt` (494 bytes)
-- `phase17_new_vectors/355a_fstat_kptr_scan_20261022_120934.txt` (1691 bytes)
-- `phase17_new_vectors/355b_blockpool_fd_20261022_165750.txt` (515 bytes)
-- `phase17_new_vectors/355c_sys622_data_20261022_165803.txt` (185 bytes)
+- `phase17_new_vectors/354e_bisect_501_20261022_165626.txt` (655 bytes)
+- `phase17_new_vectors/354f_range_523_20261022_165635.txt` (599 bytes)
+- `phase17_new_vectors/354g_range_623_20261022_165716.txt` (697 bytes)
+- `phase17_new_vectors/355a_aio_class_20261022_165716.txt` (507 bytes)
+- `phase17_new_vectors/355a_fstat_kptr_scan_20261022_120934.txt` (1734 bytes)
+- `phase17_new_vectors/355b_blockpool_fd_20261022_165750.txt` (535 bytes)
+- `phase17_new_vectors/355c_sys622_data_20261022_165803.txt` (189 bytes)
 - `phase17_new_vectors/356a_chicken_retest_20261022_173936.txt` (81 bytes)
-- `phase17_new_vectors/356a_chicken_retest_20261022_173941.txt` (535 bytes)
-- `phase17_new_vectors/357a_sys622_device_index_20261022_174133.txt` (139 bytes)
-- `phase17_new_vectors/358a_gc_read_20261022_174215.txt` (585 bytes)
-- `phase17_new_vectors/359a_dirent_inodes_20261022_174331.txt` (243 bytes)
-- `phase17_new_vectors/360a_encrypt_ioctl_matrix_20261022_175029.txt` (5465 bytes)
-- `phase17_new_vectors/361a_socket_consumption_20261022_175317.txt` (100 bytes)
-- `phase17_new_vectors/361b_socket_consumption_20261022_175357.txt` (151 bytes)
+- `phase17_new_vectors/356a_chicken_retest_20261022_173941.txt` (553 bytes)
+- `phase17_new_vectors/357a_sys622_device_index_20261022_174133.txt` (143 bytes)
+- `phase17_new_vectors/358a_gc_read_20261022_174215.txt` (607 bytes)
+- `phase17_new_vectors/359a_dirent_inodes_20261022_174331.txt` (256 bytes)
+- `phase17_new_vectors/360a_encrypt_ioctl_matrix_20261022_175029.txt` (5535 bytes)
+- `phase17_new_vectors/361a_socket_consumption_20261022_175317.txt` (104 bytes)
+- `phase17_new_vectors/361b_socket_consumption_20261022_175357.txt` (156 bytes)
 - `phase17_new_vectors/361b_socket_consumption_20261022_175438.txt` (86 bytes)
-- `phase17_new_vectors/361b_socket_consumption_20261022_175443.txt` (602 bytes)
-- `phase17_new_vectors/362a_compositor_reply_20261022_175455.txt` (482 bytes)
-- `phase17_new_vectors/362b_socket_state_20261022_175509.txt` (444 bytes)
-- `phase17_new_vectors/362b_socket_state_20261022_175632.txt` (444 bytes)
-- `phase17_new_vectors/362b_socket_state_20261022_175637.txt` (444 bytes)
-- `phase17_new_vectors/362b_socket_state_20261022_175716.txt` (444 bytes)
-- `phase17_new_vectors/362b_socket_state_20261022_181426.txt` (442 bytes)
-- `phase17_new_vectors/363a_vrtracker_ladder_20261022_175645.txt` (141 bytes)
-- `phase17_new_vectors/364a_vrtracker_shapes_20261022_175750.txt` (686 bytes)
-- `phase17_new_vectors/365a_compositor_reply_20261022_180150.txt` (277 bytes)
-- `phase17_new_vectors/366a_compositor_words_20261022_180217.txt` (858 bytes)
-- `phase17_new_vectors/367a_compositor_size_20261022_180240.txt` (1219 bytes)
-- `phase17_new_vectors/368a_compositor_opcodes_20261022_180326.txt` (850 bytes)
-- `phase17_new_vectors/369a_compositor_header_20261022_180356.txt` (3650 bytes)
-- `phase17_new_vectors/370a_compositor_args_20261022_180431.txt` (525 bytes)
-- `phase17_new_vectors/371a_compositor_sizes_20261022_180456.txt` (3323 bytes)
-- `phase17_new_vectors/372a_compositor_session_20261022_180626.txt` (620 bytes)
-- `phase17_new_vectors/373a_compositor_fullread_20261022_180644.txt` (715 bytes)
-- `phase17_new_vectors/374a_eboot_socket_strings_20261022_180807.txt` (206 bytes)
-- `phase17_new_vectors/375a_region_names_20261022_180822.txt` (14171 bytes)
-- `phase17_new_vectors/378a_jail_artifacts_20261022_181438.txt` (985 bytes)
-- `phase17_new_vectors/379a_socket_targets_20261022_181453.txt` (60 bytes)
-- `phase17_new_vectors/382a_gpu_refs_20261022_182200.txt` (138 bytes)
-- `phase17_new_vectors/382a_gpu_refs_20261022_182322.txt` (14422 bytes)
-- `phase17_new_vectors/383a_thr_new_20261022_182600.txt` (52 bytes)
-- `phase17_new_vectors/383a_thr_new_20261022_182718.txt` (165 bytes)
-- `phase17_new_vectors/383a_thr_new_20261022_182743.txt` (399 bytes)
-- `phase17_new_vectors/384a_child_multiarg_sysctl_20261023_143704.txt` (311 bytes)
-- `phase17_new_vectors/384b_child_write_minimal_20261023_144048.txt` (567 bytes)
-- `phase17_new_vectors/384b_child_write_minimal_20261023_144252.txt` (606 bytes)
-- `phase17_new_vectors/384b_child_write_minimal_20261023_144456.txt` (911 bytes)
-- `phase17_new_vectors/384b_child_write_minimal_20261023_144629.txt` (929 bytes)
-- `phase17_new_vectors/384b_child_write_minimal_20261023_144828.txt` (1377 bytes)
-- `phase17_new_vectors/385a_concurrent_child_races_20261023_145412.txt` (1188 bytes)
+- `phase17_new_vectors/361b_socket_consumption_20261022_175443.txt` (624 bytes)
+- `phase17_new_vectors/362a_compositor_reply_20261022_175455.txt` (502 bytes)
+- `phase17_new_vectors/362b_socket_state_20261022_175509.txt` (455 bytes)
+- `phase17_new_vectors/362b_socket_state_20261022_175632.txt` (455 bytes)
+- `phase17_new_vectors/362b_socket_state_20261022_175637.txt` (455 bytes)
+- `phase17_new_vectors/362b_socket_state_20261022_175716.txt` (455 bytes)
+- `phase17_new_vectors/362b_socket_state_20261022_181426.txt` (453 bytes)
+- `phase17_new_vectors/363a_vrtracker_ladder_20261022_175645.txt` (147 bytes)
+- `phase17_new_vectors/364a_vrtracker_shapes_20261022_175750.txt` (699 bytes)
+- `phase17_new_vectors/365a_compositor_reply_20261022_180150.txt` (289 bytes)
+- `phase17_new_vectors/366a_compositor_words_20261022_180217.txt` (881 bytes)
+- `phase17_new_vectors/367a_compositor_size_20261022_180240.txt` (1241 bytes)
+- `phase17_new_vectors/368a_compositor_opcodes_20261022_180326.txt` (864 bytes)
+- `phase17_new_vectors/369a_compositor_header_20261022_180356.txt` (3701 bytes)
+- `phase17_new_vectors/370a_compositor_args_20261022_180431.txt` (535 bytes)
+- `phase17_new_vectors/371a_compositor_sizes_20261022_180456.txt` (3369 bytes)
+- `phase17_new_vectors/372a_compositor_session_20261022_180626.txt` (638 bytes)
+- `phase17_new_vectors/373a_compositor_fullread_20261022_180644.txt` (731 bytes)
+- `phase17_new_vectors/374a_eboot_socket_strings_20261022_180807.txt` (214 bytes)
+- `phase17_new_vectors/375a_region_names_20261022_180822.txt` (14481 bytes)
+- `phase17_new_vectors/378a_jail_artifacts_20261022_181438.txt` (1010 bytes)
+- `phase17_new_vectors/379a_socket_targets_20261022_181453.txt` (63 bytes)
+- `phase17_new_vectors/382a_gpu_refs_20261022_182200.txt` (145 bytes)
+- `phase17_new_vectors/382a_gpu_refs_20261022_182322.txt` (14770 bytes)
+- `phase17_new_vectors/383a_thr_new_20261022_182600.txt` (55 bytes)
+- `phase17_new_vectors/383a_thr_new_20261022_182718.txt` (170 bytes)
+- `phase17_new_vectors/383a_thr_new_20261022_182743.txt` (411 bytes)
+- `phase17_new_vectors/384a_child_multiarg_sysctl_20261023_143704.txt` (328 bytes)
+- `phase17_new_vectors/384b_child_write_minimal_20261023_144048.txt` (598 bytes)
+- `phase17_new_vectors/384b_child_write_minimal_20261023_144252.txt` (638 bytes)
+- `phase17_new_vectors/384b_child_write_minimal_20261023_144456.txt` (957 bytes)
+- `phase17_new_vectors/384b_child_write_minimal_20261023_144629.txt` (975 bytes)
+- `phase17_new_vectors/384b_child_write_minimal_20261023_144828.txt` (1438 bytes)
+- `phase17_new_vectors/385a_concurrent_child_races_20261023_145412.txt` (1227 bytes)
 - `phase17_new_vectors/385a_prx_readability_20261022_210429.txt` (603 bytes)
-- `phase17_new_vectors/386a_gc_hmd_ioctl_sweep_20261022_205749.txt` (157854 bytes)
-- `phase17_new_vectors/386a_r8_r9_gadget_scan_20261023_145217.txt` (881 bytes)
+- `phase17_new_vectors/386a_gc_hmd_ioctl_sweep_20261022_205749.txt` (159706 bytes)
+- `phase17_new_vectors/386a_r8_r9_gadget_scan_20261023_145217.txt` (918 bytes)
 - `phase17_new_vectors/387a_eboot_ioctl_constants_20261022_205931.txt` (2613 bytes)
-- `phase17_new_vectors/387a_ioctl_overcopy_scan_20261023_150627.txt` (1478 bytes)
-- `phase17_new_vectors/387b_ioctl_group_sweep_full_20261023_151435.txt` (634 bytes)
-- `phase17_new_vectors/387c_ioctl_fast_discovery_20261023_151722.txt` (1711 bytes)
-- `phase17_new_vectors/388a_self_header_20261022_210502.txt` (674 bytes)
-- `phase17_new_vectors/389a_elf_segments_20261022_210526.txt` (1948 bytes)
-- `phase17_new_vectors/390a_self_plaintext_20261022_210605.txt` (598 bytes)
-- `phase17_new_vectors/391a_sys622_arg1_pointer_20261022_211208.txt` (92 bytes)
-- `phase17_new_vectors/392a_thread_syscall_storm_20261022_212003.txt` (196 bytes)
-- `phase17_new_vectors/393a_storm_bisect_20261022_212351.txt` (33 bytes)
-- `phase17_new_vectors/394a_machine_health_20261022_212804.txt` (337 bytes)
-- `phase17_new_vectors/394a_machine_health_20261022_221236.txt` (338 bytes)
-- `phase17_new_vectors/395a_storm_small_20261022_213029.txt` (32 bytes)
-- `phase17_new_vectors/396a_read_ladder_20261022_215302.txt` (472 bytes)
-- `phase17_new_vectors/397a_thread_idle_20261022_215708.txt` (171 bytes)
-- `phase17_new_vectors/398a_thread_park_isolation_20261022_221326.txt` (210 bytes)
-- `phase17_new_vectors/399a_thread_park_no_kill_20261022_223003.txt` (278 bytes)
-- `phase17_new_vectors/400a_thread_storm_small_20261022_223035.txt` (181 bytes)
-- `phase17_new_vectors/401a_thread_one_syscall_20261022_223624.txt` (296 bytes)
-- `phase17_new_vectors/402a_syscall_gadget_scan_20261022_223728.txt` (174 bytes)
-- `phase17_new_vectors/403a_pop_rax_scan_20261022_223816.txt` (311 bytes)
-- `phase17_new_vectors/405a_gadget_verify_20261022_224535.txt` (447 bytes)
-- `phase17_new_vectors/407a_chain_layout_fixed_20261022_225307.txt` (375 bytes)
-- `phase17_new_vectors/408a_chain_writes_20261022_225356.txt` (72 bytes)
-- `phase17_new_vectors/408a_chain_writes_20261022_225424.txt` (90 bytes)
-- `phase17_new_vectors/408a_chain_writes_20261022_225531.txt` (782 bytes)
-- `phase17_new_vectors/408a_chain_writes_20261022_225543.txt` (342 bytes)
-- `phase17_new_vectors/409a_chain_arg_gadgets_20261022_225607.txt` (361 bytes)
-- `phase17_new_vectors/410a_osem_race_20261022_225639.txt` (354 bytes)
-- `phase17_new_vectors/411a_aio_race_20261022_230339.txt` (457 bytes)
-- `phase17_new_vectors/413c_chain_bigstack_400_20261022_230726.txt` (477 bytes)
-- `phase17_new_vectors/413d_chain_bigstack_1200_20261022_230732.txt` (478 bytes)
-- `phase17_new_vectors/414a_aio_race_bigstack_20261022_230803.txt` (469 bytes)
-- `phase17_new_vectors/415a_aio_two_children_20261022_231101.txt` (457 bytes)
-- `phase17_new_vectors/416a_aio_delete_race_20261022_231115.txt` (455 bytes)
-- `phase17_new_vectors/417a_chain_exit_20261022_231248.txt` (340 bytes)
-- `phase17_new_vectors/418a_exit_many_children_20261022_231502.txt` (368 bytes)
-- `phase17_new_vectors/419a_fstat_close_race_20261022_231527.txt` (330 bytes)
-- `phase17_new_vectors/420a_aio_three_children_20261022_231625.txt` (386 bytes)
-- `phase17_new_vectors/421a_kevent_close_race_20261022_231753.txt` (304 bytes)
-- `phase17_new_vectors/422b_fd_reuse_race_fixed_20261022_231924.txt` (429 bytes)
-- `phase17_new_vectors/423a_mprotect_prot_sweep_20261022_232141.txt` (477 bytes)
-- `phase17_new_vectors/425a_dup2_race_20261022_232538.txt` (345 bytes)
-- `phase17_new_vectors/426a_dlsym_jit_20261022_232608.txt` (228 bytes)
-- `phase17_new_vectors/427a_dlsym_calling_convention_20261022_232628.txt` (104 bytes)
-- `phase17_new_vectors/428a_sys532_full_sweep_20261022_232648.txt` (1459 bytes)
-- `phase17_new_vectors/429a_sys532_user_pointer_20261022_234844.txt` (656 bytes)
-- `phase17_new_vectors/430a_sys532_copyout_20261022_234902.txt` (2730 bytes)
-- `phase17_new_vectors/431a_sys532_handle_search_20261022_235520.txt` (8212 bytes)
-- `phase17_new_vectors/432a_sys532_handle_search2_20261022_235606.txt` (673 bytes)
-- `phase17_new_vectors/432a_sys532_handle_search2_20261022_235623.txt` (808 bytes)
-- `phase17_new_vectors/433a_sys532_handle_map_20261022_235749.txt` (2693 bytes)
-- `phase17_new_vectors/433a_sys532_handle_map_20261022_235907.txt` (2212 bytes)
+- `phase17_new_vectors/387a_ioctl_overcopy_scan_20261023_150627.txt` (1530 bytes)
+- `phase17_new_vectors/387b_ioctl_group_sweep_full_20261023_151435.txt` (660 bytes)
+- `phase17_new_vectors/387c_ioctl_fast_discovery_20261023_151722.txt` (1756 bytes)
+- `phase17_new_vectors/388a_self_header_20261022_210502.txt` (688 bytes)
+- `phase17_new_vectors/389a_elf_segments_20261022_210526.txt` (1979 bytes)
+- `phase17_new_vectors/390a_self_plaintext_20261022_210605.txt` (611 bytes)
+- `phase17_new_vectors/391a_sys622_arg1_pointer_20261022_211208.txt` (95 bytes)
+- `phase17_new_vectors/392a_thread_syscall_storm_20261022_212003.txt` (203 bytes)
+- `phase17_new_vectors/393a_storm_bisect_20261022_212351.txt` (34 bytes)
+- `phase17_new_vectors/394a_machine_health_20261022_212804.txt` (350 bytes)
+- `phase17_new_vectors/394a_machine_health_20261022_221236.txt` (351 bytes)
+- `phase17_new_vectors/395a_storm_small_20261022_213029.txt` (33 bytes)
+- `phase17_new_vectors/396a_read_ladder_20261022_215302.txt` (491 bytes)
+- `phase17_new_vectors/397a_thread_idle_20261022_215708.txt` (177 bytes)
+- `phase17_new_vectors/398a_thread_park_isolation_20261022_221326.txt` (218 bytes)
+- `phase17_new_vectors/399a_thread_park_no_kill_20261022_223003.txt` (289 bytes)
+- `phase17_new_vectors/400a_thread_storm_small_20261022_223035.txt` (188 bytes)
+- `phase17_new_vectors/401a_thread_one_syscall_20261022_223624.txt` (307 bytes)
+- `phase17_new_vectors/402a_syscall_gadget_scan_20261022_223728.txt` (180 bytes)
+- `phase17_new_vectors/403a_pop_rax_scan_20261022_223816.txt` (328 bytes)
+- `phase17_new_vectors/405a_gadget_verify_20261022_224535.txt` (458 bytes)
+- `phase17_new_vectors/407a_chain_layout_fixed_20261022_225307.txt` (386 bytes)
+- `phase17_new_vectors/408a_chain_writes_20261022_225356.txt` (75 bytes)
+- `phase17_new_vectors/408a_chain_writes_20261022_225424.txt` (94 bytes)
+- `phase17_new_vectors/408a_chain_writes_20261022_225531.txt` (799 bytes)
+- `phase17_new_vectors/408a_chain_writes_20261022_225543.txt` (353 bytes)
+- `phase17_new_vectors/409a_chain_arg_gadgets_20261022_225607.txt` (371 bytes)
+- `phase17_new_vectors/410a_osem_race_20261022_225639.txt` (365 bytes)
+- `phase17_new_vectors/411a_aio_race_20261022_230339.txt` (470 bytes)
+- `phase17_new_vectors/413c_chain_bigstack_400_20261022_230726.txt` (490 bytes)
+- `phase17_new_vectors/413d_chain_bigstack_1200_20261022_230732.txt` (491 bytes)
+- `phase17_new_vectors/414a_aio_race_bigstack_20261022_230803.txt` (482 bytes)
+- `phase17_new_vectors/415a_aio_two_children_20261022_231101.txt` (468 bytes)
+- `phase17_new_vectors/416a_aio_delete_race_20261022_231115.txt` (466 bytes)
+- `phase17_new_vectors/417a_chain_exit_20261022_231248.txt` (351 bytes)
+- `phase17_new_vectors/418a_exit_many_children_20261022_231502.txt` (379 bytes)
+- `phase17_new_vectors/419a_fstat_close_race_20261022_231527.txt` (339 bytes)
+- `phase17_new_vectors/420a_aio_three_children_20261022_231625.txt` (397 bytes)
+- `phase17_new_vectors/421a_kevent_close_race_20261022_231753.txt` (314 bytes)
+- `phase17_new_vectors/422b_fd_reuse_race_fixed_20261022_231924.txt` (441 bytes)
+- `phase17_new_vectors/423a_mprotect_prot_sweep_20261022_232141.txt` (488 bytes)
+- `phase17_new_vectors/425a_dup2_race_20261022_232538.txt` (354 bytes)
+- `phase17_new_vectors/426a_dlsym_jit_20261022_232608.txt` (236 bytes)
+- `phase17_new_vectors/427a_dlsym_calling_convention_20261022_232628.txt` (108 bytes)
+- `phase17_new_vectors/428a_sys532_full_sweep_20261022_232648.txt` (1498 bytes)
+- `phase17_new_vectors/429a_sys532_user_pointer_20261022_234844.txt` (685 bytes)
+- `phase17_new_vectors/430a_sys532_copyout_20261022_234902.txt` (2768 bytes)
+- `phase17_new_vectors/431a_sys532_handle_search_20261022_235520.txt` (8508 bytes)
+- `phase17_new_vectors/432a_sys532_handle_search2_20261022_235606.txt` (684 bytes)
+- `phase17_new_vectors/432a_sys532_handle_search2_20261022_235623.txt` (828 bytes)
+- `phase17_new_vectors/433a_sys532_handle_map_20261022_235749.txt` (2787 bytes)
+- `phase17_new_vectors/433a_sys532_handle_map_20261022_235907.txt` (2293 bytes)
 - `phase17_new_vectors/434a_compositor_census_20261023_001201.txt` (86 bytes)
-- `phase17_new_vectors/434a_compositor_census_20261023_001328.txt` (357 bytes)
-- `phase17_new_vectors/435a_kernel_gauge_20261023_001637.txt` (330 bytes)
-- `phase17_new_vectors/436a_handle_reuse_20261023_001654.txt` (273 bytes)
-- `phase17_new_vectors/437a_slot_reuse_20261023_001934.txt` (232 bytes)
-- `phase17_new_vectors/438a_slot_prediction_20261023_002050.txt` (305 bytes)
-- `phase17_new_vectors/439a_osem_lifetime_20261023_002111.txt` (278 bytes)
-- `phase17_new_vectors/440a_osem_double_release_20261023_002132.txt` (367 bytes)
-- `phase17_new_vectors/441a_compositor_size_diff_20261023_002155.txt` (1114 bytes)
-- `phase17_new_vectors/441b_socket_recheck_20261023_002210.txt` (761 bytes)
-- `phase17_new_vectors/441b_socket_recheck_20261023_002523.txt` (761 bytes)
-- `phase17_new_vectors/441b_socket_recheck_20261023_002937.txt` (761 bytes)
-- `phase17_new_vectors/441b_socket_recheck_20261023_003623.txt` (761 bytes)
-- `phase17_new_vectors/441b_socket_recheck_20261023_003941.txt` (761 bytes)
-- `phase17_new_vectors/442a_evf_lifetime_20261023_002538.txt` (370 bytes)
-- `phase17_new_vectors/443a_named_leak_20261023_002601.txt` (164 bytes)
-- `phase17_new_vectors/444a_evf_delete_20261023_002615.txt` (250 bytes)
-- `phase17_new_vectors/445a_name_truncation_20261023_002720.txt` (458 bytes)
-- `phase17_new_vectors/446a_outbuf_sweep_20261023_002959.txt` (430 bytes)
-- `phase17_new_vectors/447a_debug_rwmem_20261023_003742.txt` (1194 bytes)
-- `phase17_new_vectors/448a_thr_create_kernel_selector_20261023_104315.txt` (330 bytes)
-- `phase17_new_vectors/449a_priv_gadget_scan_20261023_104352.txt` (397 bytes)
-- `phase17_new_vectors/450a_priv_gadget_scan2_20261023_104412.txt` (515 bytes)
-- `phase17_new_vectors/451a_priv_gadget_context_20261023_104434.txt` (685 bytes)
-- `phase17_new_vectors/454a_stack_init_branch_20261023_104857.txt` (494 bytes)
-- `phase17_new_vectors/454a_stack_init_branch_20261023_104906.txt` (103 bytes)
-- `phase17_new_vectors/454a_stack_init_branch_20261023_104917.txt` (387 bytes)
-- `phase17_new_vectors/454a_stack_init_branch_20261023_104931.txt` (387 bytes)
-- `phase17_new_vectors/454a_stack_init_branch_20261023_104951.txt` (387 bytes)
-- `phase17_new_vectors/454a_stack_init_branch_20261023_105003.txt` (546 bytes)
-- `phase17_new_vectors/454a_stack_init_branch_20261023_105024.txt` (536 bytes)
-- `phase17_new_vectors/454a_stack_init_branch_20261023_105037.txt` (989 bytes)
-- `phase17_new_vectors/455a_msync_invalidate_20261023_110152.txt` (1044 bytes)
-- `phase17_new_vectors/455b_msync_flags_20261023_110216.txt` (1077 bytes)
-- `phase17_new_vectors/455c_msync_device_flags_20261023_110354.txt` (1129 bytes)
-- `phase17_new_vectors/455d_msync_vnode_20261023_110421.txt` (1289 bytes)
-- `phase17_new_vectors/456a_loopback_scan_20261023_111210.txt` (45 bytes)
-- `phase17_new_vectors/457a_ioctl_structured_20261023_113337.txt` (29793 bytes)
-- `phase17_new_vectors/458a_ioctl_echo_and_sweep_20261023_113427.txt` (6846 bytes)
-- `phase17_new_vectors/459a_ioctl_encoding_20261023_113531.txt` (3422 bytes)
-- `phase17_new_vectors/460a_aio_wait_20261023_114004.txt` (708 bytes)
-- `phase17_new_vectors/461a_aio_wait_race_20261023_114228.txt` (644 bytes)
-- `phase17_new_vectors/462a_aio_wait_thread_20261023_114941.txt` (383 bytes)
-- `phase17_new_vectors/463a_aio_wait_sleep_20261023_115000.txt` (406 bytes)
-- `phase17_new_vectors/464a_aio_delete_under_wait_20261023_115018.txt` (473 bytes)
-- `phase17_new_vectors/465a_aio_complete_then_delete_20261023_115041.txt` (516 bytes)
-- `phase17_new_vectors/465a_aio_complete_then_delete_20261023_115053.txt` (516 bytes)
-- `phase17_new_vectors/465a_aio_complete_then_delete_20261023_115101.txt` (551 bytes)
-- `phase17_new_vectors/466a_aio_waiter_return_20261023_115123.txt` (586 bytes)
-- `phase17_new_vectors/466a_aio_waiter_return_20261023_115133.txt` (567 bytes)
-- `phase17_new_vectors/467a_aio_wait_lock_20261023_115224.txt` (548 bytes)
-- `phase17_new_vectors/468a_aio_lone_completion_20261023_115245.txt` (382 bytes)
-- `phase17_new_vectors/469a_aio_poll_completes_20261023_115304.txt` (465 bytes)
-- `phase17_new_vectors/470a_dce_command_footprint_20261023_141013.txt` (1694 bytes)
-- `phase17_new_vectors/471a_dmem0_encoding_20261023_141216.txt` (12760 bytes)
-- `phase17_new_vectors/471b_gic_encoding_20261023_141321.txt` (12785 bytes)
-- `phase17_new_vectors/472a_gic_command_shape_20261023_141510.txt` (2010 bytes)
-- `phase17_new_vectors/473a_gic_oracle_20261023_141731.txt` (364 bytes)
-- `phase17_new_vectors/473a_gic_oracle_20261023_142044.txt` (252 bytes)
-- `phase17_new_vectors/473b_first_regions_20261023_142116.txt` (734 bytes)
-- `phase17_new_vectors/473c_gic_rx_address_20261023_142317.txt` (260 bytes)
-- `phase17_new_vectors/473d_gic_libsce_rx_20261023_142347.txt` (417 bytes)
-- `phase17_new_vectors/473e_gic_index_walk_20261023_142424.txt` (483 bytes)
-- `phase17_new_vectors/473f_gic_eboot_address_20261023_143107.txt` (146 bytes)
-- `phase17_new_vectors/474a_gic_address_boundary_20261023_143637.txt` (926 bytes)
-- `phase17_new_vectors/475a_gic_write_target_20261023_143702.txt` (827 bytes)
-- `phase17_new_vectors/475b_gic_write_target_fixed_20261023_143733.txt` (1388 bytes)
-- `phase17_new_vectors/475c_gic_payload_shape_20261023_143847.txt` (1091 bytes)
-- `phase17_new_vectors/475d_gic_write_extent_20261023_143919.txt` (1457 bytes)
-- `phase17_new_vectors/475e_gic_write_length_20261023_144026.txt` (2308 bytes)
-- `phase17_new_vectors/475f_eboot_writable_check_20261023_144514.txt` (833 bytes)
-- `phase17_new_vectors/476a_unswept_node_sweep_20261023_145542.txt` (21676 bytes)
-- `phase17_new_vectors/476a_unswept_node_sweep_20261023_150014.txt` (18454 bytes)
-- `phase17_new_vectors/477a_dmem1_read_command_20261023_150520.txt` (1745 bytes)
-- `phase17_new_vectors/477b_dmem1_write_group_20261023_150640.txt` (1504 bytes)
-- `phase17_new_vectors/477b_dmem1_write_group_20261023_151601.txt` (1504 bytes)
-- `phase17_new_vectors/477b_dmem1_write_group_20261023_152010.txt` (1504 bytes)
-- `phase17_new_vectors/478a_dmem1_arg_layout_20261023_151221.txt` (884 bytes)
-- `phase17_new_vectors/478b_dmem1_zero_field_20261023_151329.txt` (425 bytes)
-- `phase17_new_vectors/478c_dmem1_prefix_only_20261023_151355.txt` (819 bytes)
-- `phase17_new_vectors/478d_dmem1_enabler_bisect_20261023_151417.txt` (1608 bytes)
-- `phase17_new_vectors/478e_dmem1_replay_477ab_20261023_151503.txt` (1889 bytes)
-- `phase17_new_vectors/478f_dmem1_rate_20261023_151855.txt` (825 bytes)
-- `phase17_new_vectors/478g_dmem1_hidden_state_20261023_151922.txt` (13631 bytes)
-- `phase17_new_vectors/478h_dmem1_delay_20261023_151842.txt` (430 bytes)
-- `phase17_new_vectors/478i_dmem1_ladder_20261023_152432.txt` (6522 bytes)
-- `phase17_new_vectors/478j_dmem1_rung11_20261023_152519.txt` (319 bytes)
-- `phase17_new_vectors/478k_rung00_20261023_152536.txt` (1534 bytes)
-- `phase17_new_vectors/478k_rung01_20261023_152536.txt` (1460 bytes)
-- `phase17_new_vectors/478k_rung02_20261023_152536.txt` (1386 bytes)
-- `phase17_new_vectors/478k_rung03_20261023_152536.txt` (1313 bytes)
-- `phase17_new_vectors/478k_rung04_20261023_152535.txt` (1239 bytes)
-- `phase17_new_vectors/478k_rung05_20261023_152535.txt` (1165 bytes)
-- `phase17_new_vectors/478k_rung06_20261023_152535.txt` (1091 bytes)
-- `phase17_new_vectors/478k_rung07_20261023_152535.txt` (1017 bytes)
-- `phase17_new_vectors/478k_rung08_20261023_152534.txt` (943 bytes)
-- `phase17_new_vectors/478k_rung09_20261023_152534.txt` (869 bytes)
-- `phase17_new_vectors/478k_rung0a_20261023_152534.txt` (795 bytes)
-- `phase17_new_vectors/478k_rung0b_20261023_152534.txt` (721 bytes)
-- `phase17_new_vectors/478k_rung0c_20261023_152534.txt` (647 bytes)
-- `phase17_new_vectors/478k_rung0d_20261023_152533.txt` (573 bytes)
-- `phase17_new_vectors/478k_rung0e_20261023_152533.txt` (499 bytes)
-- `phase17_new_vectors/478k_rung0f_20261023_152533.txt` (425 bytes)
-- `phase17_new_vectors/478k_rung10_20261023_152532.txt` (351 bytes)
-- `phase17_new_vectors/478m_dmem1_exact13_20261023_152614.txt` (1587 bytes)
-- `phase17_new_vectors/478n_cmd00_20261023_152640.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd01_20261023_152641.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd02_20261023_152641.txt` (151 bytes)
-- `phase17_new_vectors/478n_cmd03_20261023_152641.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd04_20261023_152641.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd05_20261023_152641.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd06_20261023_152642.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd07_20261023_152642.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd08_20261023_152642.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd09_20261023_152642.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd0a_20261023_152642.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd0b_20261023_152642.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd0c_20261023_152643.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd0d_20261023_152643.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd0e_20261023_152643.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd0f_20261023_152643.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd10_20261023_152643.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd11_20261023_152643.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd12_20261023_152644.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd13_20261023_152644.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd14_20261023_152644.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd15_20261023_152644.txt` (151 bytes)
-- `phase17_new_vectors/478n_cmd16_20261023_152644.txt` (152 bytes)
-- `phase17_new_vectors/478n_cmd17_20261023_152714.txt` (40 bytes)
-- `phase17_new_vectors/478p_dmem1_cmd17_padded_20261023_153833.txt` (9194 bytes)
-- `phase17_new_vectors/478p_dmem1_cmd17_padded_20261023_154002.txt` (8818 bytes)
-- `phase17_new_vectors/479a_sweep_tool_smoke_20261023_153246.txt` (354 bytes)
-- `phase17_new_vectors/479a_sweep_tool_smoke_20261023_153251.txt` (769 bytes)
-- `phase17_new_vectors/480a_dmem2_block_20261023_153548.txt` (58 bytes)
-- `phase17_new_vectors/480b_dmem2_open_only_20261023_153812.txt` (120 bytes)
-- `phase17_new_vectors/480c_dmem1_cmd17_readonly_20261023_154324.txt` (8809 bytes)
-- `phase17_new_vectors/480c_dmem1_cmd17_readonly_20261023_155258.txt` (8809 bytes)
-- `phase17_new_vectors/480d_dmem0_cmd17_20261023_160146.txt` (8832 bytes)
-- `phase17_new_vectors/481a_dmem_arg_matrix_20261023_160540.txt` (6669 bytes)
+- `phase17_new_vectors/434a_compositor_census_20261023_001328.txt` (365 bytes)
+- `phase17_new_vectors/435a_kernel_gauge_20261023_001637.txt` (338 bytes)
+- `phase17_new_vectors/436a_handle_reuse_20261023_001654.txt` (280 bytes)
+- `phase17_new_vectors/437a_slot_reuse_20261023_001934.txt` (238 bytes)
+- `phase17_new_vectors/438a_slot_prediction_20261023_002050.txt` (312 bytes)
+- `phase17_new_vectors/439a_osem_lifetime_20261023_002111.txt` (286 bytes)
+- `phase17_new_vectors/440a_osem_double_release_20261023_002132.txt` (376 bytes)
+- `phase17_new_vectors/441a_compositor_size_diff_20261023_002155.txt` (1142 bytes)
+- `phase17_new_vectors/441b_socket_recheck_20261023_002210.txt` (781 bytes)
+- `phase17_new_vectors/441b_socket_recheck_20261023_002523.txt` (781 bytes)
+- `phase17_new_vectors/441b_socket_recheck_20261023_002937.txt` (781 bytes)
+- `phase17_new_vectors/441b_socket_recheck_20261023_003623.txt` (781 bytes)
+- `phase17_new_vectors/441b_socket_recheck_20261023_003941.txt` (781 bytes)
+- `phase17_new_vectors/442a_evf_lifetime_20261023_002538.txt` (378 bytes)
+- `phase17_new_vectors/443a_named_leak_20261023_002601.txt` (168 bytes)
+- `phase17_new_vectors/444a_evf_delete_20261023_002615.txt` (257 bytes)
+- `phase17_new_vectors/445a_name_truncation_20261023_002720.txt` (475 bytes)
+- `phase17_new_vectors/446a_outbuf_sweep_20261023_002959.txt` (442 bytes)
+- `phase17_new_vectors/447a_debug_rwmem_20261023_003742.txt` (1215 bytes)
+- `phase17_new_vectors/448a_thr_create_kernel_selector_20261023_104315.txt` (343 bytes)
+- `phase17_new_vectors/449a_priv_gadget_scan_20261023_104352.txt` (410 bytes)
+- `phase17_new_vectors/450a_priv_gadget_scan2_20261023_104412.txt` (529 bytes)
+- `phase17_new_vectors/451a_priv_gadget_context_20261023_104434.txt` (699 bytes)
+- `phase17_new_vectors/454a_stack_init_branch_20261023_104857.txt` (503 bytes)
+- `phase17_new_vectors/454a_stack_init_branch_20261023_104906.txt` (107 bytes)
+- `phase17_new_vectors/454a_stack_init_branch_20261023_104917.txt` (398 bytes)
+- `phase17_new_vectors/454a_stack_init_branch_20261023_104931.txt` (398 bytes)
+- `phase17_new_vectors/454a_stack_init_branch_20261023_104951.txt` (398 bytes)
+- `phase17_new_vectors/454a_stack_init_branch_20261023_105003.txt` (559 bytes)
+- `phase17_new_vectors/454a_stack_init_branch_20261023_105024.txt` (549 bytes)
+- `phase17_new_vectors/454a_stack_init_branch_20261023_105037.txt` (1009 bytes)
+- `phase17_new_vectors/455a_msync_invalidate_20261023_110152.txt` (1061 bytes)
+- `phase17_new_vectors/455b_msync_flags_20261023_110216.txt` (1099 bytes)
+- `phase17_new_vectors/455c_msync_device_flags_20261023_110354.txt` (1159 bytes)
+- `phase17_new_vectors/455d_msync_vnode_20261023_110421.txt` (1317 bytes)
+- `phase17_new_vectors/456a_loopback_scan_20261023_111210.txt` (47 bytes)
+- `phase17_new_vectors/457a_ioctl_structured_20261023_113337.txt` (30537 bytes)
+- `phase17_new_vectors/458a_ioctl_echo_and_sweep_20261023_113427.txt` (6989 bytes)
+- `phase17_new_vectors/459a_ioctl_encoding_20261023_113531.txt` (3468 bytes)
+- `phase17_new_vectors/460a_aio_wait_20261023_114004.txt` (735 bytes)
+- `phase17_new_vectors/461a_aio_wait_race_20261023_114228.txt` (657 bytes)
+- `phase17_new_vectors/462a_aio_wait_thread_20261023_114941.txt` (397 bytes)
+- `phase17_new_vectors/463a_aio_wait_sleep_20261023_115000.txt` (420 bytes)
+- `phase17_new_vectors/464a_aio_delete_under_wait_20261023_115018.txt` (489 bytes)
+- `phase17_new_vectors/465a_aio_complete_then_delete_20261023_115041.txt` (534 bytes)
+- `phase17_new_vectors/465a_aio_complete_then_delete_20261023_115053.txt` (534 bytes)
+- `phase17_new_vectors/465a_aio_complete_then_delete_20261023_115101.txt` (570 bytes)
+- `phase17_new_vectors/466a_aio_waiter_return_20261023_115123.txt` (605 bytes)
+- `phase17_new_vectors/466a_aio_waiter_return_20261023_115133.txt` (586 bytes)
+- `phase17_new_vectors/467a_aio_wait_lock_20261023_115224.txt` (567 bytes)
+- `phase17_new_vectors/468a_aio_lone_completion_20261023_115245.txt` (397 bytes)
+- `phase17_new_vectors/469a_aio_poll_completes_20261023_115304.txt` (482 bytes)
+- `phase17_new_vectors/470a_dce_command_footprint_20261023_141013.txt` (1723 bytes)
+- `phase17_new_vectors/471a_dmem0_encoding_20261023_141216.txt` (12994 bytes)
+- `phase17_new_vectors/471b_gic_encoding_20261023_141321.txt` (13020 bytes)
+- `phase17_new_vectors/472a_gic_command_shape_20261023_141510.txt` (2071 bytes)
+- `phase17_new_vectors/473a_gic_oracle_20261023_141731.txt` (374 bytes)
+- `phase17_new_vectors/473a_gic_oracle_20261023_142044.txt` (260 bytes)
+- `phase17_new_vectors/473b_first_regions_20261023_142116.txt` (751 bytes)
+- `phase17_new_vectors/473c_gic_rx_address_20261023_142317.txt` (269 bytes)
+- `phase17_new_vectors/473d_gic_libsce_rx_20261023_142347.txt` (430 bytes)
+- `phase17_new_vectors/473e_gic_index_walk_20261023_142424.txt` (496 bytes)
+- `phase17_new_vectors/473f_gic_eboot_address_20261023_143107.txt` (151 bytes)
+- `phase17_new_vectors/474a_gic_address_boundary_20261023_143637.txt` (954 bytes)
+- `phase17_new_vectors/475a_gic_write_target_20261023_143702.txt` (851 bytes)
+- `phase17_new_vectors/475b_gic_write_target_fixed_20261023_143733.txt` (1415 bytes)
+- `phase17_new_vectors/475c_gic_payload_shape_20261023_143847.txt` (1116 bytes)
+- `phase17_new_vectors/475d_gic_write_extent_20261023_143919.txt` (1489 bytes)
+- `phase17_new_vectors/475e_gic_write_length_20261023_144026.txt` (2343 bytes)
+- `phase17_new_vectors/475f_eboot_writable_check_20261023_144514.txt` (860 bytes)
+- `phase17_new_vectors/476a_unswept_node_sweep_20261023_145542.txt` (22081 bytes)
+- `phase17_new_vectors/476a_unswept_node_sweep_20261023_150014.txt` (18781 bytes)
+- `phase17_new_vectors/477a_dmem1_read_command_20261023_150520.txt` (1793 bytes)
+- `phase17_new_vectors/477b_dmem1_write_group_20261023_150640.txt` (1546 bytes)
+- `phase17_new_vectors/477b_dmem1_write_group_20261023_151601.txt` (1546 bytes)
+- `phase17_new_vectors/477b_dmem1_write_group_20261023_152010.txt` (1546 bytes)
+- `phase17_new_vectors/478a_dmem1_arg_layout_20261023_151221.txt` (902 bytes)
+- `phase17_new_vectors/478b_dmem1_zero_field_20261023_151329.txt` (438 bytes)
+- `phase17_new_vectors/478c_dmem1_prefix_only_20261023_151355.txt` (864 bytes)
+- `phase17_new_vectors/478d_dmem1_enabler_bisect_20261023_151417.txt` (1670 bytes)
+- `phase17_new_vectors/478e_dmem1_replay_477ab_20261023_151503.txt` (1926 bytes)
+- `phase17_new_vectors/478f_dmem1_rate_20261023_151855.txt` (855 bytes)
+- `phase17_new_vectors/478g_dmem1_hidden_state_20261023_151922.txt` (13818 bytes)
+- `phase17_new_vectors/478h_dmem1_delay_20261023_151842.txt` (450 bytes)
+- `phase17_new_vectors/478i_dmem1_ladder_20261023_152432.txt` (6755 bytes)
+- `phase17_new_vectors/478j_dmem1_rung11_20261023_152519.txt` (331 bytes)
+- `phase17_new_vectors/478k_rung00_20261023_152536.txt` (1580 bytes)
+- `phase17_new_vectors/478k_rung01_20261023_152536.txt` (1504 bytes)
+- `phase17_new_vectors/478k_rung02_20261023_152536.txt` (1428 bytes)
+- `phase17_new_vectors/478k_rung03_20261023_152536.txt` (1353 bytes)
+- `phase17_new_vectors/478k_rung04_20261023_152535.txt` (1277 bytes)
+- `phase17_new_vectors/478k_rung05_20261023_152535.txt` (1201 bytes)
+- `phase17_new_vectors/478k_rung06_20261023_152535.txt` (1125 bytes)
+- `phase17_new_vectors/478k_rung07_20261023_152535.txt` (1049 bytes)
+- `phase17_new_vectors/478k_rung08_20261023_152534.txt` (973 bytes)
+- `phase17_new_vectors/478k_rung09_20261023_152534.txt` (897 bytes)
+- `phase17_new_vectors/478k_rung0a_20261023_152534.txt` (821 bytes)
+- `phase17_new_vectors/478k_rung0b_20261023_152534.txt` (745 bytes)
+- `phase17_new_vectors/478k_rung0c_20261023_152534.txt` (669 bytes)
+- `phase17_new_vectors/478k_rung0d_20261023_152533.txt` (593 bytes)
+- `phase17_new_vectors/478k_rung0e_20261023_152533.txt` (517 bytes)
+- `phase17_new_vectors/478k_rung0f_20261023_152533.txt` (441 bytes)
+- `phase17_new_vectors/478k_rung10_20261023_152532.txt` (365 bytes)
+- `phase17_new_vectors/478m_dmem1_exact13_20261023_152614.txt` (1633 bytes)
+- `phase17_new_vectors/478n_cmd00_20261023_152640.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd01_20261023_152641.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd02_20261023_152641.txt` (158 bytes)
+- `phase17_new_vectors/478n_cmd03_20261023_152641.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd04_20261023_152641.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd05_20261023_152641.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd06_20261023_152642.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd07_20261023_152642.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd08_20261023_152642.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd09_20261023_152642.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd0a_20261023_152642.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd0b_20261023_152642.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd0c_20261023_152643.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd0d_20261023_152643.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd0e_20261023_152643.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd0f_20261023_152643.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd10_20261023_152643.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd11_20261023_152643.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd12_20261023_152644.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd13_20261023_152644.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd14_20261023_152644.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd15_20261023_152644.txt` (158 bytes)
+- `phase17_new_vectors/478n_cmd16_20261023_152644.txt` (159 bytes)
+- `phase17_new_vectors/478n_cmd17_20261023_152714.txt` (41 bytes)
+- `phase17_new_vectors/478p_dmem1_cmd17_padded_20261023_153833.txt` (9402 bytes)
+- `phase17_new_vectors/478p_dmem1_cmd17_padded_20261023_154002.txt` (9020 bytes)
+- `phase17_new_vectors/479a_sweep_tool_smoke_20261023_153246.txt` (357 bytes)
+- `phase17_new_vectors/479a_sweep_tool_smoke_20261023_153251.txt` (795 bytes)
+- `phase17_new_vectors/480a_dmem2_block_20261023_153548.txt` (59 bytes)
+- `phase17_new_vectors/480b_dmem2_open_only_20261023_153812.txt` (124 bytes)
+- `phase17_new_vectors/480c_dmem1_cmd17_readonly_20261023_154324.txt` (9011 bytes)
+- `phase17_new_vectors/480c_dmem1_cmd17_readonly_20261023_155258.txt` (9011 bytes)
+- `phase17_new_vectors/480d_dmem0_cmd17_20261023_160146.txt` (9037 bytes)
+- `phase17_new_vectors/481a_dmem_arg_matrix_20261023_160540.txt` (6753 bytes)
 - `phase17_new_vectors/482a_dmem_window_lookup_20261023_160622.txt` (16021 bytes)
-- `phase17_new_vectors/482c_mmap_window_hint_20261023_161114.txt` (608 bytes)
-- `phase17_new_vectors/482d_dmem_window_call_20261023_161134.txt` (379 bytes)
-- `phase17_new_vectors/482d_dmem_window_call_20261023_161143.txt` (2343 bytes)
-- `phase17_new_vectors/482d_dmem_window_call_20261023_161157.txt` (377 bytes)
-- `phase17_new_vectors/482d_dmem_window_call_20261023_161208.txt` (2363 bytes)
-- `phase17_new_vectors/482e_dmem_map_ops_20261023_161336.txt` (58 bytes)
-- `phase17_new_vectors/482f_window_mapped_vs_unmapped_20261023_161543.txt` (17573 bytes)
-- `phase17_new_vectors/482g_window_exact_placement_20261023_161809.txt` (26316 bytes)
-- `phase17_new_vectors/483a_camera_sweep_20261023_162959.txt` (3754 bytes)
-- `phase17_new_vectors/483a_camera_sweep_20261023_165123.txt` (50159 bytes)
-- `phase17_new_vectors/483b_camera_block_bisect_20261023_163057.txt` (1657 bytes)
-- `phase17_new_vectors/483c_camera_sweep_resume_20261023_174757.txt` (21283 bytes)
-- `phase17_new_vectors/484a_localhost_scan_20261023_191732.txt` (44 bytes)
-- `phase17_new_vectors/484b_localhost_nonblock_20261023_193418.txt` (841149 bytes)
-- `phase17_new_vectors/484d_connect_truth_20261023_232338.txt` (136 bytes)
-- `phase17_new_vectors/484d_connect_truth_20261023_232346.txt` (636 bytes)
-- `phase17_new_vectors/484d_connect_truth_20261023_232351.txt` (390 bytes)
-- `phase17_new_vectors/485a_camera_death_bisect_20261023_191648.txt` (1337 bytes)
-- `phase17_new_vectors/486b_aio_create_probe_20261024_111120.txt` (82 bytes)
-- `phase17_new_vectors/486c_661_zero_20261024_111223.txt` (29 bytes)
-- `phase17_new_vectors/486e_aio662_live_slots_20261024_111353.txt` (527 bytes)
-- `phase17_new_vectors/486f_aio668_zero_20261024_111414.txt` (36 bytes)
-- `phase17_new_vectors/486h_aio662_context_scan_20261024_111558.txt` (197 bytes)
-- `phase17_new_vectors/486j_aio668_default_20261024_111623.txt` (34 bytes)
-- `phase17_new_vectors/486k_aio662_slot_sweep_20261024_111954.txt` (260 bytes)
-- `phase17_new_vectors/487a_661_page_0_0_20261024_112058.txt` (19 bytes)
-- `phase17_new_vectors/487a_aio_count0_20261024_112413.txt` (697 bytes)
-- `phase17_new_vectors/487b_aio_nodes_20261024_112457.txt` (546 bytes)
-- `phase17_new_vectors/488a_aio_create_delete_20261024_112740.txt` (284 bytes)
-- `phase17_new_vectors/488b_aio_create_matrix_20261024_112758.txt` (394 bytes)
-- `phase17_new_vectors/488c_aio_create_out_20261024_112813.txt` (489 bytes)
-- `phase17_new_vectors/488d_aio_delete_live_20261024_112833.txt` (313 bytes)
-- `phase17_new_vectors/488e_aio_mode_matrix_20261024_112906.txt` (273 bytes)
-- `phase17_new_vectors/488f_aio_request_state_20261024_112924.txt` (439 bytes)
-- `phase17_new_vectors/489a_aio_delete_outrec_20261024_112959.txt` (388 bytes)
-- `phase17_new_vectors/489b_aio_poll_cancel_20261024_113256.txt` (436 bytes)
-- `phase17_new_vectors/489c_aio_dup_delete_20261024_113350.txt` (302 bytes)
-- `phase17_new_vectors/490a_native_surface_20261024_113421.txt` (4383 bytes)
-- `phase17_new_vectors/490b_loader_threads_20261024_113447.txt` (233 bytes)
-- `phase17_new_vectors/490c_thread_lua_source_20261024_113455.txt` (3838 bytes)
-- `phase17_new_vectors/491b_aio_delete_leak_20261024_113617.txt` (475 bytes)
-- `phase17_new_vectors/492a_loader_tables_20261024_113633.txt` (2386 bytes)
-- `phase17_new_vectors/492b_aio_poll_write_20261024_113714.txt` (689 bytes)
-- `phase17_new_vectors/492b_aio_poll_write_20261024_113721.txt` (689 bytes)
-- `phase17_new_vectors/492c_aio_poll_writer_20261024_113733.txt` (877 bytes)
-- `phase17_new_vectors/492d_aio_poll_ptr_check_20261024_113751.txt` (337 bytes)
-- `phase17_new_vectors/494a_run_lua_in_thread_20261024_114406.txt` (6178 bytes)
-- `phase17_new_vectors/494b_thread_runner_source_20261024_114423.txt` (4126 bytes)
-- `phase17_new_vectors/494c_thread_body_test_20261024_114437.txt` (135 bytes)
-- `phase17_new_vectors/494d_thread_662_20261024_114457.txt` (521 bytes)
-- `phase17_new_vectors/494d_thread_662_20261024_114506.txt` (521 bytes)
-- `phase17_new_vectors/494d_thread_662_20261024_114521.txt` (201 bytes)
-- `phase17_new_vectors/495a_thread_memory_20261024_114537.txt` (133 bytes)
-- `phase17_new_vectors/495b_aio_race_20261024_114600.txt` (894 bytes)
-- `phase17_new_vectors/495c_aio_race_first_20261024_114703.txt` (2012 bytes)
-- `phase17_new_vectors/496a_aio_id_reuse_20261024_114738.txt` (517 bytes)
-- `phase17_new_vectors/496c_threads_control_20261024_114919.txt` (53 bytes)
-- `phase17_new_vectors/496d_threads_limit_20261024_114954.txt` (93 bytes)
-- `phase17_new_vectors/497a_aio_wait_semantics_20261024_115449.txt` (639 bytes)
-- `phase17_new_vectors/497b_aio_delete_vs_poll_20261024_115740.txt` (150 bytes)
-- `phase17_new_vectors/497c_poll_only_control_20261024_115821.txt` (1568 bytes)
-- `phase17_new_vectors/497e_aio_dense_race_20261024_115907.txt` (246 bytes)
-- `phase17_new_vectors/497f_aio_race_matrix_20261024_115922.txt` (1565 bytes)
-- `phase17_new_vectors/497f_aio_race_matrix_20261024_120925.txt` (1616 bytes)
-- `phase17_new_vectors/497f_aio_race_matrix_20261024_120926.txt` (1622 bytes)
-- `phase17_new_vectors/498a_aio_double_pass_20261024_120059.txt` (451 bytes)
-- `phase17_new_vectors/498a_aio_double_pass_20261024_120734.txt` (451 bytes)
-- `phase17_new_vectors/498b_aio_slot_recycle_20261024_120131.txt` (497 bytes)
-- `phase17_new_vectors/498b_aio_slot_recycle_20261024_120147.txt` (80 bytes)
-- `phase17_new_vectors/498c_aio_create_vs_delete_20261024_120251.txt` (595 bytes)
-- `phase17_new_vectors/498c_aio_create_vs_delete_20261024_120607.txt` (61 bytes)
-- `phase17_new_vectors/498d_aio_post_race_health_20261024_120740.txt` (178 bytes)
-- `phase17_new_vectors/498e_aio_post_race_health2_20261024_120911.txt` (274 bytes)
-- `phase17_new_vectors/499a_aio_alias_after_race_20261024_121248.txt` (284 bytes)
-- `phase17_new_vectors/499b_aio_allocator_churn_20261024_121326.txt` (490 bytes)
-- `phase17_new_vectors/499b_aio_allocator_churn_20261024_121340.txt` (490 bytes)
-- `phase17_new_vectors/499b_aio_allocator_churn_20261024_121341.txt` (491 bytes)
-- `phase17_new_vectors/499b_aio_allocator_churn_20261024_121342.txt` (491 bytes)
-- `phase17_new_vectors/499b_aio_allocator_churn_20261024_121344.txt` (491 bytes)
-- `phase17_new_vectors/499c_aio_cross_cpu_alias_20261024_121420.txt` (233 bytes)
-- `phase17_new_vectors/499c_aio_cross_cpu_alias_20261024_121421.txt` (235 bytes)
-- `phase17_new_vectors/500a_aio_descriptor_layout_20261024_122021.txt` (648 bytes)
-- `phase17_new_vectors/500b_aio_submit_gate_20261024_122051.txt` (739 bytes)
-- `phase17_new_vectors/501a_struct_pointer_follow_20261024_122357.txt` (1578 bytes)
-- `phase17_new_vectors/501b_sys572_follow_20261024_122450.txt` (175 bytes)
-- `phase17_new_vectors/501c_sys572_output_20261024_122504.txt` (2359 bytes)
-- `phase17_new_vectors/501d_umtx_op_map_20261024_122827.txt` (1899 bytes)
-- `phase17_new_vectors/502a_aio_slot_swap_race_20261024_123226.txt` (168 bytes)
-- `phase17_new_vectors/502b_aio_slot_swap_control_20261024_123316.txt` (183 bytes)
+- `phase17_new_vectors/482c_mmap_window_hint_20261023_161114.txt` (622 bytes)
+- `phase17_new_vectors/482d_dmem_window_call_20261023_161134.txt` (388 bytes)
+- `phase17_new_vectors/482d_dmem_window_call_20261023_161143.txt` (2400 bytes)
+- `phase17_new_vectors/482d_dmem_window_call_20261023_161157.txt` (386 bytes)
+- `phase17_new_vectors/482d_dmem_window_call_20261023_161208.txt` (2420 bytes)
+- `phase17_new_vectors/482e_dmem_map_ops_20261023_161336.txt` (59 bytes)
+- `phase17_new_vectors/482f_window_mapped_vs_unmapped_20261023_161543.txt` (17972 bytes)
+- `phase17_new_vectors/482g_window_exact_placement_20261023_161809.txt` (26915 bytes)
+- `phase17_new_vectors/483a_camera_sweep_20261023_162959.txt` (3835 bytes)
+- `phase17_new_vectors/483a_camera_sweep_20261023_165123.txt` (51023 bytes)
+- `phase17_new_vectors/483b_camera_block_bisect_20261023_163057.txt` (1748 bytes)
+- `phase17_new_vectors/483c_camera_sweep_resume_20261023_174757.txt` (21621 bytes)
+- `phase17_new_vectors/484a_localhost_scan_20261023_191732.txt` (46 bytes)
+- `phase17_new_vectors/484b_localhost_nonblock_20261023_193418.txt` (906704 bytes)
+- `phase17_new_vectors/484d_connect_truth_20261023_232338.txt` (147 bytes)
+- `phase17_new_vectors/484d_connect_truth_20261023_232346.txt` (651 bytes)
+- `phase17_new_vectors/484d_connect_truth_20261023_232351.txt` (413 bytes)
+- `phase17_new_vectors/485a_camera_death_bisect_20261023_191648.txt` (1406 bytes)
+- `phase17_new_vectors/486b_aio_create_probe_20261024_111120.txt` (85 bytes)
+- `phase17_new_vectors/486c_661_zero_20261024_111223.txt` (30 bytes)
+- `phase17_new_vectors/486e_aio662_live_slots_20261024_111353.txt` (542 bytes)
+- `phase17_new_vectors/486f_aio668_zero_20261024_111414.txt` (38 bytes)
+- `phase17_new_vectors/486h_aio662_context_scan_20261024_111558.txt` (205 bytes)
+- `phase17_new_vectors/486j_aio668_default_20261024_111623.txt` (35 bytes)
+- `phase17_new_vectors/486k_aio662_slot_sweep_20261024_111954.txt` (268 bytes)
+- `phase17_new_vectors/487a_661_page_0_0_20261024_112058.txt` (20 bytes)
+- `phase17_new_vectors/487a_aio_count0_20261024_112413.txt` (711 bytes)
+- `phase17_new_vectors/487b_aio_nodes_20261024_112457.txt` (561 bytes)
+- `phase17_new_vectors/488a_aio_create_delete_20261024_112740.txt` (291 bytes)
+- `phase17_new_vectors/488b_aio_create_matrix_20261024_112758.txt` (406 bytes)
+- `phase17_new_vectors/488c_aio_create_out_20261024_112813.txt` (497 bytes)
+- `phase17_new_vectors/488d_aio_delete_live_20261024_112833.txt` (320 bytes)
+- `phase17_new_vectors/488e_aio_mode_matrix_20261024_112906.txt` (278 bytes)
+- `phase17_new_vectors/488f_aio_request_state_20261024_112924.txt` (447 bytes)
+- `phase17_new_vectors/489a_aio_delete_outrec_20261024_112959.txt` (394 bytes)
+- `phase17_new_vectors/489b_aio_poll_cancel_20261024_113256.txt` (447 bytes)
+- `phase17_new_vectors/489c_aio_dup_delete_20261024_113350.txt` (310 bytes)
+- `phase17_new_vectors/490a_native_surface_20261024_113421.txt` (4491 bytes)
+- `phase17_new_vectors/490b_loader_threads_20261024_113447.txt` (239 bytes)
+- `phase17_new_vectors/490c_thread_lua_source_20261024_113455.txt` (3962 bytes)
+- `phase17_new_vectors/491b_aio_delete_leak_20261024_113617.txt` (483 bytes)
+- `phase17_new_vectors/492a_loader_tables_20261024_113633.txt` (2437 bytes)
+- `phase17_new_vectors/492b_aio_poll_write_20261024_113714.txt` (701 bytes)
+- `phase17_new_vectors/492b_aio_poll_write_20261024_113721.txt` (701 bytes)
+- `phase17_new_vectors/492c_aio_poll_writer_20261024_113733.txt` (885 bytes)
+- `phase17_new_vectors/492d_aio_poll_ptr_check_20261024_113751.txt` (345 bytes)
+- `phase17_new_vectors/494a_run_lua_in_thread_20261024_114406.txt` (6347 bytes)
+- `phase17_new_vectors/494b_thread_runner_source_20261024_114423.txt` (4243 bytes)
+- `phase17_new_vectors/494c_thread_body_test_20261024_114437.txt` (140 bytes)
+- `phase17_new_vectors/494d_thread_662_20261024_114457.txt` (530 bytes)
+- `phase17_new_vectors/494d_thread_662_20261024_114506.txt` (530 bytes)
+- `phase17_new_vectors/494d_thread_662_20261024_114521.txt` (208 bytes)
+- `phase17_new_vectors/495a_thread_memory_20261024_114537.txt` (137 bytes)
+- `phase17_new_vectors/495b_aio_race_20261024_114600.txt` (909 bytes)
+- `phase17_new_vectors/495c_aio_race_first_20261024_114703.txt` (2055 bytes)
+- `phase17_new_vectors/496a_aio_id_reuse_20261024_114738.txt` (534 bytes)
+- `phase17_new_vectors/496c_threads_control_20261024_114919.txt` (54 bytes)
+- `phase17_new_vectors/496d_threads_limit_20261024_114954.txt` (96 bytes)
+- `phase17_new_vectors/497a_aio_wait_semantics_20261024_115449.txt` (650 bytes)
+- `phase17_new_vectors/497b_aio_delete_vs_poll_20261024_115740.txt` (153 bytes)
+- `phase17_new_vectors/497c_poll_only_control_20261024_115821.txt` (1595 bytes)
+- `phase17_new_vectors/497e_aio_dense_race_20261024_115907.txt` (254 bytes)
+- `phase17_new_vectors/497f_aio_race_matrix_20261024_115922.txt` (1636 bytes)
+- `phase17_new_vectors/497f_aio_race_matrix_20261024_120925.txt` (1687 bytes)
+- `phase17_new_vectors/497f_aio_race_matrix_20261024_120926.txt` (1693 bytes)
+- `phase17_new_vectors/498a_aio_double_pass_20261024_120059.txt` (458 bytes)
+- `phase17_new_vectors/498a_aio_double_pass_20261024_120734.txt` (458 bytes)
+- `phase17_new_vectors/498b_aio_slot_recycle_20261024_120131.txt` (505 bytes)
+- `phase17_new_vectors/498b_aio_slot_recycle_20261024_120147.txt` (83 bytes)
+- `phase17_new_vectors/498c_aio_create_vs_delete_20261024_120251.txt` (605 bytes)
+- `phase17_new_vectors/498c_aio_create_vs_delete_20261024_120607.txt` (62 bytes)
+- `phase17_new_vectors/498d_aio_post_race_health_20261024_120740.txt` (183 bytes)
+- `phase17_new_vectors/498e_aio_post_race_health2_20261024_120911.txt` (283 bytes)
+- `phase17_new_vectors/499a_aio_alias_after_race_20261024_121248.txt` (292 bytes)
+- `phase17_new_vectors/499b_aio_allocator_churn_20261024_121326.txt` (502 bytes)
+- `phase17_new_vectors/499b_aio_allocator_churn_20261024_121340.txt` (502 bytes)
+- `phase17_new_vectors/499b_aio_allocator_churn_20261024_121341.txt` (503 bytes)
+- `phase17_new_vectors/499b_aio_allocator_churn_20261024_121342.txt` (503 bytes)
+- `phase17_new_vectors/499b_aio_allocator_churn_20261024_121344.txt` (503 bytes)
+- `phase17_new_vectors/499c_aio_cross_cpu_alias_20261024_121420.txt` (240 bytes)
+- `phase17_new_vectors/499c_aio_cross_cpu_alias_20261024_121421.txt` (242 bytes)
+- `phase17_new_vectors/500a_aio_descriptor_layout_20261024_122021.txt` (663 bytes)
+- `phase17_new_vectors/500b_aio_submit_gate_20261024_122051.txt` (751 bytes)
+- `phase17_new_vectors/501a_struct_pointer_follow_20261024_122357.txt` (1612 bytes)
+- `phase17_new_vectors/501b_sys572_follow_20261024_122450.txt` (181 bytes)
+- `phase17_new_vectors/501c_sys572_output_20261024_122504.txt` (2381 bytes)
+- `phase17_new_vectors/501d_umtx_op_map_20261024_122827.txt` (1919 bytes)
+- `phase17_new_vectors/502a_aio_slot_swap_race_20261024_123226.txt` (171 bytes)
+- `phase17_new_vectors/502b_aio_slot_swap_control_20261024_123316.txt` (186 bytes)
 - `phase17_new_vectors/502c_aio_create_vs_delete_20261024_123357.txt` (87 bytes)
-- `phase17_new_vectors/502c_aio_create_vs_delete_20261024_123415.txt` (377 bytes)
-- `phase17_new_vectors/502d_aio_steal_slot_20261024_123448.txt` (45 bytes)
-- `phase17_new_vectors/502e_aio_object_cap_20261024_123514.txt` (209 bytes)
-- `phase17_new_vectors/502f_aio_poll_then_delete_scale_20261024_123547.txt` (486 bytes)
-- `phase17_new_vectors/502h_aio_one_slot_churn_20261024_123632.txt` (382 bytes)
-- `phase17_new_vectors/502i_aio_slot_churn_polled_20261024_123710.txt` (164 bytes)
-- `phase17_new_vectors/503a_aio_out_record_20261024_124145.txt` (735 bytes)
-- `phase17_new_vectors/503a_aio_out_record_20261024_124159.txt` (666 bytes)
-- `phase17_new_vectors/503a_aio_out_record_20261024_124223.txt` (551 bytes)
-- `phase17_new_vectors/503a_aio_out_record_20261024_124230.txt` (561 bytes)
+- `phase17_new_vectors/502c_aio_create_vs_delete_20261024_123415.txt` (389 bytes)
+- `phase17_new_vectors/502d_aio_steal_slot_20261024_123448.txt` (46 bytes)
+- `phase17_new_vectors/502e_aio_object_cap_20261024_123514.txt` (220 bytes)
+- `phase17_new_vectors/502f_aio_poll_then_delete_scale_20261024_123547.txt` (493 bytes)
+- `phase17_new_vectors/502h_aio_one_slot_churn_20261024_123632.txt` (392 bytes)
+- `phase17_new_vectors/502i_aio_slot_churn_polled_20261024_123710.txt` (168 bytes)
+- `phase17_new_vectors/503a_aio_out_record_20261024_124145.txt` (747 bytes)
+- `phase17_new_vectors/503a_aio_out_record_20261024_124159.txt` (678 bytes)
+- `phase17_new_vectors/503a_aio_out_record_20261024_124223.txt` (573 bytes)
+- `phase17_new_vectors/503a_aio_out_record_20261024_124230.txt` (583 bytes)
 - `phase17_new_vectors/504a_aio_shared_ctx_20261024_130318.txt` (84 bytes)
-- `phase17_new_vectors/504a_aio_shared_ctx_20261024_130324.txt` (774 bytes)
-- `phase17_new_vectors/504b_aio_reclaim_ctx_20261024_130530.txt` (624 bytes)
-- `phase17_new_vectors/504c_aio_decrement_probe_20261024_130551.txt` (503 bytes)
-- `phase17_new_vectors/505a_aio_slot_capacity_20261024_130857.txt` (479 bytes)
-- `phase17_new_vectors/506a_thread_wall_20261024_130924.txt` (415 bytes)
+- `phase17_new_vectors/504a_aio_shared_ctx_20261024_130324.txt` (789 bytes)
+- `phase17_new_vectors/504b_aio_reclaim_ctx_20261024_130530.txt` (638 bytes)
+- `phase17_new_vectors/504c_aio_decrement_probe_20261024_130551.txt` (515 bytes)
+- `phase17_new_vectors/505a_aio_slot_capacity_20261024_130857.txt` (496 bytes)
+- `phase17_new_vectors/506a_thread_wall_20261024_130924.txt` (433 bytes)
 - `phase17_new_vectors/506b_helper_speed_sleep_20261024_130944.txt` (87 bytes)
-- `phase17_new_vectors/506b_helper_speed_sleep_20261024_130950.txt` (309 bytes)
-- `phase17_new_vectors/506c_helper_startup_20261024_131013.txt` (553 bytes)
-- `phase17_new_vectors/507a_aio_fill_zone_20261024_131058.txt` (287 bytes)
-- `phase17_new_vectors/508a_aio_filler_health_20261024_131243.txt` (235 bytes)
-- `phase17_new_vectors/509a_thread_syscall_concurrency_20261024_132809.txt` (137 bytes)
-- `phase17_new_vectors/509b_thread_syscall_concurrency_20261024_132841.txt` (137 bytes)
-- `phase17_new_vectors/510a_child_rop_syscall_20261024_133036.txt` (307 bytes)
-- `phase17_new_vectors/510b_gadget_survey_20261024_133236.txt` (1341 bytes)
-- `phase17_new_vectors/510c_loader_chain_gadgets_20261024_133254.txt` (3395 bytes)
-- `phase17_new_vectors/510d_fcall_stub_pointer_20261024_133331.txt` (1984 bytes)
-- `phase17_new_vectors/511a_identity_and_native_20261024_133748.txt` (155 bytes)
-- `phase17_new_vectors/512a_dlsym_handles_20261024_133938.txt` (4524 bytes)
-- `phase17_new_vectors/513a_dlsym_argument_shapes_20261024_134011.txt` (1509 bytes)
-- `phase17_new_vectors/514a_chain_ring_scan_20261024_134050.txt` (549 bytes)
-- `phase17_new_vectors/514b_fcall_stub_bytes_20261024_134115.txt` (1052 bytes)
-- `phase17_new_vectors/515a_heap_protection_20261024_134158.txt` (1746 bytes)
-- `phase17_new_vectors/516a_exec_regions_20261024_134240.txt` (2464 bytes)
-- `phase17_new_vectors/517a_libc_syscall_scan_20261024_134346.txt` (268 bytes)
-- `phase17_new_vectors/518a_libc_syscall_stub_20261024_134454.txt` (921 bytes)
-- `phase17_new_vectors/519a_libc_stub_bytes_20261024_134510.txt` (4152 bytes)
+- `phase17_new_vectors/506b_helper_speed_sleep_20261024_130950.txt` (323 bytes)
+- `phase17_new_vectors/506c_helper_startup_20261024_131013.txt` (579 bytes)
+- `phase17_new_vectors/507a_aio_fill_zone_20261024_131058.txt` (296 bytes)
+- `phase17_new_vectors/508a_aio_filler_health_20261024_131243.txt` (243 bytes)
+- `phase17_new_vectors/509a_thread_syscall_concurrency_20261024_132809.txt` (141 bytes)
+- `phase17_new_vectors/509b_thread_syscall_concurrency_20261024_132841.txt` (141 bytes)
+- `phase17_new_vectors/510a_child_rop_syscall_20261024_133036.txt` (316 bytes)
+- `phase17_new_vectors/510b_gadget_survey_20261024_133236.txt` (1364 bytes)
+- `phase17_new_vectors/510c_loader_chain_gadgets_20261024_133254.txt` (3509 bytes)
+- `phase17_new_vectors/510d_fcall_stub_pointer_20261024_133331.txt` (2040 bytes)
+- `phase17_new_vectors/511a_identity_and_native_20261024_133748.txt` (161 bytes)
+- `phase17_new_vectors/512a_dlsym_handles_20261024_133938.txt` (4614 bytes)
+- `phase17_new_vectors/513a_dlsym_argument_shapes_20261024_134011.txt` (1533 bytes)
+- `phase17_new_vectors/514a_chain_ring_scan_20261024_134050.txt` (572 bytes)
+- `phase17_new_vectors/514b_fcall_stub_bytes_20261024_134115.txt` (1081 bytes)
+- `phase17_new_vectors/515a_heap_protection_20261024_134158.txt` (1778 bytes)
+- `phase17_new_vectors/516a_exec_regions_20261024_134240.txt` (2517 bytes)
+- `phase17_new_vectors/517a_libc_syscall_scan_20261024_134346.txt` (275 bytes)
+- `phase17_new_vectors/518a_libc_syscall_stub_20261024_134454.txt` (937 bytes)
+- `phase17_new_vectors/519a_libc_stub_bytes_20261024_134510.txt` (4228 bytes)
 - `phase17_new_vectors/520a_libkernel_syscall_entry_20261024_134621.txt` (132 bytes)
-- `phase17_new_vectors/520a_libkernel_syscall_entry_20261024_134631.txt` (405 bytes)
-- `phase17_new_vectors/520a_libkernel_syscall_entry_20261024_134702.txt` (419 bytes)
-- `phase17_new_vectors/521a_corrected_mib_leaks_20261024_135059.txt` (1369 bytes)
-- `phase17_new_vectors/523a_aio_delete_race_threads_20261024_135839.txt` (1273 bytes)
-- `phase17_new_vectors/523b_aio_delete_storm_20261024_140023.txt` (218 bytes)
-- `phase17_new_vectors/523c_aio_delete_race_fixed_20261024_140141.txt` (323 bytes)
-- `phase17_new_vectors/523c_aio_delete_race_fixed_20261024_140856.txt` (225 bytes)
-- `phase17_new_vectors/523c_aio_delete_race_fixed_20261024_140951.txt` (2775 bytes)
-- `phase17_new_vectors/524a_aio_double_delete_single_20261024_141445.txt` (353 bytes)
-- `phase17_new_vectors/524b_aio_double_free_allocator_20261024_141727.txt` (824 bytes)
-- `phase17_new_vectors/524b_aio_double_free_allocator_20261024_141737.txt` (826 bytes)
-- `phase17_new_vectors/525a_aio_delete_create_swap_20261024_142013.txt` (427 bytes)
-- `phase17_new_vectors/525a_aio_delete_create_swap_20261024_142104.txt` (502 bytes)
-- `phase17_new_vectors/525b_aio_fill_freed_slots_20261024_142127.txt` (592 bytes)
-- `phase17_new_vectors/528a_aio_multi_delete_20261024_145057.txt` (591 bytes)
+- `phase17_new_vectors/520a_libkernel_syscall_entry_20261024_134631.txt` (416 bytes)
+- `phase17_new_vectors/520a_libkernel_syscall_entry_20261024_134702.txt` (430 bytes)
+- `phase17_new_vectors/521a_corrected_mib_leaks_20261024_135059.txt` (1408 bytes)
+- `phase17_new_vectors/523a_aio_delete_race_threads_20261024_135839.txt` (1302 bytes)
+- `phase17_new_vectors/523b_aio_delete_storm_20261024_140023.txt` (228 bytes)
+- `phase17_new_vectors/523c_aio_delete_race_fixed_20261024_140141.txt` (337 bytes)
+- `phase17_new_vectors/523c_aio_delete_race_fixed_20261024_140856.txt` (237 bytes)
+- `phase17_new_vectors/523c_aio_delete_race_fixed_20261024_140951.txt` (2858 bytes)
+- `phase17_new_vectors/524a_aio_double_delete_single_20261024_141445.txt` (365 bytes)
+- `phase17_new_vectors/524b_aio_double_free_allocator_20261024_141727.txt` (847 bytes)
+- `phase17_new_vectors/524b_aio_double_free_allocator_20261024_141737.txt` (849 bytes)
+- `phase17_new_vectors/525a_aio_delete_create_swap_20261024_142013.txt` (440 bytes)
+- `phase17_new_vectors/525a_aio_delete_create_swap_20261024_142104.txt` (516 bytes)
+- `phase17_new_vectors/525b_aio_fill_freed_slots_20261024_142127.txt` (608 bytes)
+- `phase17_new_vectors/528a_aio_multi_delete_20261024_145057.txt` (606 bytes)
 - `phase17_new_vectors/528a_aio_multi_delete_20261024_145105.txt` (91 bytes)
-- `phase17_new_vectors/528a_aio_multi_delete_20261024_145110.txt` (589 bytes)
-- `phase17_new_vectors/528a_aio_multi_delete_20261024_145123.txt` (588 bytes)
-- `phase17_new_vectors/529a_devctrl_leak_sweep_20261024_145447.txt` (85 bytes)
-- `phase17_new_vectors/529a_devctrl_leak_sweep_20261024_145846.txt` (44 bytes)
-- `phase17_new_vectors/529a_devctrl_leak_sweep_20261024_150424.txt` (148 bytes)
-- `phase17_new_vectors/536a_sys625_msr_20261024_151858.txt` (1335 bytes)
-- `phase17_new_vectors/537a_sys625_write_read_20261024_151945.txt` (1018 bytes)
-- `phase17_new_vectors/538a_sys625_msr_map_20261024_152011.txt` (1072 bytes)
-- `phase17_new_vectors/539a_sys625_domain_paths_20261024_152030.txt` (1510 bytes)
-- `phase17_new_vectors/53e_kldsym_single_20261020_030243.txt` (75 bytes)
-- `phase17_new_vectors/53g_afroute_single_valid_20261020_031032.txt` (1554 bytes)
-- `phase17_new_vectors/540a_sys625_index_map_20261024_152048.txt` (541 bytes)
-- `phase17_new_vectors/541a_umtx_op_matrix_20261024_152151.txt` (1102 bytes)
-- `phase17_new_vectors/541a_umtx_op_matrix_20261024_152200.txt` (1104 bytes)
-- `phase17_new_vectors/542a_umtx_pi_lock_20261024_152258.txt` (453 bytes)
-- `phase17_new_vectors/543a_umtx_contested_bit_20261024_152411.txt` (156 bytes)
-- `phase17_new_vectors/543b_umtx_contested_owner_20261024_152451.txt` (70 bytes)
-- `phase17_new_vectors/544a_umtx_pi_owner_exit_20261024_152907.txt` (216 bytes)
-- `phase17_new_vectors/545a_umtx_dead_owner_wake_20261024_153015.txt` (447 bytes)
-- `phase17_new_vectors/546a_aio_shared_ctx_dangling_20261024_153049.txt` (609 bytes)
-- `phase17_new_vectors/547a_aio_get_data_20261024_153148.txt` (285 bytes)
-- `phase17_new_vectors/548a_eboot_pop_gadgets_20261024_153311.txt` (328 bytes)
-- `phase17_new_vectors/549a_chain_arg4_plumbing_20261024_161110.txt` (96 bytes)
-- `phase17_new_vectors/549a_chain_arg4_plumbing_20261024_161340.txt` (184 bytes)
-- `phase17_new_vectors/551a_chain_arg4_ret_20261024_161417.txt` (121 bytes)
-- `phase17_new_vectors/552a_chain_arg4_674_20261024_161459.txt` (238 bytes)
-- `phase17_new_vectors/553a_chain_arg4_mmap_20261024_161528.txt` (199 bytes)
-- `phase17_new_vectors/554a_libc_pop_r10_20261024_161605.txt` (534 bytes)
-- `phase17_new_vectors/554a_libc_pop_r10_20261024_161635.txt` (313 bytes)
-- `phase17_new_vectors/556a_aio_double_free_followup_20261024_162100.txt` (1109 bytes)
-- `phase17_new_vectors/557a_aio_block_last_item_race_20261024_162310.txt` (966 bytes)
-- `phase17_new_vectors/558a_pi_mutex_contention_20261024_162337.txt` (354 bytes)
-- `phase17_new_vectors/559a_ctx_gpr_args_20261024_162438.txt` (102 bytes)
-- `phase17_new_vectors/559a_ctx_gpr_args_20261024_162921.txt` (135 bytes)
-- `phase17_new_vectors/559a_ctx_gpr_args_20261024_163013.txt` (171 bytes)
-- `phase17_new_vectors/559b_ctx_arg4_sysctl_20261024_163201.txt` (196 bytes)
-- `phase17_new_vectors/561a_aio_generation_wrap_20261024_163338.txt` (1278 bytes)
-- `phase17_new_vectors/562a_aio_wake_burst_race_20261024_163725.txt` (118 bytes)
-- `phase17_new_vectors/562a_aio_wake_burst_race_20261024_164054.txt` (283 bytes)
-- `phase17_new_vectors/562a_aio_wake_burst_race_20261024_164142.txt` (594 bytes)
-- `phase17_new_vectors/562a_aio_wake_burst_race_20261024_164156.txt` (415 bytes)
-- `phase17_new_vectors/562a_aio_wake_burst_race_20261024_164223.txt` (2609 bytes)
-- `phase17_new_vectors/563a_cpu_count_20261024_164111.txt` (228 bytes)
-- `phase17_new_vectors/563a_leak_survey_532_20261024_180849.txt` (526 bytes)
-- `phase17_new_vectors/563a_leak_survey_532_20261024_180913.txt` (1543 bytes)
-- `phase17_new_vectors/563b_leak_survey_562_20261024_181042.txt` (55 bytes)
-- `phase17_new_vectors/563b_leak_survey_563_20261024_181119.txt` (365 bytes)
-- `phase17_new_vectors/563d_leak_survey_569_20261024_181211.txt` (55 bytes)
-- `phase17_new_vectors/563e_leak_survey_570_20261024_181301.txt` (55 bytes)
-- `phase17_new_vectors/564a_leak_survey_20261024_181520.txt` (680 bytes)
-- `phase17_new_vectors/564a_pi_real_flag_20261024_164627.txt` (524 bytes)
-- `phase17_new_vectors/564b_leak_survey_20261024_181524.txt` (657 bytes)
-- `phase17_new_vectors/564c_leak_survey_20261024_181530.txt` (657 bytes)
-- `phase17_new_vectors/564d_leak_survey_20261024_181536.txt` (657 bytes)
-- `phase17_new_vectors/564e_leak_survey_20261024_181540.txt` (590 bytes)
-- `phase17_new_vectors/565a_pi_waiter_handoff_20261024_164655.txt` (840 bytes)
-- `phase17_new_vectors/565a_survey_hits_20261024_181556.txt` (1010 bytes)
-- `phase17_new_vectors/565b_sys639_write_20261024_181621.txt` (753 bytes)
-- `phase17_new_vectors/566a_aio_read_runs_20261024_181750.txt` (1001 bytes)
-- `phase17_new_vectors/566b_aio_read_baseline_20261024_182016.txt` (997 bytes)
-- `phase17_new_vectors/566c_aio_pending_delete_20261024_182054.txt` (46 bytes)
-- `phase17_new_vectors/566d_alloc_shapes_20261024_182429.txt` (445 bytes)
-- `phase17_new_vectors/566e_init_line_20261024_182443.txt` (838 bytes)
-- `phase17_new_vectors/566f_aio_pending_delete_20261024_182512.txt` (674 bytes)
-- `phase17_new_vectors/566g_aio_delete_record_20261024_182745.txt` (38 bytes)
-- `phase17_new_vectors/566g_aio_delete_record_20261024_190010.txt` (474 bytes)
-- `phase17_new_vectors/567a_mdbg_sweep_20261024_181858.txt` (250 bytes)
-- `phase17_new_vectors/567a_robust_owner_exit_20261024_164752.txt` (842 bytes)
-- `phase17_new_vectors/568a_aio_alias_cycles_20261024_190019.txt` (626 bytes)
-- `phase17_new_vectors/568a_aio_alias_cycles_20261024_190209.txt` (626 bytes)
-- `phase17_new_vectors/568a_aio_alias_cycles_20261024_190247.txt` (387 bytes)
-- `phase17_new_vectors/569a_pi_dead_owner_churn_20261024_164918.txt` (642 bytes)
-- `phase17_new_vectors/569a_pi_dead_owner_churn_20261024_164926.txt` (642 bytes)
-- `phase17_new_vectors/569a_pi_dead_owner_churn_20261024_164955.txt` (912 bytes)
-- `phase17_new_vectors/570a_child_liveness_20261024_165029.txt` (993 bytes)
-- `phase17_new_vectors/570a_dlsym_info2_test_20261028_080738.txt` (1731 bytes)
-- `phase17_new_vectors/571a_pi_handoff_20261024_165451.txt` (610 bytes)
-- `phase17_new_vectors/571a_sys599_656_test_20261028_081628.txt` (1435 bytes)
-- `phase17_new_vectors/572a_aio_workitem_dup_20261024_191008.txt` (564 bytes)
-- `phase17_new_vectors/572a_aio_workitem_dup_20261024_191021.txt` (623 bytes)
-- `phase17_new_vectors/572a_cclosure_exec_page_20261024_165728.txt` (266 bytes)
-- `phase17_new_vectors/572a_cclosure_exec_page_20261024_165817.txt` (313 bytes)
-- `phase17_new_vectors/572a_vm_info_reshape_20261028_081812.txt` (2345 bytes)
-- `phase17_new_vectors/572b_closure_addr_20261024_165737.txt` (4046 bytes)
-- `phase17_new_vectors/574a_aio_poll_bisect_20261024_192627.txt` (448 bytes)
-- `phase17_new_vectors/576a_aio_block_stages_20261024_191930.txt` (373 bytes)
-- `phase17_new_vectors/577a_aio_completion_storm_20261024_192017.txt` (189 bytes)
-- `phase17_new_vectors/577a_aio_completion_storm_20261024_192541.txt` (1426 bytes)
-- `phase17_new_vectors/578a_aio_early_completion_20261024_192600.txt` (870 bytes)
-- `phase17_new_vectors/579b_sys649_all_handles_20261024_192940.txt` (2258 bytes)
-- `phase17_new_vectors/586a_blockpool_map_20261024_202526.txt` (2792 bytes)
+- `phase17_new_vectors/528a_aio_multi_delete_20261024_145110.txt` (604 bytes)
+- `phase17_new_vectors/528a_aio_multi_delete_20261024_145123.txt` (603 bytes)
+- `phase17_new_vectors/529a_devctrl_leak_sweep_20261024_145447.txt` (90 bytes)
+- `phase17_new_vectors/529a_devctrl_leak_sweep_20261024_145846.txt` (46 bytes)
+- `phase17_new_vectors/529a_devctrl_leak_sweep_20261024_150424.txt` (158 bytes)
+- `phase17_new_vectors/536a_sys625_msr_20261024_151858.txt` (1368 bytes)
+- `phase17_new_vectors/537a_sys625_write_read_20261024_151945.txt` (1049 bytes)
+- `phase17_new_vectors/538a_sys625_msr_map_20261024_152011.txt` (1099 bytes)
+- `phase17_new_vectors/539a_sys625_domain_paths_20261024_152030.txt` (1555 bytes)
+- `phase17_new_vectors/53e_kldsym_single_20261020_030243.txt` (77 bytes)
+- `phase17_new_vectors/53g_afroute_single_valid_20261020_031032.txt` (1583 bytes)
+- `phase17_new_vectors/540a_sys625_index_map_20261024_152048.txt` (551 bytes)
+- `phase17_new_vectors/541a_umtx_op_matrix_20261024_152151.txt` (1132 bytes)
+- `phase17_new_vectors/541a_umtx_op_matrix_20261024_152200.txt` (1134 bytes)
+- `phase17_new_vectors/542a_umtx_pi_lock_20261024_152258.txt` (461 bytes)
+- `phase17_new_vectors/543a_umtx_contested_bit_20261024_152411.txt` (163 bytes)
+- `phase17_new_vectors/543b_umtx_contested_owner_20261024_152451.txt` (73 bytes)
+- `phase17_new_vectors/544a_umtx_pi_owner_exit_20261024_152907.txt` (224 bytes)
+- `phase17_new_vectors/545a_umtx_dead_owner_wake_20261024_153015.txt` (463 bytes)
+- `phase17_new_vectors/546a_aio_shared_ctx_dangling_20261024_153049.txt` (626 bytes)
+- `phase17_new_vectors/547a_aio_get_data_20261024_153148.txt` (296 bytes)
+- `phase17_new_vectors/548a_eboot_pop_gadgets_20261024_153311.txt` (337 bytes)
+- `phase17_new_vectors/549a_chain_arg4_plumbing_20261024_161110.txt` (100 bytes)
+- `phase17_new_vectors/549a_chain_arg4_plumbing_20261024_161340.txt` (191 bytes)
+- `phase17_new_vectors/551a_chain_arg4_ret_20261024_161417.txt` (127 bytes)
+- `phase17_new_vectors/552a_chain_arg4_674_20261024_161459.txt` (246 bytes)
+- `phase17_new_vectors/553a_chain_arg4_mmap_20261024_161528.txt` (207 bytes)
+- `phase17_new_vectors/554a_libc_pop_r10_20261024_161605.txt` (546 bytes)
+- `phase17_new_vectors/554a_libc_pop_r10_20261024_161635.txt` (321 bytes)
+- `phase17_new_vectors/556a_aio_double_free_followup_20261024_162100.txt` (1137 bytes)
+- `phase17_new_vectors/557a_aio_block_last_item_race_20261024_162310.txt` (988 bytes)
+- `phase17_new_vectors/558a_pi_mutex_contention_20261024_162337.txt` (365 bytes)
+- `phase17_new_vectors/559a_ctx_gpr_args_20261024_162438.txt` (106 bytes)
+- `phase17_new_vectors/559a_ctx_gpr_args_20261024_162921.txt` (140 bytes)
+- `phase17_new_vectors/559a_ctx_gpr_args_20261024_163013.txt` (177 bytes)
+- `phase17_new_vectors/559b_ctx_arg4_sysctl_20261024_163201.txt` (203 bytes)
+- `phase17_new_vectors/561a_aio_generation_wrap_20261024_163338.txt` (1305 bytes)
+- `phase17_new_vectors/562a_aio_wake_burst_race_20261024_163725.txt` (123 bytes)
+- `phase17_new_vectors/562a_aio_wake_burst_race_20261024_164054.txt` (296 bytes)
+- `phase17_new_vectors/562a_aio_wake_burst_race_20261024_164142.txt` (607 bytes)
+- `phase17_new_vectors/562a_aio_wake_burst_race_20261024_164156.txt` (431 bytes)
+- `phase17_new_vectors/562a_aio_wake_burst_race_20261024_164223.txt` (2663 bytes)
+- `phase17_new_vectors/563a_cpu_count_20261024_164111.txt` (234 bytes)
+- `phase17_new_vectors/563a_leak_survey_532_20261024_180849.txt` (535 bytes)
+- `phase17_new_vectors/563a_leak_survey_532_20261024_180913.txt` (1593 bytes)
+- `phase17_new_vectors/563b_leak_survey_562_20261024_181042.txt` (57 bytes)
+- `phase17_new_vectors/563b_leak_survey_563_20261024_181119.txt` (377 bytes)
+- `phase17_new_vectors/563d_leak_survey_569_20261024_181211.txt` (57 bytes)
+- `phase17_new_vectors/563e_leak_survey_570_20261024_181301.txt` (57 bytes)
+- `phase17_new_vectors/564a_leak_survey_20261024_181520.txt` (702 bytes)
+- `phase17_new_vectors/564a_pi_real_flag_20261024_164627.txt` (545 bytes)
+- `phase17_new_vectors/564b_leak_survey_20261024_181524.txt` (679 bytes)
+- `phase17_new_vectors/564c_leak_survey_20261024_181530.txt` (679 bytes)
+- `phase17_new_vectors/564d_leak_survey_20261024_181536.txt` (679 bytes)
+- `phase17_new_vectors/564e_leak_survey_20261024_181540.txt` (612 bytes)
+- `phase17_new_vectors/565a_pi_waiter_handoff_20261024_164655.txt` (861 bytes)
+- `phase17_new_vectors/565a_survey_hits_20261024_181556.txt` (1040 bytes)
+- `phase17_new_vectors/565b_sys639_write_20261024_181621.txt` (777 bytes)
+- `phase17_new_vectors/566a_aio_read_runs_20261024_181750.txt` (1019 bytes)
+- `phase17_new_vectors/566b_aio_read_baseline_20261024_182016.txt` (1020 bytes)
+- `phase17_new_vectors/566c_aio_pending_delete_20261024_182054.txt` (47 bytes)
+- `phase17_new_vectors/566d_alloc_shapes_20261024_182429.txt` (461 bytes)
+- `phase17_new_vectors/566e_init_line_20261024_182443.txt` (926 bytes)
+- `phase17_new_vectors/566f_aio_pending_delete_20261024_182512.txt` (695 bytes)
+- `phase17_new_vectors/566g_aio_delete_record_20261024_182745.txt` (39 bytes)
+- `phase17_new_vectors/566g_aio_delete_record_20261024_190010.txt` (489 bytes)
+- `phase17_new_vectors/567a_mdbg_sweep_20261024_181858.txt` (259 bytes)
+- `phase17_new_vectors/567a_robust_owner_exit_20261024_164752.txt` (863 bytes)
+- `phase17_new_vectors/568a_aio_alias_cycles_20261024_190019.txt` (638 bytes)
+- `phase17_new_vectors/568a_aio_alias_cycles_20261024_190209.txt` (638 bytes)
+- `phase17_new_vectors/568a_aio_alias_cycles_20261024_190247.txt` (399 bytes)
+- `phase17_new_vectors/569a_pi_dead_owner_churn_20261024_164918.txt` (655 bytes)
+- `phase17_new_vectors/569a_pi_dead_owner_churn_20261024_164926.txt` (655 bytes)
+- `phase17_new_vectors/569a_pi_dead_owner_churn_20261024_164955.txt` (938 bytes)
+- `phase17_new_vectors/570a_child_liveness_20261024_165029.txt` (1022 bytes)
+- `phase17_new_vectors/570a_dlsym_info2_test_20261028_080738.txt` (1778 bytes)
+- `phase17_new_vectors/571a_pi_handoff_20261024_165451.txt` (629 bytes)
+- `phase17_new_vectors/571a_sys599_656_test_20261028_081628.txt` (1480 bytes)
+- `phase17_new_vectors/572a_aio_workitem_dup_20261024_191008.txt` (575 bytes)
+- `phase17_new_vectors/572a_aio_workitem_dup_20261024_191021.txt` (636 bytes)
+- `phase17_new_vectors/572a_cclosure_exec_page_20261024_165728.txt` (274 bytes)
+- `phase17_new_vectors/572a_cclosure_exec_page_20261024_165817.txt` (321 bytes)
+- `phase17_new_vectors/572a_vm_info_reshape_20261028_081812.txt` (2410 bytes)
+- `phase17_new_vectors/572b_closure_addr_20261024_165737.txt` (4158 bytes)
+- `phase17_new_vectors/574a_aio_poll_bisect_20261024_192627.txt` (461 bytes)
+- `phase17_new_vectors/576a_aio_block_stages_20261024_191930.txt` (385 bytes)
+- `phase17_new_vectors/577a_aio_completion_storm_20261024_192017.txt` (193 bytes)
+- `phase17_new_vectors/577a_aio_completion_storm_20261024_192541.txt` (1444 bytes)
+- `phase17_new_vectors/578a_aio_early_completion_20261024_192600.txt` (885 bytes)
+- `phase17_new_vectors/579b_sys649_all_handles_20261024_192940.txt` (2301 bytes)
+- `phase17_new_vectors/586a_blockpool_map_20261024_202526.txt` (2833 bytes)
 - `phase17_new_vectors/587a_blockpool_batch_alloc_20261024_202648.txt` (86 bytes)
-- `phase17_new_vectors/587a_blockpool_batch_alloc_20261024_202654.txt` (2811 bytes)
-- `phase17_new_vectors/588a_blockpool_open_flags_20261024_202716.txt` (1533 bytes)
-- `phase17_new_vectors/589a_blockpool_offset_probe_20261024_202744.txt` (1509 bytes)
-- `phase17_new_vectors/590a_umtx_robust_lists_20261024_202808.txt` (558 bytes)
-- `phase17_new_vectors/591a_chicken_gate_retest_20261024_202903.txt` (544 bytes)
-- `phase17_new_vectors/592a_loadprx_probe_20261024_204027.txt` (211 bytes)
-- `phase17_new_vectors/593a_blockpool_id_devctx_20261024_204044.txt` (415 bytes)
-- `phase17_new_vectors/594a_devctl_after_blockpool_20261024_204104.txt` (2484 bytes)
-- `phase17_new_vectors/595a_devctx_before_after_20261024_204309.txt` (504 bytes)
-- `phase17_new_vectors/596a_devctl_arg1_pointer_20261024_204337.txt` (281 bytes)
-- `phase17_new_vectors/597a_device_enum_20261024_204428.txt` (1670 bytes)
-- `phase17_new_vectors/598a_ioctl_raw_sweep_20261024_204606.txt` (434 bytes)
-- `phase17_new_vectors/599a_dmem_phys_window_20261024_204639.txt` (1807 bytes)
-- `phase17_new_vectors/59c_thr_get_ucontext_self_20261020_030643.txt` (220 bytes)
-- `phase17_new_vectors/600a_gc_mmio_dump_20261024_204707.txt` (1108 bytes)
-- `phase17_new_vectors/601a_device_id_unlock_20261024_205001.txt` (581 bytes)
-- `phase17_new_vectors/602a_aio_race_spray_20261024_205452.txt` (518 bytes)
-- `phase17_new_vectors/603a_aio_pending_wait_20261024_205602.txt` (681 bytes)
-- `phase17_new_vectors/604a_aio_delete_pending_20261024_205621.txt` (279 bytes)
-- `phase17_new_vectors/605a_aio_pending_orderings_20261024_205650.txt` (425 bytes)
-- `phase17_new_vectors/606a_aio_aiocb_layout_20261024_205717.txt` (295 bytes)
-- `phase17_new_vectors/607a_aio_worker_reclaim_20261024_205811.txt` (275 bytes)
-- `phase17_new_vectors/608a_aio_wedge_bisect_20261024_210016.txt` (12895 bytes)
-- `phase17_new_vectors/609a_aio_slot_leak_20261024_210101.txt` (3332 bytes)
-- `phase17_new_vectors/610a_aio_race_threshold_20261024_210325.txt` (397 bytes)
-- `phase17_new_vectors/611a_aio_cycle_leak_20261024_211125.txt` (487 bytes)
-- `phase17_new_vectors/612a_aio_leak_localize_20261024_211432.txt` (516 bytes)
-- `phase17_new_vectors/613a_aio_file_cycles_20261024_211455.txt` (282 bytes)
-- `phase17_new_vectors/614a_child_libkernel_call_20261024_211726.txt` (109 bytes)
-- `phase17_new_vectors/615a_regions_debug_20261024_211741.txt` (466 bytes)
-- `phase17_new_vectors/615a_regions_debug_20261024_212728.txt` (466 bytes)
-- `phase17_new_vectors/616a_child_libkernel_call_20261024_211915.txt` (160 bytes)
-- `phase17_new_vectors/616a_child_libkernel_call_20261024_212423.txt` (336 bytes)
-- `phase17_new_vectors/617a_pltscan_20261024_211939.txt` (20516 bytes)
-- `phase17_new_vectors/618a_libc_head_20261024_212122.txt` (40 bytes)
-- `phase17_new_vectors/618a_libc_head_20261024_212133.txt` (732 bytes)
-- `phase17_new_vectors/619a_child_marker_20261024_212255.txt` (220 bytes)
-- `phase17_new_vectors/620a_libkernel_stub_main_20261024_212500.txt` (191 bytes)
-- `phase17_new_vectors/621a_fcall_stub_20261024_212525.txt` (224 bytes)
-- `phase17_new_vectors/622a_syscall_gadget_scan_20261024_212646.txt` (520 bytes)
-- `phase17_new_vectors/623a_syscall_context_20261024_212719.txt` (49 bytes)
-- `phase17_new_vectors/625a_two_thread_syscalls_20261024_212854.txt` (131 bytes)
-- `phase17_new_vectors/625a_two_thread_syscalls_20261024_212910.txt` (144 bytes)
-- `phase17_new_vectors/626a_kqueue_close_race_20261024_213153.txt` (224 bytes)
-- `phase17_new_vectors/627a_mdbg_read_shapes_20261024_213235.txt` (66 bytes)
-- `phase17_new_vectors/628a_signal_globals_20261024_213314.txt` (3175 bytes)
-- `phase17_new_vectors/628a_signal_globals_20261024_213959.txt` (3175 bytes)
-- `phase17_new_vectors/628a_signal_globals_20261024_214458.txt` (3175 bytes)
-- `phase17_new_vectors/628a_signal_globals_20261024_214919.txt` (3175 bytes)
-- `phase17_new_vectors/629a_loader_tables_20261024_213328.txt` (1827 bytes)
-- `phase17_new_vectors/630a_kernel_read_api_20261024_213357.txt` (176 bytes)
-- `phase17_new_vectors/631a_loader_threads_20261024_213429.txt` (266 bytes)
-- `phase17_new_vectors/631a_loader_threads_20261024_213437.txt` (231 bytes)
-- `phase17_new_vectors/631a_loader_threads_20261024_213448.txt` (143 bytes)
-- `phase17_new_vectors/632a_aio_race_threads_20261024_214004.txt` (402 bytes)
-- `phase17_new_vectors/632a_aio_race_threads_20261024_214016.txt` (274 bytes)
-- `phase17_new_vectors/633c_aio_race_barrier3_20261024_214506.txt` (285 bytes)
-- `phase17_new_vectors/633f_k0_20261024_214917.txt` (212 bytes)
-- `phase17_new_vectors/633f_k1_20261024_214918.txt` (213 bytes)
-- `phase17_new_vectors/633f_k2_20261024_214919.txt` (214 bytes)
+- `phase17_new_vectors/587a_blockpool_batch_alloc_20261024_202654.txt` (2851 bytes)
+- `phase17_new_vectors/588a_blockpool_open_flags_20261024_202716.txt` (1555 bytes)
+- `phase17_new_vectors/589a_blockpool_offset_probe_20261024_202744.txt` (1532 bytes)
+- `phase17_new_vectors/590a_umtx_robust_lists_20261024_202808.txt` (568 bytes)
+- `phase17_new_vectors/591a_chicken_gate_retest_20261024_202903.txt` (555 bytes)
+- `phase17_new_vectors/592a_loadprx_probe_20261024_204027.txt` (223 bytes)
+- `phase17_new_vectors/593a_blockpool_id_devctx_20261024_204044.txt` (434 bytes)
+- `phase17_new_vectors/594a_devctl_after_blockpool_20261024_204104.txt` (2553 bytes)
+- `phase17_new_vectors/595a_devctx_before_after_20261024_204309.txt` (523 bytes)
+- `phase17_new_vectors/596a_devctl_arg1_pointer_20261024_204337.txt` (291 bytes)
+- `phase17_new_vectors/597a_device_enum_20261024_204428.txt` (1722 bytes)
+- `phase17_new_vectors/598a_ioctl_raw_sweep_20261024_204606.txt` (460 bytes)
+- `phase17_new_vectors/599a_dmem_phys_window_20261024_204639.txt` (1837 bytes)
+- `phase17_new_vectors/59c_thr_get_ucontext_self_20261020_030643.txt` (226 bytes)
+- `phase17_new_vectors/600a_gc_mmio_dump_20261024_204707.txt` (1155 bytes)
+- `phase17_new_vectors/601a_device_id_unlock_20261024_205001.txt` (598 bytes)
+- `phase17_new_vectors/602a_aio_race_spray_20261024_205452.txt` (536 bytes)
+- `phase17_new_vectors/603a_aio_pending_wait_20261024_205602.txt` (699 bytes)
+- `phase17_new_vectors/604a_aio_delete_pending_20261024_205621.txt` (290 bytes)
+- `phase17_new_vectors/605a_aio_pending_orderings_20261024_205650.txt` (439 bytes)
+- `phase17_new_vectors/606a_aio_aiocb_layout_20261024_205717.txt` (303 bytes)
+- `phase17_new_vectors/607a_aio_worker_reclaim_20261024_205811.txt` (283 bytes)
+- `phase17_new_vectors/608a_aio_wedge_bisect_20261024_210016.txt` (13547 bytes)
+- `phase17_new_vectors/609a_aio_slot_leak_20261024_210101.txt` (3464 bytes)
+- `phase17_new_vectors/610a_aio_race_threshold_20261024_210325.txt` (411 bytes)
+- `phase17_new_vectors/611a_aio_cycle_leak_20261024_211125.txt` (502 bytes)
+- `phase17_new_vectors/612a_aio_leak_localize_20261024_211432.txt` (536 bytes)
+- `phase17_new_vectors/613a_aio_file_cycles_20261024_211455.txt` (297 bytes)
+- `phase17_new_vectors/614a_child_libkernel_call_20261024_211726.txt` (113 bytes)
+- `phase17_new_vectors/615a_regions_debug_20261024_211741.txt` (474 bytes)
+- `phase17_new_vectors/615a_regions_debug_20261024_212728.txt` (474 bytes)
+- `phase17_new_vectors/616a_child_libkernel_call_20261024_211915.txt` (165 bytes)
+- `phase17_new_vectors/616a_child_libkernel_call_20261024_212423.txt` (345 bytes)
+- `phase17_new_vectors/617a_pltscan_20261024_211939.txt` (20836 bytes)
+- `phase17_new_vectors/618a_libc_head_20261024_212122.txt` (42 bytes)
+- `phase17_new_vectors/618a_libc_head_20261024_212133.txt` (743 bytes)
+- `phase17_new_vectors/619a_child_marker_20261024_212255.txt` (228 bytes)
+- `phase17_new_vectors/620a_libkernel_stub_main_20261024_212500.txt` (195 bytes)
+- `phase17_new_vectors/621a_fcall_stub_20261024_212525.txt` (230 bytes)
+- `phase17_new_vectors/622a_syscall_gadget_scan_20261024_212646.txt` (532 bytes)
+- `phase17_new_vectors/623a_syscall_context_20261024_212719.txt` (51 bytes)
+- `phase17_new_vectors/625a_two_thread_syscalls_20261024_212854.txt` (136 bytes)
+- `phase17_new_vectors/625a_two_thread_syscalls_20261024_212910.txt` (150 bytes)
+- `phase17_new_vectors/626a_kqueue_close_race_20261024_213153.txt` (233 bytes)
+- `phase17_new_vectors/627a_mdbg_read_shapes_20261024_213235.txt` (68 bytes)
+- `phase17_new_vectors/628a_signal_globals_20261024_213314.txt` (3196 bytes)
+- `phase17_new_vectors/628a_signal_globals_20261024_213959.txt` (3196 bytes)
+- `phase17_new_vectors/628a_signal_globals_20261024_214458.txt` (3196 bytes)
+- `phase17_new_vectors/628a_signal_globals_20261024_214919.txt` (3196 bytes)
+- `phase17_new_vectors/629a_loader_tables_20261024_213328.txt` (1837 bytes)
+- `phase17_new_vectors/630a_kernel_read_api_20261024_213357.txt` (182 bytes)
+- `phase17_new_vectors/631a_loader_threads_20261024_213429.txt` (272 bytes)
+- `phase17_new_vectors/631a_loader_threads_20261024_213437.txt` (237 bytes)
+- `phase17_new_vectors/631a_loader_threads_20261024_213448.txt` (149 bytes)
+- `phase17_new_vectors/632a_aio_race_threads_20261024_214004.txt` (412 bytes)
+- `phase17_new_vectors/632a_aio_race_threads_20261024_214016.txt` (284 bytes)
+- `phase17_new_vectors/633c_aio_race_barrier3_20261024_214506.txt` (295 bytes)
+- `phase17_new_vectors/633f_k0_20261024_214917.txt` (221 bytes)
+- `phase17_new_vectors/633f_k1_20261024_214918.txt` (222 bytes)
+- `phase17_new_vectors/633f_k2_20261024_214919.txt` (223 bytes)
 - `phase17_new_vectors/634a_umtx_barrier_20261024_214354.txt` (103 bytes)
-- `phase17_new_vectors/634a_umtx_barrier_20261024_214358.txt` (180 bytes)
-- `phase17_new_vectors/635a_aio_race_health_20261024_214536.txt` (316 bytes)
-- `phase17_new_vectors/636a_aio_delete_semantics_20261024_214950.txt` (523 bytes)
-- `phase17_new_vectors/636a_aio_delete_semantics_20261024_215001.txt` (523 bytes)
-- `phase17_new_vectors/639a_aio_health_baseline_20261024_215030.txt` (258 bytes)
-- `phase17_new_vectors/639a_aio_health_baseline_20261024_215111.txt` (256 bytes)
-- `phase17_new_vectors/639a_aio_health_baseline_20261024_215123.txt` (213 bytes)
-- `phase17_new_vectors/639a_aio_health_baseline_20261024_215422.txt` (215 bytes)
-- `phase17_new_vectors/640a_aio_race_four_20261024_215157.txt` (264 bytes)
-- `phase17_new_vectors/641a_aio_race_lastitem_20261024_215235.txt` (224 bytes)
-- `phase17_new_vectors/642a_aio_race_count1_20261024_215308.txt` (563 bytes)
-- `phase17_new_vectors/642a_aio_race_count1_20261024_215316.txt` (290 bytes)
-- `phase17_new_vectors/643a_aio_delete_vs_create_20261024_215501.txt` (225 bytes)
-- `phase17_new_vectors/644a_aio_parent_create_vs_child_delete_20261024_215520.txt` (229 bytes)
-- `phase17_new_vectors/645a_aio_wait_vs_delete_20261024_215554.txt` (70 bytes)
-- `phase17_new_vectors/645a_aio_wait_vs_delete_20261024_215600.txt` (236 bytes)
-- `phase17_new_vectors/646a_aio_wait_pending_20261024_215620.txt` (233 bytes)
-- `phase17_new_vectors/647a_umtx_mutex_race_20261024_215650.txt` (179 bytes)
-- `phase17_new_vectors/648a_umtx_pi_mutex_20261024_215734.txt` (69 bytes)
-- `phase17_new_vectors/649a_umtx_pi_kill_waiter_20261024_220014.txt` (147 bytes)
-- `phase17_new_vectors/650a_umtx_pi_kill_waiter2_20261024_220255.txt` (152 bytes)
-- `phase17_new_vectors/651a_pi_waiter_kill_tid_20261024_220907.txt` (122 bytes)
+- `phase17_new_vectors/634a_umtx_barrier_20261024_214358.txt` (188 bytes)
+- `phase17_new_vectors/635a_aio_race_health_20261024_214536.txt` (328 bytes)
+- `phase17_new_vectors/636a_aio_delete_semantics_20261024_214950.txt` (538 bytes)
+- `phase17_new_vectors/636a_aio_delete_semantics_20261024_215001.txt` (538 bytes)
+- `phase17_new_vectors/639a_aio_health_baseline_20261024_215030.txt` (267 bytes)
+- `phase17_new_vectors/639a_aio_health_baseline_20261024_215111.txt` (265 bytes)
+- `phase17_new_vectors/639a_aio_health_baseline_20261024_215123.txt` (222 bytes)
+- `phase17_new_vectors/639a_aio_health_baseline_20261024_215422.txt` (224 bytes)
+- `phase17_new_vectors/640a_aio_race_four_20261024_215157.txt` (275 bytes)
+- `phase17_new_vectors/641a_aio_race_lastitem_20261024_215235.txt` (234 bytes)
+- `phase17_new_vectors/642a_aio_race_count1_20261024_215308.txt` (568 bytes)
+- `phase17_new_vectors/642a_aio_race_count1_20261024_215316.txt` (301 bytes)
+- `phase17_new_vectors/643a_aio_delete_vs_create_20261024_215501.txt` (236 bytes)
+- `phase17_new_vectors/644a_aio_parent_create_vs_child_delete_20261024_215520.txt` (240 bytes)
+- `phase17_new_vectors/645a_aio_wait_vs_delete_20261024_215554.txt` (72 bytes)
+- `phase17_new_vectors/645a_aio_wait_vs_delete_20261024_215600.txt` (246 bytes)
+- `phase17_new_vectors/646a_aio_wait_pending_20261024_215620.txt` (242 bytes)
+- `phase17_new_vectors/647a_umtx_mutex_race_20261024_215650.txt` (187 bytes)
+- `phase17_new_vectors/648a_umtx_pi_mutex_20261024_215734.txt` (72 bytes)
+- `phase17_new_vectors/649a_umtx_pi_kill_waiter_20261024_220014.txt` (152 bytes)
+- `phase17_new_vectors/650a_umtx_pi_kill_waiter2_20261024_220255.txt` (158 bytes)
+- `phase17_new_vectors/651a_pi_waiter_kill_tid_20261024_220907.txt` (126 bytes)
 - `phase17_new_vectors/654a_pi_signal_interrupt_20261024_221251.txt` (82 bytes)
-- `phase17_new_vectors/654a_pi_signal_interrupt_20261024_221300.txt` (511 bytes)
-- `phase17_new_vectors/654a_pi_signal_interrupt_20261024_221308.txt` (65 bytes)
-- `phase17_new_vectors/654a_pi_signal_interrupt_20261024_221350.txt` (322 bytes)
-- `phase17_new_vectors/655a_umtx_word_semantics_20261024_221612.txt` (188 bytes)
-- `phase17_new_vectors/656a_zero_returners_dump_20261024_222023.txt` (384 bytes)
-- `phase17_new_vectors/657a_thr_ucontext_20261024_222227.txt` (290 bytes)
-- `phase17_new_vectors/658a_scm_rights_basic_20261024_222512.txt` (152 bytes)
-- `phase17_new_vectors/659a_sendmsg_variants_20261024_222721.txt` (321 bytes)
-- `phase17_new_vectors/660a_scm_rights_layout_20261024_222802.txt` (268 bytes)
-- `phase17_new_vectors/661a_scm_peek_20261024_222828.txt` (237 bytes)
-- `phase17_new_vectors/662a_fd_refcount_leak_20261024_222935.txt` (103 bytes)
-- `phase17_new_vectors/667b_aioburst_control_20261024_223910.txt` (246 bytes)
-- `phase17_new_vectors/671a_aio_race_burst32_20261024_224803.txt` (268 bytes)
-- `phase17_new_vectors/671b_nonblock_burst_control_20261024_224758.txt` (139 bytes)
-- `phase17_new_vectors/672a_aio_race_statuses_20261024_224815.txt` (418 bytes)
-- `phase17_new_vectors/673a_aio_alias_detect_20261024_225040.txt` (1501 bytes)
-- `phase17_new_vectors/674a_aio_alias_detect2_20261024_225057.txt` (215 bytes)
-- `phase17_new_vectors/675a_mdbg_ret0_dump_20261024_225357.txt` (2061 bytes)
-- `phase17_new_vectors/676a_mdbg_arg_layouts_20261024_225537.txt` (2903 bytes)
-- `phase17_new_vectors/677a_umtx_op_table_20261024_225744.txt` (123 bytes)
-- `phase17_new_vectors/678a_umtx_op_table2_20261024_230103.txt` (521 bytes)
-- `phase17_new_vectors/679a_umtx_ops_13_27_20261024_230531.txt` (710 bytes)
-- `phase17_new_vectors/681a_dmem_regs_20261024_230758.txt` (1182 bytes)
-- `phase17_new_vectors/682a_aio_effect_oracle_20261024_230848.txt` (432 bytes)
-- `phase17_new_vectors/682a_aio_effect_oracle_20261024_230859.txt` (432 bytes)
-- `phase17_new_vectors/682a_aio_effect_oracle_20261024_230928.txt` (371 bytes)
-- `phase17_new_vectors/683a_aio_race_churn_20261024_230953.txt` (458 bytes)
-- `phase17_new_vectors/684a_dmem_writeback_20261024_231224.txt` (244 bytes)
-- `phase17_new_vectors/685a_dmem_change_test_20261024_231240.txt` (108 bytes)
-- `phase17_new_vectors/685a_dmem_change_test_20261024_231250.txt` (366 bytes)
-- `phase17_new_vectors/686a_dmem_offsets_20261024_231305.txt` (812 bytes)
-- `phase17_new_vectors/687a_sys670_shape_20261024_231449.txt` (470 bytes)
-- `phase17_new_vectors/688a_dmem_gpu_va_20261024_231510.txt` (753 bytes)
-- `phase17_new_vectors/689a_dmem_live_check_20261024_231653.txt` (153 bytes)
-- `phase17_new_vectors/690a_dmem_persist_20261024_231653.txt` (151 bytes)
-- `phase17_new_vectors/691a_dmem_large_window_20261024_231711.txt` (510 bytes)
-- `phase17_new_vectors/692a_dmem_recon_20261024_231735.txt` (207 bytes)
-- `phase17_new_vectors/694a_dmem_region_name_20261024_231835.txt` (187 bytes)
-- `phase17_new_vectors/695a_dmem_sysmem_probe_20261024_231853.txt` (447 bytes)
-- `phase17_new_vectors/696a_dmem_dump_pages_20261024_231904.txt` (2519 bytes)
-- `phase17_new_vectors/697a_dmem_offset_model_20261024_231928.txt` (341 bytes)
-- `phase17_new_vectors/698a_sys563_566_20261024_232013.txt` (2368 bytes)
-- `phase17_new_vectors/699a_sysctl_walk_20261024_232039.txt` (3034 bytes)
-- `phase17_new_vectors/700a_sysctl_read_20261024_232226.txt` (1395 bytes)
+- `phase17_new_vectors/654a_pi_signal_interrupt_20261024_221300.txt` (520 bytes)
+- `phase17_new_vectors/654a_pi_signal_interrupt_20261024_221308.txt` (67 bytes)
+- `phase17_new_vectors/654a_pi_signal_interrupt_20261024_221350.txt` (333 bytes)
+- `phase17_new_vectors/655a_umtx_word_semantics_20261024_221612.txt` (195 bytes)
+- `phase17_new_vectors/656a_zero_returners_dump_20261024_222023.txt` (398 bytes)
+- `phase17_new_vectors/657a_thr_ucontext_20261024_222227.txt` (299 bytes)
+- `phase17_new_vectors/658a_scm_rights_basic_20261024_222512.txt` (156 bytes)
+- `phase17_new_vectors/659a_sendmsg_variants_20261024_222721.txt` (332 bytes)
+- `phase17_new_vectors/660a_scm_rights_layout_20261024_222802.txt` (276 bytes)
+- `phase17_new_vectors/661a_scm_peek_20261024_222828.txt` (246 bytes)
+- `phase17_new_vectors/662a_fd_refcount_leak_20261024_222935.txt` (106 bytes)
+- `phase17_new_vectors/667b_aioburst_control_20261024_223910.txt` (253 bytes)
+- `phase17_new_vectors/671a_aio_race_burst32_20261024_224803.txt` (278 bytes)
+- `phase17_new_vectors/671b_nonblock_burst_control_20261024_224758.txt` (143 bytes)
+- `phase17_new_vectors/672a_aio_race_statuses_20261024_224815.txt` (432 bytes)
+- `phase17_new_vectors/673a_aio_alias_detect_20261024_225040.txt` (1542 bytes)
+- `phase17_new_vectors/674a_aio_alias_detect2_20261024_225057.txt` (224 bytes)
+- `phase17_new_vectors/675a_mdbg_ret0_dump_20261024_225357.txt` (2075 bytes)
+- `phase17_new_vectors/676a_mdbg_arg_layouts_20261024_225537.txt` (2930 bytes)
+- `phase17_new_vectors/677a_umtx_op_table_20261024_225744.txt` (126 bytes)
+- `phase17_new_vectors/678a_umtx_op_table2_20261024_230103.txt` (535 bytes)
+- `phase17_new_vectors/679a_umtx_ops_13_27_20261024_230531.txt` (727 bytes)
+- `phase17_new_vectors/681a_dmem_regs_20261024_230758.txt` (1224 bytes)
+- `phase17_new_vectors/682a_aio_effect_oracle_20261024_230848.txt` (447 bytes)
+- `phase17_new_vectors/682a_aio_effect_oracle_20261024_230859.txt` (447 bytes)
+- `phase17_new_vectors/682a_aio_effect_oracle_20261024_230928.txt` (386 bytes)
+- `phase17_new_vectors/683a_aio_race_churn_20261024_230953.txt` (469 bytes)
+- `phase17_new_vectors/684a_dmem_writeback_20261024_231224.txt` (251 bytes)
+- `phase17_new_vectors/685a_dmem_change_test_20261024_231240.txt` (112 bytes)
+- `phase17_new_vectors/685a_dmem_change_test_20261024_231250.txt` (376 bytes)
+- `phase17_new_vectors/686a_dmem_offsets_20261024_231305.txt` (826 bytes)
+- `phase17_new_vectors/687a_sys670_shape_20261024_231449.txt` (480 bytes)
+- `phase17_new_vectors/688a_dmem_gpu_va_20261024_231510.txt` (763 bytes)
+- `phase17_new_vectors/689a_dmem_live_check_20261024_231653.txt` (158 bytes)
+- `phase17_new_vectors/690a_dmem_persist_20261024_231653.txt` (156 bytes)
+- `phase17_new_vectors/691a_dmem_large_window_20261024_231711.txt` (522 bytes)
+- `phase17_new_vectors/692a_dmem_recon_20261024_231735.txt` (214 bytes)
+- `phase17_new_vectors/694a_dmem_region_name_20261024_231835.txt` (193 bytes)
+- `phase17_new_vectors/695a_dmem_sysmem_probe_20261024_231853.txt` (464 bytes)
+- `phase17_new_vectors/696a_dmem_dump_pages_20261024_231904.txt` (2558 bytes)
+- `phase17_new_vectors/697a_dmem_offset_model_20261024_231928.txt` (348 bytes)
+- `phase17_new_vectors/698a_sys563_566_20261024_232013.txt` (2405 bytes)
+- `phase17_new_vectors/699a_sysctl_walk_20261024_232039.txt` (3288 bytes)
+- `phase17_new_vectors/700a_sysctl_read_20261024_232226.txt` (1418 bytes)
 - `phase17_new_vectors/701a_chicken_unlock_20261024_232326.txt` (113 bytes)
-- `phase17_new_vectors/701a_chicken_unlock_20261024_232339.txt` (73 bytes)
-- `phase17_new_vectors/701a_chicken_unlock_20261024_232347.txt` (416 bytes)
-- `phase17_new_vectors/702a_sysctl_machdep_20261024_232421.txt` (59 bytes)
-- `phase17_new_vectors/703a_dmem_sweep_20261024_232654.txt` (147 bytes)
-- `phase17_new_vectors/704a_gc_mmio_20261024_232730.txt` (2037 bytes)
-- `phase17_new_vectors/705a_kinfo_kernel_threads_20261024_232751.txt` (275 bytes)
+- `phase17_new_vectors/701a_chicken_unlock_20261024_232339.txt` (75 bytes)
+- `phase17_new_vectors/701a_chicken_unlock_20261024_232347.txt` (428 bytes)
+- `phase17_new_vectors/702a_sysctl_machdep_20261024_232421.txt` (61 bytes)
+- `phase17_new_vectors/703a_dmem_sweep_20261024_232654.txt` (151 bytes)
+- `phase17_new_vectors/704a_gc_mmio_20261024_232730.txt` (2078 bytes)
+- `phase17_new_vectors/705a_kinfo_kernel_threads_20261024_232751.txt` (284 bytes)
 - `phase17_new_vectors/706a_sys619_slot_20261025_091322.txt` (113 bytes)
-- `phase17_new_vectors/706a_sys619_slot_20261025_091336.txt` (735 bytes)
-- `phase17_new_vectors/707a_aio_alias_after_race_20261025_092024.txt` (677 bytes)
-- `phase17_new_vectors/707a_aio_alias_after_race_20261025_092034.txt` (668 bytes)
-- `phase17_new_vectors/708a_sys589_dlopen_20261025_092301.txt` (82 bytes)
-- `phase17_new_vectors/708b_broad_shield_20261025_093920.txt` (111 bytes)
-- `phase17_new_vectors/709a_wide_queries_20261025_093905.txt` (1741 bytes)
-- `phase17_new_vectors/710a_shield_verify_20261025_094335.txt` (252 bytes)
-- `phase17_new_vectors/711a_lethal_under_shield_20261025_094352.txt` (718 bytes)
-- `phase17_new_vectors/711b_full_presence_20261025_094438.txt` (95 bytes)
-- `phase17_new_vectors/712b_fcall_stub_contents_20261025_094949.txt` (138 bytes)
-- `phase17_new_vectors/712c_child_on_fn_addr_20261025_095117.txt` (221 bytes)
-- `phase17_new_vectors/712c_child_on_fn_addr_20261025_095448.txt` (221 bytes)
-- `phase17_new_vectors/712c_child_on_fn_addr_20261025_095514.txt` (228 bytes)
-- `phase17_new_vectors/712c_child_on_fn_addr_20261025_095529.txt` (602 bytes)
-- `phase17_new_vectors/712c_child_on_fn_addr_20261025_095537.txt` (330 bytes)
-- `phase17_new_vectors/712c_child_on_fn_addr_20261025_100726.txt` (327 bytes)
-- `phase17_new_vectors/713a_native_aio_race_20261025_095627.txt` (1053 bytes)
-- `phase17_new_vectors/714a_native_delete_hammer_20261025_095852.txt` (534 bytes)
-- `phase17_new_vectors/714b_gadget_list_20261025_095753.txt` (996 bytes)
-- `phase17_new_vectors/715a_aio_alias_matrix_20261025_095938.txt` (2461 bytes)
-- `phase17_new_vectors/716a_poll_state_control_20261025_100038.txt` (293 bytes)
-- `phase17_new_vectors/717a_aio_long_hammer_20261025_100226.txt` (94 bytes)
-- `phase17_new_vectors/718a_aio_timed_pair_20261025_100449.txt` (455 bytes)
-- `phase17_new_vectors/718a_aio_timed_pair_20261025_100607.txt` (455 bytes)
-- `phase17_new_vectors/719a_aio_umtx_gate_20261025_100720.txt` (482 bytes)
-- `phase17_new_vectors/719a_aio_umtx_gate_20261025_100828.txt` (477 bytes)
-- `phase17_new_vectors/719a_aio_umtx_gate_20261025_100908.txt` (482 bytes)
-- `phase17_new_vectors/719b_umtx_child_gate_test_20261025_100751.txt` (282 bytes)
-- `phase17_new_vectors/720a_aio_race_allocator_20261025_101020.txt` (362 bytes)
-- `phase17_new_vectors/720a_aio_race_allocator_20261025_101155.txt` (361 bytes)
-- `phase17_new_vectors/721a_poll_vs_delete_20261025_101403.txt` (327 bytes)
-- `phase17_new_vectors/722a_aio_wide_window_20261025_101719.txt` (280 bytes)
-- `phase17_new_vectors/723a_aio_alias_after_race_20261025_101857.txt` (240 bytes)
-- `phase17_new_vectors/724a_cpl_probe_scan_20261025_101945.txt` (569 bytes)
-- `phase17_new_vectors/724b_priv_gadget_scan_20261025_102014.txt` (1167 bytes)
-- `phase17_new_vectors/724c_seg_readback_scan_20261025_102100.txt` (1047 bytes)
-- `phase17_new_vectors/724d_exact_gadgets_20261025_102128.txt` (504 bytes)
-- `phase17_new_vectors/727a_aio_block_pathB_race_20261025_103243.txt` (3228 bytes)
-- `phase17_new_vectors/727b_aio_block_serial_control_20261025_103003.txt` (632 bytes)
-- `phase17_new_vectors/727c_aio_block_2child_race_20261025_103202.txt` (472 bytes)
-- `phase17_new_vectors/727d_aio_block_disjoint_20261025_103156.txt` (487 bytes)
-- `phase17_new_vectors/728a_aio_pathB_alias_20261025_103635.txt` (1071 bytes)
-- `phase17_new_vectors/728a_aio_pathB_alias_20261025_103708.txt` (987 bytes)
-- `phase17_new_vectors/729a_child_syscall_probe_20261025_104128.txt` (531 bytes)
-- `phase17_new_vectors/729b_chain_compare_20261025_104235.txt` (71 bytes)
-- `phase17_new_vectors/729b_chain_compare_20261025_104410.txt` (372 bytes)
-- `phase17_new_vectors/730a_child_561_20261025_104851.txt` (265 bytes)
-- `phase17_new_vectors/735a_alloc_bisect_20261025_110746.txt` (591 bytes)
-- `phase17_new_vectors/736a_sys28_zeros_20261025_110828.txt` (445 bytes)
-- `phase17_new_vectors/740a_mmap_under_shield_20261025_111106.txt` (271 bytes)
-- `phase17_new_vectors/741a_sendmsg_mmap_20261025_111125.txt` (506 bytes)
-- `phase17_new_vectors/742a_sockaddr_control_20261025_111200.txt` (1447 bytes)
-- `phase17_new_vectors/743a_aio_delete_pending_20261025_111240.txt` (277 bytes)
-- `phase17_new_vectors/745a_aio_res_kernel_va_20261025_112127.txt` (607 bytes)
-- `phase17_new_vectors/746a_sys667_20261025_112159.txt` (649 bytes)
-- `phase17_new_vectors/750a_aio_kernel_buffer_20261025_113000.txt` (567 bytes)
-- `phase17_new_vectors/752a_aio_socket_op_kernel_src_20261025_112848.txt` (638 bytes)
-- `phase17_new_vectors/753a_aio_mode_direction_20261025_112919.txt` (681 bytes)
-- `phase17_new_vectors/754a_aio_timing_kernel_buf_20261025_113037.txt` (523 bytes)
-- `phase17_new_vectors/755a_aio_first_kernel_buf_20261025_113510.txt` (824 bytes)
-- `phase17_new_vectors/756a_aio_buf_addr_matrix_20261025_113600.txt` (769 bytes)
-- `phase17_new_vectors/757b_spin_scan_chunked_20261025_114041.txt` (289 bytes)
-- `phase17_new_vectors/758a_read_wake_children_20261025_114140.txt` (437 bytes)
-- `phase17_new_vectors/759a_aio_race_wake_release_20261025_114228.txt` (1816 bytes)
-- `phase17_new_vectors/760a_aio_race_polled_20261025_114325.txt` (1450 bytes)
-- `phase17_new_vectors/760b_aio_race_eight_20261025_114828.txt` (1804 bytes)
-- `phase17_new_vectors/761a_aio_distinct_id_race_20261025_114421.txt` (1057 bytes)
-- `phase17_new_vectors/762a_dynlib_copyout_leak_20261025_114511.txt` (3202 bytes)
-- `phase17_new_vectors/762b_sys608_struct_dump_20261025_114531.txt` (192 bytes)
-- `phase17_new_vectors/762b_sys608_struct_dump_20261025_114536.txt` (1367 bytes)
-- `phase17_new_vectors/763a_mdbg_valid_pointers_20261025_114641.txt` (105 bytes)
-- `phase17_new_vectors/764a_aio_pathA_race_20261025_115216.txt` (1291 bytes)
-- `phase17_new_vectors/765a_aio_pathA_contended_20261025_115544.txt` (1076 bytes)
-- `phase17_new_vectors/766a_aio_cancel_effect_20261025_115613.txt` (305 bytes)
-- `phase17_new_vectors/767a_iopl_context_20261025_115719.txt` (71 bytes)
-- `phase17_new_vectors/767b_iopl_ctx_20261025_120146.txt` (202 bytes)
-- `phase17_new_vectors/768a_flag_gadget_scan_20261025_120241.txt` (1329 bytes)
-- `phase17_new_vectors/769a_ctx_rflags_probe_20261025_120335.txt` (114 bytes)
-- `phase17_new_vectors/769a_ctx_rflags_probe_20261025_120418.txt` (301 bytes)
-- `phase17_new_vectors/769b_ctx_iopl_probe_20261025_120429.txt` (445 bytes)
-- `phase17_new_vectors/771a_kqueue_signal_basic_20261025_120807.txt` (228 bytes)
-- `phase17_new_vectors/771b_signal_knote_churn_20261025_120901.txt` (155 bytes)
-- `phase17_new_vectors/773a_signal_knote_native_race_20261025_121108.txt` (395 bytes)
-- `phase17_new_vectors/774a_timer_knote_churn_20261025_121229.txt` (232 bytes)
-- `phase17_new_vectors/775a_aio_close_inflight_20261025_121339.txt` (335 bytes)
-- `phase17_new_vectors/775a_aio_close_inflight_20261025_121349.txt` (337 bytes)
-- `phase17_new_vectors/775a_aio_close_inflight_20261025_121359.txt` (471 bytes)
-- `phase17_new_vectors/775a_aio_close_inflight_20261025_122410.txt` (468 bytes)
-- `phase17_new_vectors/776a_aio_cancel_inflight_20261025_122415.txt` (445 bytes)
-- `phase17_new_vectors/777a_aio_unwedge_20261025_121523.txt` (673 bytes)
-- `phase17_new_vectors/777b_aio_cancel_then_delete_20261025_121533.txt` (977 bytes)
-- `phase17_new_vectors/778a_device_enum_20261025_122452.txt` (75 bytes)
-- `phase17_new_vectors/778a_device_enum_20261025_122537.txt` (434 bytes)
-- `phase17_new_vectors/778a_relapse_preconditions_20261025_142516.txt` (251 bytes)
-- `phase17_new_vectors/778b_device_open_20261025_123159.txt` (281 bytes)
-- `phase17_new_vectors/778b_multiwait_timeout_20261025_143050.txt` (716 bytes)
-- `phase17_new_vectors/779a_multiwait_completed_20261025_143223.txt` (654 bytes)
-- `phase17_new_vectors/779a_sony_low_sweep_20261025_123206.txt` (1137 bytes)
-- `phase17_new_vectors/780a_multiwait_shapes_20261025_143247.txt` (939 bytes)
-- `phase17_new_vectors/780a_sys557_object_20261025_123423.txt` (485 bytes)
-- `phase17_new_vectors/781a_single_wait_cycle_20261025_143533.txt` (522 bytes)
-- `phase17_new_vectors/781a_sys557_relation_20261025_123453.txt` (506 bytes)
-- `phase17_new_vectors/782a_sys557_558_pair_20261025_123709.txt` (337 bytes)
-- `phase17_new_vectors/782a_sys557_558_pair_20261025_123727.txt` (337 bytes)
-- `phase17_new_vectors/782a_waiter_reclaim_20261025_143850.txt` (842 bytes)
-- `phase17_new_vectors/783a_sys558_destroy_20261025_123800.txt` (1251 bytes)
-- `phase17_new_vectors/784a_aio_buffer_ptr_20261025_153719.txt` (385 bytes)
-- `phase17_new_vectors/784a_sys557_payload_20261025_124555.txt` (364 bytes)
-- `phase17_new_vectors/785a_signal_watchdog_20261025_153802.txt` (291 bytes)
-- `phase17_new_vectors/785a_sys558_double_20261025_124605.txt` (431 bytes)
-- `phase17_new_vectors/786a_sys557_capacity_20261025_124623.txt` (218 bytes)
-- `phase17_new_vectors/786b_real_handler_watchdog_20261025_153912.txt` (136 bytes)
-- `phase17_new_vectors/786b_real_handler_watchdog_20261025_153926.txt` (350 bytes)
-- `phase17_new_vectors/787a_sys557_payload_fields_20261025_124723.txt` (525 bytes)
-- `phase17_new_vectors/787a_watchdog_blocking_wait_20261025_153952.txt` (332 bytes)
-- `phase17_new_vectors/787b_sys557_page_check_20261025_124736.txt` (282 bytes)
-- `phase17_new_vectors/788a_sys557_payload_writeback_20261025_124748.txt` (833 bytes)
-- `phase17_new_vectors/789a_sys557_free_running_job_20261025_124802.txt` (1151 bytes)
-- `phase17_new_vectors/790a_helper_completion_20261025_155621.txt` (602 bytes)
-- `phase17_new_vectors/790a_helper_completion_20261025_155703.txt` (49 bytes)
-- `phase17_new_vectors/790a_sys558_double_destroy_20261025_124859.txt` (444 bytes)
-- `phase17_new_vectors/791a_sys557_flags_20261025_124939.txt` (1294 bytes)
-- `phase17_new_vectors/791b_aio_block_delete_status_20261026_094833.txt` (1423 bytes)
-- `phase17_new_vectors/791c_aio_lastitem_array_race_20261026_095036.txt` (281 bytes)
-- `phase17_new_vectors/791c_aio_lastitem_array_race_20261026_095121.txt` (1030 bytes)
-- `phase17_new_vectors/791c_aio_lastitem_array_race_20261026_095204.txt` (1030 bytes)
-- `phase17_new_vectors/791d_aio_socket_barrier_race_20261026_095312.txt` (1126 bytes)
-- `phase17_new_vectors/791e_aio_alias_burst_20261026_095422.txt` (3336 bytes)
-- `phase17_new_vectors/791f_aio_repeat_doubles_20261026_095703.txt` (760 bytes)
-- `phase17_new_vectors/792a_aio_op_matrix_20261025_124953.txt` (906 bytes)
-- `phase17_new_vectors/792b_child_create_ctx_20261026_100124.txt` (248 bytes)
-- `phase17_new_vectors/792c_child_postrace_alloc_20261026_100208.txt` (574 bytes)
-- `phase17_new_vectors/792d_child_alloc_alias_20261026_100304.txt` (553 bytes)
-- `phase17_new_vectors/793a_mdbg_named_commands_20261026_103335.txt` (165 bytes)
-- `phase17_new_vectors/793a_sys557_stale_id_20261025_125435.txt` (605 bytes)
-- `phase17_new_vectors/793a_sys557_stale_id_20261025_125443.txt` (605 bytes)
-- `phase17_new_vectors/793a_sys557_stale_id_20261025_125454.txt` (605 bytes)
-- `phase17_new_vectors/793a_sys557_stale_id_20261025_125459.txt` (326 bytes)
-- `phase17_new_vectors/793b_mdbg_arg_layout_20261026_103634.txt` (1052 bytes)
-- `phase17_new_vectors/794a_mdbg_cmd0_selector_20261026_103726.txt` (948 bytes)
-- `phase17_new_vectors/795a_aio_alloc_during_free_20261026_104728.txt` (202 bytes)
-- `phase17_new_vectors/795a_aio_alloc_during_free_20261026_104746.txt` (202 bytes)
-- `phase17_new_vectors/795a_aio_alloc_during_free_20261026_104815.txt` (671 bytes)
-- `phase17_new_vectors/795a_aio_alloc_during_free_20261026_104900.txt` (603 bytes)
-- `phase17_new_vectors/796a_sys626_msr_read_20261026_105730.txt` (1026 bytes)
-- `phase17_new_vectors/796b_sys626_source_20261026_105806.txt` (1582 bytes)
-- `phase17_new_vectors/796c_sys626_values_20261026_105912.txt` (1160 bytes)
-- `phase17_new_vectors/796d_sys626_cmd6_shape_20261026_105940.txt` (994 bytes)
-- `phase17_new_vectors/797a_sys625_commands_20261026_110222.txt` (3415 bytes)
+- `phase17_new_vectors/706a_sys619_slot_20261025_091336.txt` (751 bytes)
+- `phase17_new_vectors/707a_aio_alias_after_race_20261025_092024.txt` (697 bytes)
+- `phase17_new_vectors/707a_aio_alias_after_race_20261025_092034.txt` (688 bytes)
+- `phase17_new_vectors/708a_sys589_dlopen_20261025_092301.txt` (85 bytes)
+- `phase17_new_vectors/708b_broad_shield_20261025_093920.txt` (115 bytes)
+- `phase17_new_vectors/709a_wide_queries_20261025_093905.txt` (1791 bytes)
+- `phase17_new_vectors/710a_shield_verify_20261025_094335.txt` (261 bytes)
+- `phase17_new_vectors/711a_lethal_under_shield_20261025_094352.txt` (750 bytes)
+- `phase17_new_vectors/711b_full_presence_20261025_094438.txt` (100 bytes)
+- `phase17_new_vectors/712b_fcall_stub_contents_20261025_094949.txt` (143 bytes)
+- `phase17_new_vectors/712c_child_on_fn_addr_20261025_095117.txt` (229 bytes)
+- `phase17_new_vectors/712c_child_on_fn_addr_20261025_095448.txt` (229 bytes)
+- `phase17_new_vectors/712c_child_on_fn_addr_20261025_095514.txt` (236 bytes)
+- `phase17_new_vectors/712c_child_on_fn_addr_20261025_095529.txt` (615 bytes)
+- `phase17_new_vectors/712c_child_on_fn_addr_20261025_095537.txt` (341 bytes)
+- `phase17_new_vectors/712c_child_on_fn_addr_20261025_100726.txt` (338 bytes)
+- `phase17_new_vectors/713a_native_aio_race_20261025_095627.txt` (1074 bytes)
+- `phase17_new_vectors/714a_native_delete_hammer_20261025_095852.txt` (548 bytes)
+- `phase17_new_vectors/714b_gadget_list_20261025_095753.txt` (1049 bytes)
+- `phase17_new_vectors/715a_aio_alias_matrix_20261025_095938.txt` (2479 bytes)
+- `phase17_new_vectors/716a_poll_state_control_20261025_100038.txt` (300 bytes)
+- `phase17_new_vectors/717a_aio_long_hammer_20261025_100226.txt` (98 bytes)
+- `phase17_new_vectors/718a_aio_timed_pair_20261025_100449.txt` (466 bytes)
+- `phase17_new_vectors/718a_aio_timed_pair_20261025_100607.txt` (466 bytes)
+- `phase17_new_vectors/719a_aio_umtx_gate_20261025_100720.txt` (493 bytes)
+- `phase17_new_vectors/719a_aio_umtx_gate_20261025_100828.txt` (488 bytes)
+- `phase17_new_vectors/719a_aio_umtx_gate_20261025_100908.txt` (493 bytes)
+- `phase17_new_vectors/719b_umtx_child_gate_test_20261025_100751.txt` (290 bytes)
+- `phase17_new_vectors/720a_aio_race_allocator_20261025_101020.txt` (370 bytes)
+- `phase17_new_vectors/720a_aio_race_allocator_20261025_101155.txt` (369 bytes)
+- `phase17_new_vectors/721a_poll_vs_delete_20261025_101403.txt` (335 bytes)
+- `phase17_new_vectors/722a_aio_wide_window_20261025_101719.txt` (288 bytes)
+- `phase17_new_vectors/723a_aio_alias_after_race_20261025_101857.txt` (247 bytes)
+- `phase17_new_vectors/724a_cpl_probe_scan_20261025_101945.txt` (581 bytes)
+- `phase17_new_vectors/724b_priv_gadget_scan_20261025_102014.txt` (1203 bytes)
+- `phase17_new_vectors/724c_seg_readback_scan_20261025_102100.txt` (1079 bytes)
+- `phase17_new_vectors/724d_exact_gadgets_20261025_102128.txt` (519 bytes)
+- `phase17_new_vectors/727a_aio_block_pathB_race_20261025_103243.txt` (3263 bytes)
+- `phase17_new_vectors/727b_aio_block_serial_control_20261025_103003.txt` (646 bytes)
+- `phase17_new_vectors/727c_aio_block_2child_race_20261025_103202.txt` (480 bytes)
+- `phase17_new_vectors/727d_aio_block_disjoint_20261025_103156.txt` (495 bytes)
+- `phase17_new_vectors/728a_aio_pathB_alias_20261025_103635.txt` (1088 bytes)
+- `phase17_new_vectors/728a_aio_pathB_alias_20261025_103708.txt` (1004 bytes)
+- `phase17_new_vectors/729a_child_syscall_probe_20261025_104128.txt` (543 bytes)
+- `phase17_new_vectors/729b_chain_compare_20261025_104235.txt` (74 bytes)
+- `phase17_new_vectors/729b_chain_compare_20261025_104410.txt` (383 bytes)
+- `phase17_new_vectors/730a_child_561_20261025_104851.txt` (272 bytes)
+- `phase17_new_vectors/735a_alloc_bisect_20261025_110746.txt` (612 bytes)
+- `phase17_new_vectors/736a_sys28_zeros_20261025_110828.txt` (465 bytes)
+- `phase17_new_vectors/740a_mmap_under_shield_20261025_111106.txt` (283 bytes)
+- `phase17_new_vectors/741a_sendmsg_mmap_20261025_111125.txt` (521 bytes)
+- `phase17_new_vectors/742a_sockaddr_control_20261025_111200.txt` (1483 bytes)
+- `phase17_new_vectors/743a_aio_delete_pending_20261025_111240.txt` (286 bytes)
+- `phase17_new_vectors/745a_aio_res_kernel_va_20261025_112127.txt` (627 bytes)
+- `phase17_new_vectors/746a_sys667_20261025_112159.txt` (670 bytes)
+- `phase17_new_vectors/750a_aio_kernel_buffer_20261025_113000.txt` (585 bytes)
+- `phase17_new_vectors/752a_aio_socket_op_kernel_src_20261025_112848.txt` (662 bytes)
+- `phase17_new_vectors/753a_aio_mode_direction_20261025_112919.txt` (705 bytes)
+- `phase17_new_vectors/754a_aio_timing_kernel_buf_20261025_113037.txt` (542 bytes)
+- `phase17_new_vectors/755a_aio_first_kernel_buf_20261025_113510.txt` (844 bytes)
+- `phase17_new_vectors/756a_aio_buf_addr_matrix_20261025_113600.txt` (790 bytes)
+- `phase17_new_vectors/757b_spin_scan_chunked_20261025_114041.txt` (301 bytes)
+- `phase17_new_vectors/758a_read_wake_children_20261025_114140.txt` (452 bytes)
+- `phase17_new_vectors/759a_aio_race_wake_release_20261025_114228.txt` (1846 bytes)
+- `phase17_new_vectors/760a_aio_race_polled_20261025_114325.txt` (1470 bytes)
+- `phase17_new_vectors/760b_aio_race_eight_20261025_114828.txt` (1824 bytes)
+- `phase17_new_vectors/761a_aio_distinct_id_race_20261025_114421.txt` (1074 bytes)
+- `phase17_new_vectors/762a_dynlib_copyout_leak_20261025_114511.txt` (3260 bytes)
+- `phase17_new_vectors/762b_sys608_struct_dump_20261025_114531.txt` (202 bytes)
+- `phase17_new_vectors/762b_sys608_struct_dump_20261025_114536.txt` (1399 bytes)
+- `phase17_new_vectors/763a_mdbg_valid_pointers_20261025_114641.txt` (109 bytes)
+- `phase17_new_vectors/764a_aio_pathA_race_20261025_115216.txt` (1312 bytes)
+- `phase17_new_vectors/765a_aio_pathA_contended_20261025_115544.txt` (1094 bytes)
+- `phase17_new_vectors/766a_aio_cancel_effect_20261025_115613.txt` (313 bytes)
+- `phase17_new_vectors/767a_iopl_context_20261025_115719.txt` (73 bytes)
+- `phase17_new_vectors/767b_iopl_ctx_20261025_120146.txt` (206 bytes)
+- `phase17_new_vectors/768a_flag_gadget_scan_20261025_120241.txt` (1351 bytes)
+- `phase17_new_vectors/769a_ctx_rflags_probe_20261025_120335.txt` (116 bytes)
+- `phase17_new_vectors/769a_ctx_rflags_probe_20261025_120418.txt` (308 bytes)
+- `phase17_new_vectors/769b_ctx_iopl_probe_20261025_120429.txt` (455 bytes)
+- `phase17_new_vectors/771a_kqueue_signal_basic_20261025_120807.txt` (238 bytes)
+- `phase17_new_vectors/771b_signal_knote_churn_20261025_120901.txt` (159 bytes)
+- `phase17_new_vectors/773a_signal_knote_native_race_20261025_121108.txt` (407 bytes)
+- `phase17_new_vectors/774a_timer_knote_churn_20261025_121229.txt` (240 bytes)
+- `phase17_new_vectors/775a_aio_close_inflight_20261025_121339.txt` (347 bytes)
+- `phase17_new_vectors/775a_aio_close_inflight_20261025_121349.txt` (349 bytes)
+- `phase17_new_vectors/775a_aio_close_inflight_20261025_121359.txt` (483 bytes)
+- `phase17_new_vectors/775a_aio_close_inflight_20261025_122410.txt` (480 bytes)
+- `phase17_new_vectors/776a_aio_cancel_inflight_20261025_122415.txt` (456 bytes)
+- `phase17_new_vectors/777a_aio_unwedge_20261025_121523.txt` (691 bytes)
+- `phase17_new_vectors/777b_aio_cancel_then_delete_20261025_121533.txt` (996 bytes)
+- `phase17_new_vectors/778a_device_enum_20261025_122452.txt` (78 bytes)
+- `phase17_new_vectors/778a_device_enum_20261025_122537.txt` (439 bytes)
+- `phase17_new_vectors/778a_relapse_preconditions_20261025_142516.txt` (258 bytes)
+- `phase17_new_vectors/778b_device_open_20261025_123159.txt` (289 bytes)
+- `phase17_new_vectors/778b_multiwait_timeout_20261025_143050.txt` (733 bytes)
+- `phase17_new_vectors/779a_multiwait_completed_20261025_143223.txt` (669 bytes)
+- `phase17_new_vectors/779a_sony_low_sweep_20261025_123206.txt` (1176 bytes)
+- `phase17_new_vectors/780a_multiwait_shapes_20261025_143247.txt` (964 bytes)
+- `phase17_new_vectors/780a_sys557_object_20261025_123423.txt` (499 bytes)
+- `phase17_new_vectors/781a_single_wait_cycle_20261025_143533.txt` (538 bytes)
+- `phase17_new_vectors/781a_sys557_relation_20261025_123453.txt` (520 bytes)
+- `phase17_new_vectors/782a_sys557_558_pair_20261025_123709.txt` (350 bytes)
+- `phase17_new_vectors/782a_sys557_558_pair_20261025_123727.txt` (350 bytes)
+- `phase17_new_vectors/782a_waiter_reclaim_20261025_143850.txt` (862 bytes)
+- `phase17_new_vectors/783a_sys558_destroy_20261025_123800.txt` (1303 bytes)
+- `phase17_new_vectors/784a_aio_buffer_ptr_20261025_153719.txt` (394 bytes)
+- `phase17_new_vectors/784a_sys557_payload_20261025_124555.txt` (376 bytes)
+- `phase17_new_vectors/785a_signal_watchdog_20261025_153802.txt` (298 bytes)
+- `phase17_new_vectors/785a_sys558_double_20261025_124605.txt` (445 bytes)
+- `phase17_new_vectors/786a_sys557_capacity_20261025_124623.txt` (224 bytes)
+- `phase17_new_vectors/786b_real_handler_watchdog_20261025_153912.txt` (140 bytes)
+- `phase17_new_vectors/786b_real_handler_watchdog_20261025_153926.txt` (361 bytes)
+- `phase17_new_vectors/787a_sys557_payload_fields_20261025_124723.txt` (541 bytes)
+- `phase17_new_vectors/787a_watchdog_blocking_wait_20261025_153952.txt` (342 bytes)
+- `phase17_new_vectors/787b_sys557_page_check_20261025_124736.txt` (290 bytes)
+- `phase17_new_vectors/788a_sys557_payload_writeback_20261025_124748.txt` (842 bytes)
+- `phase17_new_vectors/789a_sys557_free_running_job_20261025_124802.txt` (1190 bytes)
+- `phase17_new_vectors/790a_helper_completion_20261025_155621.txt` (613 bytes)
+- `phase17_new_vectors/790a_helper_completion_20261025_155703.txt` (50 bytes)
+- `phase17_new_vectors/790a_sys558_double_destroy_20261025_124859.txt` (460 bytes)
+- `phase17_new_vectors/791a_sys557_flags_20261025_124939.txt` (1321 bytes)
+- `phase17_new_vectors/791b_aio_block_delete_status_20261026_094833.txt` (1435 bytes)
+- `phase17_new_vectors/791c_aio_lastitem_array_race_20261026_095036.txt` (290 bytes)
+- `phase17_new_vectors/791c_aio_lastitem_array_race_20261026_095121.txt` (1052 bytes)
+- `phase17_new_vectors/791c_aio_lastitem_array_race_20261026_095204.txt` (1052 bytes)
+- `phase17_new_vectors/791d_aio_socket_barrier_race_20261026_095312.txt` (1149 bytes)
+- `phase17_new_vectors/791e_aio_alias_burst_20261026_095422.txt` (3428 bytes)
+- `phase17_new_vectors/791f_aio_repeat_doubles_20261026_095703.txt` (780 bytes)
+- `phase17_new_vectors/792a_aio_op_matrix_20261025_124953.txt` (927 bytes)
+- `phase17_new_vectors/792b_child_create_ctx_20261026_100124.txt` (257 bytes)
+- `phase17_new_vectors/792c_child_postrace_alloc_20261026_100208.txt` (587 bytes)
+- `phase17_new_vectors/792d_child_alloc_alias_20261026_100304.txt` (567 bytes)
+- `phase17_new_vectors/793a_mdbg_named_commands_20261026_103335.txt` (172 bytes)
+- `phase17_new_vectors/793a_sys557_stale_id_20261025_125435.txt` (615 bytes)
+- `phase17_new_vectors/793a_sys557_stale_id_20261025_125443.txt` (615 bytes)
+- `phase17_new_vectors/793a_sys557_stale_id_20261025_125454.txt` (615 bytes)
+- `phase17_new_vectors/793a_sys557_stale_id_20261025_125459.txt` (338 bytes)
+- `phase17_new_vectors/793b_mdbg_arg_layout_20261026_103634.txt` (1095 bytes)
+- `phase17_new_vectors/794a_mdbg_cmd0_selector_20261026_103726.txt` (968 bytes)
+- `phase17_new_vectors/795a_aio_alloc_during_free_20261026_104728.txt` (208 bytes)
+- `phase17_new_vectors/795a_aio_alloc_during_free_20261026_104746.txt` (208 bytes)
+- `phase17_new_vectors/795a_aio_alloc_during_free_20261026_104815.txt` (686 bytes)
+- `phase17_new_vectors/795a_aio_alloc_during_free_20261026_104900.txt` (617 bytes)
+- `phase17_new_vectors/796a_sys626_msr_read_20261026_105730.txt` (1054 bytes)
+- `phase17_new_vectors/796b_sys626_source_20261026_105806.txt` (1611 bytes)
+- `phase17_new_vectors/796c_sys626_values_20261026_105912.txt` (1185 bytes)
+- `phase17_new_vectors/796d_sys626_cmd6_shape_20261026_105940.txt` (1026 bytes)
+- `phase17_new_vectors/797a_sys625_commands_20261026_110222.txt` (3488 bytes)
 - `phase17_new_vectors/798a_vmmcall_bytes_20261026_110731.txt` (98 bytes)
-- `phase17_new_vectors/798a_vmmcall_bytes_20261026_110735.txt` (538 bytes)
-- `phase17_new_vectors/798a_vmmcall_bytes_20261026_110742.txt` (308 bytes)
-- `phase17_new_vectors/798a_vmmcall_bytes_20261026_110838.txt` (1167 bytes)
-- `phase17_new_vectors/799a_named_object_lifecycle_20261026_110933.txt` (570 bytes)
-- `phase17_new_vectors/799a_named_object_lifecycle_20261026_110940.txt` (649 bytes)
-- `phase17_new_vectors/79a_devdsp_pipe2_procctl_20261019_194903.txt` (2456 bytes)
-- `phase17_new_vectors/79c_ktimer_signal_reentrancy_20261028_222245.txt` (632 bytes)
-- `phase17_new_vectors/79c_ktimer_signal_reentrancy_20261028_222305.txt` (1590 bytes)
-- `phase17_new_vectors/79d_shm_sem_mqueuee_20261019_185320.txt` (866 bytes)
-- `phase17_new_vectors/800a_fd_double_release_20261026_111002.txt` (423 bytes)
-- `phase17_new_vectors/801a_oversized_copyout_20261026_111053.txt` (159 bytes)
-- `phase17_new_vectors/801a_oversized_copyout_20261026_111134.txt` (9329 bytes)
-- `phase17_new_vectors/803b_wx_bypass_548_20261026_115135.txt` (496 bytes)
-- `phase17_new_vectors/803b_wx_bypass_548_20261026_115157.txt` (625 bytes)
+- `phase17_new_vectors/798a_vmmcall_bytes_20261026_110735.txt` (549 bytes)
+- `phase17_new_vectors/798a_vmmcall_bytes_20261026_110742.txt` (318 bytes)
+- `phase17_new_vectors/798a_vmmcall_bytes_20261026_110838.txt` (1191 bytes)
+- `phase17_new_vectors/799a_named_object_lifecycle_20261026_110933.txt` (598 bytes)
+- `phase17_new_vectors/799a_named_object_lifecycle_20261026_110940.txt` (680 bytes)
+- `phase17_new_vectors/79a_devdsp_pipe2_procctl_20261019_194903.txt` (2498 bytes)
+- `phase17_new_vectors/79c_ktimer_signal_reentrancy_20261028_222245.txt` (650 bytes)
+- `phase17_new_vectors/79c_ktimer_signal_reentrancy_20261028_222305.txt` (1629 bytes)
+- `phase17_new_vectors/79d_shm_sem_mqueuee_20261019_185320.txt` (892 bytes)
+- `phase17_new_vectors/800a_fd_double_release_20261026_111002.txt` (448 bytes)
+- `phase17_new_vectors/801a_oversized_copyout_20261026_111053.txt` (169 bytes)
+- `phase17_new_vectors/801a_oversized_copyout_20261026_111134.txt` (9574 bytes)
+- `phase17_new_vectors/803b_wx_bypass_548_20261026_115135.txt` (505 bytes)
+- `phase17_new_vectors/803b_wx_bypass_548_20261026_115157.txt` (647 bytes)
 - `phase17_new_vectors/803c_mmap_548_protect_20261026_115225.txt` (82 bytes)
-- `phase17_new_vectors/803c_mmap_548_protect_20261026_115236.txt` (1016 bytes)
-- `phase17_new_vectors/803d_548_op_matrix_20261026_115307.txt` (875 bytes)
-- `phase17_new_vectors/803e_548_maxprot_matrix_20261026_115339.txt` (735 bytes)
-- `phase17_new_vectors/803f_548_op3_payload_20261026_115424.txt` (1577 bytes)
-- `phase17_new_vectors/803g_548_text_pages_20261026_115523.txt` (948 bytes)
-- `phase17_new_vectors/803h_mmap_prot_matrix_20261026_115541.txt` (1012 bytes)
-- `phase17_new_vectors/803i_file_mmap_exec_20261026_115603.txt` (1591 bytes)
-- `phase17_new_vectors/804a_named_object_lifecycle_20261026_115819.txt` (338 bytes)
-- `phase17_new_vectors/804b_548_op3_prot_20261026_115903.txt` (894 bytes)
-- `phase17_new_vectors/805a_net_pcblist_sweep_20261026_120122.txt` (6337 bytes)
-- `phase17_new_vectors/806a_dmem_foreign_phys_20261026_120148.txt` (538 bytes)
-- `phase17_new_vectors/806b_dmem_phys_read_20261026_120207.txt` (1035 bytes)
-- `phase17_new_vectors/806c_dmem_alias_scan_20261026_120228.txt` (588 bytes)
-- `phase17_new_vectors/806d_dmem_fine_scan_20261026_120302.txt` (631 bytes)
-- `phase17_new_vectors/808a_phys_low_dump_20261026_120410.txt` (1900 bytes)
-- `phase17_new_vectors/808c_phys_scan_upper_20261026_120539.txt` (711 bytes)
-- `phase17_new_vectors/808d_elf_hunt_20261026_120634.txt` (109 bytes)
-- `phase17_new_vectors/809a_phys_persistence_20261026_120840.txt` (683 bytes)
-- `phase17_new_vectors/80a_thr_create_cs43_threading_20261019_215051.txt` (720 bytes)
-- `phase17_new_vectors/80a_thr_create_cs43_threading_20261019_215106.txt` (1031 bytes)
-- `phase17_new_vectors/80a_thr_create_cs43_threading_20261019_215140.txt` (581 bytes)
-- `phase17_new_vectors/80a_thr_create_cs43_threading_20261019_215154.txt` (737 bytes)
-- `phase17_new_vectors/80a_thr_create_cs43_threading_20261019_215205.txt` (689 bytes)
-- `phase17_new_vectors/80a_thr_create_cs43_threading_20261020_163406.txt` (1029 bytes)
-- `phase17_new_vectors/80a_thr_create_cs43_threading_20261021_212214.txt` (720 bytes)
-- `phase17_new_vectors/80a_thr_create_cs43_threading_20261021_212300.txt` (1031 bytes)
-- `phase17_new_vectors/80a_thr_create_cs43_threading_20261021_212358.txt` (581 bytes)
-- `phase17_new_vectors/80a_thr_create_cs43_threading_20261021_212436.txt` (737 bytes)
-- `phase17_new_vectors/80a_thr_create_cs43_threading_20261021_212556.txt` (812 bytes)
-- `phase17_new_vectors/80b_thread_rop_chain_20261019_215520.txt` (587 bytes)
-- `phase17_new_vectors/80b_thread_rop_chain_20261019_215840.txt` (2246 bytes)
-- `phase17_new_vectors/80c_thread_register_exec_20261019_220059.txt` (220 bytes)
-- `phase17_new_vectors/80c_thread_register_exec_20261019_220250.txt` (757 bytes)
-- `phase17_new_vectors/80d_thread_diag_20261019_220426.txt` (267 bytes)
-- `phase17_new_vectors/80e_cs_sweep_20261019_220708.txt` (234 bytes)
-- `phase17_new_vectors/80e_thr_create_child_executes_20261020_164252.txt` (144 bytes)
-- `phase17_new_vectors/80f_get_current_cs_20261019_221206.txt` (1652 bytes)
-- `phase17_new_vectors/80k_rop_chain_20261019_223328.txt` (123 bytes)
-- `phase17_new_vectors/80l_gadget_scan_20261019_224044.txt` (6816 bytes)
-- `phase17_new_vectors/80n_infinite_thread_20261019_224822.txt` (779 bytes)
-- `phase17_new_vectors/80p_umtx_shm_20261019_225551.txt` (1084 bytes)
-- `phase17_new_vectors/80q_umtx_race_20261019_230755.txt` (1551 bytes)
-- `phase17_new_vectors/80r_umtx_wait_race_20261019_230958.txt` (221 bytes)
-- `phase17_new_vectors/80r_umtx_wait_race_20261019_231233.txt` (269 bytes)
-- `phase17_new_vectors/80r_umtx_wait_race_20261019_231457.txt` (884 bytes)
+- `phase17_new_vectors/803c_mmap_548_protect_20261026_115236.txt` (1037 bytes)
+- `phase17_new_vectors/803d_548_op_matrix_20261026_115307.txt` (899 bytes)
+- `phase17_new_vectors/803e_548_maxprot_matrix_20261026_115339.txt` (751 bytes)
+- `phase17_new_vectors/803f_548_op3_payload_20261026_115424.txt` (1601 bytes)
+- `phase17_new_vectors/803g_548_text_pages_20261026_115523.txt` (973 bytes)
+- `phase17_new_vectors/803h_mmap_prot_matrix_20261026_115541.txt` (1043 bytes)
+- `phase17_new_vectors/803i_file_mmap_exec_20261026_115603.txt` (1621 bytes)
+- `phase17_new_vectors/804a_named_object_lifecycle_20261026_115819.txt` (359 bytes)
+- `phase17_new_vectors/804b_548_op3_prot_20261026_115903.txt` (913 bytes)
+- `phase17_new_vectors/805a_net_pcblist_sweep_20261026_120122.txt` (6483 bytes)
+- `phase17_new_vectors/806a_dmem_foreign_phys_20261026_120148.txt` (554 bytes)
+- `phase17_new_vectors/806b_dmem_phys_read_20261026_120207.txt` (1053 bytes)
+- `phase17_new_vectors/806c_dmem_alias_scan_20261026_120228.txt` (605 bytes)
+- `phase17_new_vectors/806d_dmem_fine_scan_20261026_120302.txt` (644 bytes)
+- `phase17_new_vectors/808a_phys_low_dump_20261026_120410.txt` (1918 bytes)
+- `phase17_new_vectors/808c_phys_scan_upper_20261026_120539.txt` (729 bytes)
+- `phase17_new_vectors/808d_elf_hunt_20261026_120634.txt` (114 bytes)
+- `phase17_new_vectors/809a_phys_persistence_20261026_120840.txt` (700 bytes)
+- `phase17_new_vectors/80a_thr_create_cs43_threading_20261019_215051.txt` (735 bytes)
+- `phase17_new_vectors/80a_thr_create_cs43_threading_20261019_215106.txt` (1060 bytes)
+- `phase17_new_vectors/80a_thr_create_cs43_threading_20261019_215140.txt` (599 bytes)
+- `phase17_new_vectors/80a_thr_create_cs43_threading_20261019_215154.txt` (758 bytes)
+- `phase17_new_vectors/80a_thr_create_cs43_threading_20261019_215205.txt` (708 bytes)
+- `phase17_new_vectors/80a_thr_create_cs43_threading_20261020_163406.txt` (1058 bytes)
+- `phase17_new_vectors/80a_thr_create_cs43_threading_20261021_212214.txt` (735 bytes)
+- `phase17_new_vectors/80a_thr_create_cs43_threading_20261021_212300.txt` (1060 bytes)
+- `phase17_new_vectors/80a_thr_create_cs43_threading_20261021_212358.txt` (599 bytes)
+- `phase17_new_vectors/80a_thr_create_cs43_threading_20261021_212436.txt` (758 bytes)
+- `phase17_new_vectors/80a_thr_create_cs43_threading_20261021_212556.txt` (833 bytes)
+- `phase17_new_vectors/80b_thread_rop_chain_20261019_215520.txt` (606 bytes)
+- `phase17_new_vectors/80b_thread_rop_chain_20261019_215840.txt` (2317 bytes)
+- `phase17_new_vectors/80c_thread_register_exec_20261019_220059.txt` (228 bytes)
+- `phase17_new_vectors/80c_thread_register_exec_20261019_220250.txt` (783 bytes)
+- `phase17_new_vectors/80d_thread_diag_20261019_220426.txt` (277 bytes)
+- `phase17_new_vectors/80e_cs_sweep_20261019_220708.txt` (244 bytes)
+- `phase17_new_vectors/80e_thr_create_child_executes_20261020_164252.txt` (149 bytes)
+- `phase17_new_vectors/80f_get_current_cs_20261019_221206.txt` (1712 bytes)
+- `phase17_new_vectors/80k_rop_chain_20261019_223328.txt` (127 bytes)
+- `phase17_new_vectors/80l_gadget_scan_20261019_224044.txt` (6938 bytes)
+- `phase17_new_vectors/80n_infinite_thread_20261019_224822.txt` (805 bytes)
+- `phase17_new_vectors/80p_umtx_shm_20261019_225551.txt` (1121 bytes)
+- `phase17_new_vectors/80q_umtx_race_20261019_230755.txt` (1600 bytes)
+- `phase17_new_vectors/80r_umtx_wait_race_20261019_230958.txt` (232 bytes)
+- `phase17_new_vectors/80r_umtx_wait_race_20261019_231233.txt` (280 bytes)
+- `phase17_new_vectors/80r_umtx_wait_race_20261019_231457.txt` (917 bytes)
 - `phase17_new_vectors/80v_minimal_dispatch_20261019_233453.txt` (0 bytes)
 - `phase17_new_vectors/80w_loader_health_20261019_233503.txt` (0 bytes)
 - `phase17_new_vectors/80w_loader_health_20261019_233608.txt` (0 bytes)
@@ -1856,1110 +1864,1124 @@ Regenerated 2026-11-08 by `tools/regen_archives.py` — deterministic, do not ha
 - `phase17_new_vectors/80w_loader_health_20261019_234853.txt` (0 bytes)
 - `phase17_new_vectors/80w_loader_health_20261019_235115.txt` (0 bytes)
 - `phase17_new_vectors/80w_loader_health_20261019_235417.txt` (0 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_023548.txt` (109 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_023548.txt` (115 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_023625.txt` (0 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_023745.txt` (109 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_023745.txt` (115 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_023820.txt` (0 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_024017.txt` (109 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_024017.txt` (115 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_024055.txt` (0 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_024104.txt` (0 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_024221.txt` (109 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_024221.txt` (115 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_024233.txt` (0 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_024324.txt` (0 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_024355.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_024405.txt` (109 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_024355.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_024405.txt` (115 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_024431.txt` (0 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_024452.txt` (0 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_024511.txt` (0 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_024559.txt` (109 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_024559.txt` (115 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_024629.txt` (0 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_024938.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025028.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025120.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025133.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025224.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025313.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025328.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025412.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025444.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025515.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025612.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025631.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025743.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025806.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_025913.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030005.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030044.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030059.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030214.txt` (109 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_024938.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025028.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025120.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025133.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025224.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025313.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025328.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025412.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025444.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025515.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025612.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025631.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025743.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025806.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_025913.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030005.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030044.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030059.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030214.txt` (115 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_030248.txt` (0 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030325.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030358.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030444.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030522.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030619.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030647.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030828.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_030910.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_031020.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_031037.txt` (109 bytes)
-- `phase17_new_vectors/80w_loader_health_20261020_031146.txt` (109 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030325.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030358.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030444.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030522.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030619.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030647.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030828.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_030910.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_031020.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_031037.txt` (115 bytes)
+- `phase17_new_vectors/80w_loader_health_20261020_031146.txt` (115 bytes)
 - `phase17_new_vectors/80w_loader_health_20261020_031212.txt` (0 bytes)
 - `phase17_new_vectors/80w_loader_health_20261025_212603.txt` (0 bytes)
-- `phase17_new_vectors/80x_cclosure_pointer_minimal_20261020_023553.txt` (177 bytes)
+- `phase17_new_vectors/80x_cclosure_pointer_minimal_20261020_023553.txt` (182 bytes)
 - `phase17_new_vectors/80y_sys728_isolated_20261020_023811.txt` (0 bytes)
 - `phase17_new_vectors/80z_native_fcall_closure_20261020_023616.txt` (0 bytes)
-- `phase17_new_vectors/80za_native_fcall_classify_20261020_023749.txt` (180 bytes)
-- `phase17_new_vectors/810a_sys558_cross_delete_20261026_120945.txt` (520 bytes)
-- `phase17_new_vectors/810b_plant_markers_20261026_121009.txt` (772 bytes)
-- `phase17_new_vectors/810c_verify_markers_20261026_121110.txt` (543 bytes)
-- `phase17_new_vectors/810d_scan_2g_4g_20261026_121138.txt` (840 bytes)
-- `phase17_new_vectors/811a_aio_slot_exhaustion_20261026_121528.txt` (693 bytes)
-- `phase17_new_vectors/812a_cross_family_ids_20261026_121734.txt` (184 bytes)
-- `phase17_new_vectors/812b_cross_family_ids_20261026_121932.txt` (761 bytes)
-- `phase17_new_vectors/812c_osem_id_type_20261026_121954.txt` (713 bytes)
-- `phase17_new_vectors/813a_sigreturn_gate_20261026_122338.txt` (412 bytes)
-- `phase17_new_vectors/814a_getcontext_dump_20261026_122643.txt` (528 bytes)
-- `phase17_new_vectors/814a_getcontext_dump_20261026_122659.txt` (2245 bytes)
-- `phase17_new_vectors/814b_sigreturn_roundtrip_20261026_122800.txt` (671 bytes)
+- `phase17_new_vectors/80za_native_fcall_classify_20261020_023749.txt` (187 bytes)
+- `phase17_new_vectors/810a_sys558_cross_delete_20261026_120945.txt` (548 bytes)
+- `phase17_new_vectors/810b_plant_markers_20261026_121009.txt` (791 bytes)
+- `phase17_new_vectors/810c_verify_markers_20261026_121110.txt` (559 bytes)
+- `phase17_new_vectors/810d_scan_2g_4g_20261026_121138.txt` (862 bytes)
+- `phase17_new_vectors/811a_aio_slot_exhaustion_20261026_121528.txt` (711 bytes)
+- `phase17_new_vectors/812a_cross_family_ids_20261026_121734.txt` (192 bytes)
+- `phase17_new_vectors/812b_cross_family_ids_20261026_121932.txt` (792 bytes)
+- `phase17_new_vectors/812c_osem_id_type_20261026_121954.txt` (740 bytes)
+- `phase17_new_vectors/813a_sigreturn_gate_20261026_122338.txt` (428 bytes)
+- `phase17_new_vectors/814a_getcontext_dump_20261026_122643.txt` (538 bytes)
+- `phase17_new_vectors/814a_getcontext_dump_20261026_122659.txt` (2313 bytes)
+- `phase17_new_vectors/814b_sigreturn_roundtrip_20261026_122800.txt` (692 bytes)
 - `phase17_new_vectors/815b_gadget_scan_regions_20261026_123432.txt` (4541 bytes)
 - `phase17_new_vectors/815b_gadget_scan_regions_20261026_123716.txt` (320 bytes)
-- `phase17_new_vectors/815b_gadget_scan_regions_20261026_123740.txt` (586 bytes)
+- `phase17_new_vectors/815b_gadget_scan_regions_20261026_123740.txt` (601 bytes)
 - `phase17_new_vectors/815c_exec_regions_20261026_123706.txt` (1695 bytes)
-- `phase17_new_vectors/816a_rflags_iopl_20261026_123814.txt` (534 bytes)
-- `phase17_new_vectors/816b_frame_control_20261026_124248.txt` (774 bytes)
-- `phase17_new_vectors/816c_frame_readback_20261026_124415.txt` (681 bytes)
-- `phase17_new_vectors/817a_aio_window_16_20261026_170533.txt` (778 bytes)
-- `phase17_new_vectors/817b_aio_shared_barrier_20261026_171132.txt` (811 bytes)
-- `phase17_new_vectors/818a_aio_orphan_thread_20261026_171823.txt` (1087 bytes)
-- `phase17_new_vectors/819a_devctrl_cmd0_shape_20261026_184259.txt` (538 bytes)
-- `phase17_new_vectors/819a_devctrl_cmd0_shape_20261026_184322.txt` (296 bytes)
-- `phase17_new_vectors/81a_env_enumerate_20261020_002153.txt` (22701 bytes)
-- `phase17_new_vectors/820a_sys639_region_record_20261026_185757.txt` (1186 bytes)
-- `phase17_new_vectors/820a_sys639_region_record_20261026_185813.txt` (1186 bytes)
-- `phase17_new_vectors/821a_kernel_va_mapping_20261026_190642.txt` (809 bytes)
-- `phase17_new_vectors/821b_mprotect_probe_20261026_191436.txt` (515 bytes)
-- `phase17_new_vectors/821b_mprotect_probe_20261026_191443.txt` (1357 bytes)
-- `phase17_new_vectors/822a_batch548_kernel_va_20261026_191532.txt` (789 bytes)
-- `phase17_new_vectors/824a_osem_create_20261026_192653.txt` (470 bytes)
-- `phase17_new_vectors/825a_osem_name_uaf_20261026_192754.txt` (613 bytes)
-- `phase17_new_vectors/826a_osem_refcount_20261026_192827.txt` (635 bytes)
-- `phase17_new_vectors/827a_osem_dangling_open_20261026_192855.txt` (558 bytes)
-- `phase17_new_vectors/828a_osem_counter_oracle_20261026_193100.txt` (817 bytes)
-- `phase17_new_vectors/829a_osem_chunk_reuse_20261026_193202.txt` (957 bytes)
-- `phase17_new_vectors/82a_umtx_exploit_vectors_20261021_212217.txt` (1146 bytes)
-- `phase17_new_vectors/82b_kernel_rw_init_20261020_002639.txt` (6458 bytes)
-- `phase17_new_vectors/830a_osem_limit_fingerprint_20261026_193232.txt` (870 bytes)
-- `phase17_new_vectors/831a_osem_stale_alias_20261026_193352.txt` (466 bytes)
-- `phase17_new_vectors/832a_mdbg_length_arg_20261026_193611.txt` (2349 bytes)
-- `phase17_new_vectors/833a_mdbg_uio_20261026_193634.txt` (650 bytes)
-- `phase17_new_vectors/833a_mdbg_uio_20261026_193642.txt` (650 bytes)
-- `phase17_new_vectors/833a_mdbg_uio_20261026_193652.txt` (1226 bytes)
-- `phase17_new_vectors/835a_sys548_prot_ops_20261026_193822.txt` (97 bytes)
-- `phase17_new_vectors/835a_sys548_prot_ops_20261026_193831.txt` (503 bytes)
-- `phase17_new_vectors/836a_sys548_map_address_20261026_193919.txt` (523 bytes)
-- `phase17_new_vectors/837a_sys548_exec_page_20261026_194014.txt` (1439 bytes)
-- `phase17_new_vectors/838a_sys548_op_isolated_20261026_194034.txt` (977 bytes)
-- `phase17_new_vectors/83a_sys601_deep_retest_20261019_195006.txt` (773 bytes)
-- `phase17_new_vectors/83a_sys601_deep_retest_20261020_152638.txt` (775 bytes)
-- `phase17_new_vectors/83a_sys601_deep_retest_20261020_152658.txt` (1045 bytes)
-- `phase17_new_vectors/83a_sys601_deep_retest_20261022_200903.txt` (773 bytes)
-- `phase17_new_vectors/83a_sys601_deep_retest_sectionB_20261019_195019.txt` (1043 bytes)
-- `phase17_new_vectors/83a_sys601_deep_retest_sectionC_20261019_195022.txt` (847 bytes)
-- `phase17_new_vectors/83a_sys601_deep_retest_sectionD_20261019_195026.txt` (1077 bytes)
-- `phase17_new_vectors/83b_pivot_data_dump_20261020_002834.txt` (7088 bytes)
-- `phase17_new_vectors/83c_sys601_arg2_copyout_20261022_201232.txt` (231 bytes)
-- `phase17_new_vectors/83d_fcall_bytecode_dump_20261020_003000.txt` (11623 bytes)
-- `phase17_new_vectors/83f_safe_prereqs_20261020_003244.txt` (2687 bytes)
-- `phase17_new_vectors/840a_bind_sockaddr_chunk_20261026_194518.txt` (553 bytes)
-- `phase17_new_vectors/840b_osem_destroy_while_waiting_20261026_194729.txt` (570 bytes)
-- `phase17_new_vectors/840b_osem_destroy_while_waiting_20261026_194743.txt` (612 bytes)
-- `phase17_new_vectors/840b_osem_destroy_while_waiting_20261026_194803.txt` (645 bytes)
-- `phase17_new_vectors/840b_osem_destroy_while_waiting_20261026_194818.txt` (681 bytes)
-- `phase17_new_vectors/841a_osem_wait_blocks_20261026_194857.txt` (320 bytes)
-- `phase17_new_vectors/841a_osem_wait_blocks_20261026_194907.txt` (249 bytes)
-- `phase17_new_vectors/841a_osem_wait_blocks_20261026_195131.txt` (256 bytes)
-- `phase17_new_vectors/842a_osem_destroy_with_waiter_20261026_195147.txt` (549 bytes)
-- `phase17_new_vectors/843a_osem_stale_write_reclaim_20261026_195329.txt` (393 bytes)
-- `phase17_new_vectors/843b_osem_reclaim_window_20261026_195347.txt` (264 bytes)
-- `phase17_new_vectors/844a_osem_create_after_waiter_destroy_20261026_195410.txt` (439 bytes)
-- `phase17_new_vectors/845a_osem_stale_unlock_landing_20261026_195432.txt` (410 bytes)
-- `phase17_new_vectors/846a_osem_destroy_race_noqueue_20261026_195655.txt` (365 bytes)
-- `phase17_new_vectors/847a_aio_pathb_alias_20261026_200036.txt` (3281 bytes)
-- `phase17_new_vectors/848a_excess_copyout_hunt_20261026_200319.txt` (873 bytes)
-- `phase17_new_vectors/849a_context_record_dump_20261026_200651.txt` (2079 bytes)
-- `phase17_new_vectors/84a_manual_pivot_init_20261020_003437.txt` (1267 bytes)
-- `phase17_new_vectors/84a_sys653_gpu_pte_nopriv_20261019_195033.txt` (1146 bytes)
-- `phase17_new_vectors/84a_sys653_gpu_pte_nopriv_20261020_152707.txt` (1172 bytes)
-- `phase17_new_vectors/84a_sys653_gpu_pte_nopriv_20261022_121037.txt` (1146 bytes)
-- `phase17_new_vectors/84a_sys653_gpu_pte_nopriv_sectionC_20261019_195040.txt` (758 bytes)
-- `phase17_new_vectors/84c_resolve_test_20261020_003658.txt` (5679 bytes)
-- `phase17_new_vectors/84e_minimal_syscall_20261020_003917.txt` (91 bytes)
-- `phase17_new_vectors/84g_syscall_interface_20261020_004154.txt` (1326 bytes)
-- `phase17_new_vectors/84i_uint64_args_20261020_004358.txt` (103 bytes)
-- `phase17_new_vectors/84j_socket_uint64_20261020_004411.txt` (100 bytes)
-- `phase17_new_vectors/84k_setsockopt_test_20261020_004626.txt` (134 bytes)
-- `phase17_new_vectors/84l_sockopt_scan_20261020_004652.txt` (759 bytes)
-- `phase17_new_vectors/850a_sys548_handle_map_20261026_200732.txt` (2470 bytes)
-- `phase17_new_vectors/851a_sys548_object_handle_20261026_200809.txt` (704 bytes)
-- `phase17_new_vectors/852a_sys548_open_handle_20261026_200821.txt` (1548 bytes)
-- `phase17_new_vectors/853a_region_list_full_20261026_200852.txt` (79379 bytes)
-- `phase17_new_vectors/854a_sys558_osem_free_20261026_203900.txt` (1133 bytes)
-- `phase17_new_vectors/854b_sys558_presence_20261026_203911.txt` (488 bytes)
-- `phase17_new_vectors/855a_sys557_create_20261026_204024.txt` (482 bytes)
-- `phase17_new_vectors/856a_sys532_commands_20261026_204326.txt` (576 bytes)
-- `phase17_new_vectors/856a_sys532_commands_20261026_204332.txt` (4101 bytes)
-- `phase17_new_vectors/856b_sys532_status_map_20261026_204401.txt` (334324 bytes)
-- `phase17_new_vectors/857a_sys532_arg_matrix_20261026_204449.txt` (4560 bytes)
-- `phase17_new_vectors/858a_sys532_struct_20261026_204646.txt` (5414 bytes)
-- `phase17_new_vectors/859a_sys532_ids_20261026_204727.txt` (3300 bytes)
-- `phase17_new_vectors/85c_getsockopt_safe_20261020_004842.txt` (94 bytes)
-- `phase17_new_vectors/85e_step_by_step_20261020_005006.txt` (212 bytes)
-- `phase17_new_vectors/85g_kptr_safe_20261020_005321.txt` (369 bytes)
-- `phase17_new_vectors/85h_kevent_leak_20261020_025323.txt` (165 bytes)
-- `phase17_new_vectors/85i_kevent_v2_20261020_005807.txt` (110 bytes)
-- `phase17_new_vectors/85j_kevent_socketpair_20261020_025408.txt` (259 bytes)
-- `phase17_new_vectors/860a_sys532_size_20261026_204819.txt` (3106 bytes)
-- `phase17_new_vectors/861a_sys532_side_effects_20261026_204855.txt` (980 bytes)
-- `phase17_new_vectors/862a_sys533_jitshm_20261026_205153.txt` (3047 bytes)
-- `phase17_new_vectors/862b_sys533_slots_20261026_205237.txt` (22331 bytes)
-- `phase17_new_vectors/863a_sys605_to_548_20261026_205320.txt` (1183 bytes)
-- `phase17_new_vectors/864a_sys532_matrix_20261026_222612.txt` (2373 bytes)
-- `phase17_new_vectors/864b_sys532_value_20261026_222636.txt` (1272 bytes)
-- `phase17_new_vectors/865a_sys548_fd_handles_20261026_222702.txt` (608 bytes)
-- `phase17_new_vectors/866a_aio_wait_delete_20261026_222901.txt` (213 bytes)
-- `phase17_new_vectors/866a_aio_wait_delete_20261026_222944.txt` (326 bytes)
-- `phase17_new_vectors/867a_sys558_double_close_20261026_223852.txt` (645 bytes)
-- `phase17_new_vectors/868a_sys538_stored_pointer_20261026_224036.txt` (1098 bytes)
-- `phase17_new_vectors/869a_semaphore_name_duplicate_20261026_224121.txt` (479 bytes)
-- `phase17_new_vectors/86a_aio_real_handlers_20261019_194953.txt` (952 bytes)
-- `phase17_new_vectors/86a_aio_real_handlers_sectionB_20261019_195000.txt` (1049 bytes)
-- `phase17_new_vectors/86a_aio_real_handlers_sectionC_20261019_195003.txt` (874 bytes)
-- `phase17_new_vectors/86a_native_read_test_20261020_010207.txt` (2269 bytes)
-- `phase17_new_vectors/86c_kernel_wire_20261020_010440.txt` (731 bytes)
-- `phase17_new_vectors/86e_upvalue_safe_20261020_010945.txt` (424 bytes)
-- `phase17_new_vectors/86g_minimal_rw_20261020_011649.txt` (165 bytes)
-- `phase17_new_vectors/870a_priority_syscalls_20261026_225109.txt` (541 bytes)
-- `phase17_new_vectors/871a_aio_count_boundary_20261026_225600.txt` (681 bytes)
-- `phase17_new_vectors/872a_aio_spin_harness_20261026_225720.txt` (3538 bytes)
-- `phase17_new_vectors/872a_aio_spin_harness_20261026_225759.txt` (31948 bytes)
-- `phase17_new_vectors/872a_aio_spin_harness_20261026_225948.txt` (8649 bytes)
-- `phase17_new_vectors/872a_aio_spin_harness_20261026_230616.txt` (8684 bytes)
-- `phase17_new_vectors/873a_aio_state_writers_20261026_230817.txt` (533 bytes)
-- `phase17_new_vectors/873a_aio_state_writers_20261026_230840.txt` (356 bytes)
-- `phase17_new_vectors/873b_aio_state_gate_20261026_230902.txt` (630 bytes)
-- `phase17_new_vectors/874a_aio_complete_vs_delete_20261026_230925.txt` (101 bytes)
-- `phase17_new_vectors/874a_aio_complete_vs_delete_20261026_231831.txt` (236 bytes)
-- `phase17_new_vectors/874b_pipe_pending_20261026_230940.txt` (160 bytes)
-- `phase17_new_vectors/875a_aio_wait_completion_20261026_231912.txt` (356 bytes)
-- `phase17_new_vectors/877a_aio_wait_repeat_20261026_232022.txt` (5117 bytes)
-- `phase17_new_vectors/878a_gate_matrix_child_20261026_232316.txt` (361 bytes)
-- `phase17_new_vectors/879a_aio_pending_delete_race_20261026_232517.txt` (418 bytes)
-- `phase17_new_vectors/87a_fd_table_scan_20261020_011945.txt` (571 bytes)
-- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_20261019_184839.txt` (1890 bytes)
-- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_20261020_152539.txt` (1894 bytes)
-- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_20261020_152557.txt` (1658 bytes)
-- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_20261022_120531.txt` (1892 bytes)
-- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_sectionB_20261019_184850.txt` (1654 bytes)
-- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_sectionC_20261019_184851.txt` (3939 bytes)
-- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_sectionD_20261019_185338.txt` (992 bytes)
-- `phase17_new_vectors/87c_ipv6_strings_20261020_012307.txt` (3879 bytes)
-- `phase17_new_vectors/87e_fsbase_safe_20261020_012533.txt` (84 bytes)
-- `phase17_new_vectors/87g_data_quick_20261020_013048.txt` (134 bytes)
-- `phase17_new_vectors/880a_aio_completion_window_20261026_232548.txt` (859 bytes)
-- `phase17_new_vectors/880b_aio_slot_swap_20261026_232628.txt` (434 bytes)
-- `phase17_new_vectors/880b_aio_slot_swap_20261026_232643.txt` (434 bytes)
-- `phase17_new_vectors/881a_aio_waiter_deletes_20261026_232852.txt` (479 bytes)
-- `phase17_new_vectors/881a_aio_waiter_deletes_20261026_235854.txt` (467 bytes)
-- `phase17_new_vectors/883b_aio_padded_chain_single_20261027_001203.txt` (2683 bytes)
-- `phase17_new_vectors/886a_suspend_process_20261027_134127.txt` (115 bytes)
-- `phase17_new_vectors/88a_handle_namespace_confusion_20261020_152742.txt` (1436 bytes)
-- `phase17_new_vectors/88a_handle_namespace_confusion_20261028_192603.txt` (1436 bytes)
-- `phase17_new_vectors/88b_storage_only_20261020_013857.txt` (249 bytes)
-- `phase17_new_vectors/88d_safe_pipe_dump_20261020_014405.txt` (8932 bytes)
-- `phase17_new_vectors/88f_eboot_data_scan_20261020_014637.txt` (920 bytes)
-- `phase17_new_vectors/88h_kptr_chunks_20261020_015035.txt` (3563 bytes)
-- `phase17_new_vectors/89a_sys625_msr_controller_20261020_152757.txt` (2478 bytes)
-- `phase17_new_vectors/89d_native_introspect_20261020_034651.txt` (3191 bytes)
-- `phase17_new_vectors/910a_child_self_exit_20261027_184306.txt` (640 bytes)
-- `phase17_new_vectors/911a_aio_race_exiting_children_20261027_184323.txt` (1596 bytes)
-- `phase17_new_vectors/912a_aio_delete_storm_20261027_184548.txt` (520 bytes)
-- `phase17_new_vectors/918a_sys663_signature_20261027_194624.txt` (374 bytes)
-- `phase17_new_vectors/919a_sys663_returns_20261027_194818.txt` (609 bytes)
-- `phase17_new_vectors/919a_sys663_returns_20261027_194824.txt` (629 bytes)
-- `phase17_new_vectors/91a_sys630_mount_enum_20261019_185318.txt` (1145 bytes)
-- `phase17_new_vectors/91a_sys630_mount_enum_sectionB_20261019_185357.txt` (1866 bytes)
-- `phase17_new_vectors/91a_sys630_mount_enum_sectionC_20261019_185358.txt` (1100 bytes)
-- `phase17_new_vectors/91a_sys630_mount_enum_sectionD_20261019_185359.txt` (2409 bytes)
-- `phase17_new_vectors/922a_aio_delete_overcount_20261027_195748.txt` (747 bytes)
-- `phase17_new_vectors/923a_aio_forged_id_20261027_195800.txt` (1013 bytes)
-- `phase17_new_vectors/925a_aio_stale_gen_terminal_20261027_195828.txt` (369 bytes)
-- `phase17_new_vectors/926a_aio_kernel_buf_20261027_203748.txt` (331 bytes)
-- `phase17_new_vectors/927a_aio_kernel_buf_prefilled_20261027_203800.txt` (343 bytes)
-- `phase17_new_vectors/92a_pmu_hardware_exploit_20261020_151702.txt` (1110 bytes)
-- `phase17_new_vectors/930a_path_access_20261028_191858.txt` (2249 bytes)
-- `phase17_new_vectors/931a_kevent_proc_repeat_20261028_191409.txt` (500 bytes)
-- `phase17_new_vectors/931a_kevent_proc_repeat_20261028_191514.txt` (814 bytes)
-- `phase17_new_vectors/931a_kevent_proc_repeat_20261028_191545.txt` (627 bytes)
-- `phase17_new_vectors/931a_kevent_proc_repeat_20261028_191818.txt` (500 bytes)
-- `phase17_new_vectors/931a_kevent_proc_repeat_20261028_191832.txt` (647 bytes)
-- `phase17_new_vectors/932a_shm_object_lifecycle_20261028_191635.txt` (620 bytes)
-- `phase17_new_vectors/932a_shm_object_lifecycle_20261028_191643.txt` (970 bytes)
-- `phase17_new_vectors/932b_shm_object_lifecycle_20261028_191723.txt` (1623 bytes)
-- `phase17_new_vectors/933a_shm_refcount_20261028_191756.txt` (1293 bytes)
-- `phase17_new_vectors/935a_poison_diff_sweep_20261028_195603.txt` (821 bytes)
-- `phase17_new_vectors/936a_bit62_gate_oracle_20261028_200511.txt` (2026 bytes)
-- `phase17_new_vectors/937a_gadget_scan_wide_20261028_200631.txt` (1021 bytes)
-- `phase17_new_vectors/937b_aio_delete_recreate_race_20261028_200755.txt` (2007 bytes)
-- `phase17_new_vectors/937c_aio_three_actor_race_20261028_200847.txt` (1346 bytes)
-- `phase17_new_vectors/937c_aio_three_actor_race_20261028_200923.txt` (283 bytes)
-- `phase17_new_vectors/938a_sys629_integer_branch_20261028_201120.txt` (403 bytes)
-- `phase17_new_vectors/939a_file_backed_exec_20261028_204533.txt` (112 bytes)
-- `phase17_new_vectors/939b_file_fd_mapping_20261028_204747.txt` (520 bytes)
-- `phase17_new_vectors/939c_file_maxprot_oracle_20261028_204810.txt` (956 bytes)
-- `phase17_new_vectors/939d_file_exec_20261028_204844.txt` (147 bytes)
-- `phase17_new_vectors/939e_entry_prot_oracle_20261028_204919.txt` (781 bytes)
+- `phase17_new_vectors/816a_rflags_iopl_20261026_123814.txt` (546 bytes)
+- `phase17_new_vectors/816b_frame_control_20261026_124248.txt` (790 bytes)
+- `phase17_new_vectors/816c_frame_readback_20261026_124415.txt` (696 bytes)
+- `phase17_new_vectors/817a_aio_window_16_20261026_170533.txt` (797 bytes)
+- `phase17_new_vectors/817b_aio_shared_barrier_20261026_171132.txt` (831 bytes)
+- `phase17_new_vectors/818a_aio_orphan_thread_20261026_171823.txt` (1109 bytes)
+- `phase17_new_vectors/819a_devctrl_cmd0_shape_20261026_184259.txt` (547 bytes)
+- `phase17_new_vectors/819a_devctrl_cmd0_shape_20261026_184322.txt` (301 bytes)
+- `phase17_new_vectors/81a_env_enumerate_20261020_002153.txt` (23460 bytes)
+- `phase17_new_vectors/820a_sys639_region_record_20261026_185757.txt` (1199 bytes)
+- `phase17_new_vectors/820a_sys639_region_record_20261026_185813.txt` (1199 bytes)
+- `phase17_new_vectors/821a_kernel_va_mapping_20261026_190642.txt` (831 bytes)
+- `phase17_new_vectors/821b_mprotect_probe_20261026_191436.txt` (525 bytes)
+- `phase17_new_vectors/821b_mprotect_probe_20261026_191443.txt` (1385 bytes)
+- `phase17_new_vectors/822a_batch548_kernel_va_20261026_191532.txt` (816 bytes)
+- `phase17_new_vectors/824a_osem_create_20261026_192653.txt` (483 bytes)
+- `phase17_new_vectors/825a_osem_name_uaf_20261026_192754.txt` (628 bytes)
+- `phase17_new_vectors/826a_osem_refcount_20261026_192827.txt` (660 bytes)
+- `phase17_new_vectors/827a_osem_dangling_open_20261026_192855.txt` (575 bytes)
+- `phase17_new_vectors/828a_osem_counter_oracle_20261026_193100.txt` (840 bytes)
+- `phase17_new_vectors/829a_osem_chunk_reuse_20261026_193202.txt` (981 bytes)
+- `phase17_new_vectors/82a_umtx_exploit_vectors_20261021_212217.txt` (1175 bytes)
+- `phase17_new_vectors/82b_kernel_rw_init_20261020_002639.txt` (6700 bytes)
+- `phase17_new_vectors/830a_osem_limit_fingerprint_20261026_193232.txt` (893 bytes)
+- `phase17_new_vectors/831a_osem_stale_alias_20261026_193352.txt` (484 bytes)
+- `phase17_new_vectors/832a_mdbg_length_arg_20261026_193611.txt` (2395 bytes)
+- `phase17_new_vectors/833a_mdbg_uio_20261026_193634.txt` (663 bytes)
+- `phase17_new_vectors/833a_mdbg_uio_20261026_193642.txt` (663 bytes)
+- `phase17_new_vectors/833a_mdbg_uio_20261026_193652.txt` (1251 bytes)
+- `phase17_new_vectors/835a_sys548_prot_ops_20261026_193822.txt` (102 bytes)
+- `phase17_new_vectors/835a_sys548_prot_ops_20261026_193831.txt` (517 bytes)
+- `phase17_new_vectors/836a_sys548_map_address_20261026_193919.txt` (541 bytes)
+- `phase17_new_vectors/837a_sys548_exec_page_20261026_194014.txt` (1473 bytes)
+- `phase17_new_vectors/838a_sys548_op_isolated_20261026_194034.txt` (1001 bytes)
+- `phase17_new_vectors/83a_sys601_deep_retest_20261019_195006.txt` (795 bytes)
+- `phase17_new_vectors/83a_sys601_deep_retest_20261020_152638.txt` (797 bytes)
+- `phase17_new_vectors/83a_sys601_deep_retest_20261020_152658.txt` (1075 bytes)
+- `phase17_new_vectors/83a_sys601_deep_retest_20261022_200903.txt` (795 bytes)
+- `phase17_new_vectors/83a_sys601_deep_retest_sectionB_20261019_195019.txt` (1073 bytes)
+- `phase17_new_vectors/83a_sys601_deep_retest_sectionC_20261019_195022.txt` (868 bytes)
+- `phase17_new_vectors/83a_sys601_deep_retest_sectionD_20261019_195026.txt` (1113 bytes)
+- `phase17_new_vectors/83b_pivot_data_dump_20261020_002834.txt` (7382 bytes)
+- `phase17_new_vectors/83c_sys601_arg2_copyout_20261022_201232.txt` (240 bytes)
+- `phase17_new_vectors/83d_fcall_bytecode_dump_20261020_003000.txt` (11983 bytes)
+- `phase17_new_vectors/83f_safe_prereqs_20261020_003244.txt` (2804 bytes)
+- `phase17_new_vectors/840a_bind_sockaddr_chunk_20261026_194518.txt` (570 bytes)
+- `phase17_new_vectors/840b_osem_destroy_while_waiting_20261026_194729.txt` (596 bytes)
+- `phase17_new_vectors/840b_osem_destroy_while_waiting_20261026_194743.txt` (639 bytes)
+- `phase17_new_vectors/840b_osem_destroy_while_waiting_20261026_194803.txt` (673 bytes)
+- `phase17_new_vectors/840b_osem_destroy_while_waiting_20261026_194818.txt` (709 bytes)
+- `phase17_new_vectors/841a_osem_wait_blocks_20261026_194857.txt` (333 bytes)
+- `phase17_new_vectors/841a_osem_wait_blocks_20261026_194907.txt` (260 bytes)
+- `phase17_new_vectors/841a_osem_wait_blocks_20261026_195131.txt` (267 bytes)
+- `phase17_new_vectors/842a_osem_destroy_with_waiter_20261026_195147.txt` (569 bytes)
+- `phase17_new_vectors/843a_osem_stale_write_reclaim_20261026_195329.txt` (407 bytes)
+- `phase17_new_vectors/843b_osem_reclaim_window_20261026_195347.txt` (275 bytes)
+- `phase17_new_vectors/844a_osem_create_after_waiter_destroy_20261026_195410.txt` (456 bytes)
+- `phase17_new_vectors/845a_osem_stale_unlock_landing_20261026_195432.txt` (424 bytes)
+- `phase17_new_vectors/846a_osem_destroy_race_noqueue_20261026_195655.txt` (376 bytes)
+- `phase17_new_vectors/847a_aio_pathb_alias_20261026_200036.txt` (3328 bytes)
+- `phase17_new_vectors/848a_excess_copyout_hunt_20261026_200319.txt` (892 bytes)
+- `phase17_new_vectors/849a_context_record_dump_20261026_200651.txt` (2129 bytes)
+- `phase17_new_vectors/84a_manual_pivot_init_20261020_003437.txt` (1346 bytes)
+- `phase17_new_vectors/84a_sys653_gpu_pte_nopriv_20261019_195033.txt` (1182 bytes)
+- `phase17_new_vectors/84a_sys653_gpu_pte_nopriv_20261020_152707.txt` (1208 bytes)
+- `phase17_new_vectors/84a_sys653_gpu_pte_nopriv_20261022_121037.txt` (1182 bytes)
+- `phase17_new_vectors/84a_sys653_gpu_pte_nopriv_sectionC_20261019_195040.txt` (779 bytes)
+- `phase17_new_vectors/84c_resolve_test_20261020_003658.txt` (5859 bytes)
+- `phase17_new_vectors/84e_minimal_syscall_20261020_003917.txt` (97 bytes)
+- `phase17_new_vectors/84g_syscall_interface_20261020_004154.txt` (1414 bytes)
+- `phase17_new_vectors/84i_uint64_args_20261020_004358.txt` (109 bytes)
+- `phase17_new_vectors/84j_socket_uint64_20261020_004411.txt` (108 bytes)
+- `phase17_new_vectors/84k_setsockopt_test_20261020_004626.txt` (143 bytes)
+- `phase17_new_vectors/84l_sockopt_scan_20261020_004652.txt` (794 bytes)
+- `phase17_new_vectors/850a_sys548_handle_map_20261026_200732.txt` (2520 bytes)
+- `phase17_new_vectors/851a_sys548_object_handle_20261026_200809.txt` (722 bytes)
+- `phase17_new_vectors/852a_sys548_open_handle_20261026_200821.txt` (1583 bytes)
+- `phase17_new_vectors/853a_region_list_full_20261026_200852.txt` (80479 bytes)
+- `phase17_new_vectors/854a_sys558_osem_free_20261026_203900.txt` (1145 bytes)
+- `phase17_new_vectors/854b_sys558_presence_20261026_203911.txt` (496 bytes)
+- `phase17_new_vectors/855a_sys557_create_20261026_204024.txt` (493 bytes)
+- `phase17_new_vectors/856a_sys532_commands_20261026_204326.txt` (589 bytes)
+- `phase17_new_vectors/856a_sys532_commands_20261026_204332.txt` (4197 bytes)
+- `phase17_new_vectors/856b_sys532_status_map_20261026_204401.txt` (339437 bytes)
+- `phase17_new_vectors/857a_sys532_arg_matrix_20261026_204449.txt` (4653 bytes)
+- `phase17_new_vectors/858a_sys532_struct_20261026_204646.txt` (5508 bytes)
+- `phase17_new_vectors/859a_sys532_ids_20261026_204727.txt` (3374 bytes)
+- `phase17_new_vectors/85c_getsockopt_safe_20261020_004842.txt` (102 bytes)
+- `phase17_new_vectors/85e_step_by_step_20261020_005006.txt` (230 bytes)
+- `phase17_new_vectors/85g_kptr_safe_20261020_005321.txt` (390 bytes)
+- `phase17_new_vectors/85h_kevent_leak_20261020_025323.txt` (176 bytes)
+- `phase17_new_vectors/85i_kevent_v2_20261020_005807.txt` (119 bytes)
+- `phase17_new_vectors/85j_kevent_socketpair_20261020_025408.txt` (266 bytes)
+- `phase17_new_vectors/860a_sys532_size_20261026_204819.txt` (3156 bytes)
+- `phase17_new_vectors/861a_sys532_side_effects_20261026_204855.txt` (1006 bytes)
+- `phase17_new_vectors/862a_sys533_jitshm_20261026_205153.txt` (3122 bytes)
+- `phase17_new_vectors/862b_sys533_slots_20261026_205237.txt` (22738 bytes)
+- `phase17_new_vectors/863a_sys605_to_548_20261026_205320.txt` (1214 bytes)
+- `phase17_new_vectors/864a_sys532_matrix_20261026_222612.txt` (2424 bytes)
+- `phase17_new_vectors/864b_sys532_value_20261026_222636.txt` (1301 bytes)
+- `phase17_new_vectors/865a_sys548_fd_handles_20261026_222702.txt` (621 bytes)
+- `phase17_new_vectors/866a_aio_wait_delete_20261026_222901.txt` (219 bytes)
+- `phase17_new_vectors/866a_aio_wait_delete_20261026_222944.txt` (334 bytes)
+- `phase17_new_vectors/867a_sys558_double_close_20261026_223852.txt` (658 bytes)
+- `phase17_new_vectors/868a_sys538_stored_pointer_20261026_224036.txt` (1113 bytes)
+- `phase17_new_vectors/869a_semaphore_name_duplicate_20261026_224121.txt` (490 bytes)
+- `phase17_new_vectors/86a_aio_real_handlers_20261019_194953.txt` (991 bytes)
+- `phase17_new_vectors/86a_aio_real_handlers_sectionB_20261019_195000.txt` (1091 bytes)
+- `phase17_new_vectors/86a_aio_real_handlers_sectionC_20261019_195003.txt` (913 bytes)
+- `phase17_new_vectors/86a_native_read_test_20261020_010207.txt` (2354 bytes)
+- `phase17_new_vectors/86c_kernel_wire_20261020_010440.txt` (769 bytes)
+- `phase17_new_vectors/86e_upvalue_safe_20261020_010945.txt` (452 bytes)
+- `phase17_new_vectors/86g_minimal_rw_20261020_011649.txt` (180 bytes)
+- `phase17_new_vectors/870a_priority_syscalls_20261026_225109.txt` (551 bytes)
+- `phase17_new_vectors/871a_aio_count_boundary_20261026_225600.txt` (697 bytes)
+- `phase17_new_vectors/872a_aio_spin_harness_20261026_225720.txt` (3614 bytes)
+- `phase17_new_vectors/872a_aio_spin_harness_20261026_225759.txt` (32643 bytes)
+- `phase17_new_vectors/872a_aio_spin_harness_20261026_225948.txt` (8878 bytes)
+- `phase17_new_vectors/872a_aio_spin_harness_20261026_230616.txt` (8915 bytes)
+- `phase17_new_vectors/873a_aio_state_writers_20261026_230817.txt` (543 bytes)
+- `phase17_new_vectors/873a_aio_state_writers_20261026_230840.txt` (367 bytes)
+- `phase17_new_vectors/873b_aio_state_gate_20261026_230902.txt` (644 bytes)
+- `phase17_new_vectors/874a_aio_complete_vs_delete_20261026_230925.txt` (105 bytes)
+- `phase17_new_vectors/874a_aio_complete_vs_delete_20261026_231831.txt` (244 bytes)
+- `phase17_new_vectors/874b_pipe_pending_20261026_230940.txt` (165 bytes)
+- `phase17_new_vectors/875a_aio_wait_completion_20261026_231912.txt` (366 bytes)
+- `phase17_new_vectors/877a_aio_wait_repeat_20261026_232022.txt` (5222 bytes)
+- `phase17_new_vectors/878a_gate_matrix_child_20261026_232316.txt` (368 bytes)
+- `phase17_new_vectors/879a_aio_pending_delete_race_20261026_232517.txt` (432 bytes)
+- `phase17_new_vectors/87a_fd_table_scan_20261020_011945.txt` (603 bytes)
+- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_20261019_184839.txt` (1939 bytes)
+- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_20261020_152539.txt` (1943 bytes)
+- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_20261020_152557.txt` (1698 bytes)
+- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_20261022_120531.txt` (1941 bytes)
+- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_sectionB_20261019_184850.txt` (1694 bytes)
+- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_sectionC_20261019_184851.txt` (4034 bytes)
+- `phase17_new_vectors/87a_sys532_gpu_dispatch_nopriv_sectionD_20261019_185338.txt` (1022 bytes)
+- `phase17_new_vectors/87c_ipv6_strings_20261020_012307.txt` (4185 bytes)
+- `phase17_new_vectors/87e_fsbase_safe_20261020_012533.txt` (90 bytes)
+- `phase17_new_vectors/87g_data_quick_20261020_013048.txt` (141 bytes)
+- `phase17_new_vectors/880a_aio_completion_window_20261026_232548.txt` (878 bytes)
+- `phase17_new_vectors/880b_aio_slot_swap_20261026_232628.txt` (444 bytes)
+- `phase17_new_vectors/880b_aio_slot_swap_20261026_232643.txt` (444 bytes)
+- `phase17_new_vectors/881a_aio_waiter_deletes_20261026_232852.txt` (491 bytes)
+- `phase17_new_vectors/881a_aio_waiter_deletes_20261026_235854.txt` (479 bytes)
+- `phase17_new_vectors/883b_aio_padded_chain_single_20261027_001203.txt` (2734 bytes)
+- `phase17_new_vectors/886a_suspend_process_20261027_134127.txt` (118 bytes)
+- `phase17_new_vectors/88a_handle_namespace_confusion_20261020_152742.txt` (1472 bytes)
+- `phase17_new_vectors/88a_handle_namespace_confusion_20261028_192603.txt` (1472 bytes)
+- `phase17_new_vectors/88b_storage_only_20261020_013857.txt` (263 bytes)
+- `phase17_new_vectors/88d_safe_pipe_dump_20261020_014405.txt` (9290 bytes)
+- `phase17_new_vectors/88f_eboot_data_scan_20261020_014637.txt` (955 bytes)
+- `phase17_new_vectors/88h_kptr_chunks_20261020_015035.txt` (3728 bytes)
+- `phase17_new_vectors/89a_sys625_msr_controller_20261020_152757.txt` (2552 bytes)
+- `phase17_new_vectors/89d_native_introspect_20261020_034651.txt` (3269 bytes)
+- `phase17_new_vectors/910a_child_self_exit_20261027_184306.txt` (654 bytes)
+- `phase17_new_vectors/911a_aio_race_exiting_children_20261027_184323.txt` (1621 bytes)
+- `phase17_new_vectors/912a_aio_delete_storm_20261027_184548.txt` (530 bytes)
+- `phase17_new_vectors/918a_sys663_signature_20261027_194624.txt` (385 bytes)
+- `phase17_new_vectors/919a_sys663_returns_20261027_194818.txt` (621 bytes)
+- `phase17_new_vectors/919a_sys663_returns_20261027_194824.txt` (643 bytes)
+- `phase17_new_vectors/91a_sys630_mount_enum_20261019_185318.txt` (1183 bytes)
+- `phase17_new_vectors/91a_sys630_mount_enum_sectionB_20261019_185357.txt` (1920 bytes)
+- `phase17_new_vectors/91a_sys630_mount_enum_sectionC_20261019_185358.txt` (1135 bytes)
+- `phase17_new_vectors/91a_sys630_mount_enum_sectionD_20261019_185359.txt` (2474 bytes)
+- `phase17_new_vectors/922a_aio_delete_overcount_20261027_195748.txt` (767 bytes)
+- `phase17_new_vectors/923a_aio_forged_id_20261027_195800.txt` (1031 bytes)
+- `phase17_new_vectors/925a_aio_stale_gen_terminal_20261027_195828.txt` (381 bytes)
+- `phase17_new_vectors/926a_aio_kernel_buf_20261027_203748.txt` (342 bytes)
+- `phase17_new_vectors/927a_aio_kernel_buf_prefilled_20261027_203800.txt` (355 bytes)
+- `phase17_new_vectors/92a_pmu_hardware_exploit_20261020_151702.txt` (1145 bytes)
+- `phase17_new_vectors/930a_path_access_20261028_191858.txt` (2282 bytes)
+- `phase17_new_vectors/931a_kevent_proc_repeat_20261028_191409.txt` (520 bytes)
+- `phase17_new_vectors/931a_kevent_proc_repeat_20261028_191514.txt` (844 bytes)
+- `phase17_new_vectors/931a_kevent_proc_repeat_20261028_191545.txt` (652 bytes)
+- `phase17_new_vectors/931a_kevent_proc_repeat_20261028_191818.txt` (520 bytes)
+- `phase17_new_vectors/931a_kevent_proc_repeat_20261028_191832.txt` (672 bytes)
+- `phase17_new_vectors/932a_shm_object_lifecycle_20261028_191635.txt` (633 bytes)
+- `phase17_new_vectors/932a_shm_object_lifecycle_20261028_191643.txt` (1011 bytes)
+- `phase17_new_vectors/932b_shm_object_lifecycle_20261028_191723.txt` (1676 bytes)
+- `phase17_new_vectors/933a_shm_refcount_20261028_191756.txt` (1329 bytes)
+- `phase17_new_vectors/935a_poison_diff_sweep_20261028_195603.txt` (839 bytes)
+- `phase17_new_vectors/936a_bit62_gate_oracle_20261028_200511.txt` (2085 bytes)
+- `phase17_new_vectors/937a_gadget_scan_wide_20261028_200631.txt` (1047 bytes)
+- `phase17_new_vectors/937b_aio_delete_recreate_race_20261028_200755.txt` (2070 bytes)
+- `phase17_new_vectors/937c_aio_three_actor_race_20261028_200847.txt` (1400 bytes)
+- `phase17_new_vectors/937c_aio_three_actor_race_20261028_200923.txt` (294 bytes)
+- `phase17_new_vectors/938a_sys629_integer_branch_20261028_201120.txt` (421 bytes)
+- `phase17_new_vectors/939a_file_backed_exec_20261028_204533.txt` (117 bytes)
+- `phase17_new_vectors/939b_file_fd_mapping_20261028_204747.txt` (537 bytes)
+- `phase17_new_vectors/939c_file_maxprot_oracle_20261028_204810.txt` (987 bytes)
+- `phase17_new_vectors/939d_file_exec_20261028_204844.txt` (152 bytes)
+- `phase17_new_vectors/939e_entry_prot_oracle_20261028_204919.txt` (797 bytes)
 - `phase17_new_vectors/93a_gpu_vm_range_ops_20261020_152816.txt` (0 bytes)
 - `phase17_new_vectors/93a_gpu_vm_range_ops_20261020_152838.txt` (0 bytes)
 - `phase17_new_vectors/93a_gpu_vm_range_ops_20261020_153016.txt` (0 bytes)
-- `phase17_new_vectors/940a_exec_backing_file_20261028_205023.txt` (494 bytes)
-- `phase17_new_vectors/941a_umtx_pi_ops_20261028_205120.txt` (793 bytes)
-- `phase17_new_vectors/941a_umtx_pi_ops_20261028_205128.txt` (647 bytes)
-- `phase17_new_vectors/947a_mlfs_surface_20261028_214831.txt` (714 bytes)
-- `phase17_new_vectors/947b_mlfs_inode_lifetime_20261028_214857.txt` (854 bytes)
-- `phase17_new_vectors/948a_aio_file_fd_20261028_215023.txt` (587 bytes)
-- `phase17_new_vectors/949a_mlfs_lookup_race_20261028_215408.txt` (463 bytes)
-- `phase17_new_vectors/94a_pmu_counter_read_20261019_185318.txt` (877 bytes)
-- `phase17_new_vectors/94a_pmu_counter_read_20261020_151807.txt` (892 bytes)
-- `phase17_new_vectors/94a_pmu_counter_read_sectionB_20261019_185403.txt` (966 bytes)
-- `phase17_new_vectors/94a_pmu_counter_read_sectionC_20261019_185403.txt` (1181 bytes)
-- `phase17_new_vectors/951a_mapfixed_over_exec_20261029_201443.txt` (751 bytes)
-- `phase17_new_vectors/953a_mapfixed_mprotect_x_20261029_201910.txt` (848 bytes)
-- `phase17_new_vectors/95a_aio_subsystem_20261019_195054.txt` (636 bytes)
-- `phase17_new_vectors/95a_aio_subsystem_sectionB_20261019_195100.txt` (921 bytes)
-- `phase17_new_vectors/95a_aio_subsystem_sectionC_20261019_195103.txt` (678 bytes)
-- `phase17_new_vectors/95a_aio_subsystem_sectionD_20261019_195106.txt` (472 bytes)
-- `phase17_new_vectors/95a_aio_subsystem_sectionD_20261019_195443.txt` (546 bytes)
-- `phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152023.txt` (1449 bytes)
-- `phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152024.txt` (1443 bytes)
-- `phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152024_mtxoo0bx/95a_pmu_cross_connection_stability_20261020_152024.txt` (1443 bytes)
-- `phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152025.txt` (1451 bytes)
-- `phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152025_l7tojqy1/95a_pmu_cross_connection_stability_20261020_152025.txt` (1443 bytes)
-- `phase17_new_vectors/95b_aio_one_byte_completion_20261019_195448.txt` (397 bytes)
-- `phase17_new_vectors/95c_aio_invalid_fd_lifecycle_20261019_195516.txt` (426 bytes)
-- `phase17_new_vectors/96a_aio_duplicate_delete_20261021_085256.txt` (488 bytes)
-- `phase17_new_vectors/96b_handle_generation_wrap_20261028_194828.txt` (1936 bytes)
-- `phase17_new_vectors/96c_handle_cross_family_aba_20261028_194929.txt` (769 bytes)
-- `phase17_new_vectors/96c_handle_cross_family_aba_20261028_194951.txt` (1138 bytes)
-- `phase17_new_vectors/96d_handle_allocator_order_20261028_195024.txt` (759 bytes)
-- `phase17_new_vectors/96e_handle_cross_family_use_20261028_195107.txt` (1147 bytes)
-- `phase17_new_vectors/96f_aio_delete_semantics_20261028_195140.txt` (516 bytes)
-- `phase17_new_vectors/975c_fcntl_fd_map_20261103_112621.txt` (3022 bytes)
+- `phase17_new_vectors/940a_exec_backing_file_20261028_205023.txt` (507 bytes)
+- `phase17_new_vectors/941a_umtx_pi_ops_20261028_205120.txt` (813 bytes)
+- `phase17_new_vectors/941a_umtx_pi_ops_20261028_205128.txt` (671 bytes)
+- `phase17_new_vectors/947a_mlfs_surface_20261028_214831.txt` (746 bytes)
+- `phase17_new_vectors/947b_mlfs_inode_lifetime_20261028_214857.txt` (889 bytes)
+- `phase17_new_vectors/948a_aio_file_fd_20261028_215023.txt` (608 bytes)
+- `phase17_new_vectors/949a_mlfs_lookup_race_20261028_215408.txt` (480 bytes)
+- `phase17_new_vectors/94a_pmu_counter_read_20261019_185318.txt` (911 bytes)
+- `phase17_new_vectors/94a_pmu_counter_read_20261020_151807.txt` (926 bytes)
+- `phase17_new_vectors/94a_pmu_counter_read_sectionB_20261019_185403.txt` (1004 bytes)
+- `phase17_new_vectors/94a_pmu_counter_read_sectionC_20261019_185403.txt` (1225 bytes)
+- `phase17_new_vectors/951a_mapfixed_over_exec_20261029_201443.txt` (771 bytes)
+- `phase17_new_vectors/953a_mapfixed_mprotect_x_20261029_201910.txt` (870 bytes)
+- `phase17_new_vectors/95a_aio_subsystem_20261019_195054.txt` (662 bytes)
+- `phase17_new_vectors/95a_aio_subsystem_sectionB_20261019_195100.txt` (960 bytes)
+- `phase17_new_vectors/95a_aio_subsystem_sectionC_20261019_195103.txt` (718 bytes)
+- `phase17_new_vectors/95a_aio_subsystem_sectionD_20261019_195106.txt` (491 bytes)
+- `phase17_new_vectors/95a_aio_subsystem_sectionD_20261019_195443.txt` (567 bytes)
+- `phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152023.txt` (1476 bytes)
+- `phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152024.txt` (1470 bytes)
+- `phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152024_mtxoo0bx/95a_pmu_cross_connection_stability_20261020_152024.txt` (1470 bytes)
+- `phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152025.txt` (1478 bytes)
+- `phase17_new_vectors/95a_pmu_cross_connection_stability_20261020_152025_l7tojqy1/95a_pmu_cross_connection_stability_20261020_152025.txt` (1470 bytes)
+- `phase17_new_vectors/95b_aio_one_byte_completion_20261019_195448.txt` (408 bytes)
+- `phase17_new_vectors/95c_aio_invalid_fd_lifecycle_20261019_195516.txt` (437 bytes)
+- `phase17_new_vectors/96a_aio_duplicate_delete_20261021_085256.txt` (504 bytes)
+- `phase17_new_vectors/96b_handle_generation_wrap_20261028_194828.txt` (1992 bytes)
+- `phase17_new_vectors/96c_handle_cross_family_aba_20261028_194929.txt` (792 bytes)
+- `phase17_new_vectors/96c_handle_cross_family_aba_20261028_194951.txt` (1169 bytes)
+- `phase17_new_vectors/96d_handle_allocator_order_20261028_195024.txt` (788 bytes)
+- `phase17_new_vectors/96e_handle_cross_family_use_20261028_195107.txt` (1189 bytes)
+- `phase17_new_vectors/96f_aio_delete_semantics_20261028_195140.txt` (531 bytes)
+- `phase17_new_vectors/975c_fcntl_fd_map_20261103_112621.txt` (3086 bytes)
 - `phase17_new_vectors/975d_fd_identify_20261103_112648.txt` (87 bytes)
-- `phase17_new_vectors/975e_fd_peername_20261103_112723.txt` (2421 bytes)
-- `phase17_new_vectors/976a_ioctl_real_fds_20261103_112812.txt` (1668 bytes)
-- `phase17_new_vectors/977a_device_fd_mmap_20261103_112901.txt` (730 bytes)
-- `phase17_new_vectors/977b_fd18_content_20261103_112918.txt` (1756 bytes)
-- `phase17_new_vectors/978a_dev_nodes_20261103_113020.txt` (169 bytes)
-- `phase17_new_vectors/983a_opmc_index_bounds_20261103_150605.txt` (1895 bytes)
-- `phase17_new_vectors/983b_opmc_value_mask_20261103_150650.txt` (1737 bytes)
-- `phase17_new_vectors/984a_sys605_arg2_20261103_150821.txt` (1327 bytes)
-- `phase17_new_vectors/985a_device_fd_io_20261103_151106.txt` (512 bytes)
-- `phase17_new_vectors/986a_vm_prot_kernel_probe_20261103_152645.txt` (1694 bytes)
-- `phase17_new_vectors/987a_loader_source_extract_20261103_153117.txt` (1348 bytes)
-- `phase17_new_vectors/989a_shared_maxprot_20261103_153858.txt` (912 bytes)
-- `phase17_new_vectors/989b_shared_maxprot_fixed_20261103_153943.txt` (973 bytes)
-- `phase17_new_vectors/98a_gpu_pte_wxbypass_20261020_152606.txt` (698 bytes)
-- `phase17_new_vectors/992a_loader_globals_20261103_162806.txt` (763 bytes)
-- `phase17_new_vectors/993b_chain_selftest_20261103_162932.txt` (260 bytes)
-- `phase17_new_vectors/994a_handler_registers_20261103_163210.txt` (658 bytes)
-- `phase17_new_vectors/995a_fault_class_dump_20261103_163237.txt` (563 bytes)
-- `phase17_new_vectors/998a_fault_scan_loop_20261103_164018.txt` (128 bytes)
+- `phase17_new_vectors/975e_fd_peername_20261103_112723.txt` (2456 bytes)
+- `phase17_new_vectors/976a_ioctl_real_fds_20261103_112812.txt` (1697 bytes)
+- `phase17_new_vectors/977a_device_fd_mmap_20261103_112901.txt` (746 bytes)
+- `phase17_new_vectors/977b_fd18_content_20261103_112918.txt` (1768 bytes)
+- `phase17_new_vectors/978a_dev_nodes_20261103_113020.txt` (172 bytes)
+- `phase17_new_vectors/983a_opmc_index_bounds_20261103_150605.txt` (1938 bytes)
+- `phase17_new_vectors/983b_opmc_value_mask_20261103_150650.txt` (1766 bytes)
+- `phase17_new_vectors/984a_sys605_arg2_20261103_150821.txt` (1370 bytes)
+- `phase17_new_vectors/985a_device_fd_io_20261103_151106.txt` (523 bytes)
+- `phase17_new_vectors/986a_vm_prot_kernel_probe_20261103_152645.txt` (1717 bytes)
+- `phase17_new_vectors/987a_loader_source_extract_20261103_153117.txt` (1383 bytes)
+- `phase17_new_vectors/989a_shared_maxprot_20261103_153858.txt` (936 bytes)
+- `phase17_new_vectors/989b_shared_maxprot_fixed_20261103_153943.txt` (995 bytes)
+- `phase17_new_vectors/98a_gpu_pte_wxbypass_20261020_152606.txt` (729 bytes)
+- `phase17_new_vectors/992a_loader_globals_20261103_162806.txt` (790 bytes)
+- `phase17_new_vectors/993b_chain_selftest_20261103_162932.txt` (267 bytes)
+- `phase17_new_vectors/994a_handler_registers_20261103_163210.txt` (672 bytes)
+- `phase17_new_vectors/995a_fault_class_dump_20261103_163237.txt` (575 bytes)
+- `phase17_new_vectors/998a_fault_scan_loop_20261103_164018.txt` (133 bytes)
 - `phase17_new_vectors/999a_handler_exit_test_20261103_164158.txt` (87 bytes)
-- `phase17_new_vectors/999a_handler_exit_test_20261103_164227.txt` (39 bytes)
-- `phase17_new_vectors/99a_hw_write_vm_selfmod_20261020_152717.txt` (750 bytes)
-- `phase17_new_vectors/bounds_fuzz_20261020_223442.txt` (17735 bytes)
-- `phase17_new_vectors/restart_pressure_20261021_133337.txt` (598 bytes)
+- `phase17_new_vectors/999a_handler_exit_test_20261103_164227.txt` (41 bytes)
+- `phase17_new_vectors/99a_hw_write_vm_selfmod_20261020_152717.txt` (787 bytes)
+- `phase17_new_vectors/bounds_fuzz_20261020_223442.txt` (17918 bytes)
+- `phase17_new_vectors/restart_pressure_20261021_133337.txt` (608 bytes)
 - `phase17_seg_hypothesis/79a_getmcontext_layout_20261019_184618.txt` (159 bytes)
-- `phase17_seg_hypothesis/79a_getmcontext_layout_20261019_184646.txt` (1619 bytes)
-- `phase18_bsd_native/388a_bsd_top5_exploration_20261023_161540.txt` (2377 bytes)
-- `phase18_bsd_native/388b_ksem_deep_exploration_20261023_161839.txt` (1535 bytes)
-- `phase18_bsd_native/388c_ksem_corrected_20261023_162122.txt` (125 bytes)
-- `phase18_bsd_native/388d_ksem_minimal_20261023_162241.txt` (828 bytes)
-- `phase18_bsd_native/389a_ksem_race_20261023_162610.txt` (697 bytes)
-- `phase18_bsd_native/389d_bsd_batch2_no125_20261023_163315.txt` (834 bytes)
-- `phase18_bsd_native/389e_sc102_and_more_20261023_163436.txt` (761 bytes)
-- `phase18_bsd_native/389f_bsd_safe_sweep_20261023_163808.txt` (408 bytes)
-- `phase18_bsd_native/389g_targeted_bsd_20261023_171948.txt` (63 bytes)
-- `phase18_bsd_native/389h_safe_targeted_20261023_172209.txt` (785 bytes)
-- `phase18_bsd_native/389i_modfind_mlock_20261023_172335.txt` (839 bytes)
-- `phase18_bsd_native/390a_kaslr_gadget_scan_20261023_172945.txt` (111 bytes)
-- `phase18_bsd_native/390b_kaslr_fast_scan_20261023_173258.txt` (2357 bytes)
-- `phase18_bsd_native/390c_gadget_context_20261023_173530.txt` (522 bytes)
-- `phase19_posixshm/391a_shm_open_retest_20261023_180734.txt` (1059 bytes)
-- `phase19_posixshm/391b_sendfile_uaf_trigger_20261023_181317.txt` (432 bytes)
-- `phase19_posixshm/391c_shm_trunc_uaf_20261023_181935.txt` (769 bytes)
-- `phase19_posixshm/391d_sendfile_child_drain_20261023_182316.txt` (705 bytes)
-- `phase19_umtx_454/110a_umtx_shm_reachability_20261019_184821.txt` (1851 bytes)
-- `phase19_umtx_454/110b_pi_mutex_baseline_20261021_091207.txt` (246 bytes)
-- `phase19_umtx_454/151a_umtx_shm_race_20261020_075419.txt` (829 bytes)
-- `phase19_umtx_454/152b_shm_heap_safe_20261020_102211.txt` (1123 bytes)
-- `phase19_umtx_454/152e_shm_race_fcall_20261020_103437.txt` (610 bytes)
+- `phase17_seg_hypothesis/79a_getmcontext_layout_20261019_184646.txt` (1669 bytes)
+- `phase18_bsd_native/388a_bsd_top5_exploration_20261023_161540.txt` (2442 bytes)
+- `phase18_bsd_native/388b_ksem_deep_exploration_20261023_161839.txt` (1589 bytes)
+- `phase18_bsd_native/388c_ksem_corrected_20261023_162122.txt` (131 bytes)
+- `phase18_bsd_native/388d_ksem_minimal_20261023_162241.txt` (861 bytes)
+- `phase18_bsd_native/389a_ksem_race_20261023_162610.txt` (724 bytes)
+- `phase18_bsd_native/389d_bsd_batch2_no125_20261023_163315.txt` (871 bytes)
+- `phase18_bsd_native/389e_sc102_and_more_20261023_163436.txt` (780 bytes)
+- `phase18_bsd_native/389f_bsd_safe_sweep_20261023_163808.txt` (424 bytes)
+- `phase18_bsd_native/389g_targeted_bsd_20261023_171948.txt` (67 bytes)
+- `phase18_bsd_native/389h_safe_targeted_20261023_172209.txt` (827 bytes)
+- `phase18_bsd_native/389i_modfind_mlock_20261023_172335.txt` (875 bytes)
+- `phase18_bsd_native/390a_kaslr_gadget_scan_20261023_172945.txt` (117 bytes)
+- `phase18_bsd_native/390b_kaslr_fast_scan_20261023_173258.txt` (2433 bytes)
+- `phase18_bsd_native/390c_gadget_context_20261023_173530.txt` (545 bytes)
+- `phase19_posixshm/391a_shm_open_retest_20261023_180734.txt` (1094 bytes)
+- `phase19_posixshm/391b_sendfile_uaf_trigger_20261023_181317.txt` (452 bytes)
+- `phase19_posixshm/391c_shm_trunc_uaf_20261023_181935.txt` (801 bytes)
+- `phase19_posixshm/391d_sendfile_child_drain_20261023_182316.txt` (732 bytes)
+- `phase19_umtx_454/110a_umtx_shm_reachability_20261019_184821.txt` (1888 bytes)
+- `phase19_umtx_454/110b_pi_mutex_baseline_20261021_091207.txt` (254 bytes)
+- `phase19_umtx_454/151a_umtx_shm_race_20261020_075419.txt` (858 bytes)
+- `phase19_umtx_454/152b_shm_heap_safe_20261020_102211.txt` (1166 bytes)
+- `phase19_umtx_454/152e_shm_race_fcall_20261020_103437.txt` (640 bytes)
 - `phase19_umtx_454/152f_shm_slab_reclaim_20261020_103556.txt` (89 bytes)
-- `phase19_umtx_454/152f_shm_slab_reclaim_20261020_103613.txt` (1032 bytes)
-- `phase19_umtx_454/152g_shm_same_type_reclaim_20261020_103742.txt` (978 bytes)
-- `phase19_umtx_454/152h_shm_thread_pressure_20261020_103935.txt` (565 bytes)
-- `phase19_umtx_454/152i_shm_key_semantics_20261020_104133.txt` (644 bytes)
-- `phase19_umtx_454/152k_shm_side_channel_20261020_104543.txt` (818 bytes)
-- `phase19_umtx_454/153a_shm_threaded_race_20261020_084524.txt` (106 bytes)
-- `phase19_umtx_454/153b_umtx_safe_sweep_20261020_105149.txt` (297 bytes)
-- `phase19_umtx_454/160a2_umtx_lock_ops_20261021_141649.txt` (1138 bytes)
-- `phase19_umtx_454/160a_umtx_op_matrix_fixed_20261021_141350.txt` (585 bytes)
-- `phase1_identity_layout/01_identity_20261015_184155.txt` (74 bytes)
-- `phase1_identity_layout/01_identity_20261015_184244.txt` (6523 bytes)
+- `phase19_umtx_454/152f_shm_slab_reclaim_20261020_103613.txt` (1070 bytes)
+- `phase19_umtx_454/152g_shm_same_type_reclaim_20261020_103742.txt` (1019 bytes)
+- `phase19_umtx_454/152h_shm_thread_pressure_20261020_103935.txt` (589 bytes)
+- `phase19_umtx_454/152i_shm_key_semantics_20261020_104133.txt` (669 bytes)
+- `phase19_umtx_454/152k_shm_side_channel_20261020_104543.txt` (850 bytes)
+- `phase19_umtx_454/153a_shm_threaded_race_20261020_084524.txt` (111 bytes)
+- `phase19_umtx_454/153b_umtx_safe_sweep_20261020_105149.txt` (307 bytes)
+- `phase19_umtx_454/160a2_umtx_lock_ops_20261021_141649.txt` (1192 bytes)
+- `phase19_umtx_454/160a_umtx_op_matrix_fixed_20261021_141350.txt` (598 bytes)
+- `phase1_identity_layout/01_identity_20261015_184155.txt` (75 bytes)
+- `phase1_identity_layout/01_identity_20261015_184244.txt` (6828 bytes)
 - `phase1_identity_layout/01_identity_20261018_093937.txt` (0 bytes)
 - `phase1_identity_layout/01_identity_20261018_094011.txt` (0 bytes)
-- `phase1_identity_layout/01_identity_20261018_094017.txt` (6523 bytes)
+- `phase1_identity_layout/01_identity_20261018_094017.txt` (6828 bytes)
 - `phase1_identity_layout/01_identity_20261018_094103.txt` (0 bytes)
-- `phase1_identity_layout/01_identity_20261018_094147.txt` (6523 bytes)
-- `phase1_identity_layout/01_identity_20261018_094249.txt` (6522 bytes)
+- `phase1_identity_layout/01_identity_20261018_094147.txt` (6828 bytes)
+- `phase1_identity_layout/01_identity_20261018_094249.txt` (6827 bytes)
 - `phase1_identity_layout/01_identity_20261018_094355.txt` (0 bytes)
-- `phase1_identity_layout/02_syscall_sweep_20261015_184327.txt` (74 bytes)
-- `phase1_identity_layout/02_syscall_sweep_20261015_184857.txt` (46 bytes)
-- `phase1_identity_layout/02_syscall_sweep_20261015_184940.txt` (89 bytes)
-- `phase1_identity_layout/02_syscall_sweep_20261015_185021.txt` (1025 bytes)
-- `phase1_identity_layout/03_vmmap_layout_20261015_185027.txt` (21319 bytes)
-- `phase1_identity_layout/04_kernel_surface_20261015_185036.txt` (108 bytes)
-- `phase1_identity_layout/04_kernel_surface_20261015_185134.txt` (425 bytes)
-- `phase1_identity_layout/04_kernel_surface_20261015_185153.txt` (425 bytes)
-- `phase1_identity_layout/04_kernel_surface_20261015_185213.txt` (1851 bytes)
-- `phase1_identity_layout/05_file_recon_20261015_185219.txt` (3580 bytes)
-- `phase1_identity_layout/06_bug_hunt_20261015_185224.txt` (1642 bytes)
-- `phase1_identity_layout/07_ipv6_leak_20261015_185335.txt` (21179 bytes)
-- `phase1_identity_layout/08_read_offsets_20261015_185427.txt` (96344 bytes)
-- `phase20_bsd_deep/392a_bsd_high_value_20261023_183045.txt` (1289 bytes)
-- `phase20_bsd_deep/392e_bsd_noscan_20261023_184356.txt` (795 bytes)
-- `phase20_bsd_deep/392f_bsd_last_batch_20261023_184540.txt` (1287 bytes)
-- `phase20_event_leak/111a_sys662_event_records_20261023_135525.txt` (1149 bytes)
-- `phase20_event_leak/111b_event_arg_order_20261023_135552.txt` (219 bytes)
-- `phase20_event_leak/111b_event_arg_order_20261023_135642.txt` (730 bytes)
-- `phase20_event_leak/112c_credential_bit_oracle_20261023_135758.txt` (1810 bytes)
-- `phase20_event_leak/113b_thread_control_20261023_140331.txt` (641 bytes)
-- `phase20_pup_device/110c_pup_device_access_20261021_091203.txt` (205 bytes)
-- `phase21/168_page_reuse_summary.txt` (1105 bytes)
-- `phase21_kernel_leak/121a_sys642_count_gate_20261021_145900.txt` (240 bytes)
-- `phase21_kernel_leak/121b_sys657_dispatch_gate_20261021_145755.txt` (225 bytes)
-- `phase21_kernel_leak/121c_sys657_one_gpu_command_20261021_145826.txt` (248 bytes)
-- `phase21_kernel_leak/121d_sys654_one_gpu_range_20261021_145849.txt` (263 bytes)
-- `phase21_kernel_leak/121e_msync65_baseline_20261021_150300.txt` (264 bytes)
-- `phase21_kernel_leak/121f_dmem_msync_baseline_20261021_150442.txt` (311 bytes)
-- `phase21_kernel_leak/121g_dmem_msync_invalidate_20261021_150504.txt` (312 bytes)
-- `phase21_kernel_leak/121h_dmem_invalidate_cleanup_20261021_150517.txt` (112 bytes)
-- `phase21_kernel_leak/122a_gc_mmap_pointer_slice_20261021_151058.txt` (1040 bytes)
-- `phase21_kernel_leak/123a_sys547_region_record_20261021_151631.txt` (275 bytes)
-- `phase21_kernel_leak/124a_gpu_mmap_msync_invalidate_20261021_212103.txt` (947 bytes)
-- `phase21_kernel_leak/125a_thread_kevent_kptr_20261021_212757.txt` (1149 bytes)
-- `phase21_kernel_leak/126a_multi_vector_blitz_20261021_213200.txt` (1599 bytes)
-- `phase21_kernel_leak/127a_socketpair_exploit_20261021_213405.txt` (1275 bytes)
-- `phase21_kernel_leak/128a_getcontext_srop_20261021_213742.txt` (2364 bytes)
-- `phase21_kernel_leak/128c_srop_clean_return_20261021_220254.txt` (486 bytes)
-- `phase21_kernel_leak/128d_srop_rax_control_20261021_220849.txt` (888 bytes)
-- `phase21_kernel_leak/130a_srop_kldstat_kaslr_20261021_221730.txt` (122 bytes)
-- `phase21_kernel_leak/130b_srop_syscall_triage_20261021_222023.txt` (323 bytes)
-- `phase21_kernel_leak/130c_srop_sysctl_kptr_20261021_222220.txt` (966 bytes)
-- `phase21_kernel_leak/130d_srop_open_read_umtx_20261021_222452.txt` (2523 bytes)
-- `phase21_kernel_leak/131c_srop_minimal_read_20261021_223153.txt` (1021 bytes)
-- `phase21_kernel_leak/132a_srop_dipsw_dmem_20261021_223550.txt` (888 bytes)
-- `phase21_kernel_leak/132b_srop_wxe_bypass_20261021_223747.txt` (1105 bytes)
-- `phase21_kernel_leak/132c_srop_dipsw_write_20261021_223951.txt` (1181 bytes)
-- `phase21_kernel_leak/133a_srop_thr_create_cs_fix_20261021_224308.txt` (748 bytes)
-- `phase21_kernel_leak/135b_srop_kernel_syscalls_20261021_225531.txt` (1692 bytes)
-- `phase21_kernel_leak/135c_srop_kevent_sysctl_20261021_225726.txt` (946 bytes)
-- `phase21_kernel_leak/136a_srop_auxv_stack_20261021_230032.txt` (5208 bytes)
-- `phase21_kernel_leak/137a_srop_contract_scan_20261021_231111.txt` (2559 bytes)
-- `phase21_kernel_leak/137c_srop_pmc_sockopt_msgbuf_20261021_231727.txt` (2810 bytes)
-- `phase21_kernel_leak/137d_srop_deci_devs_20261021_231945.txt` (912 bytes)
-- `phase21_kernel_leak/137e_srop_deci_write_20261021_233555.txt` (577 bytes)
-- `phase21_kernel_leak/137f_srop_devlist_rdev_20261021_233420.txt` (4198 bytes)
-- `phase21_kernel_leak/138b_srop_sbl_srv_20261021_234118.txt` (424 bytes)
-- `phase21_kernel_leak/138c_srop_devs_batch_20261021_234209.txt` (701 bytes)
-- `phase21_kernel_leak/138d_srop_kptr_deep_20261021_234501.txt` (228 bytes)
-- `phase21_kernel_leak/138e_srop_kldstat_fsstat_20261021_234804.txt` (89 bytes)
-- `phase21_kernel_leak/138f_srop_residue_modfind_20261021_235053.txt` (840 bytes)
-- `phase21_kernel_leak/138g_srop_fsstat_proc_gc_20261021_235348.txt` (89 bytes)
-- `phase21_kernel_leak/138h_srop_safe_vectors_20261021_235805.txt` (229 bytes)
-- `phase21_kernel_leak/139a_srop_deci_cmd_mmap_oracle_20261022_000303.txt` (280 bytes)
-- `phase21_kernel_leak/139b_srop_mmap_oracle_20261022_000511.txt` (2429 bytes)
-- `phase21_kernel_leak/139c_srop_dipsw_rng_notif_20261022_001016.txt` (670 bytes)
-- `phase21_kernel_leak/140a_srop_auxv_kevent_fpu_20261022_001318.txt` (1291 bytes)
-- `phase21_kernel_leak/140b_srop_sysctl_toctou_20261022_001716.txt` (4601 bytes)
-- `phase21_kernel_leak/140c_srop_fcntl_shm_kstack_20261022_001923.txt` (2241 bytes)
-- `phase21_kernel_leak/140d_srop_mbuf_residue_20261022_002147.txt` (982 bytes)
-- `phase21_kernel_leak/141a_srop_umtx_pi_race_20261022_002547.txt` (225 bytes)
-- `phase21_kernel_leak/141b_srop_pi_ops_20261022_002922.txt` (698 bytes)
-- `phase21_kernel_leak/142a_srop_shm_fd_pi_race_20261022_004724.txt` (1733 bytes)
-- `phase21_kernel_leak/142b_thr_pi_lock_shm_mmap_20261022_005835.txt` (1177 bytes)
-- `phase21_kernel_leak/142d_thr_getctx_correct_offsets_20261022_010951.txt` (1633 bytes)
-- `phase21_kernel_leak/142h_rop_wait_thr_20261022_012914.txt` (120 bytes)
-- `phase21_kernel_leak/142j_80a_rop_wait_20261022_013639.txt` (789 bytes)
-- `phase21_kernel_leak/142l_metadata_shift_20261022_015224.txt` (2906 bytes)
-- `phase21_kernel_leak/142m_thread_sideeffect_20261022_015708.txt` (1388 bytes)
-- `phase21_kernel_leak/142o_verify_pipe_20261022_021004.txt` (1142 bytes)
-- `phase21_kernel_leak/142p_socket_thread_io_20261022_021423.txt` (1188 bytes)
-- `phase21_kernel_leak/142q_robust_cmsg_20261022_022120.txt` (616 bytes)
-- `phase21_kernel_leak/142s_lean_shm_open_20261022_022739.txt` (858 bytes)
-- `phase21_kernel_leak/142u_kevent_minimal_20261022_023508.txt` (1054 bytes)
-- `phase21_kernel_leak/142v_dev_enum_ioctl_20261022_023820.txt` (2329 bytes)
-- `phase21_kernel_leak/142w_kevent363_deci_notif_20261022_024139.txt` (1133 bytes)
+- `phase1_identity_layout/02_syscall_sweep_20261015_184327.txt` (79 bytes)
+- `phase1_identity_layout/02_syscall_sweep_20261015_184857.txt` (49 bytes)
+- `phase1_identity_layout/02_syscall_sweep_20261015_184940.txt` (95 bytes)
+- `phase1_identity_layout/02_syscall_sweep_20261015_185021.txt` (1096 bytes)
+- `phase1_identity_layout/03_vmmap_layout_20261015_185027.txt` (21808 bytes)
+- `phase1_identity_layout/04_kernel_surface_20261015_185036.txt` (113 bytes)
+- `phase1_identity_layout/04_kernel_surface_20261015_185134.txt` (446 bytes)
+- `phase1_identity_layout/04_kernel_surface_20261015_185153.txt` (446 bytes)
+- `phase1_identity_layout/04_kernel_surface_20261015_185213.txt` (1925 bytes)
+- `phase1_identity_layout/05_file_recon_20261015_185219.txt` (3779 bytes)
+- `phase1_identity_layout/06_bug_hunt_20261015_185224.txt` (1700 bytes)
+- `phase1_identity_layout/07_ipv6_leak_20261015_185335.txt` (21477 bytes)
+- `phase1_identity_layout/08_read_offsets_20261015_185427.txt` (99512 bytes)
+- `phase20_bsd_deep/392a_bsd_high_value_20261023_183045.txt` (1329 bytes)
+- `phase20_bsd_deep/392e_bsd_noscan_20261023_184356.txt` (840 bytes)
+- `phase20_bsd_deep/392f_bsd_last_batch_20261023_184540.txt` (1337 bytes)
+- `phase20_event_leak/111a_sys662_event_records_20261023_135525.txt` (1177 bytes)
+- `phase20_event_leak/111b_event_arg_order_20261023_135552.txt` (224 bytes)
+- `phase20_event_leak/111b_event_arg_order_20261023_135642.txt` (745 bytes)
+- `phase20_event_leak/112c_credential_bit_oracle_20261023_135758.txt` (1855 bytes)
+- `phase20_event_leak/113b_thread_control_20261023_140331.txt` (658 bytes)
+- `phase20_pup_device/110c_pup_device_access_20261021_091203.txt` (212 bytes)
+- `phase21/168_page_reuse_summary.txt` (1136 bytes)
+- `phase21_kernel_leak/121a_sys642_count_gate_20261021_145900.txt` (246 bytes)
+- `phase21_kernel_leak/121b_sys657_dispatch_gate_20261021_145755.txt` (231 bytes)
+- `phase21_kernel_leak/121c_sys657_one_gpu_command_20261021_145826.txt` (256 bytes)
+- `phase21_kernel_leak/121d_sys654_one_gpu_range_20261021_145849.txt` (271 bytes)
+- `phase21_kernel_leak/121e_msync65_baseline_20261021_150300.txt` (273 bytes)
+- `phase21_kernel_leak/121f_dmem_msync_baseline_20261021_150442.txt` (322 bytes)
+- `phase21_kernel_leak/121g_dmem_msync_invalidate_20261021_150504.txt` (321 bytes)
+- `phase21_kernel_leak/121h_dmem_invalidate_cleanup_20261021_150517.txt` (117 bytes)
+- `phase21_kernel_leak/122a_gc_mmap_pointer_slice_20261021_151058.txt` (1081 bytes)
+- `phase21_kernel_leak/123a_sys547_region_record_20261021_151631.txt` (283 bytes)
+- `phase21_kernel_leak/124a_gpu_mmap_msync_invalidate_20261021_212103.txt` (978 bytes)
+- `phase21_kernel_leak/125a_thread_kevent_kptr_20261021_212757.txt` (1183 bytes)
+- `phase21_kernel_leak/126a_multi_vector_blitz_20261021_213200.txt` (1651 bytes)
+- `phase21_kernel_leak/127a_socketpair_exploit_20261021_213405.txt` (1321 bytes)
+- `phase21_kernel_leak/128a_getcontext_srop_20261021_213742.txt` (2442 bytes)
+- `phase21_kernel_leak/128c_srop_clean_return_20261021_220254.txt` (501 bytes)
+- `phase21_kernel_leak/128d_srop_rax_control_20261021_220849.txt` (917 bytes)
+- `phase21_kernel_leak/130a_srop_kldstat_kaslr_20261021_221730.txt` (128 bytes)
+- `phase21_kernel_leak/130b_srop_syscall_triage_20261021_222023.txt` (341 bytes)
+- `phase21_kernel_leak/130c_srop_sysctl_kptr_20261021_222220.txt` (1017 bytes)
+- `phase21_kernel_leak/130d_srop_open_read_umtx_20261021_222452.txt` (2577 bytes)
+- `phase21_kernel_leak/131c_srop_minimal_read_20261021_223153.txt` (1069 bytes)
+- `phase21_kernel_leak/132a_srop_dipsw_dmem_20261021_223550.txt` (921 bytes)
+- `phase21_kernel_leak/132b_srop_wxe_bypass_20261021_223747.txt` (1150 bytes)
+- `phase21_kernel_leak/132c_srop_dipsw_write_20261021_223951.txt` (1232 bytes)
+- `phase21_kernel_leak/133a_srop_thr_create_cs_fix_20261021_224308.txt` (775 bytes)
+- `phase21_kernel_leak/135b_srop_kernel_syscalls_20261021_225531.txt` (1736 bytes)
+- `phase21_kernel_leak/135c_srop_kevent_sysctl_20261021_225726.txt` (985 bytes)
+- `phase21_kernel_leak/136a_srop_auxv_stack_20261021_230032.txt` (5351 bytes)
+- `phase21_kernel_leak/137a_srop_contract_scan_20261021_231111.txt` (2653 bytes)
+- `phase21_kernel_leak/137c_srop_pmc_sockopt_msgbuf_20261021_231727.txt` (2899 bytes)
+- `phase21_kernel_leak/137d_srop_deci_devs_20261021_231945.txt` (938 bytes)
+- `phase21_kernel_leak/137e_srop_deci_write_20261021_233555.txt` (597 bytes)
+- `phase21_kernel_leak/137f_srop_devlist_rdev_20261021_233420.txt` (4325 bytes)
+- `phase21_kernel_leak/138b_srop_sbl_srv_20261021_234118.txt` (438 bytes)
+- `phase21_kernel_leak/138c_srop_devs_batch_20261021_234209.txt` (764 bytes)
+- `phase21_kernel_leak/138d_srop_kptr_deep_20261021_234501.txt` (243 bytes)
+- `phase21_kernel_leak/138e_srop_kldstat_fsstat_20261021_234804.txt` (94 bytes)
+- `phase21_kernel_leak/138f_srop_residue_modfind_20261021_235053.txt` (866 bytes)
+- `phase21_kernel_leak/138g_srop_fsstat_proc_gc_20261021_235348.txt` (94 bytes)
+- `phase21_kernel_leak/138h_srop_safe_vectors_20261021_235805.txt` (245 bytes)
+- `phase21_kernel_leak/139a_srop_deci_cmd_mmap_oracle_20261022_000303.txt` (292 bytes)
+- `phase21_kernel_leak/139b_srop_mmap_oracle_20261022_000511.txt` (2501 bytes)
+- `phase21_kernel_leak/139c_srop_dipsw_rng_notif_20261022_001016.txt` (709 bytes)
+- `phase21_kernel_leak/140a_srop_auxv_kevent_fpu_20261022_001318.txt` (1339 bytes)
+- `phase21_kernel_leak/140b_srop_sysctl_toctou_20261022_001716.txt` (4740 bytes)
+- `phase21_kernel_leak/140c_srop_fcntl_shm_kstack_20261022_001923.txt` (2308 bytes)
+- `phase21_kernel_leak/140d_srop_mbuf_residue_20261022_002147.txt` (1021 bytes)
+- `phase21_kernel_leak/141a_srop_umtx_pi_race_20261022_002547.txt` (235 bytes)
+- `phase21_kernel_leak/141b_srop_pi_ops_20261022_002922.txt` (731 bytes)
+- `phase21_kernel_leak/142a_srop_shm_fd_pi_race_20261022_004724.txt` (1792 bytes)
+- `phase21_kernel_leak/142b_thr_pi_lock_shm_mmap_20261022_005835.txt` (1218 bytes)
+- `phase21_kernel_leak/142d_thr_getctx_correct_offsets_20261022_010951.txt` (1684 bytes)
+- `phase21_kernel_leak/142h_rop_wait_thr_20261022_012914.txt` (126 bytes)
+- `phase21_kernel_leak/142j_80a_rop_wait_20261022_013639.txt` (820 bytes)
+- `phase21_kernel_leak/142l_metadata_shift_20261022_015224.txt` (2987 bytes)
+- `phase21_kernel_leak/142m_thread_sideeffect_20261022_015708.txt` (1443 bytes)
+- `phase21_kernel_leak/142o_verify_pipe_20261022_021004.txt` (1179 bytes)
+- `phase21_kernel_leak/142p_socket_thread_io_20261022_021423.txt` (1231 bytes)
+- `phase21_kernel_leak/142q_robust_cmsg_20261022_022120.txt` (634 bytes)
+- `phase21_kernel_leak/142s_lean_shm_open_20261022_022739.txt` (897 bytes)
+- `phase21_kernel_leak/142u_kevent_minimal_20261022_023508.txt` (1091 bytes)
+- `phase21_kernel_leak/142v_dev_enum_ioctl_20261022_023820.txt` (2444 bytes)
+- `phase21_kernel_leak/142w_kevent363_deci_notif_20261022_024139.txt` (1173 bytes)
 - `phase21_kernel_leak/142x2_safe_devs_fstat_20261022_024622.txt` (91 bytes)
-- `phase21_kernel_leak/142x2_safe_devs_fstat_20261022_024632.txt` (1620 bytes)
-- `phase21_kernel_leak/142y_umtx_pi_race_20261022_025019.txt` (944 bytes)
-- `phase21_kernel_leak/142z3_mctx_minimal_20261022_025747.txt` (744 bytes)
-- `phase21_kernel_leak/143a_gc_dce_ioctl_fuzz_20261022_030035.txt` (297 bytes)
-- `phase21_kernel_leak/143b_procfs_sockopt_umtx_20261022_030302.txt` (499 bytes)
-- `phase21_kernel_leak/143c_ip_options_dump_20261022_030449.txt` (971 bytes)
-- `phase21_kernel_leak/143d_sys670_deep_probe_20261022_031404.txt` (921 bytes)
-- `phase21_kernel_leak/143e_sys670_make_syscall_20261022_031519.txt` (1271 bytes)
-- `phase21_kernel_leak/143f_sys670_fresh_20261022_031647.txt` (895 bytes)
-- `phase21_kernel_leak/143g_fd_fstat_kevent_race_20261022_031906.txt` (1939 bytes)
-- `phase21_kernel_leak/143h_fd18_read_full_20261022_032114.txt` (10229 bytes)
-- `phase21_kernel_leak/143i_read_loader_modules_20261022_032253.txt` (19451 bytes)
-- `phase21_kernel_leak/143j_globals_offsets_20261022_032453.txt` (3988 bytes)
-- `phase21_kernel_leak/143k_native_invoke_koffsets_20261022_032821.txt` (80 bytes)
-- `phase21_kernel_leak/143l_io_read_koffsets_20261022_033004.txt` (12560 bytes)
-- `phase21_kernel_leak/143m_read_gpu_ropchain_signal_20261022_034452.txt` (23925 bytes)
-- `phase21_kernel_leak/143n_native_invoke_focused_20261022_034654.txt` (4268 bytes)
-- `phase21_kernel_leak/143o_fcall_kaslr_hunt_20261022_034936.txt` (1190 bytes)
-- `phase21_kernel_leak/143p_ipv6_pktopts_errno_20261022_035124.txt` (1512 bytes)
-- `phase21_kernel_leak/143q_ipv6_pipe_kptr_leak_20261022_035728.txt` (253 bytes)
-- `phase21_kernel_leak/143q_pcblist_pktopts_kaslr_20261022_050000.txt` (3439 bytes)
-- `phase21_kernel_leak/143r_read_kernel_lua_full_20261022_035852.txt` (13672 bytes)
-- `phase21_kernel_leak/143s_pktopts_overlap_v2_20261022_040048.txt` (525 bytes)
-- `phase21_kernel_leak/143u_pktopts_minimal_20261022_040619.txt` (1013 bytes)
-- `phase21_kernel_leak/144a_koffsets_msync_native_20261022_033305.txt` (25026 bytes)
-- `phase21_kernel_leak/144f_thread_rop_validate_20261022_050418.txt` (488 bytes)
-- `phase21_kernel_leak/145b_pi_mutex_ops_20261022_052628.txt` (617 bytes)
-- `phase21_kernel_leak/145c_pi_double_unlock_uaf_20261022_052839.txt` (1125 bytes)
-- `phase21_kernel_leak/146a_rdtsc_prefetch_kaslr_20261022_053244.txt` (135 bytes)
-- `phase21_kernel_leak/146b_gadget_scan_fast_20261022_053425.txt` (204 bytes)
-- `phase21_kernel_leak/146c_gadget_context_test_20261022_053622.txt` (837 bytes)
-- `phase21_kernel_leak/147a_sysent_679_734_srop_20261022_053846.txt` (262 bytes)
-- `phase21_kernel_leak/147b_sysent_thread_isolated_20261022_054022.txt` (205 bytes)
-- `phase21_next_vectors/393a_dl_get_metadata_20261023_194926.txt` (561 bytes)
-- `phase21_next_vectors/393h_race_rsp_fix_20261023_201423.txt` (225 bytes)
-- `phase21_next_vectors/394a_loop_gadget_scan_20261023_201928.txt` (95 bytes)
-- `phase21_next_vectors/394b_loop_gadget_fast_20261023_202245.txt` (240 bytes)
-- `phase21_next_vectors/394c_gadget_wide_20261023_202620.txt` (537 bytes)
-- `phase21_next_vectors/395a_pop_rsp_loop_20261023_203357.txt` (264 bytes)
-- `phase21_next_vectors/395c_loop_getpid_20261023_210424.txt` (162 bytes)
-- `phase21_next_vectors/395e_errno_diagnostic_20261023_211937.txt` (210 bytes)
-- `phase21_next_vectors/395f_multi_close_noloop_20261023_212109.txt` (146 bytes)
-- `phase21_next_vectors/395f_multi_close_noloop_20261023_212234.txt` (148 bytes)
-- `phase21_next_vectors/395g_loop_errfix_20261023_212617.txt` (245 bytes)
-- `phase21_next_vectors/396a_ipv6_setsockopt_race_20261023_212824.txt` (209 bytes)
-- `phase21_next_vectors/396b_ipv6_optscan_20261023_212914.txt` (128 bytes)
-- `phase21_next_vectors/396c_ipv6_verify_20261023_213004.txt` (1512 bytes)
-- `phase21_next_vectors/396d_setsockopt_args_20261023_213116.txt` (503 bytes)
-- `phase21_next_vectors/396e_native_sockopt_20261023_213158.txt` (12636 bytes)
-- `phase21_next_vectors/396f_pop_r8_verify_20261023_213839.txt` (491 bytes)
-- `phase21_next_vectors/396g_sockopt_diag_20261023_214112.txt` (7455 bytes)
-- `phase21_next_vectors/396h_fd_verify_20261023_214543.txt` (628 bytes)
-- `phase21_next_vectors/396i_minimal_sockopt_20261023_215059.txt` (528 bytes)
-- `phase21_next_vectors/397a_aio_untested_20261023_220157.txt` (1348 bytes)
-- `phase21_next_vectors/397c_munmap_safe_20261023_220600.txt` (896 bytes)
-- `phase21_next_vectors/397d_remap_madvise_20261023_220714.txt` (832 bytes)
-- `phase21_next_vectors/397e_sockopt_close_race_20261023_221158.txt` (160 bytes)
-- `phase21_next_vectors/398a_shm_truncate_race_20261023_221448.txt` (179 bytes)
-- `phase21_next_vectors/398b_sysctl_munmap_race_20261023_221632.txt` (92 bytes)
-- `phase21_next_vectors/398c_sysctl_race_simple_20261023_221800.txt` (315 bytes)
-- `phase21_next_vectors/398d_recv_munmap_race_20261023_222009.txt` (1430 bytes)
-- `phase21_next_vectors/398e_kevent_munmap_race_20261023_222320.txt` (902 bytes)
-- `phase21_next_vectors/398f2_mprotect_copyout_20261023_223005.txt` (523 bytes)
-- `phase21_next_vectors/398f_mprotect_copyout_20261023_222836.txt` (159 bytes)
-- `phase21_next_vectors/399a_sys636_timezone_20261023_223625.txt` (236 bytes)
-- `phase21_next_vectors/399b_devnode_read_20261023_223631.txt` (375 bytes)
+- `phase21_kernel_leak/142x2_safe_devs_fstat_20261022_024632.txt` (1669 bytes)
+- `phase21_kernel_leak/142y_umtx_pi_race_20261022_025019.txt` (982 bytes)
+- `phase21_kernel_leak/142z3_mctx_minimal_20261022_025747.txt` (778 bytes)
+- `phase21_kernel_leak/143a_gc_dce_ioctl_fuzz_20261022_030035.txt` (313 bytes)
+- `phase21_kernel_leak/143b_procfs_sockopt_umtx_20261022_030302.txt` (519 bytes)
+- `phase21_kernel_leak/143c_ip_options_dump_20261022_030449.txt` (1016 bytes)
+- `phase21_kernel_leak/143d_sys670_deep_probe_20261022_031404.txt` (961 bytes)
+- `phase21_kernel_leak/143e_sys670_make_syscall_20261022_031519.txt` (1311 bytes)
+- `phase21_kernel_leak/143f_sys670_fresh_20261022_031647.txt` (938 bytes)
+- `phase21_kernel_leak/143g_fd_fstat_kevent_race_20261022_031906.txt` (1984 bytes)
+- `phase21_kernel_leak/143h_fd18_read_full_20261022_032114.txt` (10597 bytes)
+- `phase21_kernel_leak/143i_read_loader_modules_20261022_032253.txt` (20062 bytes)
+- `phase21_kernel_leak/143j_globals_offsets_20261022_032453.txt` (4120 bytes)
+- `phase21_kernel_leak/143k_native_invoke_koffsets_20261022_032821.txt` (82 bytes)
+- `phase21_kernel_leak/143l_io_read_koffsets_20261022_033004.txt` (12931 bytes)
+- `phase21_kernel_leak/143m_read_gpu_ropchain_signal_20261022_034452.txt` (24773 bytes)
+- `phase21_kernel_leak/143n_native_invoke_focused_20261022_034654.txt` (4396 bytes)
+- `phase21_kernel_leak/143o_fcall_kaslr_hunt_20261022_034936.txt` (1239 bytes)
+- `phase21_kernel_leak/143p_ipv6_pktopts_errno_20261022_035124.txt` (1560 bytes)
+- `phase21_kernel_leak/143q_ipv6_pipe_kptr_leak_20261022_035728.txt` (265 bytes)
+- `phase21_kernel_leak/143q_pcblist_pktopts_kaslr_20261022_050000.txt` (3530 bytes)
+- `phase21_kernel_leak/143r_read_kernel_lua_full_20261022_035852.txt` (14150 bytes)
+- `phase21_kernel_leak/143s_pktopts_overlap_v2_20261022_040048.txt` (537 bytes)
+- `phase21_kernel_leak/143u_pktopts_minimal_20261022_040619.txt` (1067 bytes)
+- `phase21_kernel_leak/144a_koffsets_msync_native_20261022_033305.txt` (25800 bytes)
+- `phase21_kernel_leak/144f_thread_rop_validate_20261022_050418.txt` (513 bytes)
+- `phase21_kernel_leak/145b_pi_mutex_ops_20261022_052628.txt` (644 bytes)
+- `phase21_kernel_leak/145c_pi_double_unlock_uaf_20261022_052839.txt` (1166 bytes)
+- `phase21_kernel_leak/146a_rdtsc_prefetch_kaslr_20261022_053244.txt` (142 bytes)
+- `phase21_kernel_leak/146b_gadget_scan_fast_20261022_053425.txt` (211 bytes)
+- `phase21_kernel_leak/146c_gadget_context_test_20261022_053622.txt` (869 bytes)
+- `phase21_kernel_leak/147a_sysent_679_734_srop_20261022_053846.txt` (272 bytes)
+- `phase21_kernel_leak/147b_sysent_thread_isolated_20261022_054022.txt` (212 bytes)
+- `phase21_next_vectors/393a_dl_get_metadata_20261023_194926.txt` (591 bytes)
+- `phase21_next_vectors/393h_race_rsp_fix_20261023_201423.txt` (238 bytes)
+- `phase21_next_vectors/394a_loop_gadget_scan_20261023_201928.txt` (99 bytes)
+- `phase21_next_vectors/394b_loop_gadget_fast_20261023_202245.txt` (251 bytes)
+- `phase21_next_vectors/394c_gadget_wide_20261023_202620.txt` (563 bytes)
+- `phase21_next_vectors/395a_pop_rsp_loop_20261023_203357.txt` (277 bytes)
+- `phase21_next_vectors/395c_loop_getpid_20261023_210424.txt` (172 bytes)
+- `phase21_next_vectors/395e_errno_diagnostic_20261023_211937.txt` (221 bytes)
+- `phase21_next_vectors/395f_multi_close_noloop_20261023_212109.txt` (155 bytes)
+- `phase21_next_vectors/395f_multi_close_noloop_20261023_212234.txt` (157 bytes)
+- `phase21_next_vectors/395g_loop_errfix_20261023_212617.txt` (257 bytes)
+- `phase21_next_vectors/396a_ipv6_setsockopt_race_20261023_212824.txt` (223 bytes)
+- `phase21_next_vectors/396b_ipv6_optscan_20261023_212914.txt` (135 bytes)
+- `phase21_next_vectors/396c_ipv6_verify_20261023_213004.txt` (1554 bytes)
+- `phase21_next_vectors/396d_setsockopt_args_20261023_213116.txt` (526 bytes)
+- `phase21_next_vectors/396e_native_sockopt_20261023_213158.txt` (13017 bytes)
+- `phase21_next_vectors/396f_pop_r8_verify_20261023_213839.txt` (515 bytes)
+- `phase21_next_vectors/396g_sockopt_diag_20261023_214112.txt` (7694 bytes)
+- `phase21_next_vectors/396h_fd_verify_20261023_214543.txt` (664 bytes)
+- `phase21_next_vectors/396i_minimal_sockopt_20261023_215059.txt` (550 bytes)
+- `phase21_next_vectors/397a_aio_untested_20261023_220157.txt` (1388 bytes)
+- `phase21_next_vectors/397c_munmap_safe_20261023_220600.txt` (935 bytes)
+- `phase21_next_vectors/397d_remap_madvise_20261023_220714.txt` (871 bytes)
+- `phase21_next_vectors/397e_sockopt_close_race_20261023_221158.txt` (168 bytes)
+- `phase21_next_vectors/398a_shm_truncate_race_20261023_221448.txt` (188 bytes)
+- `phase21_next_vectors/398b_sysctl_munmap_race_20261023_221632.txt` (97 bytes)
+- `phase21_next_vectors/398c_sysctl_race_simple_20261023_221800.txt` (331 bytes)
+- `phase21_next_vectors/398d_recv_munmap_race_20261023_222009.txt` (1461 bytes)
+- `phase21_next_vectors/398e_kevent_munmap_race_20261023_222320.txt` (930 bytes)
+- `phase21_next_vectors/398f2_mprotect_copyout_20261023_223005.txt` (542 bytes)
+- `phase21_next_vectors/398f_mprotect_copyout_20261023_222836.txt` (167 bytes)
+- `phase21_next_vectors/399a_sys636_timezone_20261023_223625.txt` (253 bytes)
+- `phase21_next_vectors/399b_devnode_read_20261023_223631.txt` (387 bytes)
 - `phase21_next_vectors/399c_gpu_write_20261023_223907.txt` (88 bytes)
-- `phase21_next_vectors/399c_gpu_write_20261023_223915.txt` (1361 bytes)
-- `phase21_next_vectors/399d_gpu_mmio_scan_20261023_224056.txt` (367 bytes)
-- `phase21_next_vectors/399e_gc_mmap_repro_20261023_224213.txt` (692 bytes)
-- `phase21_next_vectors/399f_eboot_kernel_refs_20261023_224444.txt` (1826 bytes)
-- `phase21_next_vectors/400a_kptr_rescan_20261023_225600.txt` (4841 bytes)
-- `phase21_next_vectors/400b_copyin_toctou_20261023_225952.txt` (651 bytes)
-- `phase21_next_vectors/400d_sysctl_sub32_20261023_230233.txt` (1129 bytes)
-- `phase21_next_vectors/400e_kaslr_stability_20261023_230514.txt` (1040 bytes)
-- `phase21_next_vectors/400e_kaslr_stability_20261023_230518.txt` (1040 bytes)
-- `phase22_cve_hunt/145a_tcp_rack_reachability_20261022_050401.txt` (378 bytes)
-- `phase22_cve_hunt/145b_posixshm_semctl_kevent_20261022_050555.txt` (235 bytes)
-- `phase22_cve_hunt/145c_shm_deep_kevent_20261022_050719.txt` (731 bytes)
-- `phase22_cve_hunt/146a_umtx_pi_mutex_race_20261022_050947.txt` (628 bytes)
-- `phase22_cve_hunt/146b_umtx_robust_multirace_20261022_051249.txt` (267 bytes)
-- `phase22_cve_hunt/146d_orphan_simple_20261022_051848.txt` (229 bytes)
-- `phase22_cve_hunt/146e_orphan_timeout_20261022_052900.txt` (486 bytes)
-- `phase22_cve_hunt/146f_pi_chain_stress_20261022_053030.txt` (727 bytes)
-- `phase22_cve_hunt/146g2_contested_isolated_20261022_053434.txt` (532 bytes)
-- `phase22_cve_hunt/146g3_race_isolate_20261022_053543.txt` (420 bytes)
-- `phase22_cve_hunt/146g4_race_faketid_20261022_053652.txt` (245 bytes)
+- `phase21_next_vectors/399c_gpu_write_20261023_223915.txt` (1409 bytes)
+- `phase21_next_vectors/399d_gpu_mmio_scan_20261023_224056.txt` (388 bytes)
+- `phase21_next_vectors/399e_gc_mmap_repro_20261023_224213.txt` (720 bytes)
+- `phase21_next_vectors/399f_eboot_kernel_refs_20261023_224444.txt` (1886 bytes)
+- `phase21_next_vectors/400a_kptr_rescan_20261023_225600.txt` (5000 bytes)
+- `phase21_next_vectors/400b_copyin_toctou_20261023_225952.txt` (682 bytes)
+- `phase21_next_vectors/400d_sysctl_sub32_20261023_230233.txt` (1166 bytes)
+- `phase21_next_vectors/400e_kaslr_stability_20261023_230514.txt` (1080 bytes)
+- `phase21_next_vectors/400e_kaslr_stability_20261023_230518.txt` (1080 bytes)
+- `phase22_cve_hunt/145a_tcp_rack_reachability_20261022_050401.txt` (397 bytes)
+- `phase22_cve_hunt/145b_posixshm_semctl_kevent_20261022_050555.txt` (247 bytes)
+- `phase22_cve_hunt/145c_shm_deep_kevent_20261022_050719.txt` (763 bytes)
+- `phase22_cve_hunt/146a_umtx_pi_mutex_race_20261022_050947.txt` (667 bytes)
+- `phase22_cve_hunt/146b_umtx_robust_multirace_20261022_051249.txt` (282 bytes)
+- `phase22_cve_hunt/146d_orphan_simple_20261022_051848.txt` (244 bytes)
+- `phase22_cve_hunt/146e_orphan_timeout_20261022_052900.txt` (518 bytes)
+- `phase22_cve_hunt/146f_pi_chain_stress_20261022_053030.txt` (762 bytes)
+- `phase22_cve_hunt/146g2_contested_isolated_20261022_053434.txt` (565 bytes)
+- `phase22_cve_hunt/146g3_race_isolate_20261022_053543.txt` (446 bytes)
+- `phase22_cve_hunt/146g4_race_faketid_20261022_053652.txt` (260 bytes)
 - `phase22_cve_hunt/147a_shm_race_kaslr_20261022_053954.txt` (95 bytes)
-- `phase22_cve_hunt/147a_shm_race_kaslr_20261022_054004.txt` (734 bytes)
-- `phase22_cve_hunt/148a_posixshm_largepage_20261022_054441.txt` (298 bytes)
-- `phase22_cve_hunt/149a_socketpair_pipe_scmrights_20261022_054919.txt` (345 bytes)
-- `phase22_cve_hunt/149b_scmrights_fix_pipe_io_20261022_055150.txt` (1271 bytes)
-- `phase22_cve_hunt/150a_sendfile_pipe_drain_20261022_055507.txt` (114 bytes)
-- `phase22_cve_hunt/151b_unix_uaf_peek_20261022_060402.txt` (433 bytes)
-- `phase22_cve_hunt/151c_scmrights_close_race_20261022_060555.txt` (473 bytes)
-- `phase22_cve_hunt/151e_fd_leak_exploit_20261022_061701.txt` (673 bytes)
-- `phase22_cve_hunt/152a_kaslr_timing_oracle_20261022_091335.txt` (1749 bytes)
-- `phase22_cve_hunt/152c_kernel_read_via_pipe_20261022_091326.txt` (860 bytes)
-- `phase22_cve_hunt/153b_poll_close_uaf_v2_20261022_092117.txt` (1460 bytes)
-- `phase22_cve_hunt/154a_cve49427_sendfile_shm_uaf_20261022_092325.txt` (534 bytes)
-- `phase22_cve_hunt/155b_syscall_offsets_20261022_092949.txt` (344 bytes)
-- `phase22_cve_hunt/155c_syscall_context_20261022_093024.txt` (1545 bytes)
-- `phase22_cve_hunt/156a_shm_residue_kaslr_20261022_093529.txt` (392 bytes)
-- `phase22_cve_hunt/157a_sendfile_socket_shm_20261022_094000.txt` (572 bytes)
-- `phase22_cve_hunt/158a_kaslr_deep_sysctl_unix_20261022_094254.txt` (881 bytes)
-- `phase22_cve_hunt/159a_signal_race_scmrights_20261022_094625.txt` (450 bytes)
-- `phase22_cve_hunt/160b_signal_minimal_20261022_100716.txt` (932 bytes)
-- `phase22_cve_hunt/161a_dmem0_msync_invalidate_20261022_101002.txt` (665 bytes)
-- `phase22_cve_hunt/162a_sysent_679_734_20261022_101117.txt` (83 bytes)
-- `phase22_cve_hunt/163a_kaslr_timing_sidechannel_20261022_101417.txt` (954 bytes)
-- `phase22_cve_hunt/165b_rtsock_overflow_20261022_102555.txt` (651 bytes)
-- `phase22_cve_hunt/166a_rtsock_deep_analysis_20261022_102733.txt` (895 bytes)
-- `phase22_cve_hunt/167a_rtsock_residue_kaslr_20261022_103356.txt` (1198 bytes)
-- `phase22_cve_hunt/168a_kaslr_multiplex_20261022_103710.txt` (1838 bytes)
-- `phase22_cve_hunt/171a_ropchain_kaslr_timing_20261022_105116.txt` (3518 bytes)
-- `phase22_cve_hunt/172a_kaslr_timing_verify_20261022_105606.txt` (1128 bytes)
-- `phase22_cve_hunt/173a_physhm_copyin_leak_20261022_111718.txt` (283 bytes)
-- `phase22_cve_hunt/174a_physhm_srop_copyin_20261022_112232.txt` (571 bytes)
-- `phase22_cve_hunt/177a_physhm_copyin_after_mprotect_20261022_113417.txt` (42 bytes)
-- `phase22_cve_hunt/178a_physhm_copyin_minimal_20261022_121115.txt` (199 bytes)
-- `phase22_cve_hunt/179a_ipv6_msfilter_reachability_20261022_120903.txt` (511 bytes)
-- `phase22_cve_hunt/180a_msync_physhm_madvise_20261022_121047.txt` (449 bytes)
-- `phase22_cve_hunt/181a_ip4_msfilter_reachability_20261022_121240.txt` (568 bytes)
-- `phase22_cve_hunt/182a_mcast_msfilter_confirm_20261022_121620.txt` (536 bytes)
-- `phase22_cve_hunt/183a_msfilter_struct_shape_20261022_121832.txt` (845 bytes)
-- `phase22_cve_hunt/184a_new_cve_reachability_20261022_122318.txt` (599 bytes)
-- `phase22_cve_hunt/185a_umtx_mutex_race_20261022_122906.txt` (333 bytes)
-- `phase22_cve_hunt/185d_child_getpid_20261022_142230.txt` (115 bytes)
-- `phase22_cve_hunt/185e_child_getpid_v2_20261022_142354.txt` (180 bytes)
-- `phase22_cve_hunt/185f_child_getpid_v3_20261022_142554.txt` (172 bytes)
-- `phase22_cve_hunt/185g_find_gadgets_20261022_142714.txt` (177 bytes)
-- `phase22_cve_hunt/185h_child_getpid_final_20261022_142845.txt` (337 bytes)
-- `phase22_cve_hunt/186c_socket_poll_close_20261022_144643.txt` (109 bytes)
-- `phase22_cve_hunt/test_alive_20261022_142136.txt` (20 bytes)
-- `phase22_cve_hunt/test_alive_20261022_144602.txt` (20 bytes)
-- `phase22_dem9n101/P3_thr_create_console.txt` (112 bytes)
-- `phase22_threaded_races/100a_evf_race_20261021_223837.txt` (1052 bytes)
-- `phase22_threaded_races/101a_double_close_race_20261022_150548.txt` (1150 bytes)
-- `phase22_threaded_races/102b_netcontrol_route_trigger_20261022_145139.txt` (189 bytes)
-- `phase22_threaded_races/102b_netcontrol_route_trigger_20261022_145201.txt` (189 bytes)
-- `phase22_threaded_races/102b_netcontrol_route_trigger_20261022_145410.txt` (189 bytes)
-- `phase22_threaded_races/102b_netcontrol_route_trigger_20261022_145859.txt` (1507 bytes)
-- `phase22_threaded_races/102c_netcontrol_trigger_v2_20261022_150401.txt` (151 bytes)
-- `phase22_threaded_races/102c_netcontrol_trigger_v2_20261022_150454.txt` (1210 bytes)
-- `phase22_threaded_races/102d_netcontrol_ifindex_scan_20261022_150434.txt` (1379 bytes)
-- `phase22_threaded_races/103a_sys601_race_20261022_150857.txt` (623 bytes)
-- `phase22_threaded_races/104a_child_blocked_syscalls_20261022_151110.txt` (99 bytes)
-- `phase22_threaded_races/104a_child_blocked_syscalls_20261022_151307.txt` (1173 bytes)
-- `phase22_threaded_races/104b_fcntl_pipe_explore_20261022_151447.txt` (1352 bytes)
-- `phase22_threaded_races/105a_pipe_close_race_20261022_151655.txt` (734 bytes)
-- `phase22_threaded_races/108a_cclosure_gadget_chain_20261022_152955.txt` (244 bytes)
-- `phase22_threaded_races/109a_register_leak_scan_20261022_155002.txt` (770 bytes)
-- `phase22_threaded_races/110a_fstat_child_thread_20261022_155348.txt` (2655 bytes)
-- `phase22_threaded_races/111a_kldstat_child_thread_20261022_155714.txt` (241 bytes)
-- `phase22_threaded_races/112a_child_syscall_survey_20261022_160114.txt` (209 bytes)
-- `phase22_threaded_races/113a_fd_scan_dirents_mincore_20261022_160430.txt` (1796 bytes)
-- `phase22_threaded_races/115a_fd9_mmap_deep_20261022_160843.txt` (1575 bytes)
-- `phase22_threaded_races/116a_gpu_register_map_20261022_161035.txt` (6108 bytes)
-- `phase22_threaded_races/118a_read_gadget_scan_20261022_161950.txt` (180 bytes)
-- `phase22_threaded_races/118d_rdi_offset_read_20261022_162805.txt` (1186 bytes)
-- `phase22_threaded_races/119a_rax_arb_read_20261022_163115.txt` (1781 bytes)
-- `phase22_threaded_races/119c_real_data_scan_20261022_164221.txt` (837 bytes)
-- `phase22_threaded_races/119d_kptr_verify_20261022_164455.txt` (3994 bytes)
-- `phase22_threaded_races/119e_pipe_and_modules_20261022_165247.txt` (100 bytes)
-- `phase22_threaded_races/119f_safe_pipe_read_20261022_165405.txt` (876 bytes)
-- `phase22_threaded_races/119g_modules_eboot_rest_20261022_165526.txt` (400 bytes)
-- `phase22_threaded_races/120a_umtx_op_survey_20261022_165819.txt` (337 bytes)
-- `phase22_threaded_races/120b_umtx_safe_survey_20261022_170336.txt` (181 bytes)
-- `phase22_threaded_races/120c_umtx_rest_20261022_170701.txt` (61 bytes)
-- `phase22_threaded_races/120d_mutex_rw_pi_20261022_171030.txt` (112 bytes)
-- `phase22_threaded_races/120e_lock_cycles_20261022_171549.txt` (343 bytes)
-- `phase22_threaded_races/120e_lock_cycles_20261022_171912.txt` (599 bytes)
-- `phase22_threaded_races/121a_pi_mutex_race_20261022_172411.txt` (214 bytes)
-- `phase22_threaded_races/121b_native_pi_race_20261022_172529.txt` (404 bytes)
-- `phase22_threaded_races/122a3_physhm_prot_test_20261022_181919.txt` (612 bytes)
-- `phase22_threaded_races/122a4_physhm_offset_args_20261022_182057.txt` (1238 bytes)
-- `phase22_threaded_races/122b2_sys630_safe_20261022_192408.txt` (965 bytes)
-- `phase22_threaded_races/123a_sys637_kernel_write_20261022_182704.txt` (273 bytes)
-- `phase22_threaded_races/125a_sys662_kaslr_stackclash_20261022_192348.txt` (674 bytes)
-- `phase22_threaded_races/126a_fstat_devices_aio_ids_20261022_193437.txt` (2041 bytes)
-- `phase22_threaded_races/126a_fstat_devices_aio_ids_20261022_195202.txt` (2041 bytes)
-- `phase22_threaded_races/160b_umtx_pi_race_20261021_142640.txt` (357 bytes)
-- `phase22_threaded_races/160b_umtx_pi_race_20261021_160844.txt` (599 bytes)
-- `phase22_threaded_races/160c_umtx_pi_race_4t_20261021_161035.txt` (674 bytes)
-- `phase22_threaded_races/160d_umtx_rwlock_race_20261021_161148.txt` (177 bytes)
-- `phase22_threaded_races/160d_umtx_rwlock_race_20261021_161313.txt` (672 bytes)
-- `phase22_threaded_races/160e_umtx_pi_corrupt_20261021_161522.txt` (689 bytes)
-- `phase22_threaded_races/160f_pi_exit_cascade_20261023_062904.txt` (137 bytes)
-- `phase22_threaded_races/160f_pi_exit_cascade_20261023_063249.txt` (305 bytes)
-- `phase22_threaded_races/160g_pi_exit_diag_20261023_063550.txt` (837 bytes)
-- `phase22_threaded_races/160h_dead_owner_rescue_20261023_064240.txt` (1355 bytes)
-- `phase22_threaded_races/160i_pi_ownership_fraud_20261023_064652.txt` (432 bytes)
-- `phase22_threaded_races/160i_pi_ownership_fraud_20261023_065002.txt` (474 bytes)
-- `phase22_threaded_races/160j_pi_fraud_diag_20261023_070221.txt` (2265 bytes)
-- `phase22_threaded_races/83b_sys601_threaded_auth_20261021_124459.txt` (422 bytes)
-- `phase22_threaded_races/83b_sys601_threaded_auth_20261021_125711.txt` (556 bytes)
-- `phase22_threaded_races/85b_dispatch_retaddr_threaded_20261021_131139.txt` (1930 bytes)
-- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_132658.txt` (224 bytes)
-- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_163417.txt` (323 bytes)
-- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_163959.txt` (418 bytes)
-- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_165106.txt` (583 bytes)
-- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_165439.txt` (637 bytes)
-- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_165612.txt` (840 bytes)
-- `phase22_threaded_races/89b_cve2019_5607_gate_20261021_162936.txt` (491 bytes)
-- `phase22_threaded_races/89b_cve2019_5607_gate_20261021_163120.txt` (1213 bytes)
-- `phase22_threaded_races/90a_fd_close_sendmsg_race_20261021_172135.txt` (576 bytes)
-- `phase22_threaded_races/90a_fd_close_sendmsg_race_20261021_172322.txt` (574 bytes)
-- `phase22_threaded_races/91a_ipv6_setsockopt_race_20261021_174047.txt` (845 bytes)
-- `phase22_threaded_races/91b_ipv6_race_regtest_20261021_174752.txt` (309 bytes)
-- `phase22_threaded_races/91b_ipv6_race_regtest_20261021_174955.txt` (360 bytes)
-- `phase22_threaded_races/91c_eboot_gadget_scan_20261021_175428.txt` (1605 bytes)
-- `phase22_threaded_races/91d_ipv6_race_full_20261021_175603.txt` (531 bytes)
-- `phase22_threaded_races/91e_ipv6_race_heavy_20261021_175812.txt` (153 bytes)
-- `phase22_threaded_races/91f_ipv6_race_overlap_20261021_175935.txt` (150 bytes)
-- `phase22_threaded_races/91g_child_verify_20261021_180110.txt` (210 bytes)
-- `phase22_threaded_races/91g_child_verify_20261021_190032.txt` (210 bytes)
-- `phase22_threaded_races/91h_child_regdump_20261021_180539.txt` (515 bytes)
-- `phase22_threaded_races/91i_child_setsockopt_first_20261021_180854.txt` (302 bytes)
-- `phase22_threaded_races/91j_child_mmap_r10_20261021_181213.txt` (361 bytes)
-- `phase22_threaded_races/91k_r10_hunt_20261021_183308.txt` (114 bytes)
-- `phase22_threaded_races/91l_r10_gadget_scan_20261021_183714.txt` (703 bytes)
-- `phase22_threaded_races/91m_mov_r10_rcx_scan_20261021_184141.txt` (842 bytes)
-- `phase22_threaded_races/91m_mov_r10_rcx_scan_20261021_184301.txt` (1332 bytes)
-- `phase22_threaded_races/91m_mov_r10_rcx_scan_20261021_184959.txt` (2791 bytes)
-- `phase22_threaded_races/91s_thr_control_20261021_192241.txt` (93 bytes)
-- `phase22_threaded_races/91t_mmap_nanosleep_20261021_192543.txt` (175 bytes)
-- `phase22_threaded_races/91u_r10_final_20261021_192734.txt` (152 bytes)
-- `phase22_threaded_races/92b_2292_gate_check_20261021_194730.txt` (1125 bytes)
-- `phase22_threaded_races/92c_pktinfo_close_race_20261021_194935.txt` (619 bytes)
-- `phase22_threaded_races/92e_pktinfo_race_fixed_20261021_195255.txt` (401 bytes)
-- `phase22_threaded_races/93a_socket_close_race_20261021_202408.txt` (489 bytes)
-- `phase22_threaded_races/93b_scmrights_close_diag_20261021_202631.txt` (2342 bytes)
-- `phase22_threaded_races/94a_sys601_vm_fingerprint_20261021_202923.txt` (4950 bytes)
-- `phase22_threaded_races/94b_kqueue_close_race_20261021_203942.txt` (676 bytes)
-- `phase22_threaded_races/95a_umtx_pi_race_20261021_204746.txt` (836 bytes)
-- `phase22_threaded_races/95a_umtx_pi_race_20261021_205923.txt` (836 bytes)
-- `phase22_threaded_races/95a_umtx_pi_race_20261021_210143.txt` (1011 bytes)
-- `phase22_threaded_races/95b_umtx_pi_race_only_20261021_210703.txt` (710 bytes)
-- `phase22_threaded_races/96a_robust_lists_20261021_211623.txt` (391 bytes)
-- `phase22_threaded_races/97b_exit_umtx_isolate_20261021_213738.txt` (1013 bytes)
-- `phase22_threaded_races/98a_rwlock_race_20261021_214206.txt` (1251 bytes)
-- `phase22_threaded_races/99a_umtx_deep_ops_20261021_220114.txt` (596 bytes)
-- `phase22_threaded_races/99b_umtx_sem_cvwait_20261021_220621.txt` (297 bytes)
-- `phase22_threaded_races/99c_pi_exit_race_20261021_221247.txt` (1727 bytes)
-- `phase22_threaded_races/99d_pi_leak_measure_20261021_221636.txt` (1945 bytes)
-- `phase22_threaded_races/99e_pi_contend_orphan_20261021_222229.txt` (320 bytes)
-- `phase22_threaded_races/99e_pi_contend_orphan_20261021_222511.txt` (1227 bytes)
-- `phase22_threaded_races/99f_pi_toctou_race_20261021_223107.txt` (2251 bytes)
-- `phase23_cve_2026/500b_poll_close_minimal_20261106_000923.txt` (801 bytes)
-- `phase23_cve_2026/500c_poll_close_gated_20261106_002340.txt` (1143 bytes)
-- `phase23_cve_2026/500d_poll_close_spray_20261106_002740.txt` (2150 bytes)
-- `phase23_cve_2026/500e_poll_close_doublepoll_20261106_003229.txt` (587 bytes)
-- `phase23_cve_2026/500e_poll_close_doublepoll_20261106_003546.txt` (585 bytes)
-- `phase23_cve_2026/500f_kqueue_crosszone_spray_20261106_011110.txt` (345 bytes)
-- `phase23_cve_2026/500g_sockopt_spray_sweep_20261106_011530.txt` (739 bytes)
-- `phase23_cve_2026/500h_recvmsg_iov_spray_20261106_012529.txt` (958 bytes)
-- `phase23_cve_2026/500i_si_mtx_offset_scan_20261106_014631.txt` (1036 bytes)
-- `phase23_cve_2026/500j_precision_retest_20261106_015755.txt` (1715 bytes)
-- `phase23_cve_2026/500k_crash_oracle_20261106_021322.txt` (932 bytes)
-- `phase23_cve_2026/500l_page_level_spray_20261106_022538.txt` (1270 bytes)
-- `phase23_cve_2026/500m_multisize_spray_20261106_023158.txt` (1221 bytes)
-- `phase23_cve_2026/500n_same_cpu_readback_oracle_20261106_040421.txt` (887 bytes)
-- `phase23_cve_2026/500n_same_cpu_readback_oracle_20261106_041102.txt` (791 bytes)
-- `phase23_cve_2026/500o_safe_reclaim_oracle_20261106_045302.txt` (7412 bytes)
+- `phase22_cve_hunt/147a_shm_race_kaslr_20261022_054004.txt` (776 bytes)
+- `phase22_cve_hunt/148a_posixshm_largepage_20261022_054441.txt` (318 bytes)
+- `phase22_cve_hunt/149a_socketpair_pipe_scmrights_20261022_054919.txt` (370 bytes)
+- `phase22_cve_hunt/149b_scmrights_fix_pipe_io_20261022_055150.txt` (1350 bytes)
+- `phase22_cve_hunt/150a_sendfile_pipe_drain_20261022_055507.txt` (122 bytes)
+- `phase22_cve_hunt/151b_unix_uaf_peek_20261022_060402.txt` (458 bytes)
+- `phase22_cve_hunt/151c_scmrights_close_race_20261022_060555.txt` (499 bytes)
+- `phase22_cve_hunt/151e_fd_leak_exploit_20261022_061701.txt` (710 bytes)
+- `phase22_cve_hunt/152a_kaslr_timing_oracle_20261022_091335.txt` (1807 bytes)
+- `phase22_cve_hunt/152c_kernel_read_via_pipe_20261022_091326.txt` (895 bytes)
+- `phase22_cve_hunt/153b_poll_close_uaf_v2_20261022_092117.txt` (1500 bytes)
+- `phase22_cve_hunt/154a_cve49427_sendfile_shm_uaf_20261022_092325.txt` (560 bytes)
+- `phase22_cve_hunt/155b_syscall_offsets_20261022_092949.txt` (363 bytes)
+- `phase22_cve_hunt/155c_syscall_context_20261022_093024.txt` (1610 bytes)
+- `phase22_cve_hunt/156a_shm_residue_kaslr_20261022_093529.txt` (416 bytes)
+- `phase22_cve_hunt/157a_sendfile_socket_shm_20261022_094000.txt` (603 bytes)
+- `phase22_cve_hunt/158a_kaslr_deep_sysctl_unix_20261022_094254.txt` (933 bytes)
+- `phase22_cve_hunt/159a_signal_race_scmrights_20261022_094625.txt` (475 bytes)
+- `phase22_cve_hunt/160b_signal_minimal_20261022_100716.txt` (967 bytes)
+- `phase22_cve_hunt/161a_dmem0_msync_invalidate_20261022_101002.txt` (693 bytes)
+- `phase22_cve_hunt/162a_sysent_679_734_20261022_101117.txt` (87 bytes)
+- `phase22_cve_hunt/163a_kaslr_timing_sidechannel_20261022_101417.txt` (990 bytes)
+- `phase22_cve_hunt/165b_rtsock_overflow_20261022_102555.txt` (683 bytes)
+- `phase22_cve_hunt/166a_rtsock_deep_analysis_20261022_102733.txt` (938 bytes)
+- `phase22_cve_hunt/167a_rtsock_residue_kaslr_20261022_103356.txt` (1253 bytes)
+- `phase22_cve_hunt/168a_kaslr_multiplex_20261022_103710.txt` (1928 bytes)
+- `phase22_cve_hunt/171a_ropchain_kaslr_timing_20261022_105116.txt` (3635 bytes)
+- `phase22_cve_hunt/172a_kaslr_timing_verify_20261022_105606.txt` (1160 bytes)
+- `phase22_cve_hunt/173a_physhm_copyin_leak_20261022_111718.txt` (299 bytes)
+- `phase22_cve_hunt/174a_physhm_srop_copyin_20261022_112232.txt` (605 bytes)
+- `phase22_cve_hunt/177a_physhm_copyin_after_mprotect_20261022_113417.txt` (43 bytes)
+- `phase22_cve_hunt/178a_physhm_copyin_minimal_20261022_121115.txt` (213 bytes)
+- `phase22_cve_hunt/179a_ipv6_msfilter_reachability_20261022_120903.txt` (539 bytes)
+- `phase22_cve_hunt/180a_msync_physhm_madvise_20261022_121047.txt` (476 bytes)
+- `phase22_cve_hunt/181a_ip4_msfilter_reachability_20261022_121240.txt` (597 bytes)
+- `phase22_cve_hunt/182a_mcast_msfilter_confirm_20261022_121620.txt` (566 bytes)
+- `phase22_cve_hunt/183a_msfilter_struct_shape_20261022_121832.txt` (889 bytes)
+- `phase22_cve_hunt/184a_new_cve_reachability_20261022_122318.txt` (636 bytes)
+- `phase22_cve_hunt/185a_umtx_mutex_race_20261022_122906.txt` (351 bytes)
+- `phase22_cve_hunt/185d_child_getpid_20261022_142230.txt` (122 bytes)
+- `phase22_cve_hunt/185e_child_getpid_v2_20261022_142354.txt` (188 bytes)
+- `phase22_cve_hunt/185f_child_getpid_v3_20261022_142554.txt` (181 bytes)
+- `phase22_cve_hunt/185g_find_gadgets_20261022_142714.txt` (186 bytes)
+- `phase22_cve_hunt/185h_child_getpid_final_20261022_142845.txt` (354 bytes)
+- `phase22_cve_hunt/186c_socket_poll_close_20261022_144643.txt` (116 bytes)
+- `phase22_cve_hunt/test_alive_20261022_142136.txt` (23 bytes)
+- `phase22_cve_hunt/test_alive_20261022_144602.txt` (23 bytes)
+- `phase22_dem9n101/P3_thr_create_console.txt` (115 bytes)
+- `phase22_threaded_races/100a_evf_race_20261021_223837.txt` (1088 bytes)
+- `phase22_threaded_races/101a_double_close_race_20261022_150548.txt` (1191 bytes)
+- `phase22_threaded_races/102b_netcontrol_route_trigger_20261022_145139.txt` (198 bytes)
+- `phase22_threaded_races/102b_netcontrol_route_trigger_20261022_145201.txt` (198 bytes)
+- `phase22_threaded_races/102b_netcontrol_route_trigger_20261022_145410.txt` (198 bytes)
+- `phase22_threaded_races/102b_netcontrol_route_trigger_20261022_145859.txt` (1561 bytes)
+- `phase22_threaded_races/102c_netcontrol_trigger_v2_20261022_150401.txt` (160 bytes)
+- `phase22_threaded_races/102c_netcontrol_trigger_v2_20261022_150454.txt` (1261 bytes)
+- `phase22_threaded_races/102d_netcontrol_ifindex_scan_20261022_150434.txt` (1410 bytes)
+- `phase22_threaded_races/103a_sys601_race_20261022_150857.txt` (646 bytes)
+- `phase22_threaded_races/104a_child_blocked_syscalls_20261022_151110.txt` (103 bytes)
+- `phase22_threaded_races/104a_child_blocked_syscalls_20261022_151307.txt` (1218 bytes)
+- `phase22_threaded_races/104b_fcntl_pipe_explore_20261022_151447.txt` (1391 bytes)
+- `phase22_threaded_races/105a_pipe_close_race_20261022_151655.txt` (768 bytes)
+- `phase22_threaded_races/108a_cclosure_gadget_chain_20261022_152955.txt` (255 bytes)
+- `phase22_threaded_races/109a_register_leak_scan_20261022_155002.txt` (797 bytes)
+- `phase22_threaded_races/110a_fstat_child_thread_20261022_155348.txt` (2766 bytes)
+- `phase22_threaded_races/111a_kldstat_child_thread_20261022_155714.txt` (250 bytes)
+- `phase22_threaded_races/112a_child_syscall_survey_20261022_160114.txt` (217 bytes)
+- `phase22_threaded_races/113a_fd_scan_dirents_mincore_20261022_160430.txt` (1843 bytes)
+- `phase22_threaded_races/115a_fd9_mmap_deep_20261022_160843.txt` (1637 bytes)
+- `phase22_threaded_races/116a_gpu_register_map_20261022_161035.txt` (6348 bytes)
+- `phase22_threaded_races/118a_read_gadget_scan_20261022_161950.txt` (188 bytes)
+- `phase22_threaded_races/118d_rdi_offset_read_20261022_162805.txt` (1226 bytes)
+- `phase22_threaded_races/119a_rax_arb_read_20261022_163115.txt` (1826 bytes)
+- `phase22_threaded_races/119c_real_data_scan_20261022_164221.txt` (861 bytes)
+- `phase22_threaded_races/119d_kptr_verify_20261022_164455.txt` (4131 bytes)
+- `phase22_threaded_races/119e_pipe_and_modules_20261022_165247.txt` (105 bytes)
+- `phase22_threaded_races/119f_safe_pipe_read_20261022_165405.txt` (918 bytes)
+- `phase22_threaded_races/119g_modules_eboot_rest_20261022_165526.txt` (417 bytes)
+- `phase22_threaded_races/120a_umtx_op_survey_20261022_165819.txt` (356 bytes)
+- `phase22_threaded_races/120b_umtx_safe_survey_20261022_170336.txt` (193 bytes)
+- `phase22_threaded_races/120c_umtx_rest_20261022_170701.txt` (65 bytes)
+- `phase22_threaded_races/120d_mutex_rw_pi_20261022_171030.txt` (119 bytes)
+- `phase22_threaded_races/120e_lock_cycles_20261022_171549.txt` (359 bytes)
+- `phase22_threaded_races/120e_lock_cycles_20261022_171912.txt` (630 bytes)
+- `phase22_threaded_races/121a_pi_mutex_race_20261022_172411.txt` (227 bytes)
+- `phase22_threaded_races/121b_native_pi_race_20261022_172529.txt` (421 bytes)
+- `phase22_threaded_races/122a3_physhm_prot_test_20261022_181919.txt` (648 bytes)
+- `phase22_threaded_races/122a4_physhm_offset_args_20261022_182057.txt` (1282 bytes)
+- `phase22_threaded_races/122b2_sys630_safe_20261022_192408.txt` (1010 bytes)
+- `phase22_threaded_races/123a_sys637_kernel_write_20261022_182704.txt` (287 bytes)
+- `phase22_threaded_races/125a_sys662_kaslr_stackclash_20261022_192348.txt` (711 bytes)
+- `phase22_threaded_races/126a_fstat_devices_aio_ids_20261022_193437.txt` (2088 bytes)
+- `phase22_threaded_races/126a_fstat_devices_aio_ids_20261022_195202.txt` (2088 bytes)
+- `phase22_threaded_races/160b_umtx_pi_race_20261021_142640.txt` (379 bytes)
+- `phase22_threaded_races/160b_umtx_pi_race_20261021_160844.txt` (627 bytes)
+- `phase22_threaded_races/160c_umtx_pi_race_4t_20261021_161035.txt` (702 bytes)
+- `phase22_threaded_races/160d_umtx_rwlock_race_20261021_161148.txt` (188 bytes)
+- `phase22_threaded_races/160d_umtx_rwlock_race_20261021_161313.txt` (700 bytes)
+- `phase22_threaded_races/160e_umtx_pi_corrupt_20261021_161522.txt` (729 bytes)
+- `phase22_threaded_races/160f_pi_exit_cascade_20261023_062904.txt` (145 bytes)
+- `phase22_threaded_races/160f_pi_exit_cascade_20261023_063249.txt` (318 bytes)
+- `phase22_threaded_races/160g_pi_exit_diag_20261023_063550.txt` (861 bytes)
+- `phase22_threaded_races/160h_dead_owner_rescue_20261023_064240.txt` (1381 bytes)
+- `phase22_threaded_races/160i_pi_ownership_fraud_20261023_064652.txt` (445 bytes)
+- `phase22_threaded_races/160i_pi_ownership_fraud_20261023_065002.txt` (489 bytes)
+- `phase22_threaded_races/160j_pi_fraud_diag_20261023_070221.txt` (2336 bytes)
+- `phase22_threaded_races/83b_sys601_threaded_auth_20261021_124459.txt` (441 bytes)
+- `phase22_threaded_races/83b_sys601_threaded_auth_20261021_125711.txt` (583 bytes)
+- `phase22_threaded_races/85b_dispatch_retaddr_threaded_20261021_131139.txt` (1988 bytes)
+- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_132658.txt` (234 bytes)
+- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_163417.txt` (337 bytes)
+- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_163959.txt` (437 bytes)
+- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_165106.txt` (606 bytes)
+- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_165439.txt` (663 bytes)
+- `phase22_threaded_races/89a_cve2019_5607_fd_race_20261021_165612.txt` (877 bytes)
+- `phase22_threaded_races/89b_cve2019_5607_gate_20261021_162936.txt` (507 bytes)
+- `phase22_threaded_races/89b_cve2019_5607_gate_20261021_163120.txt` (1251 bytes)
+- `phase22_threaded_races/90a_fd_close_sendmsg_race_20261021_172135.txt` (610 bytes)
+- `phase22_threaded_races/90a_fd_close_sendmsg_race_20261021_172322.txt` (608 bytes)
+- `phase22_threaded_races/91a_ipv6_setsockopt_race_20261021_174047.txt` (883 bytes)
+- `phase22_threaded_races/91b_ipv6_race_regtest_20261021_174752.txt` (323 bytes)
+- `phase22_threaded_races/91b_ipv6_race_regtest_20261021_174955.txt` (375 bytes)
+- `phase22_threaded_races/91c_eboot_gadget_scan_20261021_175428.txt` (1651 bytes)
+- `phase22_threaded_races/91d_ipv6_race_full_20261021_175603.txt` (555 bytes)
+- `phase22_threaded_races/91e_ipv6_race_heavy_20261021_175812.txt` (161 bytes)
+- `phase22_threaded_races/91f_ipv6_race_overlap_20261021_175935.txt` (156 bytes)
+- `phase22_threaded_races/91g_child_verify_20261021_180110.txt` (220 bytes)
+- `phase22_threaded_races/91g_child_verify_20261021_190032.txt` (220 bytes)
+- `phase22_threaded_races/91h_child_regdump_20261021_180539.txt` (534 bytes)
+- `phase22_threaded_races/91i_child_setsockopt_first_20261021_180854.txt` (315 bytes)
+- `phase22_threaded_races/91j_child_mmap_r10_20261021_181213.txt` (373 bytes)
+- `phase22_threaded_races/91k_r10_hunt_20261021_183308.txt` (121 bytes)
+- `phase22_threaded_races/91l_r10_gadget_scan_20261021_183714.txt` (741 bytes)
+- `phase22_threaded_races/91m_mov_r10_rcx_scan_20261021_184141.txt` (872 bytes)
+- `phase22_threaded_races/91m_mov_r10_rcx_scan_20261021_184301.txt` (1379 bytes)
+- `phase22_threaded_races/91m_mov_r10_rcx_scan_20261021_184959.txt` (2846 bytes)
+- `phase22_threaded_races/91s_thr_control_20261021_192241.txt` (99 bytes)
+- `phase22_threaded_races/91t_mmap_nanosleep_20261021_192543.txt` (185 bytes)
+- `phase22_threaded_races/91u_r10_final_20261021_192734.txt` (165 bytes)
+- `phase22_threaded_races/92b_2292_gate_check_20261021_194730.txt` (1155 bytes)
+- `phase22_threaded_races/92c_pktinfo_close_race_20261021_194935.txt` (650 bytes)
+- `phase22_threaded_races/92e_pktinfo_race_fixed_20261021_195255.txt` (425 bytes)
+- `phase22_threaded_races/93a_socket_close_race_20261021_202408.txt` (512 bytes)
+- `phase22_threaded_races/93b_scmrights_close_diag_20261021_202631.txt` (2464 bytes)
+- `phase22_threaded_races/94a_sys601_vm_fingerprint_20261021_202923.txt` (5098 bytes)
+- `phase22_threaded_races/94b_kqueue_close_race_20261021_203942.txt` (714 bytes)
+- `phase22_threaded_races/95a_umtx_pi_race_20261021_204746.txt` (862 bytes)
+- `phase22_threaded_races/95a_umtx_pi_race_20261021_205923.txt` (862 bytes)
+- `phase22_threaded_races/95a_umtx_pi_race_20261021_210143.txt` (1042 bytes)
+- `phase22_threaded_races/95b_umtx_pi_race_only_20261021_210703.txt` (742 bytes)
+- `phase22_threaded_races/96a_robust_lists_20261021_211623.txt` (412 bytes)
+- `phase22_threaded_races/97b_exit_umtx_isolate_20261021_213738.txt` (1066 bytes)
+- `phase22_threaded_races/98a_rwlock_race_20261021_214206.txt` (1300 bytes)
+- `phase22_threaded_races/99a_umtx_deep_ops_20261021_220114.txt` (612 bytes)
+- `phase22_threaded_races/99b_umtx_sem_cvwait_20261021_220621.txt` (306 bytes)
+- `phase22_threaded_races/99c_pi_exit_race_20261021_221247.txt` (1769 bytes)
+- `phase22_threaded_races/99d_pi_leak_measure_20261021_221636.txt` (1990 bytes)
+- `phase22_threaded_races/99e_pi_contend_orphan_20261021_222229.txt` (331 bytes)
+- `phase22_threaded_races/99e_pi_contend_orphan_20261021_222511.txt` (1261 bytes)
+- `phase22_threaded_races/99f_pi_toctou_race_20261021_223107.txt` (2291 bytes)
+- `phase23_cve_2026/500b_poll_close_minimal_20261106_000923.txt` (843 bytes)
+- `phase23_cve_2026/500c_poll_close_gated_20261106_002340.txt` (1204 bytes)
+- `phase23_cve_2026/500d_poll_close_spray_20261106_002740.txt` (2216 bytes)
+- `phase23_cve_2026/500e_poll_close_doublepoll_20261106_003229.txt` (611 bytes)
+- `phase23_cve_2026/500e_poll_close_doublepoll_20261106_003546.txt` (609 bytes)
+- `phase23_cve_2026/500f_kqueue_crosszone_spray_20261106_011110.txt` (357 bytes)
+- `phase23_cve_2026/500g_sockopt_spray_sweep_20261106_011530.txt` (770 bytes)
+- `phase23_cve_2026/500h_recvmsg_iov_spray_20261106_012529.txt` (994 bytes)
+- `phase23_cve_2026/500i_si_mtx_offset_scan_20261106_014631.txt` (1083 bytes)
+- `phase23_cve_2026/500j_precision_retest_20261106_015755.txt` (1771 bytes)
+- `phase23_cve_2026/500k_crash_oracle_20261106_021322.txt` (971 bytes)
+- `phase23_cve_2026/500l_page_level_spray_20261106_022538.txt` (1314 bytes)
+- `phase23_cve_2026/500m_multisize_spray_20261106_023158.txt` (1261 bytes)
+- `phase23_cve_2026/500n_same_cpu_readback_oracle_20261106_040421.txt` (916 bytes)
+- `phase23_cve_2026/500n_same_cpu_readback_oracle_20261106_041102.txt` (819 bytes)
+- `phase23_cve_2026/500o_safe_reclaim_oracle_20261106_045302.txt` (7655 bytes)
 - `phase23_cve_2026/523a_undecoded_syscalls_20261024_223218.txt` (119 bytes)
-- `phase23_cve_2026/525a_sysv_ipc_presence_20261105_090149.txt` (768 bytes)
-- `phase23_cve_2026/526a_scm_rights_deep_results.txt` (2760 bytes)
-- `phase23_cve_2026/527a_ghost_handle_refcount_20261025_072635.txt` (878 bytes)
-- `phase23_cve_2026/527b_ghost_refcount_v2_20261025_182352.txt` (482 bytes)
-- `phase23_cve_2026/527c_ghost_real_fill_20261025_184954.txt` (252 bytes)
-- `phase23_cve_2026/527d_ghost_stream_20261025_185447.txt` (318 bytes)
-- `phase23_cve_reachability/50e2_ipv6_msfilter_reach_20261022_194410.txt` (583 bytes)
-- `phase23_cve_reachability/50e3_msfilter_discriminate_20261022_194524.txt` (1094 bytes)
-- `phase23_cve_reachability/50f_ktls_reach_20261022_194646.txt` (1050 bytes)
-- `phase23_cve_reachability/50g_665_668_sigsys_20261022_195155.txt` (341 bytes)
-- `phase23_newvuln/79d_ktimer_lifecycle_20261028_222508.txt` (1700 bytes)
-- `phase23_newvuln/93a2_sndbuf_race_prefill_20261028_211825.txt` (2500 bytes)
-- `phase23_newvuln/93a3_sndbuf_race_verify_20261028_212138.txt` (101 bytes)
-- `phase23_newvuln/93a4_sndbuf_simple_20261028_212618.txt` (53 bytes)
-- `phase23_newvuln/93a4_sndbuf_simple_20261028_212912.txt` (53 bytes)
-- `phase23_newvuln/93a5_minimal_20261028_212835.txt` (327 bytes)
-- `phase23_newvuln/93a8_sndbuf_noinit_20261028_220001.txt` (167 bytes)
-- `phase23_newvuln/93a9_sndbuf_final_20261028_220648.txt` (601 bytes)
-- `phase23_newvuln/93a_sndbuf_race_20261028_211607.txt` (934 bytes)
-- `phase23_newvuln/93b_mmap_munmap_race_20261028_220710.txt` (218 bytes)
-- `phase23_newvuln/93c3_sndbuf_race_20261028_221259.txt` (726 bytes)
-- `phase23_newvuln/93c4_sndbuf_race_20261028_221405.txt` (743 bytes)
-- `phase23_newvuln/93c5_sndbuf_measure_20261028_221459.txt` (1156 bytes)
-- `phase23_newvuln/93c6_sndbuf_exploit_20261105_080421.txt` (116 bytes)
-- `phase23_newvuln/93c6_sndbuf_exploit_20261105_080942.txt` (123 bytes)
-- `phase23_newvuln/93c6_sndbuf_exploit_20261105_081149.txt` (159 bytes)
-- `phase23_newvuln/93c_lockf_spray_128b_20261028_211446.txt` (1094 bytes)
-- `phase23_newvuln/93d_dynlib_info2_leak_20261028_211439.txt` (1232 bytes)
-- `phase23_newvuln/94a_spray_vehicle_hunt_20261028_222734.txt` (801 bytes)
-- `phase23_newvuln/94b_aio_overlap_detect_20261028_223014.txt` (317 bytes)
-- `phase23_newvuln/94c_aio_overlap_v2_20261028_223150.txt` (339 bytes)
-- `phase23_newvuln/94c_aio_overlap_v2_20261028_223313.txt` (339 bytes)
-- `phase23_newvuln/94c_aio_overlap_v2_20261028_223427.txt` (339 bytes)
-- `phase23_newvuln/94d_aio_status_debug_20261028_223628.txt` (183 bytes)
-- `phase24_thread_rop/127a_child_rop_syscall_20261022_200011.txt` (1034 bytes)
-- `phase24_thread_rop/127b_gadget_deep_scan_20261022_200200.txt` (472 bytes)
-- `phase24_thread_rop/127c_fast_gadget_find_20261022_200412.txt` (1413 bytes)
-- `phase24_thread_rop/127d_rop_chain_dump_20261022_200624.txt` (9672 bytes)
-- `phase24_thread_rop/127e_syscall_hunt_20261022_201124.txt` (1688 bytes)
-- `phase24_thread_rop/127f_syscall_module_scan_20261022_201443.txt` (1076 bytes)
-- `phase24_thread_rop/127g_syscall_path_and_rop_loop_20261022_202224.txt` (1627 bytes)
-- `phase24_thread_rop/127h_thread_rop_fixed_20261022_203129.txt` (262 bytes)
-- `phase24_thread_rop/127h_thread_rop_fixed_20261022_203154.txt` (1683 bytes)
-- `phase24_thread_rop/127i_thread_156d_clone_20261022_203409.txt` (742 bytes)
-- `phase24_thread_rop/127j_rop_write_loop_20261022_203519.txt` (644 bytes)
-- `phase24_thread_rop/127k_umtx_race_20261022_204201.txt` (460 bytes)
-- `phase24_thread_rop/127l_umtx_race_trylock_20261022_205337.txt` (1173 bytes)
-- `phase24_thread_rop/127m_pi_dangling_race_20261022_205511.txt` (809 bytes)
-- `phase24_thread_rop/127n_pi_alloc_measure_20261022_210149.txt` (1111 bytes)
-- `phase25_sys625_msr/128a_sys625_survey_20261022_211851.txt` (8559 bytes)
-- `phase25_sys625_msr/128b_umtx_syscall_race_20261022_212008.txt` (1239 bytes)
-- `phase25_sys625_msr/128f_sa_identity_20261022_215129.txt` (4132 bytes)
-- `phase25_sys625_msr/128g_controlled_fd_race_20261022_222810.txt` (837 bytes)
-- `phase26_cve_vectors/58d_tiocsctty_reachability_20261023_070440.txt` (1659 bytes)
-- `phase27_phys_memory/528a_map_direct_memory_20261025_072556.txt` (133 bytes)
-- `phase27_phys_memory/528a_map_direct_memory_20261025_073147.txt` (133 bytes)
-- `phase27_phys_memory/528c_map_srop_20261025_091721.txt` (292 bytes)
-- `phase27_phys_memory/528d_child_srop_diag_20261025_092237.txt` (846 bytes)
-- `phase27_phys_memory/528e_srop_wrapper_diag_20261025_092826.txt` (611 bytes)
-- `phase27_phys_memory/528f2_mainthread_mapdm_20261025_093306.txt` (195 bytes)
-- `phase27_phys_memory/528f_mainthread_mapdm_20261025_093022.txt` (234 bytes)
-- `phase27_phys_memory/528f_mainthread_mapdm_20261025_093141.txt` (339 bytes)
-- `phase27_phys_memory/528g_mapdm_inline_epi_20261025_093452.txt` (248 bytes)
-- `phase27_phys_memory/528g_mapdm_inline_epi_20261025_093716.txt` (248 bytes)
-- `phase27_phys_memory/528g_mapdm_inline_epi_20261025_093747.txt` (423 bytes)
-- `phase27_phys_memory/528h_mapdm_debug_20261025_093940.txt` (313 bytes)
-- `phase27_phys_memory/528i_raw_map_syscalls_20261025_094222.txt` (1176 bytes)
-- `phase27_phys_memory/528j_raw_map_errno_20261025_094403.txt` (1203 bytes)
-- `phase27_phys_memory/528k_map_errno_capture_20261025_094531.txt` (1349 bytes)
-- `phase27_phys_memory/528l_mmap_dmem_verify_20261025_094634.txt` (1123 bytes)
-- `phase27_phys_memory/528m_phys_kernel_scan_20261025_094732.txt` (654 bytes)
-- `phase27_phys_memory/528n_phys_wide_scan_20261025_094900.txt` (477 bytes)
-- `phase27_phys_memory/528s_ultralight_scan_20261025_113216.txt` (105 bytes)
-- `phase27_phys_memory/528t_dmem_range_test_20261025_113323.txt` (915 bytes)
-- `phase27_phys_memory/528u_gc_mmap_scan_20261025_113421.txt` (825 bytes)
-- `phase27_phys_memory/528v_dmem0_header_deep_20261025_113513.txt` (4095 bytes)
-- `phase27_phys_memory/528w_gpu_cmdbuf_decode_20261025_115528.txt` (3737 bytes)
-- `phase27_phys_memory/528x_gpu_sdma_hunt_20261025_115659.txt` (449 bytes)
-- `phase27_phys_memory/528y_gc_ioctl_sweep_20261025_115747.txt` (260 bytes)
-- `phase27_phys_memory/528z_gnm_submit_hunt_20261025_115843.txt` (2788 bytes)
-- `phase27_phys_memory/530a_gpu_submit_test_20261025_120323.txt` (96 bytes)
-- `phase27_phys_memory/530a_gpu_submit_test_20261025_120353.txt` (1519 bytes)
-- `phase27_phys_memory/530b_gpu_submit_debug_20261025_120527.txt` (836 bytes)
-- `phase27_phys_memory/530c_gnm_submit_direct_20261025_120633.txt` (173 bytes)
-- `phase27_phys_memory/530d_eboot_gnm_got_20261025_120718.txt` (440 bytes)
-- `phase27_phys_memory/530e_gpu_ring_vmmap_20261025_120814.txt` (1597 bytes)
-- `phase27_phys_memory/530f_gnm_nid_call_20261025_120917.txt` (2173 bytes)
-- `phase27_phys_memory/530g_gnm_safe_call_20261025_121006.txt` (100 bytes)
-- `phase27_phys_memory/530h_ring_inject_20261025_121340.txt` (592 bytes)
-- `phase27_phys_memory/530i_eboot_submit_hunt_20261025_121451.txt` (1217 bytes)
-- `phase27_phys_memory/530o_gc_info_ioctls_20261025_122039.txt` (346 bytes)
-- `phase27_phys_memory/530p_ioctl_deep_20261025_122130.txt` (1446 bytes)
-- `phase27_phys_memory/530q_ioctl_probe_20261025_122255.txt` (1377 bytes)
-- `phase27_phys_memory/531a_mapdm_rop_20261025_123134.txt` (456 bytes)
-- `phase27_phys_memory/531b_mapdm_read_20261025_123226.txt` (222 bytes)
-- `phase27_phys_memory/531c_mapdm_hint_20261025_123318.txt` (169 bytes)
-- `phase27_phys_memory/531d_mapdm_minimal_20261025_123401.txt` (150 bytes)
-- `phase27_phys_memory/531e_raw_map_20261025_123456.txt` (871 bytes)
-- `phase27_phys_memory/531f_phys_scan_20261025_123544.txt` (1053 bytes)
-- `phase27_phys_memory/531g_rop_mapdm_20261025_123731.txt` (151 bytes)
-- `phase27_phys_memory/531i_gadget_lite_20261025_123930.txt` (434 bytes)
-- `phase27_phys_memory/531j_find_syscall_20261025_124039.txt` (1187 bytes)
-- `phase27_phys_memory/531k_srop_mapdm_20261025_124506.txt` (486 bytes)
-- `phase27_phys_memory/531l_tcb_mapdm_20261025_124711.txt` (436 bytes)
-- `phase27_phys_memory/531m_thr_test_20261025_125031.txt` (132 bytes)
-- `phase27_phys_memory/531n_thr_diag_20261025_125138.txt` (318 bytes)
-- `phase27_phys_memory/531o_thr_heap_20261025_125214.txt` (218 bytes)
-- `phase27_phys_memory/531p_thr_nosig_20261025_125402.txt` (383 bytes)
-- `phase27_phys_memory/531u_incremental_20261025_130355.txt` (473 bytes)
-- `phase27_phys_memory/531v_chain_s1_20261025_130441.txt` (333 bytes)
-- `phase27_phys_memory/531w_chain_s2_20261025_130511.txt` (252 bytes)
-- `phase27_phys_memory/532a_r8_survive_20261025_171949.txt` (444 bytes)
-- `phase27_phys_memory/532c_child_dmem_mmap_20261025_172047.txt` (602 bytes)
-- `phase27_phys_memory/532d_dmem_oob_map_20261025_172139.txt` (836 bytes)
-- `phase27_phys_memory/532e_dmem_range_scan_20261025_172239.txt` (919 bytes)
-- `phase27_phys_memory/532f_gc_mmap_range_20261025_172327.txt` (2083 bytes)
-- `phase27_phys_memory/532g_gc_mmio_read_20261025_172411.txt` (917 bytes)
-- `phase27_phys_memory/532h_mapdm_disasm_20261025_172525.txt` (122 bytes)
-- `phase27_phys_memory/532j_libkernel_got_20261025_172720.txt` (2645 bytes)
-- `phase27_phys_memory/532k_libkernel_relro_20261025_172754.txt` (591 bytes)
-- `phase27_phys_memory/532n_batch_map_child_20261025_173836.txt` (507 bytes)
-- `phase27_phys_memory/532q_mmap_dmem_v2_20261025_174401.txt` (834 bytes)
-- `phase27_phys_memory/532r_mmap_dmem_rw_20261025_174459.txt` (659 bytes)
-- `phase27_phys_memory/532s_alloc_sysram_20261025_174533.txt` (2401 bytes)
-- `phase27_phys_memory/532t_mmap_dmem_unowned_20261025_174623.txt` (717 bytes)
-- `phase27_phys_memory/532u_alloc_range_map_20261025_174711.txt` (538 bytes)
-- `phase27_phys_memory/533a_fd_close_race_20261025_174926.txt` (223 bytes)
-- `phase27_phys_memory/533d_aio_phys_probe_20261025_175303.txt` (842 bytes)
-- `phase27_phys_memory/533e_pager_boundary_20261025_175638.txt` (2976 bytes)
-- `phase27_phys_memory/533f_boundary_v2_20261025_175728.txt` (1998 bytes)
-- `phase27_phys_memory/533g_read_past_pool_20261025_175812.txt` (171 bytes)
-- `phase27_phys_memory/533h_read_sysram_20261025_175850.txt` (1550 bytes)
-- `phase27_phys_memory/533i_read_sysram_v2_20261025_175954.txt` (1983 bytes)
-- `phase27_phys_memory/534c_fd_race_v3_20261025_180549.txt` (389 bytes)
-- `phase27_phys_memory/534e_race_small_20261025_180905.txt` (163 bytes)
-- `phase27_phys_memory/534e_race_small_20261025_181205.txt` (215 bytes)
-- `phase27_phys_memory/534f_race_500_20261025_181321.txt` (323 bytes)
-- `phase27_phys_memory/534f_race_500_20261025_194022.txt` (324 bytes)
-- `phase29_aio_race/540a_aio_delete_race_20261025_192851.txt` (837 bytes)
-- `phase29_aio_race/540b_aio_race_stagger_20261025_193038.txt` (1270 bytes)
-- `phase29_aio_race/540c_aio_race_verify_20261025_193500.txt` (708 bytes)
-- `phase29_aio_race/541a_aio_cancel_race_20261025_195246.txt` (805 bytes)
-- `phase29_aio_race/541b_cancel_inflight_20261025_195552.txt` (1364 bytes)
-- `phase29_aio_race/541c_cancel_write_trigger_20261025_200051.txt` (1209 bytes)
-- `phase29_aio_race/541d_wait_race_20261025_200804.txt` (287 bytes)
-- `phase29_aio_race/541d_wait_race_20261025_201427.txt` (1065 bytes)
-- `phase2_kernel_objects/09_ipv6_stress_20261015_185645.txt` (1065 bytes)
-- `phase2_kernel_objects/10_umtx_stress_20261015_190047.txt` (1549 bytes)
-- `phase2_kernel_objects/11_race2_20261015_190539.txt` (306 bytes)
+- `phase23_cve_2026/525a_sysv_ipc_presence_20261105_090149.txt` (799 bytes)
+- `phase23_cve_2026/526a_scm_rights_deep_results.txt` (2844 bytes)
+- `phase23_cve_2026/527a_ghost_handle_refcount_20261025_072635.txt` (905 bytes)
+- `phase23_cve_2026/527b_ghost_refcount_v2_20261025_182352.txt` (502 bytes)
+- `phase23_cve_2026/527c_ghost_real_fill_20261025_184954.txt` (263 bytes)
+- `phase23_cve_2026/527d_ghost_stream_20261025_185447.txt` (333 bytes)
+- `phase23_cve_reachability/50e2_ipv6_msfilter_reach_20261022_194410.txt` (609 bytes)
+- `phase23_cve_reachability/50e3_msfilter_discriminate_20261022_194524.txt` (1136 bytes)
+- `phase23_cve_reachability/50f_ktls_reach_20261022_194646.txt` (1082 bytes)
+- `phase23_cve_reachability/50g_665_668_sigsys_20261022_195155.txt` (363 bytes)
+- `phase23_newvuln/79d_ktimer_lifecycle_20261028_222508.txt` (1765 bytes)
+- `phase23_newvuln/93a2_sndbuf_race_prefill_20261028_211825.txt` (2550 bytes)
+- `phase23_newvuln/93a3_sndbuf_race_verify_20261028_212138.txt` (105 bytes)
+- `phase23_newvuln/93a4_sndbuf_simple_20261028_212618.txt` (56 bytes)
+- `phase23_newvuln/93a4_sndbuf_simple_20261028_212912.txt` (56 bytes)
+- `phase23_newvuln/93a5_minimal_20261028_212835.txt` (342 bytes)
+- `phase23_newvuln/93a8_sndbuf_noinit_20261028_220001.txt` (178 bytes)
+- `phase23_newvuln/93a9_sndbuf_final_20261028_220648.txt` (617 bytes)
+- `phase23_newvuln/93a_sndbuf_race_20261028_211607.txt` (968 bytes)
+- `phase23_newvuln/93b_mmap_munmap_race_20261028_220710.txt` (227 bytes)
+- `phase23_newvuln/93c3_sndbuf_race_20261028_221259.txt` (750 bytes)
+- `phase23_newvuln/93c4_sndbuf_race_20261028_221405.txt` (758 bytes)
+- `phase23_newvuln/93c5_sndbuf_measure_20261028_221459.txt` (1181 bytes)
+- `phase23_newvuln/93c6_sndbuf_exploit_20261105_080421.txt` (123 bytes)
+- `phase23_newvuln/93c6_sndbuf_exploit_20261105_080942.txt` (130 bytes)
+- `phase23_newvuln/93c6_sndbuf_exploit_20261105_081149.txt` (167 bytes)
+- `phase23_newvuln/93c_lockf_spray_128b_20261028_211446.txt` (1139 bytes)
+- `phase23_newvuln/93d_dynlib_info2_leak_20261028_211439.txt` (1279 bytes)
+- `phase23_newvuln/94a_spray_vehicle_hunt_20261028_222734.txt` (837 bytes)
+- `phase23_newvuln/94b_aio_overlap_detect_20261028_223014.txt` (332 bytes)
+- `phase23_newvuln/94c_aio_overlap_v2_20261028_223150.txt` (359 bytes)
+- `phase23_newvuln/94c_aio_overlap_v2_20261028_223313.txt` (359 bytes)
+- `phase23_newvuln/94c_aio_overlap_v2_20261028_223427.txt` (359 bytes)
+- `phase23_newvuln/94d_aio_status_debug_20261028_223628.txt` (191 bytes)
+- `phase24_thread_rop/127a_child_rop_syscall_20261022_200011.txt` (1063 bytes)
+- `phase24_thread_rop/127b_gadget_deep_scan_20261022_200200.txt` (489 bytes)
+- `phase24_thread_rop/127c_fast_gadget_find_20261022_200412.txt` (1473 bytes)
+- `phase24_thread_rop/127d_rop_chain_dump_20261022_200624.txt` (9891 bytes)
+- `phase24_thread_rop/127e_syscall_hunt_20261022_201124.txt` (1735 bytes)
+- `phase24_thread_rop/127f_syscall_module_scan_20261022_201443.txt` (1106 bytes)
+- `phase24_thread_rop/127g_syscall_path_and_rop_loop_20261022_202224.txt` (1666 bytes)
+- `phase24_thread_rop/127h_thread_rop_fixed_20261022_203129.txt` (273 bytes)
+- `phase24_thread_rop/127h_thread_rop_fixed_20261022_203154.txt` (1737 bytes)
+- `phase24_thread_rop/127i_thread_156d_clone_20261022_203409.txt` (770 bytes)
+- `phase24_thread_rop/127j_rop_write_loop_20261022_203519.txt` (669 bytes)
+- `phase24_thread_rop/127k_umtx_race_20261022_204201.txt` (477 bytes)
+- `phase24_thread_rop/127l_umtx_race_trylock_20261022_205337.txt` (1208 bytes)
+- `phase24_thread_rop/127m_pi_dangling_race_20261022_205511.txt` (831 bytes)
+- `phase24_thread_rop/127n_pi_alloc_measure_20261022_210149.txt` (1151 bytes)
+- `phase25_sys625_msr/128a_sys625_survey_20261022_211851.txt` (8684 bytes)
+- `phase25_sys625_msr/128b_umtx_syscall_race_20261022_212008.txt` (1273 bytes)
+- `phase25_sys625_msr/128f_sa_identity_20261022_215129.txt` (4258 bytes)
+- `phase25_sys625_msr/128g_controlled_fd_race_20261022_222810.txt` (863 bytes)
+- `phase26_cve_vectors/58d_tiocsctty_reachability_20261023_070440.txt` (1707 bytes)
+- `phase27_phys_memory/528a_map_direct_memory_20261025_072556.txt` (140 bytes)
+- `phase27_phys_memory/528a_map_direct_memory_20261025_073147.txt` (140 bytes)
+- `phase27_phys_memory/528c_map_srop_20261025_091721.txt` (308 bytes)
+- `phase27_phys_memory/528d_child_srop_diag_20261025_092237.txt` (881 bytes)
+- `phase27_phys_memory/528e_srop_wrapper_diag_20261025_092826.txt` (634 bytes)
+- `phase27_phys_memory/528f2_mainthread_mapdm_20261025_093306.txt` (204 bytes)
+- `phase27_phys_memory/528f_mainthread_mapdm_20261025_093022.txt` (244 bytes)
+- `phase27_phys_memory/528f_mainthread_mapdm_20261025_093141.txt` (354 bytes)
+- `phase27_phys_memory/528g_mapdm_inline_epi_20261025_093452.txt` (261 bytes)
+- `phase27_phys_memory/528g_mapdm_inline_epi_20261025_093716.txt` (261 bytes)
+- `phase27_phys_memory/528g_mapdm_inline_epi_20261025_093747.txt` (441 bytes)
+- `phase27_phys_memory/528h_mapdm_debug_20261025_093940.txt` (329 bytes)
+- `phase27_phys_memory/528i_raw_map_syscalls_20261025_094222.txt` (1211 bytes)
+- `phase27_phys_memory/528j_raw_map_errno_20261025_094403.txt` (1228 bytes)
+- `phase27_phys_memory/528k_map_errno_capture_20261025_094531.txt` (1382 bytes)
+- `phase27_phys_memory/528l_mmap_dmem_verify_20261025_094634.txt` (1170 bytes)
+- `phase27_phys_memory/528m_phys_kernel_scan_20261025_094732.txt` (679 bytes)
+- `phase27_phys_memory/528n_phys_wide_scan_20261025_094900.txt` (495 bytes)
+- `phase27_phys_memory/528s_ultralight_scan_20261025_113216.txt` (113 bytes)
+- `phase27_phys_memory/528t_dmem_range_test_20261025_113323.txt` (950 bytes)
+- `phase27_phys_memory/528u_gc_mmap_scan_20261025_113421.txt` (856 bytes)
+- `phase27_phys_memory/528v_dmem0_header_deep_20261025_113513.txt` (4223 bytes)
+- `phase27_phys_memory/528w_gpu_cmdbuf_decode_20261025_115528.txt` (3845 bytes)
+- `phase27_phys_memory/528x_gpu_sdma_hunt_20261025_115659.txt` (471 bytes)
+- `phase27_phys_memory/528y_gc_ioctl_sweep_20261025_115747.txt` (279 bytes)
+- `phase27_phys_memory/528z_gnm_submit_hunt_20261025_115843.txt` (2853 bytes)
+- `phase27_phys_memory/530a_gpu_submit_test_20261025_120323.txt` (101 bytes)
+- `phase27_phys_memory/530a_gpu_submit_test_20261025_120353.txt` (1586 bytes)
+- `phase27_phys_memory/530b_gpu_submit_debug_20261025_120527.txt` (875 bytes)
+- `phase27_phys_memory/530c_gnm_submit_direct_20261025_120633.txt` (180 bytes)
+- `phase27_phys_memory/530d_eboot_gnm_got_20261025_120718.txt` (457 bytes)
+- `phase27_phys_memory/530e_gpu_ring_vmmap_20261025_120814.txt` (1652 bytes)
+- `phase27_phys_memory/530f_gnm_nid_call_20261025_120917.txt` (2237 bytes)
+- `phase27_phys_memory/530g_gnm_safe_call_20261025_121006.txt` (105 bytes)
+- `phase27_phys_memory/530h_ring_inject_20261025_121340.txt` (620 bytes)
+- `phase27_phys_memory/530i_eboot_submit_hunt_20261025_121451.txt` (1272 bytes)
+- `phase27_phys_memory/530o_gc_info_ioctls_20261025_122039.txt` (363 bytes)
+- `phase27_phys_memory/530p_ioctl_deep_20261025_122130.txt` (1496 bytes)
+- `phase27_phys_memory/530q_ioctl_probe_20261025_122255.txt` (1424 bytes)
+- `phase27_phys_memory/531a_mapdm_rop_20261025_123134.txt` (474 bytes)
+- `phase27_phys_memory/531b_mapdm_read_20261025_123226.txt` (234 bytes)
+- `phase27_phys_memory/531c_mapdm_hint_20261025_123318.txt` (181 bytes)
+- `phase27_phys_memory/531d_mapdm_minimal_20261025_123401.txt` (159 bytes)
+- `phase27_phys_memory/531e_raw_map_20261025_123456.txt` (908 bytes)
+- `phase27_phys_memory/531f_phys_scan_20261025_123544.txt` (1087 bytes)
+- `phase27_phys_memory/531g_rop_mapdm_20261025_123731.txt` (159 bytes)
+- `phase27_phys_memory/531i_gadget_lite_20261025_123930.txt` (447 bytes)
+- `phase27_phys_memory/531j_find_syscall_20261025_124039.txt` (1234 bytes)
+- `phase27_phys_memory/531k_srop_mapdm_20261025_124506.txt` (510 bytes)
+- `phase27_phys_memory/531l_tcb_mapdm_20261025_124711.txt` (457 bytes)
+- `phase27_phys_memory/531m_thr_test_20261025_125031.txt` (138 bytes)
+- `phase27_phys_memory/531n_thr_diag_20261025_125138.txt` (331 bytes)
+- `phase27_phys_memory/531o_thr_heap_20261025_125214.txt` (227 bytes)
+- `phase27_phys_memory/531p_thr_nosig_20261025_125402.txt` (399 bytes)
+- `phase27_phys_memory/531u_incremental_20261025_130355.txt` (485 bytes)
+- `phase27_phys_memory/531v_chain_s1_20261025_130441.txt` (346 bytes)
+- `phase27_phys_memory/531w_chain_s2_20261025_130511.txt` (264 bytes)
+- `phase27_phys_memory/532a_r8_survive_20261025_171949.txt` (460 bytes)
+- `phase27_phys_memory/532c_child_dmem_mmap_20261025_172047.txt` (629 bytes)
+- `phase27_phys_memory/532d_dmem_oob_map_20261025_172139.txt` (858 bytes)
+- `phase27_phys_memory/532e_dmem_range_scan_20261025_172239.txt` (947 bytes)
+- `phase27_phys_memory/532f_gc_mmap_range_20261025_172327.txt` (2140 bytes)
+- `phase27_phys_memory/532g_gc_mmio_read_20261025_172411.txt` (951 bytes)
+- `phase27_phys_memory/532h_mapdm_disasm_20261025_172525.txt` (128 bytes)
+- `phase27_phys_memory/532j_libkernel_got_20261025_172720.txt` (2743 bytes)
+- `phase27_phys_memory/532k_libkernel_relro_20261025_172754.txt` (613 bytes)
+- `phase27_phys_memory/532n_batch_map_child_20261025_173836.txt` (525 bytes)
+- `phase27_phys_memory/532q_mmap_dmem_v2_20261025_174401.txt` (857 bytes)
+- `phase27_phys_memory/532r_mmap_dmem_rw_20261025_174459.txt` (687 bytes)
+- `phase27_phys_memory/532s_alloc_sysram_20261025_174533.txt` (2441 bytes)
+- `phase27_phys_memory/532t_mmap_dmem_unowned_20261025_174623.txt` (746 bytes)
+- `phase27_phys_memory/532u_alloc_range_map_20261025_174711.txt` (556 bytes)
+- `phase27_phys_memory/533a_fd_close_race_20261025_174926.txt` (235 bytes)
+- `phase27_phys_memory/533d_aio_phys_probe_20261025_175303.txt` (868 bytes)
+- `phase27_phys_memory/533e_pager_boundary_20261025_175638.txt` (3062 bytes)
+- `phase27_phys_memory/533f_boundary_v2_20261025_175728.txt` (2064 bytes)
+- `phase27_phys_memory/533g_read_past_pool_20261025_175812.txt` (180 bytes)
+- `phase27_phys_memory/533h_read_sysram_20261025_175850.txt` (1598 bytes)
+- `phase27_phys_memory/533i_read_sysram_v2_20261025_175954.txt` (2037 bytes)
+- `phase27_phys_memory/534c_fd_race_v3_20261025_180549.txt` (403 bytes)
+- `phase27_phys_memory/534e_race_small_20261025_180905.txt` (171 bytes)
+- `phase27_phys_memory/534e_race_small_20261025_181205.txt` (226 bytes)
+- `phase27_phys_memory/534f_race_500_20261025_181321.txt` (336 bytes)
+- `phase27_phys_memory/534f_race_500_20261025_194022.txt` (337 bytes)
+- `phase29_aio_race/540a_aio_delete_race_20261025_192851.txt` (878 bytes)
+- `phase29_aio_race/540b_aio_race_stagger_20261025_193038.txt` (1313 bytes)
+- `phase29_aio_race/540c_aio_race_verify_20261025_193500.txt` (741 bytes)
+- `phase29_aio_race/541a_aio_cancel_race_20261025_195246.txt` (841 bytes)
+- `phase29_aio_race/541b_cancel_inflight_20261025_195552.txt` (1418 bytes)
+- `phase29_aio_race/541c_cancel_write_trigger_20261025_200051.txt` (1256 bytes)
+- `phase29_aio_race/541d_wait_race_20261025_200804.txt` (300 bytes)
+- `phase29_aio_race/541d_wait_race_20261025_201427.txt` (1117 bytes)
+- `phase2_kernel_objects/09_ipv6_stress_20261015_185645.txt` (1099 bytes)
+- `phase2_kernel_objects/10_umtx_stress_20261015_190047.txt` (1605 bytes)
+- `phase2_kernel_objects/11_race2_20261015_190539.txt` (328 bytes)
 - `phase2_kernel_objects/11_umtx_race_20261015_190341.txt` (131 bytes)
-- `phase2_kernel_objects/11_umtx_race_20261015_190437.txt` (497 bytes)
-- `phase2_kernel_objects/11_umtx_race_20261015_190449.txt` (493 bytes)
-- `phase2_kernel_objects/12_nwake_robust_20261015_190720.txt` (2534 bytes)
-- `phase2_kernel_objects/13_nwake_oracle_20261015_190841.txt` (2538 bytes)
-- `phase2_kernel_objects/14_device_ioctl_20261015_191602.txt` (2519072 bytes)
-- `phase2_kernel_objects/15_dmem_deep_20261015_191724.txt` (12213 bytes)
-- `phase2_kernel_objects/17_dmem_kptr_20261015_192017.txt` (7583 bytes)
-- `phase2_kernel_objects/19_aio_stress_20261015_192707.txt` (171 bytes)
-- `phase2_kernel_objects/19b_aio_safe_20261015_192814.txt` (658 bytes)
-- `phase2_kernel_objects/19c_aio_pipes_20261015_192919.txt` (522 bytes)
-- `phase2_kernel_objects/19d_aio_minimal_20261015_193005.txt` (124 bytes)
-- `phase2_kernel_objects/19e_aio_nocrash_20261015_193047.txt` (172 bytes)
-- `phase2_kernel_objects/19f_aio_read_only_20261015_193137.txt` (114 bytes)
-- `phase2_kernel_objects/19g_aio_debug_20261015_193320.txt` (149 bytes)
-- `phase2_kernel_objects/20_kqueue_stress_20261015_193513.txt` (1627 bytes)
+- `phase2_kernel_objects/11_umtx_race_20261015_190437.txt` (519 bytes)
+- `phase2_kernel_objects/11_umtx_race_20261015_190449.txt` (515 bytes)
+- `phase2_kernel_objects/12_nwake_robust_20261015_190720.txt` (2623 bytes)
+- `phase2_kernel_objects/13_nwake_oracle_20261015_190841.txt` (2613 bytes)
+- `phase2_kernel_objects/14_device_ioctl_20261015_191602.txt` (2572382 bytes)
+- `phase2_kernel_objects/15_dmem_deep_20261015_191724.txt` (12482 bytes)
+- `phase2_kernel_objects/17_dmem_kptr_20261015_192017.txt` (7870 bytes)
+- `phase2_kernel_objects/19_aio_stress_20261015_192707.txt` (180 bytes)
+- `phase2_kernel_objects/19b_aio_safe_20261015_192814.txt` (681 bytes)
+- `phase2_kernel_objects/19c_aio_pipes_20261015_192919.txt` (542 bytes)
+- `phase2_kernel_objects/19d_aio_minimal_20261015_193005.txt` (131 bytes)
+- `phase2_kernel_objects/19e_aio_nocrash_20261015_193047.txt` (180 bytes)
+- `phase2_kernel_objects/19f_aio_read_only_20261015_193137.txt` (121 bytes)
+- `phase2_kernel_objects/19g_aio_debug_20261015_193320.txt` (157 bytes)
+- `phase2_kernel_objects/20_kqueue_stress_20261015_193513.txt` (1692 bytes)
 - `phase2_kernel_objects/21_kqueue_deep_20261015_193631.txt` (130 bytes)
-- `phase2_kernel_objects/21_kqueue_deep_20261015_193640.txt` (947 bytes)
-- `phase2_kernel_objects/58f_kevent_timeout_matrix_20261019_185428.txt` (881 bytes)
-- `phase2_kernel_objects/58f_kevent_timeout_matrix_20261019_185526.txt` (1649 bytes)
-- `phase2_kernel_objects/58f_kevent_timeout_matrix_20261019_185532.txt` (1720 bytes)
-- `phase30_mapdirect_loader/544a_fcall_stub_layout_20261025_211156.txt` (1438 bytes)
-- `phase30_mapdirect_loader/544a_fcall_stub_layout_20261025_211235.txt` (2158 bytes)
-- `phase30_mapdirect_loader/544b_mapdm_7arg_20261025_211538.txt` (860 bytes)
-- `phase30_mapdirect_loader/544c_mapdm_diag_20261025_211640.txt` (988 bytes)
-- `phase30_mapdirect_loader/544d_alloc_diag_20261025_212017.txt` (801 bytes)
-- `phase30_mapdirect_loader/544e_mapdm_real_20261025_212109.txt` (266 bytes)
+- `phase2_kernel_objects/21_kqueue_deep_20261015_193640.txt` (986 bytes)
+- `phase2_kernel_objects/58f_kevent_timeout_matrix_20261019_185428.txt` (906 bytes)
+- `phase2_kernel_objects/58f_kevent_timeout_matrix_20261019_185526.txt` (1695 bytes)
+- `phase2_kernel_objects/58f_kevent_timeout_matrix_20261019_185532.txt` (1769 bytes)
+- `phase30_mapdirect_loader/544a_fcall_stub_layout_20261025_211156.txt` (1481 bytes)
+- `phase30_mapdirect_loader/544a_fcall_stub_layout_20261025_211235.txt` (2234 bytes)
+- `phase30_mapdirect_loader/544b_mapdm_7arg_20261025_211538.txt` (891 bytes)
+- `phase30_mapdirect_loader/544c_mapdm_diag_20261025_211640.txt` (1022 bytes)
+- `phase30_mapdirect_loader/544d_alloc_diag_20261025_212017.txt` (827 bytes)
+- `phase30_mapdirect_loader/544e_mapdm_real_20261025_212109.txt` (278 bytes)
 - `phase30_mapdirect_loader/544q_mapdm_fcalltable_20261025_214043.txt` (7278 bytes)
-- `phase30_mapdirect_loader/544w_mapdm_atomic_20261025_215210.txt` (28 bytes)
-- `phase30_mapdirect_loader/545h_mmap_dmem_raw_20261025_222648.txt` (258 bytes)
-- `phase30_mapdirect_loader/547a_dmem0_low_phys_20261026_140353.txt` (1979 bytes)
-- `phase30_mapdirect_loader/547b_phys_scan_20261026_140531.txt` (1381 bytes)
-- `phase30_mapdirect_loader/547d_dense_scan_20261026_140739.txt` (2511 bytes)
-- `phase30_mapdirect_loader/547e_pool_rest_20261026_141054.txt` (396 bytes)
-- `phase30_mapdirect_loader/547f_dmem12_20261026_141012.txt` (1687 bytes)
-- `phase30_mapdirect_loader/547g_high_phys_scan_20261026_141513.txt` (692 bytes)
-- `phase30_mapdirect_loader/552b_child_srop_test_20261026_204853.txt` (561 bytes)
-- `phase30_mapdirect_loader/552d_srop_alloc_test_20261026_205546.txt` (575 bytes)
-- `phase30_mapdirect_loader/552f_find_mapdm_20261026_205948.txt` (107 bytes)
-- `phase30_mapdirect_loader/552f_find_mapdm_20261026_210019.txt` (1508 bytes)
-- `phase30_mapdirect_loader/552g_dmem_mmap_phys_20261026_210226.txt` (1189 bytes)
-- `phase30_mapdirect_loader/552h_phys_scan_kernel_20261026_210352.txt` (917 bytes)
-- `phase30_mapdirect_loader/552i_phys_exec_and_structures_20261026_210636.txt` (2088 bytes)
-- `phase30_mapdirect_loader/552j_eboot_imports_20261026_210848.txt` (400 bytes)
-- `phase30_mapdirect_loader/552l_data_got_scan_20261026_211123.txt` (1202 bytes)
-- `phase30_mapdirect_loader/552n_fast_pid_scan_20261026_211438.txt` (240 bytes)
-- `phase30_mapdirect_loader/552o_fast_kptr_pid_scan_20261026_212312.txt` (4255 bytes)
-- `phase30_mapdirect_loader/553a_test_lk_funcs_safe_20261026_212605.txt` (93 bytes)
-- `phase30_mapdirect_loader/553a_test_lk_funcs_safe_20261026_212646.txt` (249 bytes)
-- `phase30_mapdirect_loader/553b_test_lk_remaining_20261026_212923.txt` (461 bytes)
-- `phase31_sony_leak/548a_sony_leak_hunt_20261026_143900.txt` (1671 bytes)
-- `phase32_aio_race/555a_aio_recon_20261027_053544.txt` (1325 bytes)
-- `phase32_aio_race/555a_aio_recon_20261027_163221.txt` (1326 bytes)
-- `phase32_aio_race/555b_spray_and_lifecycle_20261027_054000.txt` (2015 bytes)
-- `phase32_aio_race/555c_double_delete_race_20261027_133613.txt` (444 bytes)
-- `phase32_aio_race/555c_double_delete_race_20261027_133838.txt` (669 bytes)
-- `phase32_aio_race/555c_double_delete_race_20261027_134757.txt` (645 bytes)
-- `phase32_aio_race/555d_race_diag_20261027_134941.txt` (522 bytes)
-- `phase32_aio_race/555d_race_diag_20261027_135424.txt` (2221 bytes)
-- `phase32_aio_race/555e_barrier_test_20261027_135729.txt` (763 bytes)
-- `phase32_aio_race/555f_yield_race_20261027_135944.txt` (638 bytes)
-- `phase32_aio_race/555g_umtx_race_20261027_140311.txt` (629 bytes)
-- `phase32_aio_race/555h_dual_child_race_20261027_140636.txt` (614 bytes)
-- `phase32_aio_race/555i_barrier_race_20261027_141026.txt` (652 bytes)
-- `phase32_aio_race/555j_pipe_barrier_race_20261027_141401.txt` (741 bytes)
-- `phase32_aio_race/555k_shared_barrier_race_20261027_141635.txt` (670 bytes)
-- `phase32_aio_race/555l_reverse_order_race_20261027_141916.txt` (769 bytes)
-- `phase32_aio_race/555m_single_delete_race_20261027_142143.txt` (595 bytes)
-- `phase32_aio_race/556a_knote_spray_race_20261027_145138.txt` (630 bytes)
-- `phase32_aio_race/556b_wait_knote_race_20261027_145302.txt` (541 bytes)
-- `phase32_aio_race/557a_wait_victim_spray_20261027_150350.txt` (1462 bytes)
-- `phase32_aio_race/557b_wait_no_race_diag_20261027_150745.txt` (2215 bytes)
-- `phase32_aio_race/557c_aio_capacity_diag_20261027_151031.txt` (1411 bytes)
-- `phase32_aio_race/557d_aio_fd_compare_20261027_151247.txt` (2245 bytes)
-- `phase32_aio_race/559a_spray_vehicle_hunt_20261027_163651.txt` (80 bytes)
-- `phase32_aio_race/559c_spray_simple_20261027_165106.txt` (420 bytes)
-- `phase32_aio_race/559e_spray_stress_20261027_165237.txt` (935 bytes)
-- `phase32_aio_race/560a_kqueue_close_race_20261027_165505.txt` (626 bytes)
+- `phase30_mapdirect_loader/544w_mapdm_atomic_20261025_215210.txt` (32 bytes)
+- `phase30_mapdirect_loader/545h_mmap_dmem_raw_20261025_222648.txt` (274 bytes)
+- `phase30_mapdirect_loader/547a_dmem0_low_phys_20261026_140353.txt` (2050 bytes)
+- `phase30_mapdirect_loader/547b_phys_scan_20261026_140531.txt` (1419 bytes)
+- `phase30_mapdirect_loader/547d_dense_scan_20261026_140739.txt` (2554 bytes)
+- `phase30_mapdirect_loader/547e_pool_rest_20261026_141054.txt` (414 bytes)
+- `phase30_mapdirect_loader/547f_dmem12_20261026_141012.txt` (1745 bytes)
+- `phase30_mapdirect_loader/547g_high_phys_scan_20261026_141513.txt` (712 bytes)
+- `phase30_mapdirect_loader/552b_child_srop_test_20261026_204853.txt` (588 bytes)
+- `phase30_mapdirect_loader/552d_srop_alloc_test_20261026_205546.txt` (603 bytes)
+- `phase30_mapdirect_loader/552f_find_mapdm_20261026_205948.txt` (112 bytes)
+- `phase30_mapdirect_loader/552f_find_mapdm_20261026_210019.txt` (1557 bytes)
+- `phase30_mapdirect_loader/552g_dmem_mmap_phys_20261026_210226.txt` (1224 bytes)
+- `phase30_mapdirect_loader/552h_phys_scan_kernel_20261026_210352.txt` (951 bytes)
+- `phase30_mapdirect_loader/552i_phys_exec_and_structures_20261026_210636.txt` (2150 bytes)
+- `phase30_mapdirect_loader/552j_eboot_imports_20261026_210848.txt` (417 bytes)
+- `phase30_mapdirect_loader/552l_data_got_scan_20261026_211123.txt` (1246 bytes)
+- `phase30_mapdirect_loader/552n_fast_pid_scan_20261026_211438.txt` (250 bytes)
+- `phase30_mapdirect_loader/552o_fast_kptr_pid_scan_20261026_212312.txt` (4353 bytes)
+- `phase30_mapdirect_loader/553a_test_lk_funcs_safe_20261026_212605.txt` (98 bytes)
+- `phase30_mapdirect_loader/553a_test_lk_funcs_safe_20261026_212646.txt` (259 bytes)
+- `phase30_mapdirect_loader/553b_test_lk_remaining_20261026_212923.txt` (484 bytes)
+- `phase31_sony_leak/548a_sony_leak_hunt_20261026_143900.txt` (1740 bytes)
+- `phase32_aio_race/555a_aio_recon_20261027_053544.txt` (1379 bytes)
+- `phase32_aio_race/555a_aio_recon_20261027_163221.txt` (1380 bytes)
+- `phase32_aio_race/555b_spray_and_lifecycle_20261027_054000.txt` (2103 bytes)
+- `phase32_aio_race/555c_double_delete_race_20261027_133613.txt` (460 bytes)
+- `phase32_aio_race/555c_double_delete_race_20261027_133838.txt` (692 bytes)
+- `phase32_aio_race/555c_double_delete_race_20261027_134757.txt` (667 bytes)
+- `phase32_aio_race/555d_race_diag_20261027_134941.txt` (553 bytes)
+- `phase32_aio_race/555d_race_diag_20261027_135424.txt` (2302 bytes)
+- `phase32_aio_race/555e_barrier_test_20261027_135729.txt` (798 bytes)
+- `phase32_aio_race/555f_yield_race_20261027_135944.txt` (658 bytes)
+- `phase32_aio_race/555g_umtx_race_20261027_140311.txt` (657 bytes)
+- `phase32_aio_race/555h_dual_child_race_20261027_140636.txt` (634 bytes)
+- `phase32_aio_race/555i_barrier_race_20261027_141026.txt` (678 bytes)
+- `phase32_aio_race/555j_pipe_barrier_race_20261027_141401.txt` (769 bytes)
+- `phase32_aio_race/555k_shared_barrier_race_20261027_141635.txt` (691 bytes)
+- `phase32_aio_race/555l_reverse_order_race_20261027_141916.txt` (790 bytes)
+- `phase32_aio_race/555m_single_delete_race_20261027_142143.txt` (613 bytes)
+- `phase32_aio_race/556a_knote_spray_race_20261027_145138.txt` (666 bytes)
+- `phase32_aio_race/556b_wait_knote_race_20261027_145302.txt` (574 bytes)
+- `phase32_aio_race/557a_wait_victim_spray_20261027_150350.txt` (1494 bytes)
+- `phase32_aio_race/557b_wait_no_race_diag_20261027_150745.txt` (2299 bytes)
+- `phase32_aio_race/557c_aio_capacity_diag_20261027_151031.txt` (1456 bytes)
+- `phase32_aio_race/557d_aio_fd_compare_20261027_151247.txt` (2358 bytes)
+- `phase32_aio_race/559a_spray_vehicle_hunt_20261027_163651.txt` (85 bytes)
+- `phase32_aio_race/559c_spray_simple_20261027_165106.txt` (452 bytes)
+- `phase32_aio_race/559e_spray_stress_20261027_165237.txt` (961 bytes)
+- `phase32_aio_race/560a_kqueue_close_race_20261027_165505.txt` (650 bytes)
 - `phase32_aio_race/561a_mapdm_outofpool_20261027_165713.txt` (95 bytes)
-- `phase32_aio_race/561b_mapdm_accept_only_20261027_165851.txt` (7217 bytes)
-- `phase32_aio_race/561c_child_phys_read_20261027_170131.txt` (163 bytes)
-- `phase32_aio_race/561d_find_syscall_gadget_20261027_170345.txt` (2360 bytes)
-- `phase32_aio_race/562f_dup2_test_20261027_172915.txt` (200 bytes)
-- `phase32_aio_race/562h_phys_read_384b_pattern_20261027_174047.txt` (372 bytes)
-- `phase32_aio_race/562j_mainthread_phys_read_20261027_174416.txt` (285 bytes)
-- `phase32_aio_race/562p_kernel_copyin_20261027_181536.txt` (290 bytes)
-- `phase32_aio_race/562q_copyin_diag_20261027_181649.txt` (537 bytes)
-- `phase32_aio_race/562u_heap_stack_child_20261027_183742.txt` (294 bytes)
-- `phase32_aio_race/562x_mapdm_noop_child_20261027_184257.txt` (277 bytes)
-- `phase32_aio_race/562y_dmem0_pread_20261027_184431.txt` (529 bytes)
-- `phase32_aio_race/563a_kernel_elf_scan_20261027_184847.txt` (917 bytes)
-- `phase32_aio_race/563b_dmem0_heatmap_20261027_185023.txt` (362 bytes)
-- `phase32_aio_race/563c_devmem_and_finescan_20261027_185338.txt` (707 bytes)
-- `phase32_aio_race/563g_copyin_bypass_20261027_195025.txt` (548 bytes)
-- `phase32_aio_race/563h_dmem_high_flags_20261027_195135.txt` (1235 bytes)
-- `phase32_aio_race/563i_dmem_read_seek_20261027_195259.txt` (928 bytes)
-- `phase32_aio_race/563k_mapdm_flag_sweep_20261027_200543.txt` (1075 bytes)
-- `phase32_aio_race/564a_ipv6_2292pktoptions_test_20261027_201950.txt` (1046 bytes)
-- `phase32_aio_race/69g_submit_during_delete_20261028_090414.txt` (17923 bytes)
-- `phase32_aio_race/69h_native_submit_delete_race_20261028_091447.txt` (2513 bytes)
-- `phase32_aio_race/69i_barrier_race_20261028_092454.txt` (1040 bytes)
-- `phase32_aio_race/70a_662_feature_path_20261028_100743.txt` (2131 bytes)
-- `phase32_aio_race/70b_fixed_barrier_race_20261028_100854.txt` (1977 bytes)
-- `phase33_umtx_exploit/71_robust_lists_20261028_103205.txt` (706 bytes)
-- `phase34_kread_survey/1300a_kread_survey_20261105_015027.txt` (1009 bytes)
-- `phase34_kread_survey/1300b_dlsym_real_handles_20261105_015555.txt` (953 bytes)
-- `phase34_shm_race/1100d_shm_race_single_20261104_200815.txt` (223 bytes)
-- `phase34_shm_race/1101a_pipe2_sendfile_race_20261104_200908.txt` (920 bytes)
-- `phase34_shm_race/1104a_shm_truncread_test_20261104_204542.txt` (1475 bytes)
-- `phase34_shm_race/1107a_shm_384b_pattern_20261104_205628.txt` (994 bytes)
-- `phase34_shm_race/1108a_shm_race_live_20261104_205725.txt` (288 bytes)
-- `phase34_shm_race/1110a_shm_race_wd_20261104_210618.txt` (335 bytes)
-- `phase34_shm_race/1111a_sendfile_ftrunc_race_20261104_210900.txt` (268 bytes)
-- `phase34_shm_race/1113a_sendfile_sanity_20261104_211850.txt` (115 bytes)
-- `phase34_shm_race/1114a_read_ftrunc_race_20261104_212359.txt` (555 bytes)
-- `phase34_shm_race/93c7_pipe2_shm_race_20261105_081517.txt` (362 bytes)
-- `phase34_shm_race/93c8_socket_race_deep_20261105_081802.txt` (403 bytes)
-- `phase34_shm_race/93d1_aio_heap_overflow_20261105_084526.txt` (1697 bytes)
-- `phase34_shm_race/93d3_kevent_sony_fuzz_20261105_085507.txt` (1581 bytes)
-- `phase34_shm_race/93d5_rack_tcp_probe_20261105_090502.txt` (947 bytes)
-- `phase34_shm_race/93d8_mmap_noread_20261105_091044.txt` (1552 bytes)
-- `phase34_shm_race/93d9_camera_child_read_20261105_091523.txt` (178 bytes)
-- `phase34_shm_race/93e2_poll_close_race_20261105_111424.txt` (2289 bytes)
-- `phase34_shm_race/93e4_kqueue_close_race_20261105_111901.txt` (3183 bytes)
-- `phase34_shm_race/93e5_close_dup2_race_20261105_112333.txt` (92 bytes)
-- `phase34_shm_race/93e8_close_race_diagnostic_20261105_121818.txt` (860 bytes)
-- `phase34_shm_race/93e9_close_race_delayed_20261105_122100.txt` (257 bytes)
-- `phase34_shm_race/93f_blocking_close_race_20261105_122232.txt` (104 bytes)
-- `phase34_shm_race/94a_shm_ftruncate_race_20261105_122406.txt` (386 bytes)
-- `phase34_shm_race/94b_sendfile_truncate_race_20261105_122629.txt` (95 bytes)
-- `phase34_shm_race/94c_sendfile_behavior_20261105_124858.txt` (99 bytes)
-- `phase34_shm_race/94d_sendfile_tcp_race_20261105_131429.txt` (714 bytes)
-- `phase34_shm_race/95a_setitimer_watchdog_20261105_131221.txt` (514 bytes)
-- `phase34_shm_race/96a_gc_ioctl_close_race_20261105_132554.txt` (475 bytes)
-- `phase3_signals_codexec/22_signal_stress_20261015_193830.txt` (1631 bytes)
-- `phase3_signals_codexec/23_sigalt_exploit_20261015_193944.txt` (9405 bytes)
-- `phase3_signals_codexec/25b_sigalt_ign_20261015_194744.txt` (673 bytes)
-- `phase3_signals_codexec/26c_wxor_gadget_20261015_195234.txt` (387 bytes)
-- `phase3_signals_codexec/26f_kstack_crash_20261015_195707.txt` (431 bytes)
-- `phase4_ipc_network/27_thread_and_fd_20261015_195948.txt` (926 bytes)
-- `phase4_ipc_network/28_ipv6_scmrights_20261015_200134.txt` (1623 bytes)
-- `phase4_ipc_network/30_mmap_fcntl_deep_20261015_200421.txt` (404 bytes)
-- `phase4_ipc_network/30b_fcntl_scm_20261015_201028.txt` (1534 bytes)
-- `phase4_ipc_network/30c_fcntl_bypass_20261015_201500.txt` (1284 bytes)
-- `phase4_ipc_network/31_sockopt_fuzz_20261015_202000.txt` (3991 bytes)
-- `phase4_ipc_network/31b_tcpinfo_dump_20261015_202500.txt` (4254 bytes)
-- `phase4_ipc_network/31c_ps5opts_fuzz_20261015_203000.txt` (6215 bytes)
-- `phase5_buffer_io/32c_safe_stress_20261015_204500.txt` (1306 bytes)
+- `phase32_aio_race/561b_mapdm_accept_only_20261027_165851.txt` (7582 bytes)
+- `phase32_aio_race/561c_child_phys_read_20261027_170131.txt` (172 bytes)
+- `phase32_aio_race/561d_find_syscall_gadget_20261027_170345.txt` (2458 bytes)
+- `phase32_aio_race/562f_dup2_test_20261027_172915.txt` (210 bytes)
+- `phase32_aio_race/562h_phys_read_384b_pattern_20261027_174047.txt` (391 bytes)
+- `phase32_aio_race/562j_mainthread_phys_read_20261027_174416.txt` (301 bytes)
+- `phase32_aio_race/562p_kernel_copyin_20261027_181536.txt` (314 bytes)
+- `phase32_aio_race/562q_copyin_diag_20261027_181649.txt` (573 bytes)
+- `phase32_aio_race/562u_heap_stack_child_20261027_183742.txt` (307 bytes)
+- `phase32_aio_race/562x_mapdm_noop_child_20261027_184257.txt` (291 bytes)
+- `phase32_aio_race/562y_dmem0_pread_20261027_184431.txt` (556 bytes)
+- `phase32_aio_race/563a_kernel_elf_scan_20261027_184847.txt` (942 bytes)
+- `phase32_aio_race/563b_dmem0_heatmap_20261027_185023.txt` (378 bytes)
+- `phase32_aio_race/563c_devmem_and_finescan_20261027_185338.txt` (738 bytes)
+- `phase32_aio_race/563g_copyin_bypass_20261027_195025.txt` (572 bytes)
+- `phase32_aio_race/563h_dmem_high_flags_20261027_195135.txt` (1279 bytes)
+- `phase32_aio_race/563i_dmem_read_seek_20261027_195259.txt` (970 bytes)
+- `phase32_aio_race/563k_mapdm_flag_sweep_20261027_200543.txt` (1109 bytes)
+- `phase32_aio_race/564a_ipv6_2292pktoptions_test_20261027_201950.txt` (1088 bytes)
+- `phase32_aio_race/69g_submit_during_delete_20261028_090414.txt` (18288 bytes)
+- `phase32_aio_race/69h_native_submit_delete_race_20261028_091447.txt` (2557 bytes)
+- `phase32_aio_race/69i_barrier_race_20261028_092454.txt` (1067 bytes)
+- `phase32_aio_race/70a_662_feature_path_20261028_100743.txt` (2224 bytes)
+- `phase32_aio_race/70b_fixed_barrier_race_20261028_100854.txt` (2020 bytes)
+- `phase33_umtx_exploit/71_robust_lists_20261028_103205.txt` (740 bytes)
+- `phase34_kread_survey/1300a_kread_survey_20261105_015027.txt` (1056 bytes)
+- `phase34_kread_survey/1300b_dlsym_real_handles_20261105_015555.txt` (989 bytes)
+- `phase34_shm_race/1100d_shm_race_single_20261104_200815.txt` (235 bytes)
+- `phase34_shm_race/1101a_pipe2_sendfile_race_20261104_200908.txt` (950 bytes)
+- `phase34_shm_race/1104a_shm_truncread_test_20261104_204542.txt` (1554 bytes)
+- `phase34_shm_race/1107a_shm_384b_pattern_20261104_205628.txt` (1033 bytes)
+- `phase34_shm_race/1108a_shm_race_live_20261104_205725.txt` (304 bytes)
+- `phase34_shm_race/1110a_shm_race_wd_20261104_210618.txt` (352 bytes)
+- `phase34_shm_race/1111a_sendfile_ftrunc_race_20261104_210900.txt` (282 bytes)
+- `phase34_shm_race/1113a_sendfile_sanity_20261104_211850.txt` (120 bytes)
+- `phase34_shm_race/1114a_read_ftrunc_race_20261104_212359.txt` (584 bytes)
+- `phase34_shm_race/93c7_pipe2_shm_race_20261105_081517.txt` (379 bytes)
+- `phase34_shm_race/93c8_socket_race_deep_20261105_081802.txt` (423 bytes)
+- `phase34_shm_race/93d1_aio_heap_overflow_20261105_084526.txt` (1745 bytes)
+- `phase34_shm_race/93d3_kevent_sony_fuzz_20261105_085507.txt` (1622 bytes)
+- `phase34_shm_race/93d5_rack_tcp_probe_20261105_090502.txt` (979 bytes)
+- `phase34_shm_race/93d8_mmap_noread_20261105_091044.txt` (1587 bytes)
+- `phase34_shm_race/93d9_camera_child_read_20261105_091523.txt` (186 bytes)
+- `phase34_shm_race/93e2_poll_close_race_20261105_111424.txt` (2350 bytes)
+- `phase34_shm_race/93e4_kqueue_close_race_20261105_111901.txt` (3300 bytes)
+- `phase34_shm_race/93e5_close_dup2_race_20261105_112333.txt` (96 bytes)
+- `phase34_shm_race/93e8_close_race_diagnostic_20261105_121818.txt` (939 bytes)
+- `phase34_shm_race/93e9_close_race_delayed_20261105_122100.txt` (272 bytes)
+- `phase34_shm_race/93f_blocking_close_race_20261105_122232.txt` (112 bytes)
+- `phase34_shm_race/94a_shm_ftruncate_race_20261105_122406.txt` (408 bytes)
+- `phase34_shm_race/94b_sendfile_truncate_race_20261105_122629.txt` (100 bytes)
+- `phase34_shm_race/94c_sendfile_behavior_20261105_124858.txt` (105 bytes)
+- `phase34_shm_race/94d_sendfile_tcp_race_20261105_131429.txt` (747 bytes)
+- `phase34_shm_race/95a_setitimer_watchdog_20261105_131221.txt` (540 bytes)
+- `phase34_shm_race/96a_gc_ioctl_close_race_20261105_132554.txt` (496 bytes)
+- `phase35_dead_end_reruns/1341a2_resolve_vs_raw_fixed_20261109_095214.txt` (1812 bytes)
+- `phase35_dead_end_reruns/1341a_resolve_vs_raw_20261109_095129.txt` (1588 bytes)
+- `phase35_dead_end_reruns/1341b_vm_ops_ordered_20261109_095307.txt` (6552 bytes)
+- `phase35_dead_end_reruns/1341c_kenv_390_child_20261109_095444.txt` (209 bytes)
+- `phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_100539.txt` (218 bytes)
+- `phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101034.txt` (200 bytes)
+- `phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101145.txt` (284 bytes)
+- `phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101208.txt` (2861 bytes)
+- `phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101254.txt` (8931 bytes)
+- `phase35_dead_end_reruns/1343a_arg23_classes_20261109_101720.txt` (13159 bytes)
+- `phase35_dead_end_reruns/1343b_outpage_scorer_20261109_101811.txt` (748 bytes)
+- `phase35_dead_end_reruns/1343b_outpage_scorer_20261109_101855.txt` (1250 bytes)
+- `phase35_dead_end_reruns/1344a_arg23_kernel_class_20261109_102818.txt` (13181 bytes)
+- `phase35_dead_end_reruns/1345a_arg456_classes_20261109_102955.txt` (17668 bytes)
+- `phase3_signals_codexec/22_signal_stress_20261015_193830.txt` (1687 bytes)
+- `phase3_signals_codexec/23_sigalt_exploit_20261015_193944.txt` (9715 bytes)
+- `phase3_signals_codexec/25b_sigalt_ign_20261015_194744.txt` (698 bytes)
+- `phase3_signals_codexec/26c_wxor_gadget_20261015_195234.txt` (406 bytes)
+- `phase3_signals_codexec/26f_kstack_crash_20261015_195707.txt` (447 bytes)
+- `phase4_ipc_network/27_thread_and_fd_20261015_195948.txt` (963 bytes)
+- `phase4_ipc_network/28_ipv6_scmrights_20261015_200134.txt` (1666 bytes)
+- `phase4_ipc_network/30_mmap_fcntl_deep_20261015_200421.txt` (421 bytes)
+- `phase4_ipc_network/30b_fcntl_scm_20261015_201028.txt` (1598 bytes)
+- `phase4_ipc_network/30c_fcntl_bypass_20261015_201500.txt` (1337 bytes)
+- `phase4_ipc_network/31_sockopt_fuzz_20261015_202000.txt` (4115 bytes)
+- `phase4_ipc_network/31b_tcpinfo_dump_20261015_202500.txt` (4371 bytes)
+- `phase4_ipc_network/31c_ps5opts_fuzz_20261015_203000.txt` (6392 bytes)
+- `phase5_buffer_io/32c_safe_stress_20261015_204500.txt` (1358 bytes)
 - `phase5_buffer_io/32e_ping_20261019_194621.txt` (0 bytes)
-- `phase5_buffer_io/32e_ping_20261019_194756.txt` (45 bytes)
-- `phase5_buffer_io/32e_ping_20261019_194857.txt` (45 bytes)
+- `phase5_buffer_io/32e_ping_20261019_194756.txt` (49 bytes)
+- `phase5_buffer_io/32e_ping_20261019_194857.txt` (49 bytes)
 - `phase5_buffer_io/32e_ping_20261019_195148.txt` (0 bytes)
-- `phase5_buffer_io/32e_ping_20261019_195438.txt` (44 bytes)
-- `phase5_buffer_io/32e_ping_20261020_101631.txt` (45 bytes)
-- `phase5_buffer_io/32e_ping_20261020_101751.txt` (45 bytes)
+- `phase5_buffer_io/32e_ping_20261019_195438.txt` (48 bytes)
+- `phase5_buffer_io/32e_ping_20261020_101631.txt` (49 bytes)
+- `phase5_buffer_io/32e_ping_20261020_101751.txt` (49 bytes)
 - `phase5_buffer_io/32e_ping_20261021_085148.txt` (0 bytes)
 - `phase5_buffer_io/32e_ping_20261021_085222.txt` (0 bytes)
-- `phase5_buffer_io/32e_ping_20261021_085252.txt` (45 bytes)
-- `phase5_buffer_io/32e_ping_20261021_085302.txt` (45 bytes)
+- `phase5_buffer_io/32e_ping_20261021_085252.txt` (49 bytes)
+- `phase5_buffer_io/32e_ping_20261021_085302.txt` (49 bytes)
 - `phase5_buffer_io/32e_ping_20261021_090036.txt` (0 bytes)
 - `phase5_buffer_io/32e_ping_20261021_090111.txt` (0 bytes)
 - `phase5_buffer_io/32e_ping_20261021_090242.txt` (0 bytes)
-- `phase5_buffer_io/32e_ping_20261021_091132.txt` (45 bytes)
-- `phase5_buffer_io/32e_ping_20261021_145735.txt` (45 bytes)
-- `phase5_buffer_io/32e_ping_20261021_145836.txt` (45 bytes)
-- `phase5_buffer_io/32e_ping_20261021_150256.txt` (45 bytes)
-- `phase5_buffer_io/32e_ping_20261021_150439.txt` (45 bytes)
-- `phase5_buffer_io/32e_ping_20261021_151056.txt` (45 bytes)
+- `phase5_buffer_io/32e_ping_20261021_091132.txt` (49 bytes)
+- `phase5_buffer_io/32e_ping_20261021_145735.txt` (49 bytes)
+- `phase5_buffer_io/32e_ping_20261021_145836.txt` (49 bytes)
+- `phase5_buffer_io/32e_ping_20261021_150256.txt` (49 bytes)
+- `phase5_buffer_io/32e_ping_20261021_150439.txt` (49 bytes)
+- `phase5_buffer_io/32e_ping_20261021_151056.txt` (49 bytes)
 - `phase5_buffer_io/32e_ping_20261021_151143.txt` (0 bytes)
-- `phase5_buffer_io/32e_ping_20261021_151521.txt` (45 bytes)
-- `phase5_buffer_io/33f_dontwait_20261015_210000.txt` (491 bytes)
-- `phase6_raw_packets/36_bind_port_sweep_20261015_233451.txt` (1772 bytes)
-- `phase6_raw_packets/37_ip_options_20261015_233523.txt` (1309 bytes)
-- `phase6_raw_packets/38_untested_syscalls_20261015_233617.txt` (1413 bytes)
-- `phase6_raw_packets/39_frag_reass_20261015_233506.txt` (832 bytes)
+- `phase5_buffer_io/32e_ping_20261021_151521.txt` (49 bytes)
+- `phase5_buffer_io/33f_dontwait_20261015_210000.txt` (521 bytes)
+- `phase6_raw_packets/36_bind_port_sweep_20261015_233451.txt` (1834 bytes)
+- `phase6_raw_packets/37_ip_options_20261015_233523.txt` (1338 bytes)
+- `phase6_raw_packets/38_untested_syscalls_20261015_233617.txt` (1458 bytes)
+- `phase6_raw_packets/39_frag_reass_20261015_233506.txt` (849 bytes)
 - `phase7_heap_exploitation/40_gpu_dmem_boundary_20261015_225541.txt` (91 bytes)
-- `phase7_heap_exploitation/40_gpu_dmem_boundary_20261015_225641.txt` (871 bytes)
-- `phase7_heap_exploitation/41d_heap_dump_20261015_230106.txt` (692 bytes)
-- `phase7_heap_exploitation/41e_write_test_20261015_230228.txt` (1382 bytes)
-- `phase7_heap_exploitation/41h_refcount_corrupt_20261015_230621.txt` (1887 bytes)
-- `phase7_heap_exploitation/41i_object_id_20261015_230841.txt` (4268 bytes)
-- `phase7_heap_exploitation/41j_uaf_spray_20261015_231032.txt` (178 bytes)
-- `phase7_heap_exploitation/41k_uaf_wide_20261015_231128.txt` (3308 bytes)
-- `phase7_heap_exploitation/41n_header_chase_20261015_232532.txt` (150 bytes)
-- `phase7_heap_exploitation/41o_heap_infoleak_20261015_232436.txt` (3026 bytes)
-- `phase7_heap_exploitation/41o_vtable_redirect_20261015_232102.txt` (2083 bytes)
-- `phase7_heap_exploitation/41p_downward_scan_20261015_233152.txt` (1383 bytes)
-- `phase7_heap_exploitation/41p_gc_vtable_20261015_232246.txt` (1438 bytes)
-- `phase7_heap_exploitation/41p_libkernel_gadgets_20261015_232718.txt` (203 bytes)
-- `phase7_heap_exploitation/41p_libkernel_gadgets_20261015_232807.txt` (185 bytes)
-- `phase7_heap_exploitation/41q_anchor_scan_20261015_233343.txt` (674 bytes)
-- `phase7_heap_exploitation/41q_segment_readability_20261015_232935.txt` (7279 bytes)
-- `phase7_heap_exploitation/41r_eboot_gadgets_20261015_233051.txt` (1398 bytes)
-- `phase7_heap_exploitation/41s_eboot_deep_scan_20261015_233451.txt` (1337 bytes)
-- `phase7_heap_exploitation/41t_eboot_scan_tail_20261015_233542.txt` (889 bytes)
-- `phase7_heap_exploitation/41u_find_syscall_ret_20261015_233642.txt` (648 bytes)
-- `phase7_heap_exploitation/41v_got_dump_20261015_233933.txt` (8067 bytes)
-- `phase7_heap_exploitation/41z_chain_hijack_20261015_235238.txt` (4149 bytes)
-- `phase8_live_network/40_tcp_connectback_20261015_234749.txt` (232 bytes)
-- `phase8_live_network/40_tcp_connectback_20261016_000025.txt` (417 bytes)
-- `phase8_live_network/42a_kernel_rw_20261016_001156.txt` (1376 bytes)
-- `phase8_live_network/42a_ktimer_deep_20261015_233834.txt` (1111 bytes)
-- `phase8_live_network/42b_memfd_msync_20261015_233903.txt` (253 bytes)
-- `phase9_kaslr_defeat/1199e-spectre-gadget-fast_20261105_090851.txt` (600 bytes)
-- `phase9_kaslr_defeat/1199f-rdtsc-context_20261105_091213.txt` (2259 bytes)
-- `phase9_kaslr_defeat/1199g-timer-resolution_20261105_092010.txt` (1374 bytes)
-- `phase9_kaslr_defeat/1199h-read-gadgets_20261105_092247.txt` (2188 bytes)
-- `phase9_kaslr_defeat/1199i-counting-thread-poc_20261105_093032.txt` (803 bytes)
-- `phase9_kaslr_defeat/1199k-single-counter-test_20261105_144943.txt` (245 bytes)
-- `phase9_kaslr_defeat/1199k-single-counter-test_20261105_145638.txt` (907 bytes)
-- `phase9_kaslr_defeat/1199l-counting-timer_20261105_150604.txt` (761 bytes)
-- `phase9_kaslr_defeat/1199l-counting-timer_20261105_150825.txt` (1697 bytes)
-- `phase9_kaslr_defeat/1199l-counting-timer_20261105_150946.txt` (1096 bytes)
-- `phase9_kaslr_defeat/1199l-counting-timer_20261105_151235.txt` (1121 bytes)
-- `phase9_kaslr_defeat/1199m-cache-timing_20261105_151615.txt` (1681 bytes)
-- `phase9_kaslr_defeat/1199n-kernel-cache-footprint_20261105_153031.txt` (1442 bytes)
-- `phase9_kaslr_defeat/1199o-spectre-v1-discriminator_20261105_153500.txt` (1307 bytes)
-- `phase9_kaslr_defeat/1199p-spectre-oob-range_20261105_153930.txt` (2005 bytes)
-- `phase9_kaslr_defeat/1199q-spectre-fstat-fd_20261105_154802.txt` (1492 bytes)
-- `phase9_kaslr_defeat/42c_kaslr_deep_20261016_065713.txt` (2057 bytes)
-- `phase9_kaslr_defeat/42e_sysctl_enum_20261016_070045.txt` (193 bytes)
-- `phase9_kaslr_defeat/42f_ps5_syscall_scan_20261016_070223.txt` (548 bytes)
-- `phase9_kaslr_defeat/42i_vmquery_20261016_070711.txt` (3077 bytes)
-- `ping_20261024_210011.txt` (8 bytes)
-- `ping_20261024_232707.txt` (18 bytes)
+- `phase7_heap_exploitation/40_gpu_dmem_boundary_20261015_225641.txt` (900 bytes)
+- `phase7_heap_exploitation/41d_heap_dump_20261015_230106.txt` (724 bytes)
+- `phase7_heap_exploitation/41e_write_test_20261015_230228.txt` (1422 bytes)
+- `phase7_heap_exploitation/41h_refcount_corrupt_20261015_230621.txt` (1963 bytes)
+- `phase7_heap_exploitation/41i_object_id_20261015_230841.txt` (4415 bytes)
+- `phase7_heap_exploitation/41j_uaf_spray_20261015_231032.txt` (187 bytes)
+- `phase7_heap_exploitation/41k_uaf_wide_20261015_231128.txt` (3402 bytes)
+- `phase7_heap_exploitation/41n_header_chase_20261015_232532.txt` (156 bytes)
+- `phase7_heap_exploitation/41o_heap_infoleak_20261015_232436.txt` (3137 bytes)
+- `phase7_heap_exploitation/41o_vtable_redirect_20261015_232102.txt` (2157 bytes)
+- `phase7_heap_exploitation/41p_downward_scan_20261015_233152.txt` (1435 bytes)
+- `phase7_heap_exploitation/41p_gc_vtable_20261015_232246.txt` (1498 bytes)
+- `phase7_heap_exploitation/41p_libkernel_gadgets_20261015_232718.txt` (212 bytes)
+- `phase7_heap_exploitation/41p_libkernel_gadgets_20261015_232807.txt` (194 bytes)
+- `phase7_heap_exploitation/41q_anchor_scan_20261015_233343.txt` (698 bytes)
+- `phase7_heap_exploitation/41q_segment_readability_20261015_232935.txt` (7326 bytes)
+- `phase7_heap_exploitation/41r_eboot_gadgets_20261015_233051.txt` (1460 bytes)
+- `phase7_heap_exploitation/41s_eboot_deep_scan_20261015_233451.txt` (1399 bytes)
+- `phase7_heap_exploitation/41t_eboot_scan_tail_20261015_233542.txt` (926 bytes)
+- `phase7_heap_exploitation/41u_find_syscall_ret_20261015_233642.txt` (674 bytes)
+- `phase7_heap_exploitation/41v_got_dump_20261015_233933.txt` (8317 bytes)
+- `phase7_heap_exploitation/41z_chain_hijack_20261015_235238.txt` (4255 bytes)
+- `phase8_live_network/40_tcp_connectback_20261015_234749.txt` (241 bytes)
+- `phase8_live_network/40_tcp_connectback_20261016_000025.txt` (429 bytes)
+- `phase8_live_network/42a_kernel_rw_20261016_001156.txt` (1432 bytes)
+- `phase8_live_network/42a_ktimer_deep_20261015_233834.txt` (1162 bytes)
+- `phase8_live_network/42b_memfd_msync_20261015_233903.txt` (264 bytes)
+- `phase9_kaslr_defeat/1199e-spectre-gadget-fast_20261105_090851.txt` (626 bytes)
+- `phase9_kaslr_defeat/1199f-rdtsc-context_20261105_091213.txt` (2319 bytes)
+- `phase9_kaslr_defeat/1199g-timer-resolution_20261105_092010.txt` (1403 bytes)
+- `phase9_kaslr_defeat/1199h-read-gadgets_20261105_092247.txt` (2251 bytes)
+- `phase9_kaslr_defeat/1199i-counting-thread-poc_20261105_093032.txt` (836 bytes)
+- `phase9_kaslr_defeat/1199k-single-counter-test_20261105_144943.txt` (256 bytes)
+- `phase9_kaslr_defeat/1199k-single-counter-test_20261105_145638.txt` (940 bytes)
+- `phase9_kaslr_defeat/1199l-counting-timer_20261105_150604.txt` (795 bytes)
+- `phase9_kaslr_defeat/1199l-counting-timer_20261105_150825.txt` (1760 bytes)
+- `phase9_kaslr_defeat/1199l-counting-timer_20261105_150946.txt` (1149 bytes)
+- `phase9_kaslr_defeat/1199l-counting-timer_20261105_151235.txt` (1169 bytes)
+- `phase9_kaslr_defeat/1199m-cache-timing_20261105_151615.txt` (1730 bytes)
+- `phase9_kaslr_defeat/1199n-kernel-cache-footprint_20261105_153031.txt` (1504 bytes)
+- `phase9_kaslr_defeat/1199o-spectre-v1-discriminator_20261105_153500.txt` (1360 bytes)
+- `phase9_kaslr_defeat/1199p-spectre-oob-range_20261105_153930.txt` (2089 bytes)
+- `phase9_kaslr_defeat/1199q-spectre-fstat-fd_20261105_154802.txt` (1562 bytes)
+- `phase9_kaslr_defeat/42c_kaslr_deep_20261016_065713.txt` (2142 bytes)
+- `phase9_kaslr_defeat/42e_sysctl_enum_20261016_070045.txt` (207 bytes)
+- `phase9_kaslr_defeat/42f_ps5_syscall_scan_20261016_070223.txt` (567 bytes)
+- `phase9_kaslr_defeat/42i_vmquery_20261016_070711.txt` (3133 bytes)
+- `ping_20261024_210011.txt` (9 bytes)
+- `ping_20261024_232707.txt` (19 bytes)
 - `pmu_diag_20261020_173358.txt` (0 bytes)
-- `ps5_probe_ping_codex_20261025_212853.txt` (14 bytes)
-- `race_reclaim_20261028_102804.txt` (2122 bytes)
-- `sa_probe_20261023_114216.txt` (89976 bytes)
-- `same_type_overlap_20261028_102115.txt` (454 bytes)
-- `sidt_v5_20261022_050719.txt` (192 bytes)
-- `spray_survey_20261028_100849.txt` (1056 bytes)
-- `thread_test_20261022_050418.txt` (488 bytes)
-- `zone128_spray_20261028_101510.txt` (7967 bytes)
+- `ps5_probe_ping_codex_20261025_212853.txt` (15 bytes)
+- `race_reclaim_20261028_102804.txt` (2173 bytes)
+- `sa_probe_20261023_114216.txt` (92609 bytes)
+- `same_type_overlap_20261028_102115.txt` (469 bytes)
+- `sidt_v5_20261022_050719.txt` (201 bytes)
+- `spray_survey_20261028_100849.txt` (1102 bytes)
+- `thread_test_20261022_050418.txt` (513 bytes)
+- `zone128_spray_20261028_101510.txt` (8142 bytes)
 - `42f_kernel_phys_scan_20261016_070313.txt` (459 bytes) — SKIPPED (binary)
 - `42g3_high_phys_only_20261016_070632.txt` (404 bytes) — SKIPPED (binary)
 - `42g4_minimal_high_20261016_070704.txt` (612 bytes) — SKIPPED (binary)
@@ -3421,6 +3443,7 @@ Regenerated 2026-11-08 by `tools/regen_archives.py` — deterministic, do not ha
 - `phase34_shm_race/98a_mmap_munmap_race_20261105_140102.txt` (350 bytes) — SKIPPED (binary)
 - `phase34_shm_race/98a_mmap_munmap_race_20261105_140715.txt` (350 bytes) — SKIPPED (binary)
 - `phase34_shm_race/98b_mmap_munmap_race_v2_20261105_140924.txt` (328 bytes) — SKIPPED (binary)
+- `phase35_dead_end_reruns/1341d_sys601_cmd04_child_20261109_100048.txt` (499 bytes) — SKIPPED (binary)
 - `phase3_signals_codexec/24_sigalt_kwrite_20261015_194200.txt` (1189 bytes) — SKIPPED (binary)
 - `phase3_signals_codexec/25_sigalt_safe_20261015_194601.txt` (389 bytes) — SKIPPED (binary)
 - `phase3_signals_codexec/25c_sigprocmask_20261015_194850.txt` (785 bytes) — SKIPPED (binary)
@@ -3767,6 +3790,1227 @@ kernel table exists
 PAGE_SIZE: 16384
 
 === IDENTITY PROBE DONE ===
+```
+
+## FILE: results/1199a_20261105_213431.txt
+
+```
+=== PROBE 1199a: sys 597 privilege grant + 608 mask oracle ===
+[608] P0 id=13 rv=0 +110=00000000AA7E8020 +128=00000000AA784000 +130=00000000AA7CAD60 +148=00000000AA7DEE24 +150=00000000AA7D7890 +158=00007594000016C4 +1a4=A5A5A5A500000001
+[608] P0 id=13 name=x kq=(none)
+[608] P0 id=00 rv=0 +110=0000000021AB8000 +128=0000000021AB8020 +130=0000000021DC4AC0 +148=0000000021F31EA8 +150=0000000021EC8CF4 +158=000691B4000175CC +1a4=A5A5A5A500000003
+[608] P0 id=00 name=n kq=(none)
+[608] P0 id=14 rv=0 +110=00000000AEE8C020 +128=00000000AED74000 +130=00000000AEE3C600 +148=00000000AEE7FE5C +150=00000000AEE5D568 +158=000228F4000069AC +1a4=A5A5A5A500000001
+[608] P0 id=14 name=x kq=(none)
+[649] id=13 idx=1 rv=0 errno=2 No such file or directory out=00000000AA784000 kq=(none)
+[649] id=13 idx=2 rv=0 errno=2 No such file or directory out=00000000AA7CAD60 kq=(none)
+[649] id=13 idx=3 rv=0 errno=2 No such file or directory out=00000000AA7DEE24 kq=(none)
+[649] id=13 idx=4 rv=0 errno=2 No such file or directory out=00000000AA7D7890 kq=(none)
+[649] id=13 idx=5 rv=-1 errno=22 Invalid argument out=A5A5A5A5A5A5A5A5 kq=(none)
+[649] id=13 idx=6 rv=-1 errno=22 Invalid argument out=A5A5A5A5A5A5A5A5 kq=(none)
+[649] id=13 idx=7 rv=0 errno=22 Invalid argument out=00000000AA7E8020 kq=(none)
+[649] id=13 idx=8 rv=0 errno=22 Invalid argument out=00000000AA7E8000 kq=(none)
+[597] --- shape 1 about to run ---
+```
+
+## FILE: results/1331a_20261109_094441.txt
+
+```
+=== PROBE 1331a: KERNEL MAP SWEEP (2-BYTE) ===
+[0] pid=80 fd=21 base=0xFFFFFFFF80000000 step=0x400000 count=512
+[1] chain: write 2 bytes from ctx+0x130, then thr_exit
+[2] block=0x310960000 start=0x31096FE00 ctx=0x310868FE0
+[T000] 0xFFFFFFFF80000000
+[T001] 0xFFFFFFFF80400000
+[T002] 0xFFFFFFFF80800000
+[T003] 0xFFFFFFFF80C00000
+[T004] 0xFFFFFFFF81000000
+[T005] 0xFFFFFFFF81400000
+[T006] 0xFFFFFFFF81800000
+[T007] 0xFFFFFFFF81C00000
+[T008] 0xFFFFFFFF82000000
+[T009] 0xFFFFFFFF82400000
+[T010] 0xFFFFFFFF82800000
+[T011] 0xFFFFFFFF82C00000
+[T012] 0xFFFFFFFF83000000
+[T013] 0xFFFFFFFF83400000
+[T014] 0xFFFFFFFF83800000
+[T015] 0xFFFFFFFF83C00000
+[T016] 0xFFFFFFFF84000000
+[T017] 0xFFFFFFFF84400000
+[T018] 0xFFFFFFFF84800000
+[T019] 0xFFFFFFFF84C00000
+[T020] 0xFFFFFFFF85000000
+[T021] 0xFFFFFFFF85400000
+[T022] 0xFFFFFFFF85800000
+[T023] 0xFFFFFFFF85C00000
+[T024] 0xFFFFFFFF86000000
+[T025] 0xFFFFFFFF86400000
+[T026] 0xFFFFFFFF86800000
+[T027] 0xFFFFFFFF86C00000
+[T028] 0xFFFFFFFF87000000
+[T029] 0xFFFFFFFF87400000
+[T030] 0xFFFFFFFF87800000
+[T031] 0xFFFFFFFF87C00000
+[T032] 0xFFFFFFFF88000000
+[T033] 0xFFFFFFFF88400000
+[T034] 0xFFFFFFFF88800000
+[T035] 0xFFFFFFFF88C00000
+[T036] 0xFFFFFFFF89000000
+[T037] 0xFFFFFFFF89400000
+[T038] 0xFFFFFFFF89800000
+[T039] 0xFFFFFFFF89C00000
+[T040] 0xFFFFFFFF8A000000
+[T041] 0xFFFFFFFF8A400000
+[T042] 0xFFFFFFFF8A800000
+[T043] 0xFFFFFFFF8AC00000
+[T044] 0xFFFFFFFF8B000000
+[T045] 0xFFFFFFFF8B400000
+[T046] 0xFFFFFFFF8B800000
+[T047] 0xFFFFFFFF8BC00000
+[T048] 0xFFFFFFFF8C000000
+[T049] 0xFFFFFFFF8C400000
+[T050] 0xFFFFFFFF8C800000
+[T051] 0xFFFFFFFF8CC00000
+[T052] 0xFFFFFFFF8D000000
+[T053] 0xFFFFFFFF8D400000
+[T054] 0xFFFFFFFF8D800000
+[T055] 0xFFFFFFFF8DC00000
+[T056] 0xFFFFFFFF8E000000
+[T057] 0xFFFFFFFF8E400000
+[T058] 0xFFFFFFFF8E800000
+[T059] 0xFFFFFFFF8EC00000
+[T060] 0xFFFFFFFF8F000000
+[T061] 0xFFFFFFFF8F400000
+[T062] 0xFFFFFFFF8F800000
+[T063] 0xFFFFFFFF8FC00000
+[T064] 0xFFFFFFFF90000000
+[T065] 0xFFFFFFFF90400000
+[T066] 0xFFFFFFFF90800000
+[T067] 0xFFFFFFFF90C00000
+[T068] 0xFFFFFFFF91000000
+[T069] 0xFFFFFFFF91400000
+[T070] 0xFFFFFFFF91800000
+[T071] 0xFFFFFFFF91C00000
+[T072] 0xFFFFFFFF92000000
+[T073] 0xFFFFFFFF92400000
+[T074] 0xFFFFFFFF92800000
+[T075] 0xFFFFFFFF92C00000
+[T076] 0xFFFFFFFF93000000
+[T077] 0xFFFFFFFF93400000
+[T078] 0xFFFFFFFF93800000
+[T079] 0xFFFFFFFF93C00000
+[T080] 0xFFFFFFFF94000000
+[T081] 0xFFFFFFFF94400000
+[T082] 0xFFFFFFFF94800000
+[T083] 0xFFFFFFFF94C00000
+[T084] 0xFFFFFFFF95000000
+[T085] 0xFFFFFFFF95400000
+[T086] 0xFFFFFFFF95800000
+[T087] 0xFFFFFFFF95C00000
+[T088] 0xFFFFFFFF96000000
+[T089] 0xFFFFFFFF96400000
+[T090] 0xFFFFFFFF96800000
+[T091] 0xFFFFFFFF96C00000
+[T092] 0xFFFFFFFF97000000
+[T093] 0xFFFFFFFF97400000
+[T094] 0xFFFFFFFF97800000
+[T095] 0xFFFFFFFF97C00000
+[T096] 0xFFFFFFFF98000000
+[T097] 0xFFFFFFFF98400000
+[T098] 0xFFFFFFFF98800000
+[T099] 0xFFFFFFFF98C00000
+[T100] 0xFFFFFFFF99000000
+[T101] 0xFFFFFFFF99400000
+[T102] 0xFFFFFFFF99800000
+[T103] 0xFFFFFFFF99C00000
+[T104] 0xFFFFFFFF9A000000
+[T105] 0xFFFFFFFF9A400000
+[T106] 0xFFFFFFFF9A800000
+[T107] 0xFFFFFFFF9AC00000
+[T108] 0xFFFFFFFF9B000000
+[T109] 0xFFFFFFFF9B400000
+[T110] 0xFFFFFFFF9B800000
+[T111] 0xFFFFFFFF9BC00000
+[T112] 0xFFFFFFFF9C000000
+[T113] 0xFFFFFFFF9C400000
+[T114] 0xFFFFFFFF9C800000
+[T115] 0xFFFFFFFF9CC00000
+[T116] 0xFFFFFFFF9D000000
+[T117] 0xFFFFFFFF9D400000
+[T118] 0xFFFFFFFF9D800000
+[T119] 0xFFFFFFFF9DC00000
+[T120] 0xFFFFFFFF9E000000
+[T121] 0xFFFFFFFF9E400000
+[T122] 0xFFFFFFFF9E800000
+[T123] 0xFFFFFFFF9EC00000
+[T124] 0xFFFFFFFF9F000000
+[T125] 0xFFFFFFFF9F400000
+[T126] 0xFFFFFFFF9F800000
+[T127] 0xFFFFFFFF9FC00000
+[T128] 0xFFFFFFFFA0000000
+[T129] 0xFFFFFFFFA0400000
+[T130] 0xFFFFFFFFA0800000
+[T131] 0xFFFFFFFFA0C00000
+[T132] 0xFFFFFFFFA1000000
+[T133] 0xFFFFFFFFA1400000
+[T134] 0xFFFFFFFFA1800000
+[T135] 0xFFFFFFFFA1C00000
+[T136] 0xFFFFFFFFA2000000
+[T137] 0xFFFFFFFFA2400000
+[T138] 0xFFFFFFFFA2800000
+[T139] 0xFFFFFFFFA2C00000
+[T140] 0xFFFFFFFFA3000000
+[T141] 0xFFFFFFFFA3400000
+[T142] 0xFFFFFFFFA3800000
+[T143] 0xFFFFFFFFA3C00000
+[T144] 0xFFFFFFFFA4000000
+[T145] 0xFFFFFFFFA4400000
+[T146] 0xFFFFFFFFA4800000
+[T147] 0xFFFFFFFFA4C00000
+[T148] 0xFFFFFFFFA5000000
+[T149] 0xFFFFFFFFA5400000
+[T150] 0xFFFFFFFFA5800000
+[T151] 0xFFFFFFFFA5C00000
+[T152] 0xFFFFFFFFA6000000
+[T153] 0xFFFFFFFFA6400000
+[T154] 0xFFFFFFFFA6800000
+[T155] 0xFFFFFFFFA6C00000
+[T156] 0xFFFFFFFFA7000000
+[T157] 0xFFFFFFFFA7400000
+[T158] 0xFFFFFFFFA7800000
+[T159] 0xFFFFFFFFA7C00000
+[T160] 0xFFFFFFFFA8000000
+[T161] 0xFFFFFFFFA8400000
+[T162] 0xFFFFFFFFA8800000
+[T163] 0xFFFFFFFFA8C00000
+[T164] 0xFFFFFFFFA9000000
+[T165] 0xFFFFFFFFA9400000
+[T166] 0xFFFFFFFFA9800000
+[T167] 0xFFFFFFFFA9C00000
+[T168] 0xFFFFFFFFAA000000
+[T169] 0xFFFFFFFFAA400000
+[T170] 0xFFFFFFFFAA800000
+[T171] 0xFFFFFFFFAAC00000
+[T172] 0xFFFFFFFFAB000000
+[T173] 0xFFFFFFFFAB400000
+[T174] 0xFFFFFFFFAB800000
+[T175] 0xFFFFFFFFABC00000
+[T176] 0xFFFFFFFFAC000000
+[T177] 0xFFFFFFFFAC400000
+[T178] 0xFFFFFFFFAC800000
+[T179] 0xFFFFFFFFACC00000
+[T180] 0xFFFFFFFFAD000000
+[T181] 0xFFFFFFFFAD400000
+[T182] 0xFFFFFFFFAD800000
+[T183] 0xFFFFFFFFADC00000
+[T184] 0xFFFFFFFFAE000000
+[T185] 0xFFFFFFFFAE400000
+[T186] 0xFFFFFFFFAE800000
+[T187] 0xFFFFFFFFAEC00000
+[T188] 0xFFFFFFFFAF000000
+[T189] 0xFFFFFFFFAF400000
+[T190] 0xFFFFFFFFAF800000
+[T191] 0xFFFFFFFFAFC00000
+[T192] 0xFFFFFFFFB0000000
+[T193] 0xFFFFFFFFB0400000
+[T194] 0xFFFFFFFFB0800000
+[T195] 0xFFFFFFFFB0C00000
+[T196] 0xFFFFFFFFB1000000
+[T197] 0xFFFFFFFFB1400000
+[T198] 0xFFFFFFFFB1800000
+[T199] 0xFFFFFFFFB1C00000
+[T200] 0xFFFFFFFFB2000000
+[T201] 0xFFFFFFFFB2400000
+[T202] 0xFFFFFFFFB2800000
+[T203] 0xFFFFFFFFB2C00000
+[T204] 0xFFFFFFFFB3000000
+[T205] 0xFFFFFFFFB3400000
+[T206] 0xFFFFFFFFB3800000
+[T207] 0xFFFFFFFFB3C00000
+[T208] 0xFFFFFFFFB4000000
+[T209] 0xFFFFFFFFB4400000
+[T210] 0xFFFFFFFFB4800000
+[T211] 0xFFFFFFFFB4C00000
+[T212] 0xFFFFFFFFB5000000
+[T213] 0xFFFFFFFFB5400000
+[T214] 0xFFFFFFFFB5800000
+[T215] 0xFFFFFFFFB5C00000
+[T216] 0xFFFFFFFFB6000000
+[T217] 0xFFFFFFFFB6400000
+[T218] 0xFFFFFFFFB6800000
+[T219] 0xFFFFFFFFB6C00000
+[T220] 0xFFFFFFFFB7000000
+[T221] 0xFFFFFFFFB7400000
+[T222] 0xFFFFFFFFB7800000
+[T223] 0xFFFFFFFFB7C00000
+[T224] 0xFFFFFFFFB8000000
+[T225] 0xFFFFFFFFB8400000
+[T226] 0xFFFFFFFFB8800000
+[T227] 0xFFFFFFFFB8C00000
+[T228] 0xFFFFFFFFB9000000
+[T229] 0xFFFFFFFFB9400000
+[T230] 0xFFFFFFFFB9800000
+[T231] 0xFFFFFFFFB9C00000
+[T232] 0xFFFFFFFFBA000000
+[T233] 0xFFFFFFFFBA400000
+[T234] 0xFFFFFFFFBA800000
+[T235] 0xFFFFFFFFBAC00000
+[T236] 0xFFFFFFFFBB000000
+[T237] 0xFFFFFFFFBB400000
+[T238] 0xFFFFFFFFBB800000
+[T239] 0xFFFFFFFFBBC00000
+[T240] 0xFFFFFFFFBC000000
+[T241] 0xFFFFFFFFBC400000
+[T242] 0xFFFFFFFFBC800000
+[T243] 0xFFFFFFFFBCC00000
+[T244] 0xFFFFFFFFBD000000
+[T245] 0xFFFFFFFFBD400000
+[T246] 0xFFFFFFFFBD800000
+[T247] 0xFFFFFFFFBDC00000
+[T248] 0xFFFFFFFFBE000000
+[T249] 0xFFFFFFFFBE400000
+[T250] 0xFFFFFFFFBE800000
+[T251] 0xFFFFFFFFBEC00000
+[T252] 0xFFFFFFFFBF000000
+[T253] 0xFFFFFFFFBF400000
+[T254] 0xFFFFFFFFBF800000
+[T255] 0xFFFFFFFFBFC00000
+[T256] 0xFFFFFFFFC0000000
+[T257] 0xFFFFFFFFC0400000
+[T258] 0xFFFFFFFFC0800000
+[T259] 0xFFFFFFFFC0C00000
+[T260] 0xFFFFFFFFC1000000
+[T261] 0xFFFFFFFFC1400000
+[T262] 0xFFFFFFFFC1800000
+[T263] 0xFFFFFFFFC1C00000
+[T264] 0xFFFFFFFFC2000000
+[T265] 0xFFFFFFFFC2400000
+[T266] 0xFFFFFFFFC2800000
+[T267] 0xFFFFFFFFC2C00000
+[T268] 0xFFFFFFFFC3000000
+[T269] 0xFFFFFFFFC3400000
+[T270] 0xFFFFFFFFC3800000
+[T271] 0xFFFFFFFFC3C00000
+[T272] 0xFFFFFFFFC4000000
+[T273] 0xFFFFFFFFC4400000
+[T274] 0xFFFFFFFFC4800000
+[T275] 0xFFFFFFFFC4C00000
+[T276] 0xFFFFFFFFC5000000
+[T277] 0xFFFFFFFFC5400000
+[T278] 0xFFFFFFFFC5800000
+[T279] 0xFFFFFFFFC5C00000
+[T280] 0xFFFFFFFFC6000000
+[T281] 0xFFFFFFFFC6400000
+[T282] 0xFFFFFFFFC6800000
+[T283] 0xFFFFFFFFC6C00000
+[T284] 0xFFFFFFFFC7000000
+[T285] 0xFFFFFFFFC7400000
+[T286] 0xFFFFFFFFC7800000
+[T287] 0xFFFFFFFFC7C00000
+[T288] 0xFFFFFFFFC8000000
+[T289] 0xFFFFFFFFC8400000
+[T290] 0xFFFFFFFFC8800000
+[T291] 0xFFFFFFFFC8C00000
+[T292] 0xFFFFFFFFC9000000
+[T293] 0xFFFFFFFFC9400000
+[T294] 0xFFFFFFFFC9800000
+[T295] 0xFFFFFFFFC9C00000
+[T296] 0xFFFFFFFFCA000000
+[T297] 0xFFFFFFFFCA400000
+[T298] 0xFFFFFFFFCA800000
+[T299] 0xFFFFFFFFCAC00000
+[T300] 0xFFFFFFFFCB000000
+[T301] 0xFFFFFFFFCB400000
+[T302] 0xFFFFFFFFCB800000
+[T303] 0xFFFFFFFFCBC00000
+[T304] 0xFFFFFFFFCC000000
+[T305] 0xFFFFFFFFCC400000
+[T306] 0xFFFFFFFFCC800000
+[T307] 0xFFFFFFFFCCC00000
+[T308] 0xFFFFFFFFCD000000
+[T309] 0xFFFFFFFFCD400000
+[T310] 0xFFFFFFFFCD800000
+[T311] 0xFFFFFFFFCDC00000
+[T312] 0xFFFFFFFFCE000000
+[T313] 0xFFFFFFFFCE400000
+[T314] 0xFFFFFFFFCE800000
+[T315] 0xFFFFFFFFCEC00000
+[T316] 0xFFFFFFFFCF000000
+[T317] 0xFFFFFFFFCF400000
+[T318] 0xFFFFFFFFCF800000
+[T319] 0xFFFFFFFFCFC00000
+[T320] 0xFFFFFFFFD0000000
+[T321] 0xFFFFFFFFD0400000
+[T322] 0xFFFFFFFFD0800000
+[T323] 0xFFFFFFFFD0C00000
+[T324] 0xFFFFFFFFD1000000
+[T325] 0xFFFFFFFFD1400000
+[T326] 0xFFFFFFFFD1800000
+[T327] 0xFFFFFFFFD1C00000
+[T328] 0xFFFFFFFFD2000000
+[T329] 0xFFFFFFFFD2400000
+[T330] 0xFFFFFFFFD2800000
+[T331] 0xFFFFFFFFD2C00000
+[T332] 0xFFFFFFFFD3000000
+[T333] 0xFFFFFFFFD3400000
+[T334] 0xFFFFFFFFD3800000
+[T335] 0xFFFFFFFFD3C00000
+[T336] 0xFFFFFFFFD4000000
+[T337] 0xFFFFFFFFD4400000
+[T338] 0xFFFFFFFFD4800000
+[T339] 0xFFFFFFFFD4C00000
+[T340] 0xFFFFFFFFD5000000
+[T341] 0xFFFFFFFFD5400000
+[T342] 0xFFFFFFFFD5800000
+[T343] 0xFFFFFFFFD5C00000
+[T344] 0xFFFFFFFFD6000000
+[T345] 0xFFFFFFFFD6400000
+[T346] 0xFFFFFFFFD6800000
+[T347] 0xFFFFFFFFD6C00000
+[T348] 0xFFFFFFFFD7000000
+[T349] 0xFFFFFFFFD7400000
+[T350] 0xFFFFFFFFD7800000
+[T351] 0xFFFFFFFFD7C00000
+[T352] 0xFFFFFFFFD8000000
+[T353] 0xFFFFFFFFD8400000
+[T354] 0xFFFFFFFFD8800000
+[T355] 0xFFFFFFFFD8C00000
+[T356] 0xFFFFFFFFD9000000
+[T357] 0xFFFFFFFFD9400000
+[T358] 0xFFFFFFFFD9800000
+[T359] 0xFFFFFFFFD9C00000
+[T360] 0xFFFFFFFFDA000000
+[T361] 0xFFFFFFFFDA400000
+[T362] 0xFFFFFFFFDA800000
+[T363] 0xFFFFFFFFDAC00000
+[T364] 0xFFFFFFFFDB000000
+[T365] 0xFFFFFFFFDB400000
+[T366] 0xFFFFFFFFDB800000
+[T367] 0xFFFFFFFFDBC00000
+[T368] 0xFFFFFFFFDC000000
+[T369] 0xFFFFFFFFDC400000
+[T370] 0xFFFFFFFFDC800000
+[T371] 0xFFFFFFFFDCC00000
+[T372] 0xFFFFFFFFDD000000
+[T373] 0xFFFFFFFFDD400000
+[T374] 0xFFFFFFFFDD800000
+[T375] 0xFFFFFFFFDDC00000
+[T376] 0xFFFFFFFFDE000000
+[T377] 0xFFFFFFFFDE400000
+[T378] 0xFFFFFFFFDE800000
+[T379] 0xFFFFFFFFDEC00000
+[T380] 0xFFFFFFFFDF000000
+[T381] 0xFFFFFFFFDF400000
+[T382] 0xFFFFFFFFDF800000
+[T383] 0xFFFFFFFFDFC00000
+[T384] 0xFFFFFFFFE0000000
+[T385] 0xFFFFFFFFE0400000
+[T386] 0xFFFFFFFFE0800000
+[T387] 0xFFFFFFFFE0C00000
+[T388] 0xFFFFFFFFE1000000
+[T389] 0xFFFFFFFFE1400000
+[T390] 0xFFFFFFFFE1800000
+[T391] 0xFFFFFFFFE1C00000
+[T392] 0xFFFFFFFFE2000000
+[T393] 0xFFFFFFFFE2400000
+[T394] 0xFFFFFFFFE2800000
+[T395] 0xFFFFFFFFE2C00000
+[T396] 0xFFFFFFFFE3000000
+[T397] 0xFFFFFFFFE3400000
+[T398] 0xFFFFFFFFE3800000
+[T399] 0xFFFFFFFFE3C00000
+[T400] 0xFFFFFFFFE4000000
+[T401] 0xFFFFFFFFE4400000
+[T402] 0xFFFFFFFFE4800000
+[T403] 0xFFFFFFFFE4C00000
+[T404] 0xFFFFFFFFE5000000
+[T405] 0xFFFFFFFFE5400000
+[T406] 0xFFFFFFFFE5800000
+[T407] 0xFFFFFFFFE5C00000
+[T408] 0xFFFFFFFFE6000000
+[T409] 0xFFFFFFFFE6400000
+[T410] 0xFFFFFFFFE6800000
+[T411] 0xFFFFFFFFE6C00000
+[T412] 0xFFFFFFFFE7000000
+[T413] 0xFFFFFFFFE7400000
+[T414] 0xFFFFFFFFE7800000
+[T415] 0xFFFFFFFFE7C00000
+[T416] 0xFFFFFFFFE8000000
+[T417] 0xFFFFFFFFE8400000
+[T418] 0xFFFFFFFFE8800000
+[T419] 0xFFFFFFFFE8C00000
+[T420] 0xFFFFFFFFE9000000
+[T421] 0xFFFFFFFFE9400000
+[T422] 0xFFFFFFFFE9800000
+[T423] 0xFFFFFFFFE9C00000
+[T424] 0xFFFFFFFFEA000000
+[T425] 0xFFFFFFFFEA400000
+[T426] 0xFFFFFFFFEA800000
+[T427] 0xFFFFFFFFEAC00000
+[T428] 0xFFFFFFFFEB000000
+[T429] 0xFFFFFFFFEB400000
+[T430] 0xFFFFFFFFEB800000
+[T431] 0xFFFFFFFFEBC00000
+[T432] 0xFFFFFFFFEC000000
+[T433] 0xFFFFFFFFEC400000
+[T434] 0xFFFFFFFFEC800000
+[T435] 0xFFFFFFFFECC00000
+[T436] 0xFFFFFFFFED000000
+[T437] 0xFFFFFFFFED400000
+[T438] 0xFFFFFFFFED800000
+[T439] 0xFFFFFFFFEDC00000
+[T440] 0xFFFFFFFFEE000000
+[T441] 0xFFFFFFFFEE400000
+[T442] 0xFFFFFFFFEE800000
+[T443] 0xFFFFFFFFEEC00000
+[T444] 0xFFFFFFFFEF000000
+[T445] 0xFFFFFFFFEF400000
+[T446] 0xFFFFFFFFEF800000
+[T447] 0xFFFFFFFFEFC00000
+[T448] 0xFFFFFFFFF0000000
+[T449] 0xFFFFFFFFF0400000
+[T450] 0xFFFFFFFFF0800000
+[T451] 0xFFFFFFFFF0C00000
+[T452] 0xFFFFFFFFF1000000
+[T453] 0xFFFFFFFFF1400000
+[T454] 0xFFFFFFFFF1800000
+[T455] 0xFFFFFFFFF1C00000
+[T456] 0xFFFFFFFFF2000000
+[T457] 0xFFFFFFFFF2400000
+[T458] 0xFFFFFFFFF2800000
+[T459] 0xFFFFFFFFF2C00000
+[T460] 0xFFFFFFFFF3000000
+[T461] 0xFFFFFFFFF3400000
+[T462] 0xFFFFFFFFF3800000
+[T463] 0xFFFFFFFFF3C00000
+[T464] 0xFFFFFFFFF4000000
+[T465] 0xFFFFFFFFF4400000
+[T466] 0xFFFFFFFFF4800000
+[T467] 0xFFFFFFFFF4C00000
+[T468] 0xFFFFFFFFF5000000
+[T469] 0xFFFFFFFFF5400000
+[T470] 0xFFFFFFFFF5800000
+[T471] 0xFFFFFFFFF5C00000
+[T472] 0xFFFFFFFFF6000000
+[T473] 0xFFFFFFFFF6400000
+[T474] 0xFFFFFFFFF6800000
+[T475] 0xFFFFFFFFF6C00000
+[T476] 0xFFFFFFFFF7000000
+[T477] 0xFFFFFFFFF7400000
+[T478] 0xFFFFFFFFF7800000
+[T479] 0xFFFFFFFFF7C00000
+[T480] 0xFFFFFFFFF8000000
+[T481] 0xFFFFFFFFF8400000
+[T482] 0xFFFFFFFFF8800000
+[T483] 0xFFFFFFFFF8C00000
+[T484] 0xFFFFFFFFF9000000
+[T485] 0xFFFFFFFFF9400000
+[T486] 0xFFFFFFFFF9800000
+[T487] 0xFFFFFFFFF9C00000
+[T488] 0xFFFFFFFFFA000000
+[T489] 0xFFFFFFFFFA400000
+[T490] 0xFFFFFFFFFA800000
+[T491] 0xFFFFFFFFFAC00000
+[T492] 0xFFFFFFFFFB000000
+[T493] 0xFFFFFFFFFB400000
+[T494] 0xFFFFFFFFFB800000
+[T495] 0xFFFFFFFFFBC00000
+[T496] 0xFFFFFFFFFC000000
+[T497] 0xFFFFFFFFFC400000
+[T498] 0xFFFFFFFFFC800000
+[T499] 0xFFFFFFFFFCC00000
+[T500] 0xFFFFFFFFFD000000
+[T501] 0xFFFFFFFFFD400000
+[T502] 0xFFFFFFFFFD800000
+[T503] 0xFFFFFFFFFDC00000
+[T504] 0xFFFFFFFFFE000000
+[T505] 0xFFFFFFFFFE400000
+[T506] 0xFFFFFFFFFE800000
+[T507] 0xFFFFFFFFFEC00000
+[T508] 0xFFFFFFFFFF000000
+[T509] 0xFFFFFFFFFF400000
+[T510] 0xFFFFFFFFFF800000
+[T511] 0xFFFFFFFFFFC00000
+[E] spawned=512 failed=0 alive pid=80
+=== COMPLETE ===
+```
+
+## FILE: results/1331a_20261109_100517.txt
+
+```
+=== PROBE 1331a: KERNEL MAP SWEEP (2-BYTE) ===
+[0] pid=92 fd=21 base=0xFFFFFFFF80000000 step=0x400000 count=512
+[1] chain: write 2 bytes from ctx+0x130, then thr_exit
+[2] block=0x31126C000 start=0x31127BE00 ctx=0x3112357C0
+[T000] 0xFFFFFFFF80000000
+[T001] 0xFFFFFFFF80400000
+[T002] 0xFFFFFFFF80800000
+[T003] 0xFFFFFFFF80C00000
+[T004] 0xFFFFFFFF81000000
+[T005] 0xFFFFFFFF81400000
+[T006] 0xFFFFFFFF81800000
+[T007] 0xFFFFFFFF81C00000
+[T008] 0xFFFFFFFF82000000
+[T009] 0xFFFFFFFF82400000
+[T010] 0xFFFFFFFF82800000
+[T011] 0xFFFFFFFF82C00000
+[T012] 0xFFFFFFFF83000000
+[T013] 0xFFFFFFFF83400000
+[T014] 0xFFFFFFFF83800000
+[T015] 0xFFFFFFFF83C00000
+[T016] 0xFFFFFFFF84000000
+[T017] 0xFFFFFFFF84400000
+[T018] 0xFFFFFFFF84800000
+[T019] 0xFFFFFFFF84C00000
+[T020] 0xFFFFFFFF85000000
+[T021] 0xFFFFFFFF85400000
+[T022] 0xFFFFFFFF85800000
+[T023] 0xFFFFFFFF85C00000
+[T024] 0xFFFFFFFF86000000
+[T025] 0xFFFFFFFF86400000
+[T026] 0xFFFFFFFF86800000
+[T027] 0xFFFFFFFF86C00000
+[T028] 0xFFFFFFFF87000000
+[T029] 0xFFFFFFFF87400000
+[T030] 0xFFFFFFFF87800000
+[T031] 0xFFFFFFFF87C00000
+[T032] 0xFFFFFFFF88000000
+[T033] 0xFFFFFFFF88400000
+[T034] 0xFFFFFFFF88800000
+[T035] 0xFFFFFFFF88C00000
+[T036] 0xFFFFFFFF89000000
+[T037] 0xFFFFFFFF89400000
+[T038] 0xFFFFFFFF89800000
+[T039] 0xFFFFFFFF89C00000
+[T040] 0xFFFFFFFF8A000000
+[T041] 0xFFFFFFFF8A400000
+[T042] 0xFFFFFFFF8A800000
+[T043] 0xFFFFFFFF8AC00000
+[T044] 0xFFFFFFFF8B000000
+[T045] 0xFFFFFFFF8B400000
+[T046] 0xFFFFFFFF8B800000
+[T047] 0xFFFFFFFF8BC00000
+[T048] 0xFFFFFFFF8C000000
+[T049] 0xFFFFFFFF8C400000
+[T050] 0xFFFFFFFF8C800000
+[T051] 0xFFFFFFFF8CC00000
+[T052] 0xFFFFFFFF8D000000
+[T053] 0xFFFFFFFF8D400000
+[T054] 0xFFFFFFFF8D800000
+[T055] 0xFFFFFFFF8DC00000
+[T056] 0xFFFFFFFF8E000000
+[T057] 0xFFFFFFFF8E400000
+[T058] 0xFFFFFFFF8E800000
+[T059] 0xFFFFFFFF8EC00000
+[T060] 0xFFFFFFFF8F000000
+[T061] 0xFFFFFFFF8F400000
+[T062] 0xFFFFFFFF8F800000
+[T063] 0xFFFFFFFF8FC00000
+[T064] 0xFFFFFFFF90000000
+[T065] 0xFFFFFFFF90400000
+[T066] 0xFFFFFFFF90800000
+[T067] 0xFFFFFFFF90C00000
+[T068] 0xFFFFFFFF91000000
+[T069] 0xFFFFFFFF91400000
+[T070] 0xFFFFFFFF91800000
+[T071] 0xFFFFFFFF91C00000
+[T072] 0xFFFFFFFF92000000
+[T073] 0xFFFFFFFF92400000
+[T074] 0xFFFFFFFF92800000
+[T075] 0xFFFFFFFF92C00000
+[T076] 0xFFFFFFFF93000000
+[T077] 0xFFFFFFFF93400000
+[T078] 0xFFFFFFFF93800000
+[T079] 0xFFFFFFFF93C00000
+[T080] 0xFFFFFFFF94000000
+[T081] 0xFFFFFFFF94400000
+[T082] 0xFFFFFFFF94800000
+[T083] 0xFFFFFFFF94C00000
+[T084] 0xFFFFFFFF95000000
+[T085] 0xFFFFFFFF95400000
+[T086] 0xFFFFFFFF95800000
+[T087] 0xFFFFFFFF95C00000
+[T088] 0xFFFFFFFF96000000
+[T089] 0xFFFFFFFF96400000
+[T090] 0xFFFFFFFF96800000
+[T091] 0xFFFFFFFF96C00000
+[T092] 0xFFFFFFFF97000000
+[T093] 0xFFFFFFFF97400000
+[T094] 0xFFFFFFFF97800000
+[T095] 0xFFFFFFFF97C00000
+[T096] 0xFFFFFFFF98000000
+[T097] 0xFFFFFFFF98400000
+[T098] 0xFFFFFFFF98800000
+[T099] 0xFFFFFFFF98C00000
+[T100] 0xFFFFFFFF99000000
+[T101] 0xFFFFFFFF99400000
+[T102] 0xFFFFFFFF99800000
+[T103] 0xFFFFFFFF99C00000
+[T104] 0xFFFFFFFF9A000000
+[T105] 0xFFFFFFFF9A400000
+[T106] 0xFFFFFFFF9A800000
+[T107] 0xFFFFFFFF9AC00000
+[T108] 0xFFFFFFFF9B000000
+[T109] 0xFFFFFFFF9B400000
+[T110] 0xFFFFFFFF9B800000
+[T111] 0xFFFFFFFF9BC00000
+[T112] 0xFFFFFFFF9C000000
+[T113] 0xFFFFFFFF9C400000
+[T114] 0xFFFFFFFF9C800000
+[T115] 0xFFFFFFFF9CC00000
+[T116] 0xFFFFFFFF9D000000
+[T117] 0xFFFFFFFF9D400000
+[T118] 0xFFFFFFFF9D800000
+[T119] 0xFFFFFFFF9DC00000
+[T120] 0xFFFFFFFF9E000000
+[T121] 0xFFFFFFFF9E400000
+[T122] 0xFFFFFFFF9E800000
+[T123] 0xFFFFFFFF9EC00000
+[T124] 0xFFFFFFFF9F000000
+[T125] 0xFFFFFFFF9F400000
+[T126] 0xFFFFFFFF9F800000
+[T127] 0xFFFFFFFF9FC00000
+[T128] 0xFFFFFFFFA0000000
+[T129] 0xFFFFFFFFA0400000
+[T130] 0xFFFFFFFFA0800000
+[T131] 0xFFFFFFFFA0C00000
+[T132] 0xFFFFFFFFA1000000
+[T133] 0xFFFFFFFFA1400000
+[T134] 0xFFFFFFFFA1800000
+[T135] 0xFFFFFFFFA1C00000
+[T136] 0xFFFFFFFFA2000000
+[T137] 0xFFFFFFFFA2400000
+[T138] 0xFFFFFFFFA2800000
+[T139] 0xFFFFFFFFA2C00000
+[T140] 0xFFFFFFFFA3000000
+[T141] 0xFFFFFFFFA3400000
+[T142] 0xFFFFFFFFA3800000
+[T143] 0xFFFFFFFFA3C00000
+[T144] 0xFFFFFFFFA4000000
+[T145] 0xFFFFFFFFA4400000
+[T146] 0xFFFFFFFFA4800000
+[T147] 0xFFFFFFFFA4C00000
+[T148] 0xFFFFFFFFA5000000
+[T149] 0xFFFFFFFFA5400000
+[T150] 0xFFFFFFFFA5800000
+[T151] 0xFFFFFFFFA5C00000
+[T152] 0xFFFFFFFFA6000000
+[T153] 0xFFFFFFFFA6400000
+[T154] 0xFFFFFFFFA6800000
+[T155] 0xFFFFFFFFA6C00000
+[T156] 0xFFFFFFFFA7000000
+[T157] 0xFFFFFFFFA7400000
+[T158] 0xFFFFFFFFA7800000
+[T159] 0xFFFFFFFFA7C00000
+[T160] 0xFFFFFFFFA8000000
+[T161] 0xFFFFFFFFA8400000
+[T162] 0xFFFFFFFFA8800000
+[T163] 0xFFFFFFFFA8C00000
+[T164] 0xFFFFFFFFA9000000
+[T165] 0xFFFFFFFFA9400000
+[T166] 0xFFFFFFFFA9800000
+[T167] 0xFFFFFFFFA9C00000
+[T168] 0xFFFFFFFFAA000000
+[T169] 0xFFFFFFFFAA400000
+[T170] 0xFFFFFFFFAA800000
+[T171] 0xFFFFFFFFAAC00000
+[T172] 0xFFFFFFFFAB000000
+[T173] 0xFFFFFFFFAB400000
+[T174] 0xFFFFFFFFAB800000
+[T175] 0xFFFFFFFFABC00000
+[T176] 0xFFFFFFFFAC000000
+[T177] 0xFFFFFFFFAC400000
+[T178] 0xFFFFFFFFAC800000
+[T179] 0xFFFFFFFFACC00000
+[T180] 0xFFFFFFFFAD000000
+[T181] 0xFFFFFFFFAD400000
+[T182] 0xFFFFFFFFAD800000
+[T183] 0xFFFFFFFFADC00000
+[T184] 0xFFFFFFFFAE000000
+[T185] 0xFFFFFFFFAE400000
+[T186] 0xFFFFFFFFAE800000
+[T187] 0xFFFFFFFFAEC00000
+[T188] 0xFFFFFFFFAF000000
+[T189] 0xFFFFFFFFAF400000
+[T190] 0xFFFFFFFFAF800000
+[T191] 0xFFFFFFFFAFC00000
+[T192] 0xFFFFFFFFB0000000
+[T193] 0xFFFFFFFFB0400000
+[T194] 0xFFFFFFFFB0800000
+[T195] 0xFFFFFFFFB0C00000
+[T196] 0xFFFFFFFFB1000000
+[T197] 0xFFFFFFFFB1400000
+[T198] 0xFFFFFFFFB1800000
+[T199] 0xFFFFFFFFB1C00000
+[T200] 0xFFFFFFFFB2000000
+[T201] 0xFFFFFFFFB2400000
+[T202] 0xFFFFFFFFB2800000
+[T203] 0xFFFFFFFFB2C00000
+[T204] 0xFFFFFFFFB3000000
+[T205] 0xFFFFFFFFB3400000
+[T206] 0xFFFFFFFFB3800000
+[T207] 0xFFFFFFFFB3C00000
+[T208] 0xFFFFFFFFB4000000
+[T209] 0xFFFFFFFFB4400000
+[T210] 0xFFFFFFFFB4800000
+[T211] 0xFFFFFFFFB4C00000
+[T212] 0xFFFFFFFFB5000000
+[T213] 0xFFFFFFFFB5400000
+[T214] 0xFFFFFFFFB5800000
+[T215] 0xFFFFFFFFB5C00000
+[T216] 0xFFFFFFFFB6000000
+[T217] 0xFFFFFFFFB6400000
+[T218] 0xFFFFFFFFB6800000
+[T219] 0xFFFFFFFFB6C00000
+[T220] 0xFFFFFFFFB7000000
+[T221] 0xFFFFFFFFB7400000
+[T222] 0xFFFFFFFFB7800000
+[T223] 0xFFFFFFFFB7C00000
+[T224] 0xFFFFFFFFB8000000
+[T225] 0xFFFFFFFFB8400000
+[T226] 0xFFFFFFFFB8800000
+[T227] 0xFFFFFFFFB8C00000
+[T228] 0xFFFFFFFFB9000000
+[T229] 0xFFFFFFFFB9400000
+[T230] 0xFFFFFFFFB9800000
+[T231] 0xFFFFFFFFB9C00000
+[T232] 0xFFFFFFFFBA000000
+[T233] 0xFFFFFFFFBA400000
+[T234] 0xFFFFFFFFBA800000
+[T235] 0xFFFFFFFFBAC00000
+[T236] 0xFFFFFFFFBB000000
+[T237] 0xFFFFFFFFBB400000
+[T238] 0xFFFFFFFFBB800000
+[T239] 0xFFFFFFFFBBC00000
+[T240] 0xFFFFFFFFBC000000
+[T241] 0xFFFFFFFFBC400000
+[T242] 0xFFFFFFFFBC800000
+[T243] 0xFFFFFFFFBCC00000
+[T244] 0xFFFFFFFFBD000000
+[T245] 0xFFFFFFFFBD400000
+[T246] 0xFFFFFFFFBD800000
+[T247] 0xFFFFFFFFBDC00000
+[T248] 0xFFFFFFFFBE000000
+[T249] 0xFFFFFFFFBE400000
+[T250] 0xFFFFFFFFBE800000
+[T251] 0xFFFFFFFFBEC00000
+[T252] 0xFFFFFFFFBF000000
+[T253] 0xFFFFFFFFBF400000
+[T254] 0xFFFFFFFFBF800000
+[T255] 0xFFFFFFFFBFC00000
+[T256] 0xFFFFFFFFC0000000
+[T257] 0xFFFFFFFFC0400000
+[T258] 0xFFFFFFFFC0800000
+[T259] 0xFFFFFFFFC0C00000
+[T260] 0xFFFFFFFFC1000000
+[T261] 0xFFFFFFFFC1400000
+[T262] 0xFFFFFFFFC1800000
+[T263] 0xFFFFFFFFC1C00000
+[T264] 0xFFFFFFFFC2000000
+[T265] 0xFFFFFFFFC2400000
+[T266] 0xFFFFFFFFC2800000
+[T267] 0xFFFFFFFFC2C00000
+[T268] 0xFFFFFFFFC3000000
+[T269] 0xFFFFFFFFC3400000
+[T270] 0xFFFFFFFFC3800000
+[T271] 0xFFFFFFFFC3C00000
+[T272] 0xFFFFFFFFC4000000
+[T273] 0xFFFFFFFFC4400000
+[T274] 0xFFFFFFFFC4800000
+[T275] 0xFFFFFFFFC4C00000
+[T276] 0xFFFFFFFFC5000000
+[T277] 0xFFFFFFFFC5400000
+[T278] 0xFFFFFFFFC5800000
+[T279] 0xFFFFFFFFC5C00000
+[T280] 0xFFFFFFFFC6000000
+[T281] 0xFFFFFFFFC6400000
+[T282] 0xFFFFFFFFC6800000
+[T283] 0xFFFFFFFFC6C00000
+[T284] 0xFFFFFFFFC7000000
+[T285] 0xFFFFFFFFC7400000
+[T286] 0xFFFFFFFFC7800000
+[T287] 0xFFFFFFFFC7C00000
+[T288] 0xFFFFFFFFC8000000
+[T289] 0xFFFFFFFFC8400000
+[T290] 0xFFFFFFFFC8800000
+[T291] 0xFFFFFFFFC8C00000
+[T292] 0xFFFFFFFFC9000000
+[T293] 0xFFFFFFFFC9400000
+[T294] 0xFFFFFFFFC9800000
+[T295] 0xFFFFFFFFC9C00000
+[T296] 0xFFFFFFFFCA000000
+[T297] 0xFFFFFFFFCA400000
+[T298] 0xFFFFFFFFCA800000
+[T299] 0xFFFFFFFFCAC00000
+[T300] 0xFFFFFFFFCB000000
+[T301] 0xFFFFFFFFCB400000
+[T302] 0xFFFFFFFFCB800000
+[T303] 0xFFFFFFFFCBC00000
+[T304] 0xFFFFFFFFCC000000
+[T305] 0xFFFFFFFFCC400000
+[T306] 0xFFFFFFFFCC800000
+[T307] 0xFFFFFFFFCCC00000
+[T308] 0xFFFFFFFFCD000000
+[T309] 0xFFFFFFFFCD400000
+[T310] 0xFFFFFFFFCD800000
+[T311] 0xFFFFFFFFCDC00000
+[T312] 0xFFFFFFFFCE000000
+[T313] 0xFFFFFFFFCE400000
+[T314] 0xFFFFFFFFCE800000
+[T315] 0xFFFFFFFFCEC00000
+[T316] 0xFFFFFFFFCF000000
+[T317] 0xFFFFFFFFCF400000
+[T318] 0xFFFFFFFFCF800000
+[T319] 0xFFFFFFFFCFC00000
+[T320] 0xFFFFFFFFD0000000
+[T321] 0xFFFFFFFFD0400000
+[T322] 0xFFFFFFFFD0800000
+[T323] 0xFFFFFFFFD0C00000
+[T324] 0xFFFFFFFFD1000000
+[T325] 0xFFFFFFFFD1400000
+[T326] 0xFFFFFFFFD1800000
+[T327] 0xFFFFFFFFD1C00000
+[T328] 0xFFFFFFFFD2000000
+[T329] 0xFFFFFFFFD2400000
+[T330] 0xFFFFFFFFD2800000
+[T331] 0xFFFFFFFFD2C00000
+[T332] 0xFFFFFFFFD3000000
+[T333] 0xFFFFFFFFD3400000
+[T334] 0xFFFFFFFFD3800000
+[T335] 0xFFFFFFFFD3C00000
+[T336] 0xFFFFFFFFD4000000
+[T337] 0xFFFFFFFFD4400000
+[T338] 0xFFFFFFFFD4800000
+[T339] 0xFFFFFFFFD4C00000
+[T340] 0xFFFFFFFFD5000000
+[T341] 0xFFFFFFFFD5400000
+[T342] 0xFFFFFFFFD5800000
+[T343] 0xFFFFFFFFD5C00000
+[T344] 0xFFFFFFFFD6000000
+[T345] 0xFFFFFFFFD6400000
+[T346] 0xFFFFFFFFD6800000
+[T347] 0xFFFFFFFFD6C00000
+[T348] 0xFFFFFFFFD7000000
+[T349] 0xFFFFFFFFD7400000
+[T350] 0xFFFFFFFFD7800000
+[T351] 0xFFFFFFFFD7C00000
+[T352] 0xFFFFFFFFD8000000
+[T353] 0xFFFFFFFFD8400000
+[T354] 0xFFFFFFFFD8800000
+[T355] 0xFFFFFFFFD8C00000
+[T356] 0xFFFFFFFFD9000000
+[T357] 0xFFFFFFFFD9400000
+[T358] 0xFFFFFFFFD9800000
+[T359] 0xFFFFFFFFD9C00000
+[T360] 0xFFFFFFFFDA000000
+[T361] 0xFFFFFFFFDA400000
+[T362] 0xFFFFFFFFDA800000
+[T363] 0xFFFFFFFFDAC00000
+[T364] 0xFFFFFFFFDB000000
+[T365] 0xFFFFFFFFDB400000
+[T366] 0xFFFFFFFFDB800000
+[T367] 0xFFFFFFFFDBC00000
+[T368] 0xFFFFFFFFDC000000
+[T369] 0xFFFFFFFFDC400000
+[T370] 0xFFFFFFFFDC800000
+[T371] 0xFFFFFFFFDCC00000
+[T372] 0xFFFFFFFFDD000000
+[T373] 0xFFFFFFFFDD400000
+[T374] 0xFFFFFFFFDD800000
+[T375] 0xFFFFFFFFDDC00000
+[T376] 0xFFFFFFFFDE000000
+[T377] 0xFFFFFFFFDE400000
+[T378] 0xFFFFFFFFDE800000
+[T379] 0xFFFFFFFFDEC00000
+[T380] 0xFFFFFFFFDF000000
+[T381] 0xFFFFFFFFDF400000
+[T382] 0xFFFFFFFFDF800000
+[T383] 0xFFFFFFFFDFC00000
+[T384] 0xFFFFFFFFE0000000
+[T385] 0xFFFFFFFFE0400000
+[T386] 0xFFFFFFFFE0800000
+[T387] 0xFFFFFFFFE0C00000
+[T388] 0xFFFFFFFFE1000000
+[T389] 0xFFFFFFFFE1400000
+[T390] 0xFFFFFFFFE1800000
+[T391] 0xFFFFFFFFE1C00000
+[T392] 0xFFFFFFFFE2000000
+[T393] 0xFFFFFFFFE2400000
+[T394] 0xFFFFFFFFE2800000
+[T395] 0xFFFFFFFFE2C00000
+[T396] 0xFFFFFFFFE3000000
+[T397] 0xFFFFFFFFE3400000
+[T398] 0xFFFFFFFFE3800000
+[T399] 0xFFFFFFFFE3C00000
+[T400] 0xFFFFFFFFE4000000
+[T401] 0xFFFFFFFFE4400000
+[T402] 0xFFFFFFFFE4800000
+[T403] 0xFFFFFFFFE4C00000
+[T404] 0xFFFFFFFFE5000000
+[T405] 0xFFFFFFFFE5400000
+[T406] 0xFFFFFFFFE5800000
+[T407] 0xFFFFFFFFE5C00000
+[T408] 0xFFFFFFFFE6000000
+[T409] 0xFFFFFFFFE6400000
+[T410] 0xFFFFFFFFE6800000
+[T411] 0xFFFFFFFFE6C00000
+[T412] 0xFFFFFFFFE7000000
+[T413] 0xFFFFFFFFE7400000
+[T414] 0xFFFFFFFFE7800000
+[T415] 0xFFFFFFFFE7C00000
+[T416] 0xFFFFFFFFE8000000
+[T417] 0xFFFFFFFFE8400000
+[T418] 0xFFFFFFFFE8800000
+[T419] 0xFFFFFFFFE8C00000
+[T420] 0xFFFFFFFFE9000000
+[T421] 0xFFFFFFFFE9400000
+[T422] 0xFFFFFFFFE9800000
+[T423] 0xFFFFFFFFE9C00000
+[T424] 0xFFFFFFFFEA000000
+[T425] 0xFFFFFFFFEA400000
+[T426] 0xFFFFFFFFEA800000
+[T427] 0xFFFFFFFFEAC00000
+[T428] 0xFFFFFFFFEB000000
+[T429] 0xFFFFFFFFEB400000
+[T430] 0xFFFFFFFFEB800000
+[T431] 0xFFFFFFFFEBC00000
+[T432] 0xFFFFFFFFEC000000
+[T433] 0xFFFFFFFFEC400000
+[T434] 0xFFFFFFFFEC800000
+[T435] 0xFFFFFFFFECC00000
+[T436] 0xFFFFFFFFED000000
+[T437] 0xFFFFFFFFED400000
+[T438] 0xFFFFFFFFED800000
+[T439] 0xFFFFFFFFEDC00000
+[T440] 0xFFFFFFFFEE000000
+[T441] 0xFFFFFFFFEE400000
+[T442] 0xFFFFFFFFEE800000
+[T443] 0xFFFFFFFFEEC00000
+[T444] 0xFFFFFFFFEF000000
+[T445] 0xFFFFFFFFEF400000
+[T446] 0xFFFFFFFFEF800000
+[T447] 0xFFFFFFFFEFC00000
+[T448] 0xFFFFFFFFF0000000
+[T449] 0xFFFFFFFFF0400000
+[T450] 0xFFFFFFFFF0800000
+[T451] 0xFFFFFFFFF0C00000
+[T452] 0xFFFFFFFFF1000000
+[T453] 0xFFFFFFFFF1400000
+[T454] 0xFFFFFFFFF1800000
+[T455] 0xFFFFFFFFF1C00000
+[T456] 0xFFFFFFFFF2000000
+[T457] 0xFFFFFFFFF2400000
+[T458] 0xFFFFFFFFF2800000
+[T459] 0xFFFFFFFFF2C00000
+[T460] 0xFFFFFFFFF3000000
+[T461] 0xFFFFFFFFF3400000
+[T462] 0xFFFFFFFFF3800000
+[T463] 0xFFFFFFFFF3C00000
+[T464] 0xFFFFFFFFF4000000
+[T465] 0xFFFFFFFFF4400000
+[T466] 0xFFFFFFFFF4800000
+[T467] 0xFFFFFFFFF4C00000
+[T468] 0xFFFFFFFFF5000000
+[T469] 0xFFFFFFFFF5400000
+[T470] 0xFFFFFFFFF5800000
+[T471] 0xFFFFFFFFF5C00000
+[T472] 0xFFFFFFFFF6000000
+[T473] 0xFFFFFFFFF6400000
+[T474] 0xFFFFFFFFF6800000
+[T475] 0xFFFFFFFFF6C00000
+[T476] 0xFFFFFFFFF7000000
+[T477] 0xFFFFFFFFF7400000
+[T478] 0xFFFFFFFFF7800000
+[T479] 0xFFFFFFFFF7C00000
+[T480] 0xFFFFFFFFF8000000
+[T481] 0xFFFFFFFFF8400000
+[T482] 0xFFFFFFFFF8800000
+[T483] 0xFFFFFFFFF8C00000
+[T484] 0xFFFFFFFFF9000000
+[T485] 0xFFFFFFFFF9400000
+[T486] 0xFFFFFFFFF9800000
+[T487] 0xFFFFFFFFF9C00000
+[T488] 0xFFFFFFFFFA000000
+[T489] 0xFFFFFFFFFA400000
+[T490] 0xFFFFFFFFFA800000
+[T491] 0xFFFFFFFFFAC00000
+[T492] 0xFFFFFFFFFB000000
+[T493] 0xFFFFFFFFFB400000
+[T494] 0xFFFFFFFFFB800000
+[T495] 0xFFFFFFFFFBC00000
+[T496] 0xFFFFFFFFFC000000
+[T497] 0xFFFFFFFFFC400000
+[T498] 0xFFFFFFFFFC800000
+[T499] 0xFFFFFFFFFCC00000
+[T500] 0xFFFFFFFFFD000000
+[T501] 0xFFFFFFFFFD400000
+[T502] 0xFFFFFFFFFD800000
+[T503] 0xFFFFFFFFFDC00000
+[T504] 0xFFFFFFFFFE000000
+[T505] 0xFFFFFFFFFE400000
+[T506] 0xFFFFFFFFFE800000
+[T507] 0xFFFFFFFFFEC00000
+[T508] 0xFFFFFFFFFF000000
+[T509] 0xFFFFFFFFFF400000
+[T510] 0xFFFFFFFFFF800000
+[T511] 0xFFFFFFFFFFC00000
+[E] spawned=512 failed=0 alive pid=92
+=== COMPLETE ===
+```
+
+## FILE: results/1335a_20261106_150315.txt
+
+```
+=== PROBE 1335a rev2: 622 ENTRY-CHECK BYPASS ===
+SKIP: 201 202 232 302
+[A] control arg4=0x100 cmd 0x200
+  rv 0 status 0x800E0001
+[B] control arg4=0x40 cmd 0x200
+  rv 0 status 0xFFFFFFFF
+[B2] context probes, cmd 0x200
+  idx 0: rv 0 st 0xFFFFFFFF
+  idx 1: rv 0 st 0xFFFFFFFF
+  idx 2: rv 0 st 0xFFFFFFFF
+  idx 3: rv 0 st 0xFFFFFFFF
+  idx 4: rv 0 st 0xFFFFFFFF
+  idx 5: rv 0 st 0xFFFFFFFF
+  idx 6: rv 0 st 0xFFFFFFFF
+  idx 7: rv 0 st 0xFFFFFFFF
+  idx 8: rv 0 st 0xFFFFFFFF
+  idx 9: rv 0 st 0xFFFFFFFF
+  /dev/gc fd 22: rv 0 st 0xFFFFFFFF
+  /dev/dce fd 22: rv 0 st 0xFFFFFFFF
+  /dev/camera fd 22: rv 0 st 0xFFFFFFFF
+  /dev/sce_zlib fd 22: rv 0 st 0xFFFFFFFF
+  /dev/hid fd 22: rv 0 st 0xFFFFFFFF
+  /dev/dipsw fd 22: rv 0 st 0xFFFFFFFF
+[C] range 0x200-0x270
+  c200
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c203
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c204
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c205
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c206
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c207
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c208
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c209
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c20A
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c20B
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c20C
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c20D
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c20E
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c20F
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c210
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c211
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c212
+  = rv -1 st 0x00000000 0x00000000 0x00000000 0x00000000
+  c213
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c214
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c215
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c216
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c217
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c218
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c219
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c21A
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c21B
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c21C
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c21D
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c21E
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c21F
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c220
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c221
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c222
+  = rv -1 st 0x00000000 0x00000000 0x00000000 0x00000000
+  c223
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c224
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c225
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c226
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c227
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c228
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c229
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c22A
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c22B
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c22C
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c22D
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c22E
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c22F
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c230
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c231
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c233
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c234
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c235
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c236
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c237
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c238
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c239
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c23A
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c23B
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c23C
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c23D
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c23E
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c23F
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c240
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c241
 ```
 
 ## FILE: results/160a_boot1_20261020_173454.txt
@@ -18914,6 +20158,13 @@ Limitations:
 Blocker: Info leak — reading a heap pointer as a JS number is blocked by DAZ.
          49+ community-documented dead paths. Active angles: APNG decoder overread,
          RAB sort OOB (P560 confirmed sort operates on stale length).
+
+Subsequent P560 evidence qualification (2026-11-07 UTC): The P560-derived
+status above is a historical interpretation. Its reported prefix after resize
+does not establish OOB writes or the internal read/write path. Snapshot-based
+sorting with bounded prefix writeback reproduces that observation. See
+results/phase13_webkit/p560_sort_oob_write_20261027.txt. This qualifies only
+the P560 reference; the Canvas observations recorded here are unchanged.
 ```
 
 ## FILE: results/phase13_webkit/p554_canvas_crosstype_offsetmap_20261026.txt
@@ -19432,6 +20683,49 @@ Sort OOB WRITES need P560 to verify — if writes also bypass bounds,
 this is a controlled OOB write primitive.
 
 Stability: All 7 tests completed, no crash.
+
+=== SUBSEQUENT PHASE E EVIDENCE QUALIFICATION (2026-11-07 UTC) ===
+
+The original reconstructed account above is preserved. Phase E's reported
+comparator values and counts do not establish a post-shrink out-of-bounds
+read from the original backing store. Values collected before shrinking
+can remain in private scratch arrays and reach later comparator calls.
+Public WebKit revision caa31552bab4d322ec1ced2f059d93f2c2fd45b4,
+Source/JavaScriptCore/builtins/TypedArrayPrototype.js:170-243, implements
+that comparator-present resizable-view path: it copies live values before
+comparator callbacks, merges through scratch arrays, and bounds final
+writeback by the current live view length. Identity with Sony firmware
+14.10's shipping binary or the reviewer's exact WebKit-1400 drop is not
+established.
+
+The probe sets eResized before resize(32), silently catches resize errors,
+and logs no resulting dimensions; successful shrink is not independently
+confirmed. It includes call five's already-received arguments in ePostVals,
+although those arguments predate the resize attempt. ePostVals retains at
+most 20 pairs, so postPairs=20 is a capped retained-pair count, not the total
+number of comparator invocations after successful shrink. Only the first
+eight pairs would be emitted as E-PAIRS; their original beacons were not
+persisted.
+
+The reported 32/40 figure counts rounded operand occurrences in the
+inclusive numeric range [300,4050], not unique source indices or physical
+memory reads. The numerator cannot be independently recomputed from the
+retained reconstruction. Phase E has no explicit NaN or undefined counters,
+so the reconstructed zero-count statements are not independently
+recoverable counter outputs. An undefined argument would throw during
+toFixed formatting before that pair is retained.
+
+Consequently, the historical Phase E "SORT OOB READ CONFIRMED" verdict,
+direct C++ backing-store-read explanation, and sort-based inference of
+surviving hidden backing data are unsupported by the retained evidence.
+This note adds no console measurements, does not establish Sony memory
+safety or the absence of a vulnerability, and does not independently
+reclassify the reported outcomes of Phases A/B/C/D/F/G.
+
+Pinned public source:
+https://github.com/WebKit/WebKit/blob/caa31552bab4d322ec1ced2f059d93f2c2fd45b4/Source/JavaScriptCore/builtins/TypedArrayPrototype.js
+Related P560 qualification:
+https://github.com/ZigZagBoi1/PS5-14.10-Research/pull/230
 ```
 
 ## FILE: results/phase13_webkit/p560_sort_oob_write_20261027.txt
@@ -19448,6 +20742,129 @@ Source:   Reconstructed from Engram observation #2965
 NOTE: This file is reconstructed from session memory. The original beacon
 data was received via host.py stdout (transient) and not persisted to disk
 at the time of execution.
+
+=== SUBSEQUENT EVIDENCE QUALIFICATION (2026-11-07 UTC) ===
+
+The original reconstructed account below is preserved, including its reported
+measurements and source attribution. Its "CONFIRMED" verdicts, "proof by
+permutation", and JSC access-bound model are historical interpretations,
+qualified here; they are not established memory-access findings.
+
+Test B reports B-POST=[1,2,3,4] after shrinking on comparison five. This
+qualification accepts that observation as reported; it does not allege that
+the measurements were fabricated or incorrect. The prefix alone does not
+logically require OOB writes: values can be collected before the comparator,
+sorted in private storage, and copied back only to the surviving prefix.
+The displaced large values need not be stored outside the resized view.
+
+Independent offline work (Mission 019B, local research workspace artifacts
+experiments/019-typedarray-sort/matrix.js and results.json; reviewed in 019C)
+reproduced the prefix in Node v26.13.0 and Linux JSC 2.54.2-1, with both JSC
+JITs disabled. A separate plain-JavaScript snapshot/insertion-sort model
+also reproduced it, writing back only indices 0-3 after shrinking its live
+array to four elements. That model uses an ordinary array, not a native
+TypedArray or a reconstruction of Sony's implementation. Comparator counts
+(36 for Node, 45 for desktop JSC, 65 for the model) do not prove memory safety.
+The local research artifacts are not bundled in this upstream repository;
+the small counterexample below is self-contained.
+
+Source-level follow-up: cobrajet302gt's review of PR #230
+https://github.com/ZigZagBoi1/PS5-14.10-Research/pull/230#issuecomment-6701794162
+Path distinction in cobrajet302gt's follow-up review:
+https://github.com/ZigZagBoi1/PS5-14.10-Research/pull/230#issuecomment-6702034096
+Independent reviewer record:
+https://github.com/cobrajet302gt/PS5-14.10-Jailbreak-Research/issues/14
+
+The following findings are attributed to cobrajet302gt's WebKit-1400-era
+source review, as supplied with this follow-up. No corresponding source copy
+was available locally; attempts to retrieve the review and source failed.
+The exact source revision and cited line locations have not been independently
+verified here. Reviewer's source locations:
+  Source/JavaScriptCore/builtins/TypedArrayPrototype.js:170-240
+  Source/JavaScriptCore/runtime/JSGenericTypedArrayViewInlines.h:816,826,893,899
+
+According to cobrajet302gt's source reviews, the two paths differ:
+- Comparator present: the JavaScript merge-sort path for resizable views
+  copies values into private storage before comparator execution. Intermediate
+  merge passes sort scratch arrays; final writeback rechecks the live
+  TypedArray length and bounds its writes accordingly.
+- Comparator absent: the native sorting path takes a buffer-witness length
+  before sorting and runs without comparator-driven JavaScript re-entry.
+  Same-thread JavaScript resize therefore cannot interleave with that native
+  operation. This is not the JavaScript path's bounded-writeback mechanism.
+
+The reviewer's merge-sort transcription predicts 36 comparator calls for
+P560's input: 8+8+8+12 at merge widths 1, 2, 4, and 8. That matches the
+reconstructed P560 count but does not uniquely identify an implementation:
+Node also produced 36. This transcription is separate from the independent
+insertion-sort counterexample below, which uses 65 comparisons. The local
+019B no-shrink control already places [1,2,3,4] in the first four positions;
+the prefix is not specific to shrinking.
+
+Status: CLOSED for P560's permutation-based memory-primitive claim (source
+grade, based on the attributed reviews). The two reviewed paths close the
+same-thread JavaScript resize-during-sort hypothesis for different reasons:
+private sorting plus live-length-bounded writeback with a comparator; no
+comparator-driven JavaScript re-entry in the native path without one. P560
+uses a comparator, and the independently demonstrated counterexample shows
+why its prefix cannot establish an OOB-write primitive. Neither closure is
+a general memory-safety verdict about all sorting paths or other concurrency
+models. This source-grade assessment does not independently identify or
+verify Sony's shipping binary.
+The reconstructed console measurements remain device reports, not newly
+confirmed device evidence; actual historical PS5 internal accesses remain
+undetermined. No claim of universal TypedArray-sort memory safety follows.
+
+Tests B/C/D are not three independent proofs of OOB memory writes: their
+write-confirmation claims rely on the same permutation inference. Test E
+reports unchanged sampled canaries (bad=0); that does not establish a physical
+access bound, including a bound at maxByteLength. These observations do not
+establish the historical JSC write path or whether it rechecked length.
+Actual PS5 internal reads/writes remain undetermined. This note does not
+independently evaluate or retract P559, P561, or unrelated Canvas/FontFace work.
+
+ECMAScript 2024 references:
+https://tc39.es/ecma262/2024/multipage/indexed-collections.html#sec-%typedarray%.prototype.sort
+https://tc39.es/ecma262/2024/multipage/indexed-collections.html#sec-sortindexedproperties
+https://tc39.es/ecma262/2024/multipage/ordinary-and-exotic-objects-behaviours.html#sec-typedarraysetelement
+SortIndexedProperties collects values into a List before sorting. TypedArray
+sort's abstract writeback iterates the original length; TypedArraySetElement
+stores only for currently valid indices. This specifies observable behavior,
+not a native storage layout. The model's explicit prefix bound is an
+alternative implementation, not a literal copy of that abstract loop.
+Mutation cases are not universal sorted-order conformance tests.
+
+Bounded counterexample: run the following standard JavaScript in Node or a
+JavaScript shell. It uses no native sort, detachment, sprays, or pointer values.
+Only private snapshot indices are sorted; live-array writeback is bounded.
+
+--- BEGIN JAVASCRIPT COUNTEREXAMPLE ---
+var live = [16000,15000,14000,13000,1,2,3,4,5,6,7,8,9,10,11,12];
+var snapshot = live.slice(), calls = 0, writes = [];
+function compare(a, b) {
+    if (++calls === 5) live.length = 4;
+    return a - b;
+}
+for (var i = 1; i < snapshot.length; i++) {
+    var value = snapshot[i], j = i - 1;
+    while (j >= 0 && compare(snapshot[j], value) > 0) {
+        snapshot[j + 1] = snapshot[j];
+        j--;
+    }
+    snapshot[j + 1] = value;
+}
+for (var k = 0; k < Math.min(live.length, snapshot.length); k++) {
+    if (k >= live.length) throw new Error("writeback exceeds live array");
+    live[k] = snapshot[k];
+    writes.push(k);
+}
+if (live.length !== 4 || JSON.stringify(live) !== "[1,2,3,4]" ||
+    JSON.stringify(writes) !== "[0,1,2,3]") throw new Error("counterexample failed");
+var result = JSON.stringify({prefix: live, writeIndices: writes});
+if (typeof print === "function") print(result); else console.log(result);
+--- END JAVASCRIPT COUNTEREXAMPLE ---
+
+=== ORIGINAL RECONSTRUCTED ACCOUNT CONTINUES; INTERPRETATIONS QUALIFIED ABOVE ===
 
 === RESULTS ===
 
@@ -24427,6 +25844,468 @@ All 6 sections returned `undefined` consistently. DFG LICM correctly tracks
 variable initialization state and does not hoist uses past their definitions.
 
 Sony backported the LICM initialization check to 605.1.15.
+```
+
+## FILE: results/phase13_webkit/p690_walk_forge_oracle_20261109_204155.txt
+
+```
+=== PROBE p690: walk-forge-oracle — PS5 14.10 WebKit ===
+Date: 2026-11-09 20:34-20:44 UTC-3
+Target: PS5 14.10 browser (WebKit 605.1.15 / Safari 17.0)
+Probe: p690-walk-forge-oracle.html via chiaki-ng remote play
+Server: serve.py on port 443 (HTTPS)
+
+== SUMMARY ==
+
+5 runs total. Run 4 (O73QK6) achieved PARTIAL SUCCESS:
+  - FontFace UAF trigger + spray reclaim: SUCCESS (1 buffer)
+  - L1 (hash table ptr) leak: SUCCESS — 0x1000891e60
+  - L2 (WeakPtrImpl*) leak: SUCCESS — 0x1000804200
+  - Oracle (check() pattern-match): ALIVE for self-scan, DEAD for boundary()
+  - Self-discovery (spray buffer VA): SUCCESS — 0x1000384480
+  - VTAB (adjacent buffer): SUCCESS — 0x1000384100 (buffer j0, -14*64B from SELF)
+  - W1 vtable chain read via forgeRead(): CRASH (WebProcess died)
+  - Walk forge / face.style trigger: NOT REACHED
+
+== CRASH ANALYSIS ==
+
+forgeRead(L1-0x10, 80) modifies the spray buffer to redirect face.style
+to read 80 bytes from the hash table region. It writes:
+  +0x08 = self+0x70  (overwrites CSSFontFace member)
+  +0x30 = 4
+  +0x34 = 80 (length)
+  +0x38 = L1-0x10 (target address)
+  +0x70..+0x98 = forged property serialization chain
+
+The engine actively reads CSSFontFace fields during layout (the face was
+re-added to document.fonts and is in the font set). Changing +0x08 to a
+forged pointer triggers an IMMEDIATE crash before the 70ms setTimeout
+callback fires. No W1-PRE-RD synchronous beacon was received.
+
+ROOT CAUSE: The style-read mechanism is unsafe because the engine
+dereferences CSSFontFace fields between the buffer write and the
+explicit face.style read. The fields at +0x08, +0x70, +0x7A, +0x90,
++0x98 are actively accessed by the engine's layout/rendering thread.
+
+== RUN-BY-RUN ==
+
+Run 1 (R4UDWW, 20:34:16): VER+BOOT only, no trigger (cold page)
+Run 2 (7ZGDTS, 20:36:25): VER+BOOT only, no trigger
+Run 3 (DOF0A5, 20:37:35): RES-n2, L1=0x0, L2=0x0 → NOLEAK (spray missed)
+Run 4 (O73QK6, 20:41:41): PARTIAL SUCCESS — see below
+Run 5 (S7ANGN, 20:44:09): VER+BOOT only (auto-reload after crash)
+
+== RUN 4 (O73QK6) DETAILED TIMELINE ==
+
+20:41:41.943  BOOT-O73QK6,ctl=0
+20:41:41.950  RES-n2  (promise resolved, 2 faces)
+20:41:41.997  L1-0x1000891e60  (hash table pointer LEAKED)
+20:41:42.007  L2-0x1000804200  (WeakPtrImpl* LEAKED)
+20:41:42.021  FORGED-1  (1 spray buffer reclaimed CSSFontFace slot)
+20:41:42.043  FAMILY-OK  (face renamed to zz0)
+20:41:42.082  ADD-OK  (face re-added to document.fonts)
+20:41:42.333  DIAG: chk0=false,chk41=false,chk100=false (boundary oracle dead)
+20:41:42.405  PH2-START (7 b0 candidates)
+20:41:42.429  A-DEAD  (boundary() returned -1, m_status=0 makes all in-range false)
+20:41:42.500  DIAG: bufs=1, fam=zz0, zi=0
+20:41:42.583  DIAG: ptr20=0x1000804207 (L2 still at +0x20)
+20:41:42.609  PH3 oracle sweep begins (570 readings over ~13s)
+20:41:42.669  DIAG: L2=0x1000804200, cnt=1, cap=1
+20:41:42.795  PH2-SKIP-DEAD
+20:41:43.086  INTABLE-zz0  (face IS in font table)
+20:41:43.253  PH3-START (b4=16, full self-scan)
+20:41:48.578  PH2-FRESH (scan state reset)
+20:41:51.220  PH2-END (ntry=0 — skipped because oracle dead)
+20:41:52.421  VTAB-0x1000384100-j0 (adjacent buffer found, 14*64=896B below SELF)
+20:41:53.024  W1-START (si=1)
+20:41:54.310  SELF-0x1000384480 (spray buffer VA discovered!)
+              ... forgeRead() called, buffer layout modified ...
+              ... WebProcess CRASHED (no further beacons) ...
+20:41:55.440  Last queued async PH3 beacon delivered
+20:44:09.355  New BOOT (page auto-reloaded after crash)
+
+== ORACLE MECHANISM ==
+
+The check() oracle works in TWO modes:
+1. boundary() — binary search for exact byte values via UnicodeRange
+   DEAD in this run: L2+0x07 encoded a range including char 0
+2. Pattern match — check specific codepoints against known marker values
+   ALIVE: self-scan used {from=0x1000, to=0x2000} marker at +0x38..+0x3F
+
+The pattern-match oracle enabled self-discovery and VTAB detection even
+when boundary() failed. This dual-mode design is robust.
+
+== ADDRESSES DISCOVERED ==
+
+  L1 (hash table)      = 0x1000891e60  (engine-written at CSSFontFace+0x58)
+  L2 (WeakPtrImpl*)    = 0x1000804200  (engine-written at CSSFontFace+0x68)
+  SELF (spray buffer)  = 0x1000384480  (found via +0x38 marker oracle)
+  VTAB (adjacent buf)  = 0x1000384100  (14 positions below SELF)
+  SKIPJ                = 0             (buffer index used for external vtable)
+
+Address relationships:
+  SELF - VTAB = 0x380 = 896 bytes = 14 * 64B (14 spray-buffer positions)
+  L1 region ~5.3 MB above SELF
+  L2 region ~4.9 MB above SELF
+
+== WHAT WORKS ==
+
+1. FontFace UAF trigger + 192B ArrayBuffer spray reclaim
+2. L1/L2 leak from engine-written fields (+0x58, +0x68)
+3. check() pattern-match oracle for in-buffer markers
+4. Self-discovery of spray buffer VA
+5. Adjacent buffer detection for external vtable storage
+
+== WHAT CRASHED ==
+
+forgeRead() style-read mechanism. The engine actively dereferences
+CSSFontFace members during layout, so modifying +0x08 (and other
+fields) for a redirected face.style read crashes immediately.
+
+== NEXT STEPS ==
+
+1. Remove face from document.fonts BEFORE forgeRead to prevent layout access
+2. Or: use check() oracle ONLY (no face.style) for memory reads
+3. Or: find which specific field causes the crash and avoid modifying it
+4. The walk-forge layout (Step 9) was never tested — the crash is earlier
+
+== BEACON LOG ==
+
+Full beacon log: p690_walk_forge_oracle_20261109_204155.log (604 lines, 38KB)
+```
+
+## FILE: results/phase13_webkit/p691_walk_forge_fixed_20261109_235425.txt
+
+```
+=== PROBE p691: walk-forge-fixed — PS5 14.10 WebKit ===
+Date: 2026-11-09 23:54 UTC-3
+Target: PS5 14.10 browser (WebKit 605.1.15 / Safari 17.0)
+Probe: p691-walk-forge-fixed.html via chiaki-ng remote play
+Server: serve.py on port 443 (HTTPS)
+
+== SUMMARY ==
+
+FULL SUCCESS: 4-step walk chain completed. CSSFontFaceSet vtable
+pointer (VP) and 9 vtable function pointers leaked from the WebProcess
+code segment. VP = WebProcess_base + constant_RVA. This is the
+WebProcess TEXT BASE LEAK — HARD BLOCKER #1 is solved.
+
+Run UHOGII (23:54:02):
+  - FontFace UAF trigger + spray reclaim: SUCCESS (1 buffer)
+  - L1 (hash table ptr) leak: SUCCESS — 0x10008a5ff0
+  - L2 (WeakPtrImpl*) leak: SUCCESS — 0x1000164140
+  - Self-discovery (spray buffer VA): SUCCESS — 0x1000384480
+  - VTAB (adjacent buffer): SUCCESS — 0x1000384100 (buffer j0)
+  - IHT (read 1: hash table): SUCCESS — 160 hex chars
+  - W2 (read 2: IM → FO): SUCCESS — FO = 0x1000160770
+  - W3 (read 3: FO → VP): SUCCESS — VP = 0x80f4b9b28
+  - W4 (read 4: VP → vtable): SUCCESS — 9 slots, 72 bytes
+  - WALK-ok: true
+
+== BUG FIX ==
+
+The VP validation threshold was `VP > 0x1000000000n` (68 GiB). VP is a
+CODE SEGMENT pointer at ~0x8xxxxxxxxx (~34 GiB), not a HEAP pointer at
+~0x10xxxxxxxxxx. The check always failed, so the W4 block never
+executed. h4/h5/VT were always empty strings — not because the CSS
+engine had a 3-read budget, but because the code that would have done
+the 4th read was inside an if-block that was never entered.
+
+Fix: changed threshold to `VP > 0x100000000n` (4 GiB).
+
+This one-line bug masked the working 4-read chain for multiple sessions.
+The "3-read limit" was a phantom.
+
+== WALK CHAIN ==
+
+The walk chain dereferences 4 pointers in sequence, each via
+forgeRead() + face.style (CSS property read from the reclaimed
+CSSFontFace buffer):
+
+  Step 1 (IHT): Read hash table at L1-0x10 (80 bytes)
+    → Parse metadata (dc, kc, mask, size) and scan 8 buckets
+    → Find client WeakPtrImpl address (IM)
+    Result: IM = 0x10009e0140
+
+  Step 2 (W2): Read IM+8 (16 bytes)
+    → Dereference WeakPtrImpl.m_ptr to find CSSFontFaceSet object (FO)
+    Result: FO = 0x1000160770
+
+  Step 3 (W3): Read FO (32 bytes)
+    → FO+0x00 = vtable pointer (VP) — CODE SEGMENT address
+    → FO+0x08 = IM (back-pointer, validates chain)
+    → FO+0x10 = spray buffer address (SELF!)
+    → FO+0x18 = another heap pointer
+    Result: VP = 0x80f4b9b28
+
+  Step 4 (W4): Read VP (72 bytes = 9 qwords)
+    → 9 vtable function pointers in the WebProcess code segment
+    Result: see VTABLE SLOTS below
+
+Between W3 and W4 there is a yield (restore safe state + sync XHR) as a
+safety measure. The yield is not required — the 4th read works with or
+without it.
+
+== VTABLE SLOTS (at VP) ==
+
+  Slot  Offset  Address         Notes
+  ----  ------  --------------  ---------------------------------
+  s0    +0x00   0x80dda8fb0     ~CSSFontFaceSet() destructor
+  s1    +0x08   0x80dda8fe0     deleting destructor (s0 + 0x30)
+  s2    +0x10   0x80c26d750     shared base impl (= s4, s5)
+  s3    +0x18   0x80dda96b0     unique (fontStateChanged?)
+  s4    +0x20   0x80c26d750     = s2
+  s5    +0x28   0x80c26d750     = s2
+  s6    +0x30   0x80d9ff400     unique
+  s7    +0x38   0x80dda9810     unique
+  s8    +0x40   0x000000000     NULL (vtable end marker)
+
+Pattern: s2 = s4 = s5 indicates three virtual methods sharing one base
+class implementation (likely CSSFontFace::Client pure virtuals that
+CSSFontFaceSet doesn't override, or a common no-op stub).
+
+Inter-slot deltas (from VP):
+  s0: VP - s0 = 0x171_0B78  (23.07 MB)
+  s1: VP - s1 = 0x171_0B48  (s1 = s0 + 0x30)
+  s2: VP - s2 = 0x324_C3D8  (50.30 MB)
+  s3: VP - s3 = 0x171_0478
+  s6: VP - s6 = 0x1AB_A728  (26.73 MB)
+  s7: VP - s7 = 0x171_0318
+  (corrected 2026-11-10: original deltas had computation error)
+
+== VP ACROSS 5 BOOTS ==
+
+All VP values end in 0xB28 (fixed page offset within the WebProcess
+binary), confirming the vtable is at a constant RVA:
+
+  Boot 1: 0x81780db28   (earlier session)
+  Boot 2: 0x82dbcdb28   (earlier session)
+  Boot 3: 0x809e21b28   (earlier session)
+  Boot 4: 0x805e09b28   (earlier session)
+  Boot 5: 0x80f4b9b28   (this run)
+
+  VP = WebProcess_base + CSSFontFaceSet_vtable_RVA
+
+  WebProcess_base = VP - RVA
+  (RVA to be determined from WebKit 605.1.15 source analysis)
+
+== ADDRESSES DISCOVERED (this run) ==
+
+  L1 (hash table)       = 0x10008a5ff0  (engine-written at CSSFontFace+0x58)
+  L2 (WeakPtrImpl*)     = 0x1000164140  (engine-written at CSSFontFace+0x68)
+  SELF (spray buffer)   = 0x1000384480  (found via +0x38 marker oracle)
+  VTAB (adjacent buf)   = 0x1000384100  (14 positions below SELF)
+  IM (client WeakPtr)   = 0x10009e0140  (from hash table bucket)
+  FO (CSSFontFaceSet)   = 0x1000160770  (from IM+8 dereference)
+  VP (vtable pointer)   = 0x80f4b9b28   (from FO+0x00, CODE SEGMENT)
+
+Address relationships:
+  SELF - VTAB  = 0x380 = 896 bytes = 14 × 64B spray positions
+  L1 - SELF    = ~5.3 MB (hash table region above spray)
+  FO + 0x10    = SELF (CSSFontFaceSet stores pointer to the reclaimed buffer)
+
+== HASH TABLE METADATA ==
+
+  hw0 = 02000000 01000000 07000000 08000000
+        dc=2     kc=1     mask=7   size=8
+
+  deletedCount=2, keyCount=1 (one active client), tableSizeMask=7,
+  tableSize=8 (8 buckets). One client = CSSFontFaceSet. Consistent
+  across all successful runs.
+
+== h3 DATA (CSSFontFaceSet at FO, 32 bytes) ==
+
+  FO+0x00: 0x80f4b9b28   VP (vtable pointer → code segment)
+  FO+0x08: 0x10009e0140  IM (back-pointer to WeakPtrImpl)
+  FO+0x10: 0x1000384480  SELF (spray buffer address!)
+  FO+0x18: 0x100087800e  another heap pointer (varies)
+
+== TIMELINE (run UHOGII) ==
+
+  23:54:02.394  BOOT-UHOGII,ctl=0
+  23:54:02.418  RES-n2 (2 faces resolved)
+  23:54:02.451  L1-0x10008a5ff0
+  23:54:02.463  L2-0x1000164140
+  23:54:02.470  FORGED-1 (1 spray buffer reclaimed)
+  23:54:02.491  FAMILY-OK (face renamed)
+  23:54:02.524  ADD-OK (face re-added to document.fonts)
+  23:54:02.716  DIAG-bufs=1,fam=zz0,zi=0
+  23:54:02.833  A-DEAD (boundary oracle dead)
+  23:54:02.937  PH2-SKIP-DEAD
+  23:54:03.001  PH3-START (self-scan begins)
+  23:54:25.559  SELF-0x1000384480 (spray buffer VA found!)
+  23:54:27.915  DEL-OK (step 7: delete face from set before walk)
+  23:54:28.974  IHT-ok-160 (read 1: hash table, 160 hex chars)
+  23:54:29.245  VTAB-0x1000384100-j0 (adjacent buffer found)
+  23:54:29.294  W3-MID (yield between W3 and W4)
+  23:54:29.478  WALK-hw0..hw3 (hash table metadata)
+  23:54:29.630  WALK-IM/FO/VP
+  23:54:29.671  WALK-h2 (FO data)
+  23:54:29.709  WALK-h3 (VP + back-pointers)
+  23:54:29.746  WALK-h4len=144,raw4len=175 (W4 SUCCEEDED!)
+  23:54:29.849  WALK-wt4=normal (face.weight also works)
+  23:54:29.889  WALK-h4 (decoded vtable, first 40 hex chars)
+  23:54:29.997  WALK-VT (full 144 hex chars, 9 qwords)
+  23:54:30.068  WALK-ok=true
+  23:54:30.109  VT-s0..s2
+  23:54:30.152  VT-s3..s5
+  23:54:30.188  VT-s6..s8
+
+== WHAT THIS MEANS ==
+
+1. The FontFace UAF walk chain is a WORKING arbitrary-read primitive.
+   Four sequential reads, each redirecting face.style to an attacker-
+   chosen address, successfully walk from the hash table through two
+   pointer dereferences to reach the WebProcess code segment.
+
+2. VP is a CODE SEGMENT pointer with a fixed low-order offset (0xB28)
+   across all observed boots. This is the CSSFontFaceSet vtable in
+   WebProcess .rodata. VP = WebProcess_base + RVA.
+
+3. The 9 vtable function pointers are also code-segment addresses.
+   Their inter-slot deltas are constant, providing redundant validation
+   of the leak.
+
+4. The read primitive can target any readable address in the WebProcess
+   address space. It is not limited to heap — the W4 read successfully
+   targeted code-segment .rodata at 0x8xxxxxxxxx.
+
+== REMAINING WORK ==
+
+1. Determine the static CSSFontFaceSet vtable RVA from WebKit 605.1.15
+   source or binary analysis. Then: WebProcess_base = VP - RVA.
+
+2. With WebProcess_base known, the code-reuse chain can target known
+   functions/gadgets at base + offset.
+
+3. The arbitrary-read primitive (forgeRead + face.style) can also be
+   used to scan WebProcess memory for additional structures.
+
+== BEACON LOG ==
+
+Full beacon log: p691_walk_forge_fixed_20261109_235425.log (947 lines)
+```
+
+## FILE: results/phase13_webkit/p710_base_discovery_20261110_013236.txt
+
+```
+=== PROBE p710: base-discovery — PS5 14.10 WebKit ===
+Date: 2026-11-10 01:32 UTC-3
+Target: PS5 14.10 browser (WebKit 605.1.15 / Safari 17.0)
+Probe: p710-base-discovery.html via chiaki-ng remote play
+Server: serve.py on port 443 (HTTPS) with P710_STATE persistence
+
+== SUMMARY ==
+
+BOUNDARY MEASUREMENT COMPLETE: the .text/.rodata section boundary in the
+WebProcess binary is located. The vtable (VP) sits at a fixed offset of
+0x76DB28 (7.43 MB) within .rodata. The .text section is at least 42.87 MB
+(measured from s2, a known .text function). The binary layout is:
+
+  [base] → [.text ≥42.87 MB, XO] → [gap=16KB] → [.rodata ≥7.43 MB, RO] → ...
+                                      ↑ boundary              ↑ VP at +0x76DB28
+
+RVA = text_size + 0x76DB28. The RVA's low 14 bits are 0x1B28 (from VP & 0x3FFF).
+Full RVA requires .text_size from WebKit 605.1.15 source/binary analysis.
+
+== METHOD ==
+
+The probe uses forgeRead (face.style on a UAF-reclaimed CSSFontFace buffer)
+to test whether addresses below VP are readable or XO. Starting from VP
+(known readable in .rodata) and scanning downward:
+
+  Phase 1 (coarse): Binary search in 4 MB steps from VP down to s2.
+    - VP - 0x1B28 (VP page): OK (readable)
+    - VP - 0x401B28 (4 MB):  OK (readable, still .rodata)
+    - VP - 0x801B28 (8 MB):  CRASH (XO, .text reached)
+
+  Phase 2 (fine): Binary search between last OK and first CRASH.
+    - VP - 0x601B28 (6.0 MB): OK
+    - VP - 0x701B28 (7.0 MB): OK
+    - VP - 0x741B28 (7.25 MB): OK
+    - VP - 0x761B28 (7.375 MB): OK
+    - VP - 0x769B28 (7.41 MB): OK
+    - VP - 0x76DB28 (7.43 MB): OK ← last readable
+    - VP - 0x771B28 (7.44 MB): CRASH
+    - VP - 0x781B28 (7.5 MB):  CRASH (redundant, from coarse)
+
+  Convergence: 0x76DB28 readable, 0x771B28 crashes → boundary at VP - 0x76DB28.
+  The 16 KB gap (0x771B28 - 0x76DB28 = 0x4000) is one PS5 page.
+
+== BOUNDARY GEOMETRY ==
+
+  .rodata start:      0x808628000  (this boot)
+  .text top:           0x808624000  (boundary - 16KB = last XO page)
+  VP:                  0x808D95B28  (this boot)
+  VP offset in rodata: 0x76DB28     (7,429,928 bytes, constant across boots)
+  s2 (known .text fn): 0x805B49750  (this boot)
+  boundary - s2:       0x2ADE8B0   (44,951,728 bytes = 42.87 MB)
+  VP - s2 total:       0x324C3D8   (52,741,080 bytes = 50.30 MB)
+
+== VP ACROSS 7 BOOTS (all end in 0xB28) ==
+
+  Boot 1: 0x8172D9B28   (scan: coarse + fine converged)
+  Boot 2: 0x820051B28   (scan: coarse OK at 4MB)
+  Boot 3: 0x80BB25B28   (scan: coarse crash at 8MB → fine)
+  Boot 4: 0x81C9D5B28   (scan: fine convergence)
+  Boot 5: 0x82FE99B28   (scan: fine convergence)
+  Boot 6: 0x80BE7DB28   (scan: fine convergence, boundary found)
+  Boot 7: 0x808D95B28   (scan: final confirmation at 0x76DB28)
+
+== SCAN LOG (boot-by-boot) ==
+
+  00:36:55  Boot 1: NOLEAK → leak fail → first successful leak
+  00:38:26  Boot 2: VP=0x819089B28, SCAN-START, no scan data (crashed)
+  01:10:04  Boot 3: VP=0x8301BDB28, SCAN-START (no server state)
+  01:10:47  Boot 4: VP=0x81EF3DB28, SCAN-START (no server state)
+  01:11:04  Boot 5: VP=0x82EFBB... ARMDELTA=0x324DB28 (first arm, close to VP-s2)
+  01:14:09  Boot 6: VP=0x83FCF1B28, ARMDELTA=0x304DB28
+  01:15:19  Boot 7: VP=0x842B75B28, SCAN-OUT-OF-RANGE (arm too large)
+  01:15:37  Boot 8: VP=0x842D11B28, from=VP (same as VP → out of range)
+
+  [server state reset, probe redesigned to scan from VP downward]
+
+  01:27:54  Boot 9:  VP=0x8172D9B28  ARM=0x1B28, OK → coarse first pass
+  01:28:09  Boot 10: VP=0x820051B28  ARM=0x401B28, OK → coarse 4MB pass
+  01:28:28  Boot 11: VP=0x80BB25B28  ARM=0x801B28, CRASH → coarse→fine
+  01:30:17  Boot 12: VP=0x81C9D5B28  ARM=0x601B28 OK, 0x801B28 CRASH → fine
+  01:30:37  Boot 13: VP=0x82FE99B28  ARM=0x701B28 OK, 0x801B28 CRASH, ARM=0x781B28
+  01:32:07  Boot 14: VP=0x80BE7DB28  ARM=0x741B28 OK, 0x781B28 CRASH, ARM=0x761B28 OK, 0x781B28 CRASH, ARM=0x771B28
+  01:32:33  Boot 15: VP=0x808D95B28  ARM=0x769B28 OK, 0x771B28 CRASH, ARM=0x76DB28 OK, 0x771B28 CRASH → CONVERGED
+
+  Total: ~7 effective boots for convergence, ~5 minutes wall time.
+
+== TECHNICAL NOTES ==
+
+1. Sync loop fix: setTimeout between reads allowed CSS engine to touch
+   the UAF buffer, crashing after one read per page load. Fix: converted
+   doScan() to a synchronous for(;;) loop — multiple reads per page load.
+
+2. ELF header unreachable: .text is 42+ MB of XO pages between boundary
+   and the ELF header at binary base. Cannot read through .text.
+
+3. Auto-reload on crash: verd('bad',...) triggers setTimeout(reload, 8000)
+   so the scan continues after WebProcess restarts.
+
+4. P691 delta correction: the p691 result file's inter-slot deltas had
+   a computation error (0x2CEC3D8 vs correct 0x324C3D8 for VP-s2).
+   The correct delta, verified across two boots, is 0x324C3D8.
+
+== RVA CONSTRAINTS ==
+
+  RVA & 0x3FFF = 0x1B28           (from VP page offset)
+  RVA > 0x324C3D8                 (VP-s2, s2 is above binary base)
+  RVA = text_size + 0x76DB28      (text_size unknown)
+
+  To compute WebProcess_base = VP - RVA, need text_size from:
+  (a) WebKit 605.1.15 source compilation for x86_64, or
+  (b) Offline binary analysis of a PS5 WebProcess dump, or
+  (c) Further scanning to locate a readable page below .text (ELF headers)
+
+== BEACON LOG ==
+
+Full beacon log: beacons_02263713-58d7-4a65-88a6-cb6209c45aeb.log (12704 lines)
+Key milestone beacons extracted above in SCAN LOG section.
 ```
 
 ## FILE: results/phase13_webkit/v674_canvas_api_info_leak_20261029.txt
@@ -31013,6 +32892,52 @@ testing 20 nodes
   data: 0A184F6D 97DBDC60 204EAD47 7A3DDBD0 AF4A4FE5 BB0DCEAB D0667D0F 3F0C3931
 
 === 1404c DONE ===
+```
+
+## FILE: results/phase14_kernel_read/p803_procfs_auxv_20261110_041157.txt
+
+```
+=== PROBE p803: /proc auxv file test ===
+
+PID: 2799 (0xAEF)
+
+=== SECTION A: procfs existence test ===
+
+  stat('/proc') = -1
+  stat('/proc/self') = -1
+  stat('/proc/curproc') = -1
+  stat('/proc/2799') = -1
+
+VERDICT: procfs not mounted or not accessible.
+This is ENOENT-no-procfs, not ENOENT-no-auxv.
+The /proc leg is closed for this jail context.
+
+=== SECTION B: /proc auxv file read ===
+
+  open('/proc/self/auxv') = -1
+  open('/proc/curproc/auxv') = -1
+  open('/proc/2799/auxv') = -1
+
+No auxv file readable. Trying other /proc paths...
+
+  open('/proc/self/status') = -1
+  open('/proc/self/map') = -1
+  open('/proc/self/exe') = -1
+  open('/proc/2799/status') = -1
+  open('/proc/2799/map') = -1
+
+VERDICT: /proc auxv not readable from game process.
+
+=== SECTION C: sysctl KERN_PROC_AUXV (confirming line) ===
+
+  sysctl(KERN_PROC_AUXV, pid=2799) = -1, outlen=4096
+  Confirming: sysctl KERN_PROC_AUXV not available (matches probe 56g3).
+
+=== SECTION D: cross-process auxv (WebProcess PID discovery) ===
+
+  Skipped (procfs not mounted).
+
+=== COMPLETE ===
 ```
 
 ## FILE: results/phase15_jailbreak/66a_sound_mmap_krw_20261023_122632.txt
@@ -282007,6 +283932,2172 @@ CMD 0xC0188132: kptrs=0
 
 alive=true
 === 96a COMPLETE ===
+```
+
+## FILE: results/phase35_dead_end_reruns/1341a2_resolve_vs_raw_fixed_20261109_095214.txt
+
+```
+=== PROBE 1341a2: NAMED SYSCALL TABLE VS make_syscall (revised) ===
+
+pid=80  stub=0x829c60b57
+
+[1] fork(2) and rfork(251), identical arguments on both paths
+  getpid raw                 80   0x00000000_00000050
+  getpid named               80   0x00000000_00000050
+  fork raw                   -1   0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  fork named                 absent from the table
+  rfork raw                  -1   0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  rfork named                absent from the table
+
+[2] resolve() accept/refuse matrix (type before -> after)
+  zzz20        num=20   nil      -> table    resolve ok=true rv=nil
+  getpid       num=20   table    -> table    resolve ok=true rv=nil
+  thr_exit     num=431  nil      -> table    resolve ok=true rv=nil
+  msync        num=65   nil      -> table    resolve ok=true rv=nil
+  kenv         num=390  nil      -> table    resolve ok=true rv=nil
+  kldstat      num=308  nil      -> table    resolve ok=true rv=nil
+  thr_new      num=455  table    -> table    resolve ok=true rv=nil
+  thr_create   num=430  table    -> table    resolve ok=true rv=nil
+
+[3] thr_new(455)
+  eb=0_0FA4C000
+  param=31080AC80 start_func=0x00000000_0FA4C992 stack=310698040+100
+  thr_new raw                0    0x00000000_00000000
+  thr_new raw tid            child_tid=0x00000000_00018F0A
+  thr_new named              0    0x00000000_00000000
+  thr_new named tid          child_tid=0x00000000_00018F0B
+
+[4] thr_create(430)
+  ctx=310658CA0 rsp=3109B8020
+  thr_create raw             0    0x00000000_00000000
+  thr_create raw tid         tid=0x00000000_00018F0C
+  thr_create named           0    0x00000000_00000000
+  thr_create named tid       tid=0x00000000_00018F0D
+  canary after 200ms: ok=true pid=80 (was 80)
+
+=== PROBE 1341a2 COMPLETE ===
+```
+
+## FILE: results/phase35_dead_end_reruns/1341a_resolve_vs_raw_20261109_095129.txt
+
+```
+=== PROBE 1341a: NAMED SYSCALL TABLE VS make_syscall ===
+
+pid=80  stub=0x829c60b57
+
+[0] the console loader's syscall table
+  accept:table bind:table close:table collect_info:function connect:table dlsym:table do_sanity_check:function dynlib_load_prx:table dynlib_unload_prx:table getpid:table getsockopt:table getuid:table init:function is_in_sandbox:table listen:table mmap:table mprotect:table nanosleep:table netgetiflist:table open:table pipe:table read:table resolve:function setsockopt:table sigaction:table socket:table syscall_address:table sysctl:table thr_self:table write:table
+  resolve is a function
+  resolve(number) test: table
+
+[1] fork(2) and rfork(251), identical arguments on both paths
+  getpid raw                 80   0x00000000_00000050
+  getpid named               absent from the table
+  fork raw                   -1   0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  fork named                 absent from the table
+  rfork raw                  -1   0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  rfork named                absent from the table
+
+[2] thr_new(455)
+  eb=0_0FA4C000
+  param=31070C620 start_func=0x00000000_0FA4C992 stack=310688020+100
+  thr_new raw                absent from the table
+  resolve({thr_new=455}): ok=true -> nil
+  thr_new named              absent from the table
+
+[3] thr_create(430)
+  ctx=3106127E0 rsp=310978020
+  thr_create raw             absent from the table
+  resolve({thr_create=430}): ok=true -> nil
+  thr_create named           absent from the table
+  canary after 200ms: ok=true pid=80 (was 80)
+
+=== PROBE 1341a COMPLETE ===
+```
+
+## FILE: results/phase35_dead_end_reruns/1341b_vm_ops_ordered_20261109_095307.txt
+
+```
+=== PROBE 1341b: VM OPS + PAGE TABLE MODIFIERS, ORDERED ===
+
+pid=80
+eboot=0xFA4C000
+gpu=0x310678000
+
+[A] 645 (narg=0)
+  CALL 645()
+  645()                      ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[B] 648 (narg=1, user pointer)
+  CALL 648(buf 40)
+  648(buf 40)                ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  648 out: nonzero=0 first=-
+  CALL 648(buf 100)
+  648(buf 100)               ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  648 out: nonzero=0 first=-
+  CALL 648(buf 400)
+  648(buf 400)               ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  648 out: nonzero=0 first=-
+
+[C] 658 (descriptor-backed synchronisation)
+  udp socket fd=22
+  CALL 658(fd=22,pad=0)
+  658(fd=22,pad=0)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=22,pad=8)
+  658(fd=22,pad=8)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=22,pad=64)
+  658(fd=22,pad=64)          ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=0,pad=0)
+  658(fd=0,pad=0)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=0,pad=8)
+  658(fd=0,pad=8)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=0,pad=64)
+  658(fd=0,pad=64)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=1,pad=0)
+  658(fd=1,pad=0)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=1,pad=8)
+  658(fd=1,pad=8)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 658(fd=1,pad=64)
+  658(fd=1,pad=64)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[D] 647 (ORBI metadata)
+  CALL 647(&buf)
+  647(&buf)                  ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  647 out: nonzero=0 first=-
+  kptr-shaped dwords: 0
+  CALL 647(0)
+  647(0)                     ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[E] 667 (process/thread enumeration, count-only)
+  CALL 667(0,0,&out)
+  667(0,0,&out)              ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  out[0]=0x0 out[1]=0x0
+  CALL 667(pid=80,&buf)
+  667(pid=80,&buf)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  667 out: nonzero=0 first=-
+  kptr-shaped dwords: 0
+
+[F] 660 (dynlib info v2: handle, slot_padding, info_inout)
+  CALL 660(h=0,sz=160)
+  660(h=0,sz=160)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  660 out: nonzero=1 first=+0x0
+    +0x000: 00000160
+  kptr-shaped dwords: 0
+  CALL 660(h=0,sz=400)
+  660(h=0,sz=400)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  660 out: nonzero=1 first=+0x0
+    +0x000: 00000400
+  kptr-shaped dwords: 0
+  CALL 660(h=2,sz=160)
+  660(h=2,sz=160)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  660 out: nonzero=1 first=+0x0
+    +0x000: 00000160
+  kptr-shaped dwords: 0
+  CALL 660(h=2,sz=400)
+  660(h=2,sz=400)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  660 out: nonzero=1 first=+0x0
+    +0x000: 00000400
+  kptr-shaped dwords: 0
+
+[G] 654 (validated 64 KiB VM range)
+  CALL 654(a=0,sz=0,prot=0)
+  654(a=0,sz=0,prot=0)       ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=0,sz=4000,prot=3)
+  654(a=0,sz=4000,prot=3)    ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=0,sz=4000,prot=33)
+  654(a=0,sz=4000,prot=33)   ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=310678000,sz=0,prot=0)
+  654(a=310678000,sz=0,prot=0) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=310678000,sz=4000,prot=3)
+  654(a=310678000,sz=4000,prot=3) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=310678000,sz=4000,prot=33)
+  654(a=310678000,sz=4000,prot=33) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=FA4C000,sz=0,prot=0)
+  654(a=FA4C000,sz=0,prot=0) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=FA4C000,sz=4000,prot=3)
+  654(a=FA4C000,sz=4000,prot=3) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=FA4C000,sz=4000,prot=33)
+  654(a=FA4C000,sz=4000,prot=33) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=3106B41A0,sz=0,prot=0)
+  654(a=3106B41A0,sz=0,prot=0) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=3106B41A0,sz=4000,prot=3)
+  654(a=3106B41A0,sz=4000,prot=3) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 654(a=3106B41A0,sz=4000,prot=33)
+  654(a=3106B41A0,sz=4000,prot=33) ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[H] 655 (range reset companion)
+  CALL 655(a=0,prot=0)
+  655(a=0,prot=0)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=0,prot=3)
+  655(a=0,prot=3)            ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=0,prot=33)
+  655(a=0,prot=33)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=310678000,prot=0)
+  655(a=310678000,prot=0)    ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=310678000,prot=3)
+  655(a=310678000,prot=3)    ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=310678000,prot=33)
+  655(a=310678000,prot=33)   ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=FA4C000,prot=0)
+  655(a=FA4C000,prot=0)      ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=FA4C000,prot=3)
+  655(a=FA4C000,prot=3)      ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=FA4C000,prot=33)
+  655(a=FA4C000,prot=33)     ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=3106B41A0,prot=0)
+  655(a=3106B41A0,prot=0)    ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=3106B41A0,prot=3)
+  655(a=3106B41A0,prot=3)    ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 655(a=3106B41A0,prot=33)
+  655(a=3106B41A0,prot=33)   ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+[I] 653 (page-table attribute modifier)
+  CALL 653(a=0)
+  653(a=0)                   ret=22    0x16
+  CALL 653(a=310678000)
+  653(a=310678000)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(a=FA4C000)
+  653(a=FA4C000)             ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(a=3106B41A0)
+  653(a=3106B41A0)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(gpu,1)
+  653(gpu,1)                 ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(gpu,3)
+  653(gpu,3)                 ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(gpu,5)
+  653(gpu,5)                 ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(gpu,7)
+  653(gpu,7)                 ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(gpu,33)
+  653(gpu,33)                ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(310678000,3)
+  653(310678000,3)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(310678000,7)
+  653(310678000,7)           ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(FA4C000,3)
+  653(FA4C000,3)             ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+  CALL 653(FA4C000,7)
+  653(FA4C000,7)             ret=-1    0xFFFFFFFFFFFFFFFFFFFFFFFF
+
+canary: ok=true pid=80 (was 80) OK
+
+=== PROBE 1341b COMPLETE ===
+```
+
+## FILE: results/phase35_dead_end_reruns/1341c_kenv_390_child_20261109_095444.txt
+
+```
+=== PROBE 1341c: KENV(390) IN A CHILD THREAD ===
+
+pid=80
+eb=FA4C000  stub=0x829c60b57
+
+[A] control: 20 getpid
+  spawn(20): ok=true rv=0 tid=0x18F0F
+
+[B] 390 shapes
+  spawn(390): ok=true rv=0 tid=0x18F10
+
+```
+
+## FILE: results/phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_100539.txt
+
+```
+=== PROBE 1342a: ARG1 POINTER-CLASS SWEEP, RESUMED AT 589 ===
+[0] user=0x311024000 absent=0x7FFF00000000 K=0xFFFFFFFFC1000000 (image base measured 2026-11-09)
+
+[A] N class -- gap numbers, then 590..676
+CALL 568 N
+```
+
+## FILE: results/phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101034.txt
+
+```
+=== PROBE 1342a: ARG1 POINTER-CLASS SWEEP, RESUMED AT 589 ===
+[0] user=0x310EF0000 absent=0x7FFF00000000 K=0xFFFFFFFFC1000000 (image base measured 2026-11-09)
+
+[A] N class -- 590..676
+CALL 590 N
+```
+
+## FILE: results/phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101145.txt
+
+```
+=== PROBE 1342a: ARG1 POINTER-CLASS SWEEP, RESUMED AT 589 ===
+[0] user=0x3115F8000 absent=0x7FFF00000000 K=0xFFFFFFFFC1000000 (image base measured 2026-11-09)
+[0] sigaction(12, SIG_IGN) -> EXC
+[!] SIGSYS could not be ignored; not spending the console
+=== PROBE 1342a STOPPED ===
+```
+
+## FILE: results/phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101208.txt
+
+```
+=== PROBE 1342a: ARG1 POINTER-CLASS SWEEP, RESUMED AT 589 ===
+[0] user=0x3115FC000 absent=0x7FFF00000000 K=0xFFFFFFFFC1000000 (image base measured 2026-11-09)
+[0] sa[+0]=0x1
+[0] sigaction(12, SIG_IGN) -> 0
+
+[A] N class -- 568..676
+CALL 568 N
+[568] N -> -1 err=78 Function not implemented
+CALL 569 N
+[569] N -> -1 err=78 Function not implemented
+CALL 572 N
+[572] N -> -1 err=13 Permission denied
+CALL 574 N
+[574] N -> -1 err=78 Function not implemented
+CALL 575 N
+[575] N -> -1 err=78 Function not implemented
+CALL 576 N
+[576] N -> -1 err=78 Function not implemented
+CALL 577 N
+[577] N -> -1 err=78 Function not implemented
+CALL 578 N
+[578] N -> -1 err=78 Function not implemented
+CALL 579 N
+[579] N -> -1 err=78 Function not implemented
+CALL 580 N
+[580] N -> -1 err=78 Function not implemented
+CALL 581 N
+[581] N -> -1 err=78 Function not implemented
+CALL 582 N
+[582] N -> -1 err=78 Function not implemented
+CALL 583 N
+[583] N -> -1 err=78 Function not implemented
+CALL 584 N
+[584] N -> -1 err=78 Function not implemented
+CALL 585 N
+[585] N -> 1 err=78 Function not implemented
+CALL 586 N
+[586] N -> -1 err=1 Operation not permitted
+CALL 587 N
+[587] N -> -1 err=1 Operation not permitted
+CALL 588 N
+[588] N -> -1 err=14 Bad address
+CALL 589 N
+[589] N -> -1 err=78 Function not implemented
+CALL 590 N
+[590] N -> -1 err=78 Function not implemented
+CALL 591 N
+[591] N -> -1 err=14 Bad address
+CALL 592 N
+[592] N -> -1 err=12 Cannot allocate memory
+CALL 593 N
+[593] N -> -1 err=14 Bad address
+CALL 594 N
+[594] N -> -1 err=14 Bad address
+CALL 595 N
+[595] N -> -1 err=3 No such process
+CALL 596 N
+[596] N -> 0 err=3 No such process
+CALL 597 N
+[597] N -> -1 err=78 Function not implemented
+CALL 598 N
+[598] N -> -1 err=14 Bad address
+CALL 599 N
+[599] N -> -1 err=1 Operation not permitted
+CALL 600 N
+[600] N -> -1 err=1 Operation not permitted
+CALL 601 N
+[601] N -> -1 err=14 Bad address
+CALL 602 N
+[602] N -> -1 err=1 Operation not permitted
+CALL 603 N
+[603] N -> -1 err=1 Operation not permitted
+CALL 604 N
+[604] N -> -1 err=1 Operation not permitted
+CALL 605 N
+[605] N -> -1 err=22 Invalid argument
+CALL 606 N
+[606] N -> 0 err=22 Invalid argument
+CALL 607 N
+[607] N -> -1 err=14 Bad address
+CALL 608 N
+[608] N -> -1 err=14 Bad address
+CALL 610 N
+[610] N -> -1 err=78 Function not implemented
+CALL 611 N
+[611] N -> -1 err=1 Operation not permitted
+CALL 612 N
+[612] N -> -1 err=14 Bad address
+CALL 613 N
+[613] N -> -1 err=1 Operation not permitted
+CALL 615 N
+[615] N -> -1 err=14 Bad address
+CALL 616 N
+[616] N -> -1 err=3 No such process
+CALL 617 N
+[617] N -> 0 err=3 No such process
+CALL 618 N
+[618] N -> -1 err=1 Operation not permitted
+CALL 619 N
+[619] N -> -1 err=78 Function not implemented
+CALL 620 N
+[620] N -> 0 err=78 Function not implemented
+CALL 622 N
+```
+
+## FILE: results/phase35_dead_end_reruns/1342a_arg1_sweep_589_plus_20261109_101254.txt
+
+```
+=== PROBE 1342a: ARG1 POINTER-CLASS SWEEP, RESUMED AT 589 ===
+[0] user=0x310F34000 absent=0x7FFF00000000 K=0xFFFFFFFFC1000000 (image base measured 2026-11-09)
+[0] sa[+0]=0x1
+[0] sigaction(12, SIG_IGN) -> 0
+
+[A] N class -- 623..676
+CALL 623 N
+[623] N -> -1 err=1 Operation not permitted
+CALL 624 N
+[624] N -> 3384 err=1 Operation not permitted
+CALL 625 N
+[625] N -> -1 err=22 Invalid argument
+CALL 626 N
+[626] N -> -1 err=22 Invalid argument
+CALL 627 N
+[627] N -> -1 err=78 Function not implemented
+CALL 628 N
+[628] N -> -1 err=22 Invalid argument
+CALL 629 N
+[629] N -> -1 err=14 Bad address
+CALL 630 N
+[630] N -> -1 err=14 Bad address
+CALL 632 N
+[632] N -> -1 err=3 No such process
+CALL 633 N
+[633] N -> -1 err=3 No such process
+CALL 634 N
+[634] N -> -1 err=3 No such process
+CALL 635 N
+[635] N -> -1 err=78 Function not implemented
+CALL 636 N
+[636] N -> -1 err=1 Operation not permitted
+CALL 637 N
+[637] N -> -1 err=22 Invalid argument
+CALL 638 N
+[638] N -> 0 err=22 Invalid argument
+CALL 639 N
+[639] N -> 0 err=22 Invalid argument
+CALL 640 N
+[640] N -> 0 err=22 Invalid argument
+CALL 641 N
+[641] N -> -1 err=78 Function not implemented
+CALL 642 N
+[642] N -> -1 err=1 Operation not permitted
+CALL 643 N
+[643] N -> 0 err=1 Operation not permitted
+CALL 644 N
+[644] N -> -1 err=78 Function not implemented
+CALL 645 N
+[645] N -> -1 err=78 Function not implemented
+CALL 646 N
+[646] N -> -1 err=1 Operation not permitted
+CALL 647 N
+[647] N -> -1 err=1 Operation not permitted
+CALL 648 N
+[648] N -> -1 err=1 Operation not permitted
+CALL 649 N
+[649] N -> -1 err=22 Invalid argument
+CALL 652 N
+[652] N -> -1 err=1 Operation not permitted
+CALL 653 N
+[653] N -> 22 err=1 Operation not permitted
+CALL 654 N
+[654] N -> -1 err=22 Invalid argument
+CALL 655 N
+[655] N -> -1 err=22 Invalid argument
+CALL 656 N
+[656] N -> -1 err=1 Operation not permitted
+CALL 657 N
+[657] N -> 0 err=1 Operation not permitted
+CALL 658 N
+[658] N -> -1 err=15 Block device required
+CALL 659 N
+[659] N -> -1 err=12 Cannot allocate memory
+CALL 660 N
+[660] N -> -1 err=14 Bad address
+CALL 661 N
+[661] N -> -1 err=78 Function not implemented
+CALL 662 N
+[662] N -> -1 err=22 Invalid argument
+CALL 663 N
+[663] N -> -1 err=22 Invalid argument
+CALL 664 N
+[664] N -> -1 err=22 Invalid argument
+CALL 665 N
+[665] N -> -1 err=78 Function not implemented
+CALL 666 N
+[666] N -> -1 err=22 Invalid argument
+CALL 667 N
+[667] N -> -1 err=78 Function not implemented
+CALL 669 N
+[669] N -> -1 err=22 Invalid argument
+CALL 670 N
+[670] N -> -1 err=16 Device busy
+CALL 671 N
+[671] N -> -1 err=1 Operation not permitted
+CALL 672 N
+[672] N -> -1 err=1 Operation not permitted
+CALL 674 N
+[674] N -> -1 err=22 Invalid argument
+CALL 675 N
+[675] N -> 0 err=22 Invalid argument
+CALL 676 N
+[676] N -> -1 err=22 Invalid argument
+[A] canary 113
+
+[B] K class -- handlers whose U and N answers differ
+CALL 538 K
+[538] K -> -1 err=14 Bad address
+CALL 540 K
+[540] K -> -1 err=14 Bad address
+CALL 547 K
+[547] K -> -1 err=22 Invalid argument
+CALL 551 K
+[551] K -> -1 err=14 Bad address
+CALL 557 K
+[557] K -> -1 err=14 Bad address
+CALL 559 K
+[559] K -> -1 err=22 Invalid argument
+CALL 563 K
+[563] K -> -1 err=3 No such process
+CALL 564 K
+[564] K -> -1 err=3 No such process
+CALL 565 K
+[565] K -> -1 err=3 No such process
+CALL 566 K
+[566] K -> -1 err=3 No such process
+CALL 587 K
+[587] K -> -1 err=3 No such process
+[B] canary 113
+
+[C] U class -- 568..676 (a death here names the first dereferencing handler)
+CALL 568 U
+[568] U -> -1 err=78 Function not implemented
+CALL 569 U
+[569] U -> -1 err=78 Function not implemented
+CALL 572 U
+[572] U -> 0 err=78 Function not implemented
+CALL 574 U
+[574] U -> -1 err=78 Function not implemented
+CALL 575 U
+[575] U -> -1 err=78 Function not implemented
+CALL 576 U
+[576] U -> -1 err=78 Function not implemented
+CALL 577 U
+[577] U -> -1 err=78 Function not implemented
+CALL 578 U
+[578] U -> -1 err=78 Function not implemented
+CALL 579 U
+[579] U -> -1 err=78 Function not implemented
+CALL 580 U
+[580] U -> -1 err=78 Function not implemented
+CALL 581 U
+[581] U -> -1 err=78 Function not implemented
+CALL 582 U
+[582] U -> -1 err=78 Function not implemented
+CALL 583 U
+[583] U -> -1 err=78 Function not implemented
+CALL 584 U
+[584] U -> -1 err=78 Function not implemented
+CALL 585 U
+[585] U -> 1 err=78 Function not implemented
+CALL 586 U
+[586] U -> -1 err=1 Operation not permitted
+CALL 587 U
+[587] U -> -1 err=3 No such process
+CALL 588 U
+[588] U -> -1 err=14 Bad address
+CALL 589 U
+[589] U -> -1 err=78 Function not implemented
+CALL 590 U
+[590] U -> -1 err=78 Function not implemented
+CALL 591 U
+[591] U -> -1 err=14 Bad address
+CALL 592 U
+[592] U -> -1 err=12 Cannot allocate memory
+CALL 593 U
+[593] U -> -1 err=14 Bad address
+CALL 594 U
+[594] U -> -1 err=2 No such file or directory
+CALL 595 U
+[595] U -> -1 err=3 No such process
+CALL 596 U
+[596] U -> 0 err=3 No such process
+CALL 597 U
+[597] U -> -1 err=78 Function not implemented
+CALL 598 U
+[598] U -> -1 err=14 Bad address
+CALL 599 U
+[599] U -> -1 err=1 Operation not permitted
+CALL 600 U
+[600] U -> -1 err=1 Operation not permitted
+CALL 601 U
+[601] U -> -1 err=78 Function not implemented
+CALL 602 U
+[602] U -> -1 err=1 Operation not permitted
+CALL 603 U
+[603] U -> -1 err=1 Operation not permitted
+CALL 604 U
+[604] U -> -1 err=1 Operation not permitted
+CALL 605 U
+[605] U -> -1 err=22 Invalid argument
+CALL 606 U
+[606] U -> 0 err=22 Invalid argument
+CALL 607 U
+[607] U -> -1 err=2 No such file or directory
+CALL 608 U
+[608] U -> -1 err=14 Bad address
+CALL 610 U
+[610] U -> -1 err=78 Function not implemented
+CALL 611 U
+[611] U -> -1 err=1 Operation not permitted
+CALL 612 U
+[612] U -> -1 err=22 Invalid argument
+CALL 613 U
+[613] U -> -1 err=1 Operation not permitted
+CALL 615 U
+[615] U -> -1 err=1 Operation not permitted
+CALL 616 U
+[616] U -> -1 err=3 No such process
+CALL 617 U
+[617] U -> 0 err=3 No such process
+CALL 618 U
+[618] U -> -1 err=1 Operation not permitted
+CALL 619 U
+[619] U -> -1 err=78 Function not implemented
+CALL 620 U
+[620] U -> 0 err=78 Function not implemented
+CALL 623 U
+[623] U -> -1 err=1 Operation not permitted
+CALL 624 U
+[624] U -> 3384 err=1 Operation not permitted
+CALL 625 U
+[625] U -> -1 err=22 Invalid argument
+CALL 626 U
+[626] U -> -1 err=22 Invalid argument
+CALL 627 U
+[627] U -> -1 err=78 Function not implemented
+CALL 628 U
+[628] U -> -1 err=22 Invalid argument
+CALL 629 U
+[629] U -> -1 err=22 Invalid argument
+CALL 630 U
+[630] U -> -1 err=2 No such file or directory
+CALL 632 U
+[632] U -> -1 err=3 No such process
+CALL 633 U
+[633] U -> -1 err=3 No such process
+CALL 634 U
+[634] U -> -1 err=3 No such process
+CALL 635 U
+[635] U -> -1 err=78 Function not implemented
+CALL 636 U
+[636] U -> -1 err=1 Operation not permitted
+CALL 637 U
+[637] U -> -1 err=22 Invalid argument
+CALL 638 U
+[638] U -> 0 err=22 Invalid argument
+CALL 639 U
+[639] U -> 0 err=22 Invalid argument
+CALL 640 U
+[640] U -> 0 err=22 Invalid argument
+CALL 641 U
+[641] U -> -1 err=78 Function not implemented
+CALL 642 U
+[642] U -> -1 err=1 Operation not permitted
+CALL 643 U
+[643] U -> 0 err=1 Operation not permitted
+CALL 644 U
+[644] U -> -1 err=78 Function not implemented
+CALL 645 U
+[645] U -> -1 err=78 Function not implemented
+CALL 646 U
+[646] U -> -1 err=1 Operation not permitted
+CALL 647 U
+[647] U -> -1 err=1 Operation not permitted
+CALL 648 U
+[648] U -> -1 err=1 Operation not permitted
+CALL 649 U
+[649] U -> -1 err=3 No such process
+CALL 652 U
+[652] U -> -1 err=1 Operation not permitted
+CALL 653 U
+[653] U -> -1 err=22 Invalid argument
+CALL 654 U
+[654] U -> -1 err=22 Invalid argument
+CALL 655 U
+[655] U -> -1 err=22 Invalid argument
+CALL 656 U
+[656] U -> -1 err=1 Operation not permitted
+CALL 657 U
+[657] U -> 0 err=1 Operation not permitted
+CALL 658 U
+[658] U -> -1 err=9 Bad file descriptor
+CALL 659 U
+[659] U -> -1 err=12 Cannot allocate memory
+CALL 660 U
+[660] U -> -1 err=14 Bad address
+CALL 661 U
+[661] U -> -1 err=78 Function not implemented
+CALL 662 U
+[662] U -> -1 err=22 Invalid argument
+CALL 663 U
+[663] U -> -1 err=22 Invalid argument
+CALL 664 U
+[664] U -> -1 err=22 Invalid argument
+CALL 665 U
+[665] U -> -1 err=78 Function not implemented
+CALL 666 U
+[666] U -> -1 err=22 Invalid argument
+CALL 667 U
+[667] U -> -1 err=78 Function not implemented
+CALL 669 U
+[669] U -> -1 err=22 Invalid argument
+CALL 670 U
+[670] U -> -1 err=16 Device busy
+CALL 671 U
+[671] U -> -1 err=1 Operation not permitted
+CALL 672 U
+[672] U -> -1 err=1 Operation not permitted
+CALL 674 U
+[674] U -> -1 err=22 Invalid argument
+CALL 675 U
+[675] U -> 0 err=22 Invalid argument
+CALL 676 U
+[676] U -> -1 err=22 Invalid argument
+[C] canary 113
+
+[E] alive pid=113
+=== PROBE 1342a COMPLETE ===
+```
+
+## FILE: results/phase35_dead_end_reruns/1343a_arg23_classes_20261109_101720.txt
+
+```
+=== PROBE 1343a: ARG2 / ARG3 POINTER CLASSES ===
+[0] U1=0x310F38000 U2=0x310F8C000 U3=0x310F90000 absent=0x7FFF00000000
+[0] sigaction(12, SIG_IGN) -> 0
+
+[A] all mapped
+532 A -1 1 Operation not permitted
+533 A -1 1 Operation not permitted
+534 A -1 1 Operation not permitted
+535 A -1 1 Operation not permitted
+536 A -1 1 Operation not permitted
+537 A -1 78 Function not implemented
+538 A -1 22 Invalid argument
+539 A -1 3 No such process
+540 A -1 3 No such process
+541 A -1 3 No such process
+542 A -1 22 Invalid argument
+543 A -1 22 Invalid argument
+544 A -1 3 No such process
+545 A -1 3 No such process
+546 A -1 3 No such process
+547 A 0 3 No such process
+548 A -1 22 Invalid argument
+549 A -1 22 Invalid argument
+550 A -1 3 No such process
+551 A -1 3 No such process
+552 A -1 3 No such process
+553 A -1 3 No such process
+554 A -1 3 No such process
+555 A -1 3 No such process
+556 A -1 3 No such process
+557 A 16901 3 No such process
+558 A -1 3 No such process
+559 A -1 22 Invalid argument
+560 A -1 16 Device busy
+563 A -1 3 No such process
+564 A -1 3 No such process
+565 A -1 22 Invalid argument
+566 A -1 22 Invalid argument
+567 A -1 22 Invalid argument
+568 A -1 78 Function not implemented
+569 A -1 78 Function not implemented
+572 A 0 78 Function not implemented
+574 A -1 78 Function not implemented
+575 A -1 78 Function not implemented
+576 A -1 78 Function not implemented
+577 A -1 78 Function not implemented
+578 A -1 78 Function not implemented
+579 A -1 78 Function not implemented
+580 A -1 78 Function not implemented
+581 A -1 78 Function not implemented
+582 A -1 78 Function not implemented
+583 A -1 78 Function not implemented
+584 A -1 78 Function not implemented
+585 A 1 78 Function not implemented
+586 A -1 1 Operation not permitted
+587 A -1 3 No such process
+588 A 0 3 No such process
+589 A -1 78 Function not implemented
+590 A -1 78 Function not implemented
+591 A -1 3 No such process
+592 A 0 3 No such process
+593 A -1 22 Invalid argument
+594 A -1 22 Invalid argument
+595 A -1 3 No such process
+596 A 0 3 No such process
+597 A -1 78 Function not implemented
+598 A 0 78 Function not implemented
+599 A -1 1 Operation not permitted
+600 A -1 1 Operation not permitted
+601 A -1 78 Function not implemented
+602 A -1 1 Operation not permitted
+603 A -1 1 Operation not permitted
+604 A -1 1 Operation not permitted
+605 A -1 22 Invalid argument
+606 A 0 22 Invalid argument
+607 A -1 2 No such file or directory
+608 A -1 22 Invalid argument
+610 A -1 78 Function not implemented
+611 A -1 1 Operation not permitted
+612 A -1 22 Invalid argument
+613 A -1 1 Operation not permitted
+615 A -1 1 Operation not permitted
+616 A -1 3 No such process
+617 A 0 3 No such process
+618 A -1 1 Operation not permitted
+619 A -1 78 Function not implemented
+620 A 0 78 Function not implemented
+623 A -1 1 Operation not permitted
+624 A 3401 1 Operation not permitted
+625 A -1 22 Invalid argument
+626 A -1 22 Invalid argument
+627 A -1 78 Function not implemented
+628 A -1 22 Invalid argument
+629 A -1 22 Invalid argument
+630 A -1 2 No such file or directory
+632 A -1 3 No such process
+633 A -1 3 No such process
+634 A -1 3 No such process
+635 A -1 78 Function not implemented
+636 A -1 1 Operation not permitted
+637 A -1 1 Operation not permitted
+638 A 0 1 Operation not permitted
+639 A 0 1 Operation not permitted
+640 A 0 1 Operation not permitted
+641 A -1 78 Function not implemented
+642 A -1 1 Operation not permitted
+643 A 0 1 Operation not permitted
+644 A -1 78 Function not implemented
+645 A -1 78 Function not implemented
+646 A -1 1 Operation not permitted
+647 A -1 1 Operation not permitted
+648 A -1 1 Operation not permitted
+649 A -1 3 No such process
+652 A -1 1 Operation not permitted
+653 A -1 22 Invalid argument
+654 A -1 22 Invalid argument
+655 A -1 22 Invalid argument
+656 A -1 1 Operation not permitted
+657 A -1 22 Invalid argument
+658 A -1 9 Bad file descriptor
+659 A 0 9 Bad file descriptor
+660 A -1 22 Invalid argument
+661 A -1 78 Function not implemented
+662 A -1 22 Invalid argument
+663 A -1 22 Invalid argument
+664 A -1 22 Invalid argument
+665 A -1 78 Function not implemented
+666 A -1 22 Invalid argument
+667 A -1 78 Function not implemented
+669 A -1 22 Invalid argument
+670 A -1 22 Invalid argument
+671 A -1 1 Operation not permitted
+672 A -1 1 Operation not permitted
+674 A -1 22 Invalid argument
+675 A 0 22 Invalid argument
+676 A -1 22 Invalid argument
+[A] canary 113
+
+[B] arg2 absent
+532 B -1 1 Operation not permitted
+533 B -1 1 Operation not permitted
+534 B -1 1 Operation not permitted
+535 B -1 1 Operation not permitted
+536 B -1 1 Operation not permitted
+537 B -1 78 Function not implemented
+538 B 518 78 Function not implemented
+539 B -1 3 No such process
+540 B -1 3 No such process
+541 B -1 3 No such process
+542 B -1 22 Invalid argument
+543 B -1 22 Invalid argument
+544 B -1 3 No such process
+545 B -1 3 No such process
+546 B -1 3 No such process
+547 B -1 14 Bad address
+548 B 0 14 Bad address
+549 B -1 22 Invalid argument
+550 B -1 3 No such process
+551 B -1 3 No such process
+552 B -1 3 No such process
+553 B -1 22 Invalid argument
+554 B -1 22 Invalid argument
+555 B -1 22 Invalid argument
+556 B -1 3 No such process
+557 B 519 3 No such process
+558 B -1 3 No such process
+559 B -1 22 Invalid argument
+560 B -1 16 Device busy
+563 B -1 3 No such process
+564 B -1 3 No such process
+565 B -1 22 Invalid argument
+566 B -1 3 No such process
+567 B -1 3 No such process
+568 B -1 78 Function not implemented
+569 B -1 78 Function not implemented
+572 B 0 78 Function not implemented
+574 B -1 78 Function not implemented
+575 B -1 78 Function not implemented
+576 B -1 78 Function not implemented
+577 B -1 78 Function not implemented
+578 B -1 78 Function not implemented
+579 B -1 78 Function not implemented
+580 B -1 78 Function not implemented
+581 B -1 78 Function not implemented
+582 B -1 78 Function not implemented
+583 B -1 78 Function not implemented
+584 B -1 78 Function not implemented
+585 B 1 78 Function not implemented
+586 B -1 1 Operation not permitted
+587 B -1 3 No such process
+588 B -1 22 Invalid argument
+589 B -1 78 Function not implemented
+590 B -1 78 Function not implemented
+591 B -1 14 Bad address
+592 B 0 14 Bad address
+593 B -1 14 Bad address
+594 B -1 2 No such file or directory
+595 B -1 3 No such process
+596 B 0 3 No such process
+597 B -1 78 Function not implemented
+598 B -1 14 Bad address
+599 B -1 1 Operation not permitted
+600 B -1 1 Operation not permitted
+601 B -1 78 Function not implemented
+602 B -1 1 Operation not permitted
+603 B -1 1 Operation not permitted
+604 B -1 1 Operation not permitted
+605 B -1 22 Invalid argument
+606 B 0 22 Invalid argument
+607 B -1 2 No such file or directory
+608 B -1 22 Invalid argument
+610 B -1 78 Function not implemented
+611 B -1 1 Operation not permitted
+612 B -1 22 Invalid argument
+613 B -1 1 Operation not permitted
+615 B -1 1 Operation not permitted
+616 B -1 3 No such process
+617 B 0 3 No such process
+618 B -1 1 Operation not permitted
+619 B -1 78 Function not implemented
+620 B 0 78 Function not implemented
+623 B -1 1 Operation not permitted
+624 B 3401 1 Operation not permitted
+625 B -1 22 Invalid argument
+626 B -1 22 Invalid argument
+627 B -1 78 Function not implemented
+628 B -1 22 Invalid argument
+629 B -1 22 Invalid argument
+630 B -1 2 No such file or directory
+632 B -1 3 No such process
+633 B -1 3 No such process
+634 B -1 3 No such process
+635 B -1 78 Function not implemented
+636 B -1 1 Operation not permitted
+637 B -1 1 Operation not permitted
+638 B -1 14 Bad address
+639 B 0 14 Bad address
+640 B 0 14 Bad address
+641 B -1 78 Function not implemented
+642 B -1 1 Operation not permitted
+643 B 0 1 Operation not permitted
+644 B -1 78 Function not implemented
+645 B -1 78 Function not implemented
+646 B -1 1 Operation not permitted
+647 B -1 1 Operation not permitted
+648 B -1 1 Operation not permitted
+649 B -1 3 No such process
+652 B -1 1 Operation not permitted
+653 B -1 22 Invalid argument
+654 B -1 22 Invalid argument
+655 B -1 22 Invalid argument
+656 B -1 1 Operation not permitted
+657 B 0 1 Operation not permitted
+658 B -1 9 Bad file descriptor
+659 B 0 9 Bad file descriptor
+660 B -1 14 Bad address
+661 B -1 78 Function not implemented
+662 B -1 22 Invalid argument
+663 B -1 22 Invalid argument
+664 B -1 22 Invalid argument
+665 B -1 78 Function not implemented
+666 B -1 22 Invalid argument
+667 B -1 78 Function not implemented
+669 B -1 22 Invalid argument
+670 B -1 22 Invalid argument
+671 B -1 1 Operation not permitted
+672 B -1 1 Operation not permitted
+674 B -1 22 Invalid argument
+675 B 0 22 Invalid argument
+676 B -1 22 Invalid argument
+[B] canary 113
+
+[C] arg3 absent
+532 C -1 1 Operation not permitted
+533 C -1 1 Operation not permitted
+534 C -1 1 Operation not permitted
+535 C -1 1 Operation not permitted
+536 C -1 1 Operation not permitted
+537 C -1 78 Function not implemented
+538 C -1 22 Invalid argument
+539 C -1 3 No such process
+540 C -1 3 No such process
+541 C -1 3 No such process
+542 C -1 22 Invalid argument
+543 C -1 22 Invalid argument
+544 C -1 3 No such process
+545 C -1 3 No such process
+546 C -1 3 No such process
+547 C 0 3 No such process
+548 C -1 22 Invalid argument
+549 C -1 22 Invalid argument
+550 C -1 3 No such process
+551 C -1 3 No such process
+552 C -1 3 No such process
+553 C -1 14 Bad address
+554 C -1 3 No such process
+555 C -1 3 No such process
+556 C -1 3 No such process
+557 C 520 3 No such process
+558 C -1 3 No such process
+559 C -1 22 Invalid argument
+560 C -1 16 Device busy
+563 C -1 3 No such process
+564 C -1 3 No such process
+565 C -1 22 Invalid argument
+566 C -1 22 Invalid argument
+567 C -1 22 Invalid argument
+568 C -1 78 Function not implemented
+569 C -1 78 Function not implemented
+572 C 0 78 Function not implemented
+574 C -1 78 Function not implemented
+575 C -1 78 Function not implemented
+576 C -1 78 Function not implemented
+577 C -1 78 Function not implemented
+578 C -1 78 Function not implemented
+579 C -1 78 Function not implemented
+580 C -1 78 Function not implemented
+581 C -1 78 Function not implemented
+582 C -1 78 Function not implemented
+583 C -1 78 Function not implemented
+584 C -1 78 Function not implemented
+585 C 1 78 Function not implemented
+586 C -1 1 Operation not permitted
+587 C -1 3 No such process
+588 C -1 14 Bad address
+589 C -1 78 Function not implemented
+590 C -1 78 Function not implemented
+591 C -1 3 No such process
+592 C -1 14 Bad address
+593 C -1 22 Invalid argument
+594 C -1 22 Invalid argument
+595 C -1 3 No such process
+596 C 0 3 No such process
+597 C -1 78 Function not implemented
+598 C 0 78 Function not implemented
+599 C -1 1 Operation not permitted
+600 C -1 1 Operation not permitted
+601 C -1 78 Function not implemented
+602 C -1 1 Operation not permitted
+603 C -1 1 Operation not permitted
+604 C -1 1 Operation not permitted
+605 C -1 22 Invalid argument
+606 C 0 22 Invalid argument
+607 C -1 2 No such file or directory
+608 C -1 14 Bad address
+610 C -1 78 Function not implemented
+611 C -1 1 Operation not permitted
+612 C -1 22 Invalid argument
+613 C -1 1 Operation not permitted
+615 C -1 1 Operation not permitted
+616 C -1 3 No such process
+617 C 0 3 No such process
+618 C -1 1 Operation not permitted
+619 C -1 78 Function not implemented
+620 C 0 78 Function not implemented
+623 C -1 1 Operation not permitted
+624 C 3401 1 Operation not permitted
+625 C -1 22 Invalid argument
+626 C -1 22 Invalid argument
+627 C -1 78 Function not implemented
+628 C -1 16 Device busy
+629 C -1 22 Invalid argument
+630 C -1 2 No such file or directory
+632 C -1 3 No such process
+633 C -1 3 No such process
+634 C -1 3 No such process
+635 C -1 78 Function not implemented
+636 C -1 1 Operation not permitted
+637 C -1 1 Operation not permitted
+638 C -1 14 Bad address
+639 C -1 14 Bad address
+640 C 0 14 Bad address
+641 C -1 78 Function not implemented
+642 C -1 1 Operation not permitted
+643 C 0 1 Operation not permitted
+644 C -1 78 Function not implemented
+645 C -1 78 Function not implemented
+646 C -1 1 Operation not permitted
+647 C -1 1 Operation not permitted
+648 C -1 1 Operation not permitted
+649 C -1 3 No such process
+652 C -1 1 Operation not permitted
+653 C -1 22 Invalid argument
+654 C -1 22 Invalid argument
+655 C -1 22 Invalid argument
+656 C -1 1 Operation not permitted
+657 C -1 22 Invalid argument
+658 C -1 9 Bad file descriptor
+659 C -1 14 Bad address
+660 C -1 22 Invalid argument
+661 C -1 78 Function not implemented
+662 C -1 22 Invalid argument
+663 C -1 22 Invalid argument
+664 C -1 22 Invalid argument
+665 C -1 78 Function not implemented
+666 C -1 22 Invalid argument
+667 C -1 78 Function not implemented
+669 C -1 22 Invalid argument
+670 C -1 22 Invalid argument
+671 C -1 1 Operation not permitted
+672 C -1 1 Operation not permitted
+674 C -1 22 Invalid argument
+675 C 0 22 Invalid argument
+676 C -1 22 Invalid argument
+[C] canary 113
+
+[E] alive pid=113
+=== PROBE 1343a COMPLETE ===
+```
+
+## FILE: results/phase35_dead_end_reruns/1343b_outpage_scorer_20261109_101811.txt
+
+```
+=== PROBE 1343b: DO THESE CALLS WRITE INTO THEIR POINTER ARGUMENTS ===
+[0] U1=0x310F94000 U2=0x310F98000 U3=0x310FCC000 absent=0x7FFF00000000
+[0] sigaction(12, SIG_IGN) -> 0
+[string "-- CRASH_CLASS: MODERATE (the same call sha..."]:98: attempt to call global 'rq' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: MODERATE (the same call sha..."]:98: in function 'scan'
+	[string "-- CRASH_CLASS: MODERATE (the same call sha..."]:138: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>
+```
+
+## FILE: results/phase35_dead_end_reruns/1343b_outpage_scorer_20261109_101855.txt
+
+```
+=== PROBE 1343b: DO THESE CALLS WRITE INTO THEIR POINTER ARGUMENTS ===
+[0] U1=0x310FD0000 U2=0x310FD4000 U3=0x310FD8000 absent=0x7FFF00000000
+[0] sigaction(12, SIG_IGN) -> 0
+clean 540 rv=-1
+W 547 a2 cnt=6 end=42424242,42424242 0=10fd0000 4=3 8=10fd4000 c=3
+     547 rv=0 err=3 No such process
+clean 560 rv=-1
+clean 580 rv=-1
+W 592 a1 cnt=39 end=42424242,42424242 0=0 4=2001 8=2 c=11
+W 592 a3 cnt=2 end=42424242,42424242 0=27 4=0
+     592 rv=0 err=63 File name too long
+W 598 a1 cnt=2 end=42424242,42424242 0=cfe8000 4=0
+W 598 a2 cnt=2 end=42424242,42424242 0=60 4=0
+     598 rv=0 err=78 Function not implemented
+clean 600 rv=-1
+clean 620 rv=0
+W 638 a2 cnt=2 end=42424242,42424242 0=10fd0000 4=3
+W 638 a3 cnt=4 end=42424242,42424242 0=f615db90 4=0 8=0 c=0
+     638 rv=0 err=1 Operation not permitted
+W 639 a3 cnt=2 end=42424242,42424242 0=10fd0000 4=3
+     639 rv=0 err=1 Operation not permitted
+clean 640 rv=0
+W 657 a3 cnt=1 end=42424242,42424242 0=0
+     657 rv=-1 err=22 Invalid argument
+W 659 a1 cnt=3 end=42424242,42424242 0=0 4=13 8=14
+W 659 a3 cnt=2 end=42424242,42424242 0=3 4=0
+     659 rv=0 err=9 Bad file descriptor
+clean 660 rv=-1
+
+[E] numbers with a write: 7
+[E] alive pid=113
+=== PROBE 1343b COMPLETE ===
+```
+
+## FILE: results/phase35_dead_end_reruns/1344a_arg23_kernel_class_20261109_102818.txt
+
+```
+=== PROBE 1344a: ARG2 / ARG3 KERNEL POINTER CLASS ===
+[0] U1=0x31102C000 U2=0x311030000 U3=0x311034000 K=0xFFFFFFFFC1000000
+[0] sigaction(12, SIG_IGN) -> 0
+
+[A] all mapped
+532 A -1 1 Operation not permitted
+533 A -1 1 Operation not permitted
+534 A -1 1 Operation not permitted
+535 A -1 1 Operation not permitted
+536 A -1 1 Operation not permitted
+537 A -1 78 Function not implemented
+538 A -1 22 Invalid argument
+539 A -1 3 No such process
+540 A -1 3 No such process
+541 A -1 3 No such process
+542 A -1 22 Invalid argument
+543 A -1 22 Invalid argument
+544 A -1 3 No such process
+545 A -1 3 No such process
+546 A -1 3 No such process
+547 A 0 3 No such process
+548 A -1 22 Invalid argument
+549 A -1 22 Invalid argument
+550 A -1 3 No such process
+551 A -1 3 No such process
+552 A -1 3 No such process
+553 A -1 3 No such process
+554 A -1 3 No such process
+555 A -1 3 No such process
+556 A -1 3 No such process
+557 A 521 3 No such process
+558 A -1 3 No such process
+559 A -1 22 Invalid argument
+560 A -1 16 Device busy
+563 A -1 3 No such process
+564 A -1 3 No such process
+565 A -1 22 Invalid argument
+566 A -1 22 Invalid argument
+567 A -1 22 Invalid argument
+568 A -1 78 Function not implemented
+569 A -1 78 Function not implemented
+572 A 0 78 Function not implemented
+574 A -1 78 Function not implemented
+575 A -1 78 Function not implemented
+576 A -1 78 Function not implemented
+577 A -1 78 Function not implemented
+578 A -1 78 Function not implemented
+579 A -1 78 Function not implemented
+580 A -1 78 Function not implemented
+581 A -1 78 Function not implemented
+582 A -1 78 Function not implemented
+583 A -1 78 Function not implemented
+584 A -1 78 Function not implemented
+585 A 1 78 Function not implemented
+586 A -1 1 Operation not permitted
+587 A -1 3 No such process
+588 A 0 3 No such process
+589 A -1 78 Function not implemented
+590 A -1 78 Function not implemented
+591 A -1 3 No such process
+592 A 0 3 No such process
+593 A -1 22 Invalid argument
+594 A -1 22 Invalid argument
+595 A -1 3 No such process
+596 A 0 3 No such process
+597 A -1 78 Function not implemented
+598 A 0 78 Function not implemented
+599 A -1 1 Operation not permitted
+600 A -1 1 Operation not permitted
+601 A -1 78 Function not implemented
+602 A -1 1 Operation not permitted
+603 A -1 1 Operation not permitted
+604 A -1 1 Operation not permitted
+605 A -1 22 Invalid argument
+606 A 0 22 Invalid argument
+607 A -1 2 No such file or directory
+608 A -1 22 Invalid argument
+610 A -1 78 Function not implemented
+611 A -1 1 Operation not permitted
+612 A -1 22 Invalid argument
+613 A -1 1 Operation not permitted
+615 A -1 1 Operation not permitted
+616 A -1 3 No such process
+617 A 0 3 No such process
+618 A -1 1 Operation not permitted
+619 A -1 78 Function not implemented
+620 A 0 78 Function not implemented
+623 A -1 1 Operation not permitted
+624 A 3448 1 Operation not permitted
+625 A -1 22 Invalid argument
+626 A -1 22 Invalid argument
+627 A -1 78 Function not implemented
+628 A -1 22 Invalid argument
+629 A -1 22 Invalid argument
+630 A -1 2 No such file or directory
+632 A -1 3 No such process
+633 A -1 3 No such process
+634 A -1 3 No such process
+635 A -1 78 Function not implemented
+636 A -1 1 Operation not permitted
+637 A -1 1 Operation not permitted
+638 A 0 1 Operation not permitted
+639 A 0 1 Operation not permitted
+640 A 0 1 Operation not permitted
+641 A -1 78 Function not implemented
+642 A -1 1 Operation not permitted
+643 A 0 1 Operation not permitted
+644 A -1 78 Function not implemented
+645 A -1 78 Function not implemented
+646 A -1 1 Operation not permitted
+647 A -1 1 Operation not permitted
+648 A -1 1 Operation not permitted
+649 A -1 3 No such process
+652 A -1 1 Operation not permitted
+653 A -1 22 Invalid argument
+654 A -1 22 Invalid argument
+655 A -1 22 Invalid argument
+656 A -1 1 Operation not permitted
+657 A -1 22 Invalid argument
+658 A -1 9 Bad file descriptor
+659 A 0 9 Bad file descriptor
+660 A -1 22 Invalid argument
+661 A -1 78 Function not implemented
+662 A -1 22 Invalid argument
+663 A -1 22 Invalid argument
+664 A -1 22 Invalid argument
+665 A -1 78 Function not implemented
+666 A -1 22 Invalid argument
+667 A -1 78 Function not implemented
+669 A -1 22 Invalid argument
+670 A -1 22 Invalid argument
+671 A -1 1 Operation not permitted
+672 A -1 1 Operation not permitted
+674 A -1 22 Invalid argument
+675 A 0 22 Invalid argument
+676 A -1 22 Invalid argument
+[A] canary 113
+
+[B] arg2 = kernel image base
+532 B -1 1 Operation not permitted
+533 B -1 1 Operation not permitted
+534 B -1 1 Operation not permitted
+535 B -1 1 Operation not permitted
+536 B -1 1 Operation not permitted
+537 B -1 78 Function not implemented
+538 B 522 78 Function not implemented
+539 B -1 3 No such process
+540 B -1 3 No such process
+541 B -1 3 No such process
+542 B -1 22 Invalid argument
+543 B -1 22 Invalid argument
+544 B -1 3 No such process
+545 B -1 3 No such process
+546 B -1 3 No such process
+547 B -1 14 Bad address
+548 B 0 14 Bad address
+549 B -1 22 Invalid argument
+550 B -1 3 No such process
+551 B -1 3 No such process
+552 B -1 3 No such process
+553 B -1 22 Invalid argument
+554 B -1 22 Invalid argument
+555 B -1 22 Invalid argument
+556 B -1 3 No such process
+557 B 523 3 No such process
+558 B -1 3 No such process
+559 B -1 22 Invalid argument
+560 B -1 16 Device busy
+563 B -1 3 No such process
+564 B -1 3 No such process
+565 B -1 22 Invalid argument
+566 B -1 3 No such process
+567 B -1 3 No such process
+568 B -1 78 Function not implemented
+569 B -1 78 Function not implemented
+572 B 0 78 Function not implemented
+574 B -1 78 Function not implemented
+575 B -1 78 Function not implemented
+576 B -1 78 Function not implemented
+577 B -1 78 Function not implemented
+578 B -1 78 Function not implemented
+579 B -1 78 Function not implemented
+580 B -1 78 Function not implemented
+581 B -1 78 Function not implemented
+582 B -1 78 Function not implemented
+583 B -1 78 Function not implemented
+584 B -1 78 Function not implemented
+585 B 1 78 Function not implemented
+586 B -1 1 Operation not permitted
+587 B -1 3 No such process
+588 B -1 22 Invalid argument
+589 B -1 78 Function not implemented
+590 B -1 78 Function not implemented
+591 B -1 14 Bad address
+592 B 0 14 Bad address
+593 B -1 14 Bad address
+594 B -1 2 No such file or directory
+595 B -1 3 No such process
+596 B 0 3 No such process
+597 B -1 78 Function not implemented
+598 B -1 14 Bad address
+599 B -1 1 Operation not permitted
+600 B -1 1 Operation not permitted
+601 B -1 78 Function not implemented
+602 B -1 1 Operation not permitted
+603 B -1 1 Operation not permitted
+604 B -1 1 Operation not permitted
+605 B -1 22 Invalid argument
+606 B 0 22 Invalid argument
+607 B -1 2 No such file or directory
+608 B -1 22 Invalid argument
+610 B -1 78 Function not implemented
+611 B -1 1 Operation not permitted
+612 B -1 22 Invalid argument
+613 B -1 1 Operation not permitted
+615 B -1 1 Operation not permitted
+616 B -1 3 No such process
+617 B 0 3 No such process
+618 B -1 1 Operation not permitted
+619 B -1 78 Function not implemented
+620 B 0 78 Function not implemented
+623 B -1 1 Operation not permitted
+624 B 3448 1 Operation not permitted
+625 B -1 22 Invalid argument
+626 B -1 22 Invalid argument
+627 B -1 78 Function not implemented
+628 B -1 22 Invalid argument
+629 B -1 22 Invalid argument
+630 B -1 2 No such file or directory
+632 B -1 3 No such process
+633 B -1 3 No such process
+634 B -1 3 No such process
+635 B -1 78 Function not implemented
+636 B -1 1 Operation not permitted
+637 B -1 22 Invalid argument
+638 B -1 14 Bad address
+639 B 0 14 Bad address
+640 B 0 14 Bad address
+641 B -1 78 Function not implemented
+642 B -1 1 Operation not permitted
+643 B 0 1 Operation not permitted
+644 B -1 78 Function not implemented
+645 B -1 78 Function not implemented
+646 B -1 1 Operation not permitted
+647 B -1 1 Operation not permitted
+648 B -1 1 Operation not permitted
+649 B -1 3 No such process
+652 B -1 1 Operation not permitted
+653 B -1 22 Invalid argument
+654 B -1 22 Invalid argument
+655 B -1 22 Invalid argument
+656 B -1 1 Operation not permitted
+657 B 0 1 Operation not permitted
+658 B -1 9 Bad file descriptor
+659 B 0 9 Bad file descriptor
+660 B -1 14 Bad address
+661 B -1 78 Function not implemented
+662 B -1 22 Invalid argument
+663 B -1 22 Invalid argument
+664 B -1 22 Invalid argument
+665 B -1 78 Function not implemented
+666 B -1 22 Invalid argument
+667 B -1 78 Function not implemented
+669 B -1 22 Invalid argument
+670 B -1 22 Invalid argument
+671 B -1 1 Operation not permitted
+672 B -1 1 Operation not permitted
+674 B -1 22 Invalid argument
+675 B 0 22 Invalid argument
+676 B -1 22 Invalid argument
+[B] canary 113
+
+[C] arg3 = kernel image base
+532 C -1 1 Operation not permitted
+533 C -1 1 Operation not permitted
+534 C -1 1 Operation not permitted
+535 C -1 1 Operation not permitted
+536 C -1 1 Operation not permitted
+537 C -1 78 Function not implemented
+538 C -1 22 Invalid argument
+539 C -1 3 No such process
+540 C -1 3 No such process
+541 C -1 3 No such process
+542 C -1 22 Invalid argument
+543 C -1 22 Invalid argument
+544 C -1 3 No such process
+545 C -1 3 No such process
+546 C -1 3 No such process
+547 C 0 3 No such process
+548 C -1 22 Invalid argument
+549 C -1 22 Invalid argument
+550 C -1 3 No such process
+551 C -1 3 No such process
+552 C -1 3 No such process
+553 C -1 14 Bad address
+554 C -1 3 No such process
+555 C -1 3 No such process
+556 C -1 3 No such process
+557 C 524 3 No such process
+558 C -1 3 No such process
+559 C -1 22 Invalid argument
+560 C -1 16 Device busy
+563 C -1 3 No such process
+564 C -1 3 No such process
+565 C -1 22 Invalid argument
+566 C -1 22 Invalid argument
+567 C -1 22 Invalid argument
+568 C -1 78 Function not implemented
+569 C -1 78 Function not implemented
+572 C 0 78 Function not implemented
+574 C -1 78 Function not implemented
+575 C -1 78 Function not implemented
+576 C -1 78 Function not implemented
+577 C -1 78 Function not implemented
+578 C -1 78 Function not implemented
+579 C -1 78 Function not implemented
+580 C -1 78 Function not implemented
+581 C -1 78 Function not implemented
+582 C -1 78 Function not implemented
+583 C -1 78 Function not implemented
+584 C -1 78 Function not implemented
+585 C 1 78 Function not implemented
+586 C -1 1 Operation not permitted
+587 C -1 3 No such process
+588 C -1 14 Bad address
+589 C -1 78 Function not implemented
+590 C -1 78 Function not implemented
+591 C -1 3 No such process
+592 C -1 14 Bad address
+593 C -1 22 Invalid argument
+594 C -1 22 Invalid argument
+595 C -1 3 No such process
+596 C 0 3 No such process
+597 C -1 78 Function not implemented
+598 C 0 78 Function not implemented
+599 C -1 1 Operation not permitted
+600 C -1 1 Operation not permitted
+601 C -1 78 Function not implemented
+602 C -1 1 Operation not permitted
+603 C -1 1 Operation not permitted
+604 C -1 1 Operation not permitted
+605 C -1 22 Invalid argument
+606 C 0 22 Invalid argument
+607 C -1 2 No such file or directory
+608 C -1 14 Bad address
+610 C -1 78 Function not implemented
+611 C -1 1 Operation not permitted
+612 C -1 22 Invalid argument
+613 C -1 1 Operation not permitted
+615 C -1 1 Operation not permitted
+616 C -1 3 No such process
+617 C 0 3 No such process
+618 C -1 1 Operation not permitted
+619 C -1 78 Function not implemented
+620 C 0 78 Function not implemented
+623 C -1 1 Operation not permitted
+624 C 3448 1 Operation not permitted
+625 C -1 22 Invalid argument
+626 C -1 22 Invalid argument
+627 C -1 78 Function not implemented
+628 C -1 16 Device busy
+629 C -1 22 Invalid argument
+630 C -1 2 No such file or directory
+632 C -1 3 No such process
+633 C -1 3 No such process
+634 C -1 3 No such process
+635 C -1 78 Function not implemented
+636 C -1 1 Operation not permitted
+637 C -1 1 Operation not permitted
+638 C -1 14 Bad address
+639 C -1 14 Bad address
+640 C 0 14 Bad address
+641 C -1 78 Function not implemented
+642 C -1 1 Operation not permitted
+643 C 0 1 Operation not permitted
+644 C -1 78 Function not implemented
+645 C -1 78 Function not implemented
+646 C -1 1 Operation not permitted
+647 C -1 1 Operation not permitted
+648 C -1 1 Operation not permitted
+649 C -1 3 No such process
+652 C -1 1 Operation not permitted
+653 C -1 22 Invalid argument
+654 C -1 22 Invalid argument
+655 C -1 22 Invalid argument
+656 C -1 1 Operation not permitted
+657 C -1 22 Invalid argument
+658 C -1 9 Bad file descriptor
+659 C -1 14 Bad address
+660 C -1 22 Invalid argument
+661 C -1 78 Function not implemented
+662 C -1 22 Invalid argument
+663 C -1 22 Invalid argument
+664 C -1 22 Invalid argument
+665 C -1 78 Function not implemented
+666 C -1 22 Invalid argument
+667 C -1 78 Function not implemented
+669 C -1 22 Invalid argument
+670 C -1 22 Invalid argument
+671 C -1 1 Operation not permitted
+672 C -1 1 Operation not permitted
+674 C -1 22 Invalid argument
+675 C 0 22 Invalid argument
+676 C -1 22 Invalid argument
+[C] canary 113
+
+[E] alive pid=113
+=== PROBE 1344a COMPLETE ===
+```
+
+## FILE: results/phase35_dead_end_reruns/1345a_arg456_classes_20261109_102955.txt
+
+```
+=== PROBE 1345a: ARG4 / ARG5 / ARG6 POINTER CLASSES ===
+[0] U1=0x311038000 U2=0x3110BC000 U3=0x3110C0000 P4=0x3110C4000 P5=0x3110C8000 P6=0x3110CC000
+[0] sigaction(12, SIG_IGN) -> 0
+
+[A] args 1-6 mapped
+532 A -1 1 Operation not permitted
+533 A -1 1 Operation not permitted
+534 A -1 1 Operation not permitted
+535 A -1 1 Operation not permitted
+536 A -1 1 Operation not permitted
+537 A -1 78 Function not implemented
+538 A -1 22 Invalid argument
+539 A -1 3 No such process
+540 A -1 3 No such process
+541 A -1 3 No such process
+542 A -1 22 Invalid argument
+543 A -1 22 Invalid argument
+544 A -1 3 No such process
+545 A -1 3 No such process
+546 A -1 3 No such process
+547 A 0 3 No such process
+548 A -1 22 Invalid argument
+549 A -1 22 Invalid argument
+550 A -1 3 No such process
+551 A -1 3 No such process
+552 A -1 3 No such process
+553 A -1 3 No such process
+554 A -1 3 No such process
+555 A -1 3 No such process
+556 A -1 3 No such process
+557 A 525 3 No such process
+558 A -1 3 No such process
+559 A -1 22 Invalid argument
+560 A -1 16 Device busy
+563 A -1 3 No such process
+564 A -1 3 No such process
+565 A -1 22 Invalid argument
+566 A -1 22 Invalid argument
+567 A -1 22 Invalid argument
+568 A -1 78 Function not implemented
+569 A -1 78 Function not implemented
+572 A 0 78 Function not implemented
+574 A -1 78 Function not implemented
+575 A -1 78 Function not implemented
+576 A -1 78 Function not implemented
+577 A -1 78 Function not implemented
+578 A -1 78 Function not implemented
+579 A -1 78 Function not implemented
+580 A -1 78 Function not implemented
+581 A -1 78 Function not implemented
+582 A -1 78 Function not implemented
+583 A -1 78 Function not implemented
+584 A -1 78 Function not implemented
+585 A 1 78 Function not implemented
+586 A -1 1 Operation not permitted
+587 A -1 3 No such process
+588 A 0 3 No such process
+589 A -1 78 Function not implemented
+590 A -1 78 Function not implemented
+591 A -1 3 No such process
+592 A 0 3 No such process
+593 A -1 22 Invalid argument
+594 A -1 22 Invalid argument
+595 A -1 3 No such process
+596 A 0 3 No such process
+597 A -1 78 Function not implemented
+598 A 0 78 Function not implemented
+599 A -1 1 Operation not permitted
+600 A -1 1 Operation not permitted
+601 A -1 78 Function not implemented
+602 A -1 1 Operation not permitted
+603 A -1 1 Operation not permitted
+604 A -1 1 Operation not permitted
+605 A -1 22 Invalid argument
+606 A 0 22 Invalid argument
+607 A -1 2 No such file or directory
+608 A -1 22 Invalid argument
+610 A -1 78 Function not implemented
+611 A -1 1 Operation not permitted
+612 A -1 22 Invalid argument
+613 A -1 1 Operation not permitted
+615 A -1 1 Operation not permitted
+616 A -1 3 No such process
+617 A 0 3 No such process
+618 A -1 1 Operation not permitted
+619 A -1 78 Function not implemented
+620 A 0 78 Function not implemented
+623 A -1 1 Operation not permitted
+624 A 3480 1 Operation not permitted
+625 A -1 22 Invalid argument
+626 A -1 22 Invalid argument
+627 A -1 78 Function not implemented
+628 A -1 22 Invalid argument
+629 A -1 22 Invalid argument
+630 A -1 2 No such file or directory
+632 A -1 3 No such process
+633 A -1 3 No such process
+634 A -1 3 No such process
+635 A -1 78 Function not implemented
+636 A -1 1 Operation not permitted
+637 A -1 1 Operation not permitted
+638 A 0 1 Operation not permitted
+639 A 0 1 Operation not permitted
+640 A 0 1 Operation not permitted
+641 A -1 78 Function not implemented
+642 A -1 1 Operation not permitted
+643 A 0 1 Operation not permitted
+644 A -1 78 Function not implemented
+645 A -1 78 Function not implemented
+646 A -1 1 Operation not permitted
+647 A -1 1 Operation not permitted
+648 A -1 1 Operation not permitted
+649 A -1 3 No such process
+652 A -1 1 Operation not permitted
+653 A -1 22 Invalid argument
+654 A -1 22 Invalid argument
+655 A -1 22 Invalid argument
+656 A -1 1 Operation not permitted
+657 A -1 22 Invalid argument
+658 A -1 9 Bad file descriptor
+659 A 0 9 Bad file descriptor
+660 A -1 22 Invalid argument
+661 A -1 78 Function not implemented
+662 A -1 22 Invalid argument
+663 A -1 22 Invalid argument
+664 A -1 22 Invalid argument
+665 A -1 78 Function not implemented
+666 A -1 22 Invalid argument
+667 A -1 78 Function not implemented
+669 A -1 22 Invalid argument
+670 A -1 22 Invalid argument
+671 A -1 1 Operation not permitted
+672 A -1 1 Operation not permitted
+674 A -1 22 Invalid argument
+675 A 0 22 Invalid argument
+676 A -1 22 Invalid argument
+[A] canary 113
+
+[B] arg4 zero -- the shape every earlier sweep used
+532 B -1 1 Operation not permitted
+533 B -1 1 Operation not permitted
+534 B -1 1 Operation not permitted
+535 B -1 1 Operation not permitted
+536 B -1 1 Operation not permitted
+537 B -1 78 Function not implemented
+538 B -1 22 Invalid argument
+539 B -1 3 No such process
+540 B -1 3 No such process
+541 B -1 3 No such process
+542 B -1 22 Invalid argument
+543 B -1 22 Invalid argument
+544 B -1 3 No such process
+545 B -1 3 No such process
+546 B -1 3 No such process
+547 B 0 3 No such process
+548 B -1 22 Invalid argument
+549 B -1 22 Invalid argument
+550 B -1 3 No such process
+551 B -1 3 No such process
+552 B -1 3 No such process
+553 B -1 3 No such process
+554 B -1 3 No such process
+555 B -1 3 No such process
+556 B -1 3 No such process
+557 B 526 3 No such process
+558 B -1 3 No such process
+559 B -1 22 Invalid argument
+560 B -1 16 Device busy
+563 B -1 3 No such process
+564 B -1 3 No such process
+565 B -1 22 Invalid argument
+566 B -1 22 Invalid argument
+567 B -1 22 Invalid argument
+568 B -1 78 Function not implemented
+569 B -1 78 Function not implemented
+572 B 0 78 Function not implemented
+574 B -1 78 Function not implemented
+575 B -1 78 Function not implemented
+576 B -1 78 Function not implemented
+577 B -1 78 Function not implemented
+578 B -1 78 Function not implemented
+579 B -1 78 Function not implemented
+580 B -1 78 Function not implemented
+581 B -1 78 Function not implemented
+582 B -1 78 Function not implemented
+583 B -1 78 Function not implemented
+584 B -1 78 Function not implemented
+585 B 1 78 Function not implemented
+586 B -1 1 Operation not permitted
+587 B -1 3 No such process
+588 B 0 3 No such process
+589 B -1 78 Function not implemented
+590 B -1 78 Function not implemented
+591 B -1 3 No such process
+592 B 0 3 No such process
+593 B -1 22 Invalid argument
+594 B -1 22 Invalid argument
+595 B -1 3 No such process
+596 B 0 3 No such process
+597 B -1 78 Function not implemented
+598 B 0 78 Function not implemented
+599 B -1 1 Operation not permitted
+600 B -1 1 Operation not permitted
+601 B -1 78 Function not implemented
+602 B -1 1 Operation not permitted
+603 B -1 1 Operation not permitted
+604 B -1 1 Operation not permitted
+605 B -1 22 Invalid argument
+606 B 0 22 Invalid argument
+607 B -1 2 No such file or directory
+608 B -1 22 Invalid argument
+610 B -1 78 Function not implemented
+611 B -1 1 Operation not permitted
+612 B -1 22 Invalid argument
+613 B -1 1 Operation not permitted
+615 B -1 1 Operation not permitted
+616 B -1 3 No such process
+617 B 0 3 No such process
+618 B -1 1 Operation not permitted
+619 B -1 78 Function not implemented
+620 B 0 78 Function not implemented
+623 B -1 1 Operation not permitted
+624 B 3481 1 Operation not permitted
+625 B -1 22 Invalid argument
+626 B -1 22 Invalid argument
+627 B -1 78 Function not implemented
+628 B -1 22 Invalid argument
+629 B -1 22 Invalid argument
+630 B -1 2 No such file or directory
+632 B -1 3 No such process
+633 B -1 3 No such process
+634 B -1 3 No such process
+635 B -1 78 Function not implemented
+636 B -1 1 Operation not permitted
+637 B -1 1 Operation not permitted
+638 B 0 1 Operation not permitted
+639 B 0 1 Operation not permitted
+640 B 0 1 Operation not permitted
+641 B -1 78 Function not implemented
+642 B -1 1 Operation not permitted
+643 B 0 1 Operation not permitted
+644 B -1 78 Function not implemented
+645 B -1 78 Function not implemented
+646 B -1 1 Operation not permitted
+647 B -1 1 Operation not permitted
+648 B -1 1 Operation not permitted
+649 B -1 3 No such process
+652 B -1 1 Operation not permitted
+653 B -1 22 Invalid argument
+654 B -1 22 Invalid argument
+655 B -1 22 Invalid argument
+656 B -1 1 Operation not permitted
+657 B -1 22 Invalid argument
+658 B -1 9 Bad file descriptor
+659 B 0 9 Bad file descriptor
+660 B -1 22 Invalid argument
+661 B -1 78 Function not implemented
+662 B -1 22 Invalid argument
+663 B -1 22 Invalid argument
+664 B -1 22 Invalid argument
+665 B -1 78 Function not implemented
+666 B -1 22 Invalid argument
+667 B -1 78 Function not implemented
+669 B -1 22 Invalid argument
+670 B -1 22 Invalid argument
+671 B -1 1 Operation not permitted
+672 B -1 1 Operation not permitted
+674 B -1 22 Invalid argument
+675 B 0 22 Invalid argument
+676 B -1 22 Invalid argument
+[B] canary 113
+
+[C] arg5 zero
+532 C -1 1 Operation not permitted
+533 C -1 1 Operation not permitted
+534 C -1 1 Operation not permitted
+535 C -1 1 Operation not permitted
+536 C -1 1 Operation not permitted
+537 C -1 78 Function not implemented
+538 C -1 22 Invalid argument
+539 C -1 3 No such process
+540 C -1 3 No such process
+541 C -1 3 No such process
+542 C -1 22 Invalid argument
+543 C -1 22 Invalid argument
+544 C -1 3 No such process
+545 C -1 3 No such process
+546 C -1 3 No such process
+547 C 0 3 No such process
+548 C -1 22 Invalid argument
+549 C -1 22 Invalid argument
+550 C -1 3 No such process
+551 C -1 3 No such process
+552 C -1 3 No such process
+553 C -1 3 No such process
+554 C -1 3 No such process
+555 C -1 3 No such process
+556 C -1 3 No such process
+557 C 527 3 No such process
+558 C -1 3 No such process
+559 C -1 22 Invalid argument
+560 C -1 16 Device busy
+563 C -1 3 No such process
+564 C -1 3 No such process
+565 C -1 22 Invalid argument
+566 C -1 22 Invalid argument
+567 C -1 22 Invalid argument
+568 C -1 78 Function not implemented
+569 C -1 78 Function not implemented
+572 C 0 78 Function not implemented
+574 C -1 78 Function not implemented
+575 C -1 78 Function not implemented
+576 C -1 78 Function not implemented
+577 C -1 78 Function not implemented
+578 C -1 78 Function not implemented
+579 C -1 78 Function not implemented
+580 C -1 78 Function not implemented
+581 C -1 78 Function not implemented
+582 C -1 78 Function not implemented
+583 C -1 78 Function not implemented
+584 C -1 78 Function not implemented
+585 C 1 78 Function not implemented
+586 C -1 1 Operation not permitted
+587 C -1 3 No such process
+588 C 0 3 No such process
+589 C -1 78 Function not implemented
+590 C -1 78 Function not implemented
+591 C -1 3 No such process
+592 C 0 3 No such process
+593 C -1 22 Invalid argument
+594 C -1 22 Invalid argument
+595 C -1 3 No such process
+596 C 0 3 No such process
+597 C -1 78 Function not implemented
+598 C 0 78 Function not implemented
+599 C -1 1 Operation not permitted
+600 C -1 1 Operation not permitted
+601 C -1 78 Function not implemented
+602 C -1 1 Operation not permitted
+603 C -1 1 Operation not permitted
+604 C -1 1 Operation not permitted
+605 C -1 22 Invalid argument
+606 C 0 22 Invalid argument
+607 C -1 2 No such file or directory
+608 C -1 22 Invalid argument
+610 C -1 78 Function not implemented
+611 C -1 1 Operation not permitted
+612 C -1 22 Invalid argument
+613 C -1 1 Operation not permitted
+615 C -1 1 Operation not permitted
+616 C -1 3 No such process
+617 C 0 3 No such process
+618 C -1 1 Operation not permitted
+619 C -1 78 Function not implemented
+620 C 0 78 Function not implemented
+623 C -1 1 Operation not permitted
+624 C 3482 1 Operation not permitted
+625 C -1 22 Invalid argument
+626 C -1 22 Invalid argument
+627 C -1 78 Function not implemented
+628 C -1 22 Invalid argument
+629 C -1 22 Invalid argument
+630 C -1 2 No such file or directory
+632 C -1 3 No such process
+633 C -1 3 No such process
+634 C -1 3 No such process
+635 C -1 78 Function not implemented
+636 C -1 1 Operation not permitted
+637 C -1 1 Operation not permitted
+638 C 0 1 Operation not permitted
+639 C 0 1 Operation not permitted
+640 C 0 1 Operation not permitted
+641 C -1 78 Function not implemented
+642 C -1 1 Operation not permitted
+643 C 0 1 Operation not permitted
+644 C -1 78 Function not implemented
+645 C -1 78 Function not implemented
+646 C -1 1 Operation not permitted
+647 C -1 1 Operation not permitted
+648 C -1 1 Operation not permitted
+649 C -1 3 No such process
+652 C -1 1 Operation not permitted
+653 C -1 22 Invalid argument
+654 C -1 22 Invalid argument
+655 C -1 22 Invalid argument
+656 C -1 1 Operation not permitted
+657 C -1 22 Invalid argument
+658 C -1 9 Bad file descriptor
+659 C 0 9 Bad file descriptor
+660 C -1 22 Invalid argument
+661 C -1 78 Function not implemented
+662 C -1 22 Invalid argument
+663 C -1 22 Invalid argument
+664 C -1 22 Invalid argument
+665 C -1 78 Function not implemented
+666 C -1 22 Invalid argument
+667 C -1 78 Function not implemented
+669 C -1 22 Invalid argument
+670 C -1 22 Invalid argument
+671 C -1 1 Operation not permitted
+672 C -1 1 Operation not permitted
+674 C -1 22 Invalid argument
+675 C 0 22 Invalid argument
+676 C -1 22 Invalid argument
+[C] canary 113
+
+[D] arg6 zero
+532 D -1 1 Operation not permitted
+533 D -1 1 Operation not permitted
+534 D -1 1 Operation not permitted
+535 D -1 1 Operation not permitted
+536 D -1 1 Operation not permitted
+537 D -1 78 Function not implemented
+538 D -1 22 Invalid argument
+539 D -1 3 No such process
+540 D -1 3 No such process
+541 D -1 3 No such process
+542 D -1 22 Invalid argument
+543 D -1 22 Invalid argument
+544 D -1 3 No such process
+545 D -1 3 No such process
+546 D -1 3 No such process
+547 D 0 3 No such process
+548 D -1 22 Invalid argument
+549 D -1 22 Invalid argument
+550 D -1 3 No such process
+551 D -1 3 No such process
+552 D -1 3 No such process
+553 D -1 3 No such process
+554 D -1 3 No such process
+555 D -1 3 No such process
+556 D -1 3 No such process
+557 D 528 3 No such process
+558 D -1 3 No such process
+559 D -1 22 Invalid argument
+560 D -1 16 Device busy
+563 D -1 3 No such process
+564 D -1 3 No such process
+565 D -1 22 Invalid argument
+566 D -1 22 Invalid argument
+567 D -1 22 Invalid argument
+568 D -1 78 Function not implemented
+569 D -1 78 Function not implemented
+572 D 0 78 Function not implemented
+574 D -1 78 Function not implemented
+575 D -1 78 Function not implemented
+576 D -1 78 Function not implemented
+577 D -1 78 Function not implemented
+578 D -1 78 Function not implemented
+579 D -1 78 Function not implemented
+580 D -1 78 Function not implemented
+581 D -1 78 Function not implemented
+582 D -1 78 Function not implemented
+583 D -1 78 Function not implemented
+584 D -1 78 Function not implemented
+585 D 1 78 Function not implemented
+586 D -1 1 Operation not permitted
+587 D -1 3 No such process
+588 D 0 3 No such process
+589 D -1 78 Function not implemented
+590 D -1 78 Function not implemented
+591 D -1 3 No such process
+592 D 0 3 No such process
+593 D -1 22 Invalid argument
+594 D -1 22 Invalid argument
+595 D -1 3 No such process
+596 D 0 3 No such process
+597 D -1 78 Function not implemented
+598 D 0 78 Function not implemented
+599 D -1 1 Operation not permitted
+600 D -1 1 Operation not permitted
+601 D -1 78 Function not implemented
+602 D -1 1 Operation not permitted
+603 D -1 1 Operation not permitted
+604 D -1 1 Operation not permitted
+605 D -1 22 Invalid argument
+606 D 0 22 Invalid argument
+607 D -1 2 No such file or directory
+608 D -1 22 Invalid argument
+610 D -1 78 Function not implemented
+611 D -1 1 Operation not permitted
+612 D -1 22 Invalid argument
+613 D -1 1 Operation not permitted
+615 D -1 1 Operation not permitted
+616 D -1 3 No such process
+617 D 0 3 No such process
+618 D -1 1 Operation not permitted
+619 D -1 78 Function not implemented
+620 D 0 78 Function not implemented
+623 D -1 1 Operation not permitted
+624 D 3483 1 Operation not permitted
+625 D -1 22 Invalid argument
+626 D -1 22 Invalid argument
+627 D -1 78 Function not implemented
+628 D -1 22 Invalid argument
+629 D -1 22 Invalid argument
+630 D -1 2 No such file or directory
+632 D -1 3 No such process
+633 D -1 3 No such process
+634 D -1 3 No such process
+635 D -1 78 Function not implemented
+636 D -1 1 Operation not permitted
+637 D -1 1 Operation not permitted
+638 D 0 1 Operation not permitted
+639 D 0 1 Operation not permitted
+640 D 0 1 Operation not permitted
+641 D -1 78 Function not implemented
+642 D -1 1 Operation not permitted
+643 D 0 1 Operation not permitted
+644 D -1 78 Function not implemented
+645 D -1 78 Function not implemented
+646 D -1 1 Operation not permitted
+647 D -1 1 Operation not permitted
+648 D -1 1 Operation not permitted
+649 D -1 3 No such process
+652 D -1 1 Operation not permitted
+653 D -1 22 Invalid argument
+654 D -1 22 Invalid argument
+655 D -1 22 Invalid argument
+656 D -1 1 Operation not permitted
+657 D -1 22 Invalid argument
+658 D -1 9 Bad file descriptor
+659 D 0 9 Bad file descriptor
+660 D -1 22 Invalid argument
+661 D -1 78 Function not implemented
+662 D -1 22 Invalid argument
+663 D -1 22 Invalid argument
+664 D -1 22 Invalid argument
+665 D -1 78 Function not implemented
+666 D -1 22 Invalid argument
+667 D -1 78 Function not implemented
+669 D -1 22 Invalid argument
+670 D -1 22 Invalid argument
+671 D -1 1 Operation not permitted
+672 D -1 1 Operation not permitted
+674 D -1 22 Invalid argument
+675 D 0 22 Invalid argument
+676 D -1 22 Invalid argument
+[D] canary 113
+
+[E] alive pid=113
+=== PROBE 1345a COMPLETE ===
 ```
 
 ## FILE: results/phase3_signals_codexec/22_signal_stress_20261015_193830.txt

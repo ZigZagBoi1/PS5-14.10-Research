@@ -17,14 +17,15 @@ All 54 queued analysis tasks completed. 0 failures.
 - **Remaining (4):** Final CVEs closed (1 DEAD, 1 DoS-only, 1 component-absent, 1 probes-ready)
 
 ### Key Discoveries
-1. **CVE-2025-43265 (OOB read) → TOP PRIORITY** — JIT-independent info leak, probe p719 written, could unblock WebProcess text base RVA (our #1 blocker)
-2. **SDK-derived addresses are UNVALIDATED** — kernel_data, allproc, security_flags, rootvnode all come from SDK v0.45, never measured on device. Only kernel_text is measured via fault oracle.
+1. **CVE-2025-43265 (OOB read) → DOWNGRADED to MEDIUM after preflight** — Probe tests generic OOB vectors, NOT the specific bug 294182. RAB bounds already spec-compliant (p555). Vectors A/E likely dead, B is JIT-dependent. 3 unknown vectors (C/D/F) still worth testing. Unpatched status uncertain.
+2. **SDK-derived addresses are UNVALIDATED** — kernel_data, allproc, security_flags, rootvnode all come from SDK v0.45, never measured on device. Only kernel_text is measured via fault oracle. (Docs already correctly label this.)
 3. **2 CVEs downgraded** — CVE-2025-24213 and CVE-2024-54505 are likely JIT-dependent (probes built on false DFG assumption)
 4. **CVE-2023-41976 (SVG animation UAF) elevated** — different size class than FontFace, JIT-independent, could provide complementary UAF primitive
+5. **CVE-2024-23213 flagged HIGH** — JIT-independent memory handling ACE, probes p689/p690 ready
 
-### Console Probe Priority (when online)
-1. **p719** — CVE-2025-43265 OOB read (TOP PRIORITY info leak)
-2. **p721** — CVE-2026-64718 Canvas UAF (second Canvas primitive)
+### Console Probe Priority (when online, revised after p719 preflight)
+1. **p719** (vectors C/D/F) — generic OOB read survey (CVE-specific claim UNVERIFIED)
+2. **p721** — CVE-2026-64718 Canvas UAF (DEFINITELY unpatched, post-cutoff fix)
 3. **p686** — CVE-2023-41976 SVG animation UAF (different size class)
 4. **p692** — CVE-2023-40447 DOM UAF
 5. **p694** — CVE-2023-42950 Heap UAF (Proxy trap vector)

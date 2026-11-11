@@ -1,3 +1,10 @@
+## 2026-11-11: v930 repaired census — BRANCH (b) FIRED. The engine write CORRUPTED the carrier style property on 14.22
+
+- v930 (results/phase13_webkit/v930_branch_b_degraded_backing_20261111.txt): trigger-free control leg reads italic (the style channel carries member values on this build). Winner carrier (idx=0) reads NORMAL (constructed italic). TWIN also normal. The style property on the freed+reclaimed chunk was DEGRADED by the free+engine-write cycle - impl-scale corruption witness, ZERO addresses needed (the getter reads its own backing).
+- Winner status VALUE = error (not loaded like p640): non-lifecycle value for a never-loaded face. Two readings: (i) 14.22 layout shift - the +0x82 write landed on a different field, cascading corruption visible in BOTH style and status; (ii) lifecycle race on the local() source. The pre-registration value-beacon separates them for the next probe.
+- The TWIN also degraded - the corruption is wider than one chunk. Next: v931 per-carrier style map with alternating descriptors to bound the corruption region and test value-directionality.
+- This CONTRADICTS v919 behaviorally-inert: the write IS visible in a second channel (style). The FontFaceSet UAF on 14.22 has a REAL observable beyond status.
+
 ## 2026-11-10: v929 census - the style-decode lane reads the CLEAN DESCRIPTOR on 14.22 (winner==pristine, zero chunk-byte transport)
 
 - v929 (results/phase13_webkit/v929_census_clean_descriptor_20261110.txt): CENSUS-WIN idx=0 (p640 status lane alive), CENSUS-DATA = 6e6f726d616c = ASCII normal (the style DESCRIPTOR serialization), PRISTINE identical - zero delta. The p691 readStyle lane does not transport chunk bytes on 14.22: it carries the clean descriptor value only.

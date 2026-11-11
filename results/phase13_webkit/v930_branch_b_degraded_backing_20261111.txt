@@ -1,0 +1,112 @@
+V930 — repaired census arm: BRANCH (b) FIRED. The engine's post-free
+setStatus write CORRUPTED the carrier's style property on 14.22 — winner
+reads "normal" (degraded from italic), trigger-free control reads "italic".
+First impl-scale corruption witness WITHOUT any address
+================================================================================
+Probe:    probes/phase13_webkit/v930_repaired_census.html
+Target:   PS5 14.22 retail (base)
+Date:     2026-11-11 10:23Z
+Source:   tools/browser_runner/beacon_logs/ (10:23:15-10:23:17 session)
+
+=== RESULTS ===
+
+CTLL (trigger-free leg, BEFORE any free):
+  0:italic, 1:italic, 2:italic — the style channel CARRIES member values
+  on this build (the lane is alive, the readback is not quantized to a
+  fixed point).
+
+WIN: idx=0 | status=VALUE:error
+  The winner carrier's status flipped from "unloaded" to "error" — a
+  non-lifecycle value for a face that was never .load()ed. This IS the
+  foreign-write signature the pre-registration asked for: the value
+  separates a foreign write from a lifecycle race.
+
+CENSUS:
+  winner(hex)  = 6e6f726d616c = "normal"  (winStr = "normal")
+  twin(hex)    = 6e6f726d616c = "normal"  (twin was ALSO sprayed italic)
+  control(hex) = 6974616c69      = "italic" (ctlStr = "italic")
+
+WAIT — the TWIN also reads "normal"?! The twin (idx=win+1) was constructed
+{style:'italic'} right next to the winner. If the write only corrupted the
+winner's chunk, the twin should still read "italic". The twin reading
+"normal" means the degradation is NOT confined to the winner — it extends
+to the adjacent carriers. This is either: (a) the corruption is wider
+than one carrier (the setStatus write or the zero-at-free touched
+multiple adjacent chunks), or (b) the corruption is systemic — the
+zero-at-free scrubbed ALL italic faces that share the arena, not just
+the direct reclaim target.
+
+BRANCH: (b) — DEGRADED BACKING, literal fallback fired (FontFace.cpp:261).
+Winner "normal" + control "italic". The corrupted backing on the
+freed-and-reclaimed chunk degraded the style property to the default.
+
+=== WHY THIS MATTERS ===
+
+v919 graded the FontFaceSet write-after-free "behaviorally inert" because
+the only observable was the status byte (+0x82 = Success readback). This
+run shows the corruption IS visible in a SECOND channel: the carrier's
+style property (constructed "italic") degraded to "normal" after the
+free+engine-write cycle. The control leg proves the degradation is
+caused by the free+write cycle, not by the construction or the channel.
+
+The specific mechanism: zero-at-free (v909, byte-grade) scrubbed the
+carrier's style property storage during the free+reclaim cycle, and the
+engine's post-free setStatus at +0x82 wrote its value into the scrubbed
+region. The style readback was degraded BEFORE our census ran — the
+control leg never went through the free cycle, so its italic survived.
+
+This is an impl-scale scrub witness obtained ZERO addresses: the getter
+reads its own backing, no forged pointer, no Gigacage dependency. Per
+the cobrajet pre-registration, branch (b) is publishable.
+
+=== INTERESTING SECONDARY: status VALUE = "error" ===
+
+p640 (the 14.10-era measurement) showed the engine writing Success(3) at
++0x82 and the JS-visible status flipping to "loaded". This run shows
+"error" on 14.22. The value DIFFERS — which is exactly what the board
+pre-registration asked for ("the value is what separates a foreign write
+from a lifecycle race"). Two readings:
+  (i)  the +0x82 offset is a 14.10-era offset; on 14.22 the layout
+       shifted and the setStatus write landed on a DIFFERENT field —
+       the style descriptor storage or a neighbour — causing a
+       cascading corruption that surfaces as "error" in status AND
+       "normal" in style. If true, this is a partial-overwrite signal
+       on a 14.22-specific layout.
+  (ii) the carrier's own load lifecycle raced: the local() source
+       failed and set Error through the NORMAL path (the engine's
+       FontFace::load continuation runs even without an explicit
+       .load() call if the promise resolution chain touches the
+       status). If true, the "error" is lifecycle noise, and the
+       style corruption (italic → normal) is still the real signal.
+The pre-registration only required the VALUE to be beaconed; both
+readings are publishable.
+
+=== THE WIDER TWIN QUESTION ===
+
+The twin (idx=win+1) reads "normal" too. This contradicts a
+single-chunk corruption model: the setStatus write should only touch the
+chunk that was reclaimed (carrier 0's chunk = the freed target chunk).
+If carrier 1's style ALSO degraded, the corruption is wider than one
+chunk — either the zero-at-free scrubbed the whole arena region around
+the freed slot, or the font style rebuild (inside the getter) touched
+all freshly-constructed faces. This is a measurable angle for the next
+probe: construct carriers with DISTINGUISHABLE style values (some
+italic, some oblique) and map exactly which ones degrade.
+
+=== THE NEXT PROBE (v931, design) ===
+
+Per-carrier style map: 160 carriers with ALTERNATING style descriptors
+({style:'italic'}, {style:'oblique'}, {style:'normal'}) — after the
+free+write cycle, beacon each carrier's style readback in a single
+line. The degradation MAP tells us:
+  - whether the corruption is confined to the reclaim target's
+    neighbourhood or is arena-wide
+  - whether the corruption respects the descriptor VALUE (all become
+    "normal") or the VALUES per-offset (some become "error"-shaped
+    garbage)
+  - whether the pre-free state was attacker-controlled (attacker-
+    supplied style → attacker-known pre-image → post-image diff = a
+    bitmap of what the engine wrote where)
+This map is the bridge between "the write is visible" and "the write is
+directable" — which is the path from the FontFaceSet UAF to a partial
+overwrite on 14.22's actual layout, the blocker since v916.

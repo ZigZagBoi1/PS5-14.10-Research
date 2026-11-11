@@ -1,0 +1,11 @@
+=== PROBE 1051a: three-way aio delete race ===
+[0] pid=163
+[0] eboot=6A288000 gadgets ok=1781126273
+[A] D=311BA0000 ID=311BA4000 ST=311BA8000 A=311BB0000 B=311BF0000
+[T1] id=0000A21D spawnA=true spawnB=true parent=80020003 A=00000000 B=80020003 succ=1
+[T2] id=0000C21D spawnA=true spawnB=true parent=00000000 A=80020003 B=80020003 succ=1
+[T3] id=0000E21D spawnA=true spawnB=true parent=00000000 A=80020003 B=80020003 succ=1
+[T4] id=0000021D spawnA=true spawnB=true parent=00000000 A=80020003 B=80020003 succ=1
+[T5] id=0000221D spawnA=true spawnB=true parent=00000000 A=80020003 B=80020003 succ=1
+[T6] id=0000421D spawnA=true spawnB=true parent=00000000 A=80020003 B=80020003 succ=1
+[Z] trials=6 doubles=0 alive pid=163

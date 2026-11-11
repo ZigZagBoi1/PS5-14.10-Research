@@ -1,0 +1,21 @@
+=== PROBE 1061a: ip6_pktinfo free/reuse overlap ===
+
+[S] A fd=22
+[S] B fd=23
+[A] set A pktinfo rv=-1
+[A] get A pktinfo rv=0
+[A] out len=14 q0=0 q1=0 q2=0
+[B] set A len=0 rv=-1
+[C] get A after free rv=0
+[C] out len=14 q0=0 q1=0 q2=0
+[C] pointer is NULL, no dangling reference on this path
+[D] set B pktinfo rv=-1
+[E] get A after B alloc rv=0
+[E] out len=14 q0=0 q1=0 q2=0
+[E] shared=false
+[F] get B after A realloc rv=0
+[F] out len=14 q0=0 q1=0 q2=0
+[G] get A after close B rv=0
+[G] out len=14 q0=0 q1=0 q2=0
+[E] alive pid=274
+=== COMPLETE ===

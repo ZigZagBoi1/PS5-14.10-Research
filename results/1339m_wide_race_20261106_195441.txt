@@ -1,0 +1,8 @@
+=== 1339m WIDE-CMSG RACE ===
+pid=346
+ebase=2AA6C000
+gadgets: pop_rax=2AA6C992 pop_rdi=2AB35DFE pop_rsi=2AA7977D pop_rdx=2AE1C2D7 pop_rcx=2AA6CE64 fn=81D8C4B57
+cmsg: use=310644000 bad=310648000 entries=20 total=480
+stacks: free=3107C8000 use=3108C8000
+  chains verified OK
+params: TRIALS=500 SPRAY=128 CMSG_ENTRIES=20 OPTLEN=480

@@ -1,0 +1,19 @@
+=== PROBE 942a: SYS 620 ATTRIBUTE-CHANGE ORACLE ===
+
+[0] pid=148
+[0] fn_addr=0x8247D4B57 memory.alloc=function: 31067a760
+[A] before
+[A fn] 0x8247D4B57  start=0x8247d4000 end=0x82481c000 prot=0x4 flags=0x61042C
+[B alloc] no address
+[C] calling sys 620 once
+   ret=0
+[A fn] 0x8247D4B57  start=0x8247d4000 end=0x82481c000 prot=0x4 flags=0x61042C
+[B alloc] no address
+[D] five more calls
+[A fn] 0x8247D4B57  start=0x8247d4000 end=0x82481c000 prot=0x4 flags=0x61042C
+[B alloc] no address
+
+[Z] fn prot: 0x4 -> 0x4 -> 0x4
+[Z] alloc prot: 0x0 -> 0x0 -> 0x0
+
+=== PROBE 942a COMPLETE ===

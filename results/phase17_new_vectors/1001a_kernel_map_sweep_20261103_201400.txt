@@ -1,0 +1,4 @@
+=== PROBE 1001a: KERNEL MAP SWEEP ===
+
+[0] pid=191 fd=21 base=0xFFFFFFFF80000000 step=0x200000 count=512
+[1] chain: write 0x80 from ctx+0x100, then thr_exit

@@ -1,0 +1,5 @@
+=== PROBE 936b: SYSV CREATORS, ONE AT A TIME ===
+
+[0] pid=228 vm=3379
+
+[A] msgget(IPC_PRIVATE, 0x380)

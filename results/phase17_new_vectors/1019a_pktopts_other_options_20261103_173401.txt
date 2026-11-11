@@ -1,0 +1,12 @@
+=== PROBE 1019a: PKTOPTS OPTIONS ===
+
+[0] fd=24
+[HOPOPTS   ] set=-1, readback skipped (unmeasured)
+[DSTOPTS   ] set=-1, readback skipped (unmeasured)
+[RTHDR     ] set=-1, readback skipped (unmeasured)
+[PKTOPTIONS] set=-1, readback skipped (unmeasured)
+[2292HOPOPTS] set=-1, readback skipped (unmeasured)
+[2292DSTOPTS] set=-1, readback skipped (unmeasured)
+[2292RTHDR ] set=-1, readback skipped (unmeasured)
+[Z] alive pid=80
+=== COMPLETE ===

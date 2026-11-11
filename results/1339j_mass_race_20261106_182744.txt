@@ -1,0 +1,12 @@
+=== 1339j MASS-SPAWN RACE ===
+pid=311
+ebase=33A8000
+addrs: free_blk=311740000 free_base=311744000 use_blk=311840000 use_base=311844000
+addrs: cmsg_buf=311450000 cmsg_bad=311454000 rbuf=311458000
+gadgets: pop_rax=33A8992 pop_rdi=3471DFE pop_rsi=33B577D pop_rdx=37582D7 pop_rcx=33A8E64 fn=81E2F8B57
+params: FREE=20 USE=20 TRIALS=50 SPRAY=128
+  free chain verified OK (17 entries)
+  free_chain[8] = 33A8992 (expect pop_rax=33A8992)
+  step1: chains built
+  step2: socketpair sp_rd=23 sp_wr=24
+  step3: spawned free=20 use=20

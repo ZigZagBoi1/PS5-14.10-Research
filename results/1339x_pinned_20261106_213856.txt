@@ -1,0 +1,25 @@
+=== 1339x PINNED ===
+pid=412
+pin: ok=true rv=7.9228162514264e+28
+pin2: true
+affinity: 0x0
+gadgets OK
+spray=22..85
+starting 2000 trials
+t=108 tc=42
+t=274 tc=42
+t=434 tc=42
+t=500 u=3 f=497 r=0 o=0
+t=907 tc=42
+t=910 tc=42
+t=1000 u=5 f=995 r=0 o=0
+t=1469 tc=42
+t=1500 u=6 f=1494 r=0 o=0
+t=1503 tc=42
+t=1641 tc=42
+t=1714 tc=42
+t=1866 tc=42
+t=2000 u=12 f=1988 r=0 o=0
+=== RESULTS: use=12 free=1988 reclaim=0 other=0 ===
+pid=412
+=== DONE ===

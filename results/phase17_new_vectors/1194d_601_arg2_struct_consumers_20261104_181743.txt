@@ -1,0 +1,38 @@
+=== PROBE 1194d: 601 ARG2 STRUCT-CONSUMER DETECTOR ===
+[S] unmapped arg2 = 0x0000500000000000
+[01] rv=-1  errno=14 Bad address
+[02] rv=-1  errno=78 Function not implemented
+[05] rv=-1  errno=78 Function not implemented
+[06] rv=-1  errno=78 Function not implemented
+[07] rv=0   errno=78 Function not implemented
+[09] rv=0   errno=78 Function not implemented
+[0A] rv=-1  errno=1 Operation not permitted
+[0B] rv=0   errno=1 Operation not permitted
+[0D] rv=0   errno=1 Operation not permitted
+[0E] rv=-1  errno=14 Bad address
+[0F] rv=-1  errno=1 Operation not permitted
+[10] rv=-1  errno=22 Invalid argument
+[11] rv=-1  errno=22 Invalid argument
+[12] rv=-1  errno=22 Invalid argument
+[13] rv=0   errno=22 Invalid argument
+[14] rv=0   errno=22 Invalid argument
+[15] rv=-1  errno=1 Operation not permitted
+[16] rv=-1  errno=78 Function not implemented
+[17] rv=-1  errno=78 Function not implemented
+[18] rv=-1  errno=1 Operation not permitted
+[19] rv=0   errno=1 Operation not permitted
+[1A] rv=-1  errno=14 Bad address
+[1C] rv=-1  errno=14 Bad address
+[1D] rv=0   errno=14 Bad address
+[1E] rv=-1  errno=22 Invalid argument
+[1F] rv=-1  errno=14 Bad address
+[20] rv=0   errno=14 Bad address
+[21] rv=-1  errno=22 Invalid argument
+[22] rv=-1  errno=78 Function not implemented
+[23] rv=-1  errno=22 Invalid argument
+[24] rv=-1  errno=14 Bad address
+[25] rv=-1  errno=14 Bad address
+[26] rv=-1  errno=1 Operation not permitted
+[SUM] EFAULT-on-bad-arg2 = 1,14,26,28,29,31,32,36,37
+[Z] alive
+=== DONE ===

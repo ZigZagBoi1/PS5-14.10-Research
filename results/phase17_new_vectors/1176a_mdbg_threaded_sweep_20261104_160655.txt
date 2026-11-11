@@ -1,0 +1,4 @@
+=== PROBE 1176a: 601 COMMAND SWEEP ON SACRIFICIAL THREADS ===
+[F] socket fd=21
+[L] 38 commands, 0x03/0x04/0x27 excluded
+[S] spawned 0x09

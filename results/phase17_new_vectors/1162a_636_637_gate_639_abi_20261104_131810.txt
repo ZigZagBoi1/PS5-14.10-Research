@@ -1,0 +1,11 @@
+=== PROBE 1162a: 636/637 GATES AND 639 ABI ===
+[636/gate-first check] records=NULL count=1 -> rv=-1 errno=1 Operation not permitted
+[636/count 0] records=buf count=0 -> rv=-1 errno=1 Operation not permitted
+[636/count 1] records=buf count=1 -> rv=-1 errno=1 Operation not permitted
+[636/count 2] records=buf count=2 -> rv=-1 errno=1 Operation not permitted
+[636/count 512] records=buf count=512 -> rv=-1 errno=1 Operation not permitted
+[636/count 513] records=buf count=513 -> rv=-1 errno=1 Operation not permitted
+[636/count 0x10000] records=buf count=65536 -> rv=-1 errno=1 Operation not permitted
+[637/value 0] pid=0 value=0x0 -> rv=-1 errno=22 Invalid argument
+[637/value 1] pid=0 value=0x1 -> rv=-1 errno=22 Invalid argument
+[637/value 16] pid=0 value=0x10 -> rv=-1 errno=22 Invalid argument

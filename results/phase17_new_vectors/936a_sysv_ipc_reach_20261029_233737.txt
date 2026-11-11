@@ -1,0 +1,5 @@
+=== PROBE 936a: SYSV IPC CREATORS ===
+
+[0] pid=221 vm=3377
+
+[A] semget(IPC_PRIVATE, 1, 0x380) ...

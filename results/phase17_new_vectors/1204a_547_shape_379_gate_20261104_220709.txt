@@ -1,0 +1,30 @@
+=== PROBE 1204a: 547 QUERY_MEMORY_PROTECTION SHAPE, 379 GATE ===
+page=0x310DD2B40 out=0x310DD3B60
+-- 547(va=0x310DD0000,out) --
+547 pcall=true err=2 No such file or directory
+  out+00 = 0000000310DC4000
+  out+08 = 0000000310DD4000
+  out+10 = 0061002000000003
+-- 547(va=0x310DD2C63 unaligned,out) --
+547b pcall=true err=2 No such file or directory
+  out+00 = 0000000310DC4000
+  out+08 = 0000000310DD4000
+  out+10 = 0061002000000003
+-- 379 id sweep prot=3 on own page --
+379 id= 0 pcall=true err=45 Operation not supported
+379 id= 1 pcall=true err=45 Operation not supported
+379 id= 2 pcall=true err=45 Operation not supported
+379 id= 3 pcall=true err=45 Operation not supported
+379 id= 4 pcall=true err=45 Operation not supported
+379 id= 5 pcall=true err=45 Operation not supported
+379 id= 6 pcall=true err=45 Operation not supported
+379 id= 7 pcall=true err=45 Operation not supported
+379 id= 8 pcall=true err=45 Operation not supported
+379 id= 9 pcall=true err=45 Operation not supported
+379 id=10 pcall=true err=13 Permission denied
+379 id=11 pcall=true err=45 Operation not supported
+379 id=12 pcall=true err=45 Operation not supported
+379 id=13 pcall=true err=45 Operation not supported
+379 id=14 pcall=true err=45 Operation not supported
+379 id=15 pcall=true err=45 Operation not supported
+=== DONE

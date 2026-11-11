@@ -1,0 +1,10 @@
+=== PROBE 904a: minimal child spawn ===
+[0] pid=80
+[0] gadgets rax=1584826770 rdi=1585651198 store=1585425511 jmp=1584911489
+[1] socketpair fd=22
+[R1] child rax=0 errs=DEADBEEF,80020010 (mixed) | parent ret=0 errs=80020010,80020010 (mixed) | after st=2
+[R2] child rax=0 errs=80020003,80020003 (mixed) | parent ret=0 errs=0,0 (BOTH-SUCCESS) | after st=80020003
+[R3] child rax=0 errs=80020003,80020003 (mixed) | parent ret=0 errs=0,0 (BOTH-SUCCESS) | after st=80020003
+[R4] child rax=0 errs=80020003,80020003 (mixed) | parent ret=0 errs=0,0 (BOTH-SUCCESS) | after st=80020003
+[R5] child rax=0 errs=80020003,80020003 (mixed) | parent ret=0 errs=0,0 (BOTH-SUCCESS) | after st=80020003
+[R6] child rax=0 errs=DEADBEEF,DEADBEEF (mixed) | parent ret=0 errs=0,0 (BOTH-SUCCESS) | after st=80020003

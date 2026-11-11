@@ -1,0 +1,12 @@
+=== PROBE 942a: AIO SLOT REUSE RACE ===
+
+[0] pid=80 base=0x6520000
+  fds=24,25
+  [r1] child_zero=0 parent_zero=0 fresh=0x00000206 freshdel=0x80020010
+  [r2] child_zero=0 parent_zero=0 fresh=0x00000208 freshdel=0x80020010
+  [r3] child_zero=0 parent_zero=0 fresh=0x0000020A freshdel=0x80020010
+  [r4] child_zero=0 parent_zero=0 fresh=0x0000020C freshdel=0x80020010
+  [r5] child_zero=0 parent_zero=0 fresh=0x0000020E freshdel=0x80020010
+  [r6] child_zero=0 parent_zero=0 fresh=0x00000210 freshdel=0x80020010
+[Z] anomalous rounds=0 alive pid=80
+=== COMPLETE ===

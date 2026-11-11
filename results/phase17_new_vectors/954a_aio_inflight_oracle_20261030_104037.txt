@@ -1,0 +1,37 @@
+=== PROBE 940a: AIO IN-FLIGHT ORACLE ===
+
+[A] pid=80
+  [socketpair] ret=0x00000000_00000000
+  fds = 22, 23
+  buf=0x3114960C0
+[B] submit 669(cmd=0x1001, reqs, 4, prio=3, ids)
+  [submit] ret=0x00000000_00000000
+    id[0]=0x00004205
+    id[1]=0x00014205
+    id[2]=0x00024205
+    id[3]=0x00034205
+[C] poll before any data is written
+  [poll] ret=0x00000000_00000000
+    state[0]=2
+    state[1]=2
+    state[2]=1
+    state[3]=1
+[D] delete one while the reads have no data
+  [del one] ret=0x00000000_00000000
+    err=0x80020010 (0x80020010 = in flight)
+[E] write 16 bytes into the peer so the reads can complete
+  [write] ret=0x00000000_00000010
+[F] poll after the write
+  [poll2] ret=0x00000000_00000000
+    state[0]=3
+    state[1]=2
+    state[2]=2
+    state[3]=1
+[G] delete again, four at once
+  [del all] ret=0x00000000_00000000
+    err[0]=0x00000000
+    err[1]=0x80020010
+    err[2]=0x80020010
+    err[3]=0x80020010
+[Z] alive pid=80
+=== COMPLETE ===

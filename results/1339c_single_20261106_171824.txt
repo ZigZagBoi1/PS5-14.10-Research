@@ -1,0 +1,5 @@
+=== 1339c SINGLE-CHILD setsockopt(25) TEST ===
+fn=82CA3CB57
+pid=283
+ABORT: ebase=0
+=== DONE ===

@@ -1,0 +1,25 @@
+=== PROBE 971a: SCM_RIGHTS recvmsg vs CLOSE ===
+
+[0] pid=87 base=0x1B174000 pop_rax=0x1B174992
+  [sendmsg] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [r1] fds=23,24 recvmsg_ctrl_len=0 close=true
+  [sendmsg] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [r2] fds=24,25 recvmsg_ctrl_len=0 close=true
+  [sendmsg] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [r3] fds=25,26 recvmsg_ctrl_len=0 close=true
+  [sendmsg] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [r4] fds=26,27 recvmsg_ctrl_len=0 close=true
+  [sendmsg] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [r5] fds=27,28 recvmsg_ctrl_len=0 close=true
+  [sendmsg] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [r6] fds=28,29 recvmsg_ctrl_len=0 close=true
+  [sendmsg] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [r7] fds=29,30 recvmsg_ctrl_len=0 close=true
+  [sendmsg] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [r8] fds=30,31 recvmsg_ctrl_len=0 close=true
+  [sendmsg] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [r9] fds=31,32 recvmsg_ctrl_len=0 close=true
+  [sendmsg] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [r10] fds=32,33 recvmsg_ctrl_len=0 close=true
+[Z] alive pid=87 rounds=10
+=== COMPLETE ===

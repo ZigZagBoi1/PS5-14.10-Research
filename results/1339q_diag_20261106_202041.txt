@@ -1,0 +1,54 @@
+=== 1339q DIAGNOSTIC ===
+pid=395
+ebase=33984000
+gadgets OK
+--- PART A: sequential children ---
+fd_a=22
+child1: spawned
+child1: released
+child1: tc=51 (expect 51)
+child2: spawned
+child2: released
+child2: tc=52 (expect 52)
+child3: spawned
+child3: released
+child3: tc=53 (expect 53)
+child4: spawned
+child4: released
+child4: tc=54 (expect 54)
+PART A PASSED
+--- PART B: concurrent race ---
+fd_b=23
+B-trial1: start
+B-trial1: released
+B-trial1: tc=42
+B-trial2: start
+B-trial2: released
+B-trial2: tc=42
+B-trial3: start
+B-trial3: released
+B-trial3: tc=42
+B-trial4: start
+B-trial4: released
+B-trial4: tc=42
+B-trial5: start
+B-trial5: released
+B-trial5: tc=42
+B-trial6: start
+B-trial6: released
+B-trial6: tc=42
+B-trial7: start
+B-trial7: released
+B-trial7: tc=42
+B-trial8: start
+B-trial8: released
+B-trial8: tc=42
+B-trial9: start
+B-trial9: released
+B-trial9: tc=42
+B-trial10: start
+B-trial10: released
+B-trial10: tc=42
+=== ALL PASSED ===
+pid=395
+=== DONE ===

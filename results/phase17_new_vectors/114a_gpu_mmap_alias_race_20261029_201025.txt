@@ -1,0 +1,31 @@
+=== PROBE 114a: GPU MMAP ALIASING + RACE ===
+Section: A
+
+--- SECTION A: Double GPU mmap aliasing test ---
+
+[A] Region A: 0x00000003_118A8000 (8 pages)
+[A] Region B: 0x00000003_118C8000 (8 pages)
+[A] Separation: 0x20000 bytes
+
+[A1] Writing sentinels: A=0x56123, B=0x31072
+  Regions properly isolated (expected)
+
+[A2] Adjacency probe (read between regions):
+  Region A end: 0x118C8000, Region B start: 0x118C8000, gap: 0x0
+  *** REGIONS ARE ADJACENT — NO GUARD PAGE ***
+
+[A3] GPU region spacing analysis (10 regions):
+  Allocated 10 regions:
+  [1] 0x00000003_118A8000
+  [2] 0x00000003_118C8000 (gap from prev: 0x20000)
+  [3] 0x00000003_118E8000 (gap from prev: 0x20000)
+  [4] 0x00000003_118F8000 (gap from prev: 0x10000)
+  [5] 0x00000003_11908000 (gap from prev: 0x10000)
+  [6] 0x00000003_11918000 (gap from prev: 0x10000)
+  [7] 0x00000003_11928000 (gap from prev: 0x10000)
+  [8] 0x00000003_11938000 (gap from prev: 0x10000)
+  [9] 0x00000003_11948000 (gap from prev: 0x10000)
+  [10] 0x00000003_11958000 (gap from prev: 0x10000)
+  *** 8 ADJACENT REGION PAIRS (no guard pages) ***
+
+=== PROBE 114a COMPLETE ===

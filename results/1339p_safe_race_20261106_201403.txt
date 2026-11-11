@@ -1,0 +1,23 @@
+=== 1339p SAFE RACE ===
+pid=388
+ebase=CACC000
+mmap: bad=310A5C000 use=310A60000 rb=310A64000 fb=310D3C000 ub=310E3C000
+params: TRIALS=50 SPRAY=128 OPTLEN=24
+t1:socket
+t1:tclass_set
+t1:sp=23,24
+t1:spawn_free
+t1:spawn_use
+t1:parking
+t1:releasing
+t1:released
+t1:waited
+t1:sprayed=128
+t1:tc=42 fw=0
+t2:socket
+t2:tclass_set
+t2:sp=24,25
+t2:spawn_free
+t2:spawn_use
+t2:parking
+t2:releasing

@@ -1,0 +1,22 @@
+=== PROBE 1236a: 663 mode space with zero ids ===
+[0] pid=80 trampoline=0x839AF03B7
+  mode=0x00 n=2 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0x01 n=2 ret=0x00000000_00000000 err=22 Invalid argument      out=80020003 80020003 AAAAAAAA pid=80
+  mode=0x02 n=2 ret=0x00000000_00000000 err=22 Invalid argument      out=80020003 80020003 AAAAAAAA pid=80
+  mode=0x03 n=2 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0x04 n=2 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0x05 n=2 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0x06 n=2 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0x07 n=2 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0x08 n=2 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0x10 n=2 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0x40 n=2 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0xFF n=2 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+[B] count 3 on the modes that accepted count 2
+  mode=0x03 n=3 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0x04 n=3 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0x05 n=3 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0x10 n=3 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+  mode=0xFF n=3 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument      out=AAAAAAAA AAAAAAAA AAAAAAAA AAAAAAAA pid=80
+[Z] pid_end=80
+=== DONE ===

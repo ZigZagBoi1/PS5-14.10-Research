@@ -1,0 +1,37 @@
+=== PROBE 88b: handle namespace with real handles ===
+[0] pid=109
+--- 1: event flag ---
+  538 ef_create ret=525
+  544 signal ret=0
+  543 poll   ret=-1 pattern=0
+  546 clear  ret=0
+  545 wait   ret=0
+
+--- 2: semaphore ---
+  549 sem_create ret=526
+  555 sem_post   ret=0
+  554 sem_trywait ret=-1
+  552 sem_close   ret=-1
+
+--- 3: cross-type calls ---
+  ef_signal(544) on semaphore handle 526 ret=-1
+  ef_poll(543)   on semaphore handle 526 ret=-1
+  ef_delete(539) on semaphore handle 526 ret=-1
+  sem_post(555)  on event flag handle 525 ret=-1
+  sem_trywait(554) on event flag handle 525 ret=-1
+  sem_delete(550) on event flag handle 525 ret=-1
+
+--- 4: slot reuse ---
+  create A -> 527
+  delete A -> 0
+  create B -> 8719 (same as A? false)
+  create sem S -> 528 (equals A? false)
+
+--- 5: 557/558 ---
+  557 create ret=529
+  557 create ret=-1
+  558 delete(0x206,0) ret=-1
+  558 delete(0x206,1) ret=-1
+  558 delete(ef,0) ret=-1
+[Z] alive=109
+=== PROBE 88b COMPLETE ===

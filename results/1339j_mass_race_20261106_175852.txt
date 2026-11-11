@@ -1,0 +1,28 @@
+=== 1339j MASS-SPAWN RACE ===
+pid=290
+ebase=56990000
+params: FREE=150 USE=150 TRIALS=20 SPRAY=128
+trial 1: tc_after=42 tc_spray=42
+trial 2: tc_after=42 tc_spray=42
+trial 3: tc_after=42 tc_spray=42
+trial 4: tc_after=42 tc_spray=42
+trial 5: tc_after=42 tc_spray=42
+trial 6: tc_after=42 tc_spray=42
+trial 7: tc_after=42 tc_spray=42
+trial 8: tc_after=42 tc_spray=42
+trial 9: tc_after=42 tc_spray=42
+trial 10: tc_after=42 tc_spray=42
+trial 11: tc_after=42 tc_spray=42
+trial 12: tc_after=42 tc_spray=42
+trial 13: tc_after=42 tc_spray=42
+trial 14: tc_after=42 tc_spray=42
+trial 15: tc_after=42 tc_spray=42
+trial 16: tc_after=42 tc_spray=42
+trial 17: tc_after=42 tc_spray=42
+trial 18: tc_after=42 tc_spray=42
+trial 19: tc_after=42 tc_spray=42
+trial 20: tc_after=42 tc_spray=42
+
+=== RESULTS: 0/20 trials reclaimed ===
+pid=290
+=== DONE ===

@@ -1,0 +1,17 @@
+=== 1339t RACE WITH IN-CHAIN SPRAY ===
+pid=400
+ebase=0x188C8000
+gadgets OK
+spray fds: 24..55
+pool=0x3108DC000 cmsg_bad=0x3107E8000 cmsg_use=0x310A6C000 spray_cmsg=0x31082C000
+progress t=25 use=0 free=25 reclaim=0
+progress t=50 use=0 free=50 reclaim=0
+progress t=75 use=1 free=74 reclaim=0
+progress t=100 use=2 free=98 reclaim=0
+progress t=125 use=2 free=123 reclaim=0
+progress t=150 use=2 free=148 reclaim=0
+progress t=175 use=2 free=173 reclaim=0
+progress t=200 use=2 free=198 reclaim=0
+=== RESULTS: trials=200 use_wins=2 free_wins=198 reclaim=0 trial=-1 spray=-1 fd=-1 ===
+pid=400
+=== DONE ===

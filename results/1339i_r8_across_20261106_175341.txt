@@ -1,0 +1,17 @@
+=== 1339i R8 ACROSS SETSOCKOPT TEST ===
+pid=290
+ebase=56990000
+fd=22
+baseline TCLASS=42
+val99=311658000 val77=31165C000
+sp: rd=27 wr=28
+chain: 39 entries
+spawning child...
+tid=100882
+done=BEEF01
+rv1 (round 1)=0 hi=0
+rv2 (round 2)=4294967295 hi=4294967295
+TCLASS=99
+*** R8 CLOBBERED after setsockopt! (99 = round 1 ok, round 2 EINVAL) ***
+pid=290
+=== DONE ===

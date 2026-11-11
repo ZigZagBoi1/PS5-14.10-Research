@@ -1,0 +1,2 @@
+=== PROBE 1183a: PAGE SCAN FOR AVX STORES ===
+[R] region=libkernel base=0x0000000823998000 pages=100 from 0

@@ -1,0 +1,22 @@
+=== PROBE 1332a: POINTER CLASS (INPUT) ===
+[0] user pages map=0x310D08000 msg=0x310C00000 out=0x310C04000 | K=0xFFFFFFFFCD400000
+  557 parse      U ret=16901 err=2150498320 error_code=0x802e0010
+  557 parse      N ret=-1 err=14 Bad address
+  557 parse      K ret=-1 err=14 Bad address
+  636 input      U ret=-1 err=1 Operation not permitted
+  636 input      N ret=-1 err=1 Operation not permitted
+  636 input      K ret=-1 err=1 Operation not permitted
+  601 iovec      U ret=-1 err=22 Invalid argument
+  601 iovec      N ret=-1 err=22 Invalid argument
+  601 iovec      K ret=-1 err=22 Invalid argument
+  669 create     U ret=0 err=22 Invalid argument
+  669 create     N ret=-1 err=14 Bad address
+  669 create     K ret=-1 err=14 Bad address
+  674 query      U ret=-1 err=14 Bad address
+  674 query      N ret=-1 err=14 Bad address
+  674 query      K ret=-1 err=14 Bad address
+  548 q          U ret=-1 err=22 Invalid argument
+  548 q          N ret=-1 err=14 Bad address
+  548 q          K ret=-1 err=22 Invalid argument
+[E] alive pid=192
+=== DONE ===

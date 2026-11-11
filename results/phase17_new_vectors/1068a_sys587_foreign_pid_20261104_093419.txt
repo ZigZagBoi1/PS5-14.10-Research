@@ -1,0 +1,12 @@
+=== PROBE 1068a: sys 587 with a foreign pid ===
+[S] pid=80
+[Q] pid=0 rv=0 touched=32 kp=0 authid=0_00000000 caps=20000000_00000000
+[Q] pid=1 rv=0 touched=32 kp=0 authid=0_00000000 caps=40000000_00000000
+[Q] pid=2 rv=0 touched=32 kp=0 authid=0_00000000 caps=40000000_00000000
+[Q] pid=3 rv=0 touched=32 kp=0 authid=0_00000000 caps=40000000_00000000
+[Q] pid=4 rv=0 touched=32 kp=0 authid=0_00000000 caps=40000000_00000000
+[Q] pid=5 rv=0 touched=32 kp=0 authid=0_00000000 caps=40000000_00000000
+[Q] pid=6 rv=0 touched=32 kp=0 authid=0_00000000 caps=40000000_00000000
+[Q] pid=7 rv=0 touched=32 kp=0 authid=0_00000000 caps=40000000_00000000
+[Q] pid=80 rv=0 touched=32 kp=0 authid=0_00000000 caps=20000000_00000000
+[Z] done pid=80

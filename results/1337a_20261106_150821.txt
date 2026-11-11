@@ -1,0 +1,15 @@
+=== PROBE 1337a: 648 STRUCTURED CALL ===
+  st 0x3111CAEC0 slot 0x3111CB9A0
+  A null +0xb0
+    rv -1 err 1 Operation not permitted
+  B +0xb0 set, type 0
+    rv -1 err 1 Operation not permitted
+  C type 0xf000
+    rv -1 err 1 Operation not permitted
+  D type 0x20f00
+    rv -1 err 1 Operation not permitted
+  E type 0x1000000
+    rv -1 err 1 Operation not permitted
+[F] alive
+  vm_counter 3376
+=== DONE 1337a ===

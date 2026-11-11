@@ -1,0 +1,68 @@
+=== PROBE 1037a ===
+[S] shield ok=true rv=0
+[P] pid=94
+-- shape A: 536(pid, handle, buf)
+[536A h=0] rv=-1
+[536A h=1] rv=-1
+[536A h=2] rv=-1
+[536A h=3] rv=-1
+[536A h=4] rv=-1
+[536A h=5] rv=-1
+[536A h=6] rv=-1
+[536A h=7] rv=-1
+[536A h=8] rv=-1
+[536A h=D] rv=-1
+[536A h=16] rv=-1
+[536A h=20] rv=-1
+[536A h=22] rv=-1
+[536A h=24] rv=-1
+[536A h=26] rv=-1
+[536A h=8E] rv=-1
+[536A h=2001] rv=-1
+[536A h=3A] rv=-1
+[536A h=41] rv=-1
+[536A h=9F] rv=-1
+[536A h=A0] rv=-1
+[536A h=8D] rv=-1
+[536A h=A2] rv=-1
+[536A h=48] rv=-1
+[536A h=4A] rv=-1
+[536A h=42] rv=-1
+-- shape B: 536(handle, buf, len)
+[536B h=0] rv=-1
+[536B h=2] rv=-1
+[536B h=8E] rv=-1
+[536B h=2001] rv=-1
+-- shape C: 604(handle, buf, len)
+[604C h=0] rv=-1
+[604C h=1] rv=-1
+[604C h=2] rv=-1
+[604C h=3] rv=-1
+[604C h=4] rv=-1
+[604C h=5] rv=-1
+[604C h=6] rv=-1
+[604C h=7] rv=-1
+[604C h=8] rv=-1
+[604C h=D] rv=-1
+[604C h=16] rv=-1
+[604C h=20] rv=-1
+[604C h=22] rv=-1
+[604C h=24] rv=-1
+[604C h=26] rv=-1
+[604C h=8E] rv=-1
+[604C h=2001] rv=-1
+[604C h=3A] rv=-1
+[604C h=41] rv=-1
+[604C h=9F] rv=-1
+[604C h=A0] rv=-1
+[604C h=8D] rv=-1
+[604C h=A2] rv=-1
+[604C h=48] rv=-1
+[604C h=4A] rv=-1
+[604C h=42] rv=-1
+-- shape D: 604(pid, handle, buf)
+[604D h=0] rv=-1
+[604D h=2] rv=-1
+[604D h=8E] rv=-1
+[604D h=2001] rv=-1
+[Z] done pid=94

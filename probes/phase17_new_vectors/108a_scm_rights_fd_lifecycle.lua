@@ -569,10 +569,18 @@ repeat
     safe_wq(rmsg + 0x20, uint64(rcmsg))
     safe_wd(rmsg + 0x28, 0x100)
 
-    local ok_r, rrv = pcall(function()
-        return to_num(make_syscall(SYS_recvmsg)(uint64(fd_a), uint64(rmsg), uint64(0)))
-    end)
-    local actual_clen = safe_rd(rmsg + 0x28)
+    local ok_r, rrv = -1, -1
+    local actual_clen = 0
+    if ok_s and srv == 1 then
+        -- Only receive when a datagram is actually queued: a blocking recvmsg
+        -- with no data wedges the single-threaded loader forever.
+        ok_r, rrv = pcall(function()
+            return to_num(make_syscall(SYS_recvmsg)(uint64(fd_a), uint64(rmsg), uint64(0)))
+        end)
+        actual_clen = safe_rd(rmsg + 0x28)
+    else
+        print("[F] sendmsg carried no datagram - skipping recvmsg")
+    end
     print("[F] recvmsg: ok=" .. tostring(ok_r) .. " ret=" .. tostring(rrv) ..
           " controllen=" .. tostring(actual_clen))
 

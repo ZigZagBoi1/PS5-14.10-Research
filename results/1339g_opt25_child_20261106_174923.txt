@@ -1,0 +1,19 @@
+=== 1339g OPT25 FROM CHILD ===
+pid=290
+ebase=56990000
+pop_r8=NOT FOUND
+fd=22
+baseline TCLASS=42
+cmsg_buf=3115EC000  len=20 level=41 type=61 val=99
+parent setsockopt(25, cmsg, 24): TCLASS=99 (expect 99)
+sp: rd=25 wr=26
+chain: 25 entries
+spawning child...
+tid=100881
+done marker: BEEF01
+setsockopt rv: lo=0 hi=0
+setsockopt returned: 0
+TCLASS=99
+*** SUCCESS: setsockopt(25, cmsg, 24) WORKED from child! R8 survives read() ***
+pid=290
+=== DONE ===

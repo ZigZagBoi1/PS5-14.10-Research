@@ -1,0 +1,9 @@
+=== PROBE 1335a: 622 ENTRY-CHECK BYPASS ===
+[A] control arg4=0x100 cmd 0x200
+  rv 0 status 0x800E0001
+[B] control arg4=0x40 cmd 0x200
+  rv 0 status 0xFFFFFFFF
+[C] range 0x200-0x270
+  c200
+  = rv 0 st 0xFFFFFFFF 0x00000000 0x00000000 0x00000000
+  c202

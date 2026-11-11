@@ -1,0 +1,10 @@
+=== 1339z SCATTER ===
+fdlimit: 1024
+pid=412
+gadgets OK
+spray=22..147 (126)
+starting 1500 trials
+EXHAUSTED t=1
+=== RESULTS: use=0 free=0 reclaim=0 ===
+pid=412
+=== DONE ===

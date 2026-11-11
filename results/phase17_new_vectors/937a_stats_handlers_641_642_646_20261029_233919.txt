@@ -1,0 +1,25 @@
+=== PROBE 937a: 641 / 642 / 646 ARGUMENT SHAPES ===
+
+[0] pid=242 bufp=311040FA0
+
+[A] 642(buf, 0x400)      map statistics
+    -> -1
+    A buffer all zero
+[B] 642(buf, 0x400, 0)   map statistics, selector 0
+    -> -1
+    B buffer all zero
+
+[C] 646(buf, 0x400)      kernel memory statistics
+    -> -1
+    C buffer all zero
+[D] 646(0, buf, 0x400)   kernel mem stats, buffer second
+    -> -1
+    D buffer all zero
+
+[E] 641(pid, 0)          cpu usage
+    -> -1
+[F] 641(pid, buf)        cpu usage into buffer
+    -> -1
+    F buffer all zero
+
+=== COMPLETE ===

@@ -189,10 +189,17 @@ def _drop_rows_for_capture(capture):
 
 def _append_rows(rows):
     os.makedirs(RESULTS, exist_ok=True)
-    fresh = not os.path.exists(INDEX)
+    fresh = not os.path.exists(INDEX) or os.path.getsize(INDEX) == 0
+    needs_separator = False
+    if not fresh:
+        with open(INDEX, "rb") as existing:
+            existing.seek(-1, os.SEEK_END)
+            needs_separator = existing.read(1) != b"\n"
     with open(INDEX, "a", encoding="utf-8", newline="\n") as fh:
         if fresh:
             fh.write(INDEX_HEADER)
+        elif needs_separator:
+            fh.write("\n")
         for row in rows:
             fh.write(
                 "| %s | %s | %s | %s | %s | %s |\n"

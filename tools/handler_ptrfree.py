@@ -43,8 +43,10 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--dump", default="docs/dumps_13.60")
     args = ap.parse_args()
-    kt = open(os.path.join(args.dump, "kernel_text.bin"), "rb").read()
-    se = open(os.path.join(args.dump, "sysent_raw.bin"), "rb").read()
+    with open(os.path.join(args.dump, "kernel_text.bin"), "rb") as handle:
+        kt = handle.read()
+    with open(os.path.join(args.dump, "sysent_raw.bin"), "rb") as handle:
+        se = handle.read()
     md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
     md.skipdata = True
 
@@ -66,6 +68,7 @@ def main():
             continue
         off = addr - BASE
         pend_slot = pend_size = None
+        ld_slot = None
         ptr_slots = {}
         hits = []
         for ins in md.disasm(kt[off:off + BODY_CAP], addr):
@@ -88,7 +91,7 @@ def main():
                     pass
                 if tgt == FREE:
                     s = ld_slot
-                    if s in ptr_slots:
+                    if s is not None and s in ptr_slots:
                         hits.append((ptr_slots[s], ins.address - BASE, s))
             if m == "mov" and o.startswith("rdi, qword ptr [rbp - "):
                 ld_slot = slot(o)

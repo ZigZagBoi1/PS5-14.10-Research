@@ -151,6 +151,20 @@ class StateToolTests(unittest.TestCase):
         self.assertEqual(
             before, (self.root / "results" / "STATE.md").read_text(encoding="utf-8"))
 
+    def test_state_marker_in_a_value_round_trips(self):
+        value = "<!-- STATE:END -->"
+        self._run(["set", "notes=" + value])
+        self.assertEqual(dict(state._read_state())["notes"], value)
+
+    def test_every_splitlines_separator_is_refused_in_state(self):
+        self._run(["set", "notes=calm"])
+        before = (self.root / "results" / "STATE.md").read_text(encoding="utf-8")
+        for separator in "\v\f\x1c\x1d\x1e\x85\u2028\u2029":
+            with self.assertRaises(SystemExit):
+                self._run(["set", "notes=first" + separator + "second"])
+        self.assertEqual(
+            before, (self.root / "results" / "STATE.md").read_text(encoding="utf-8"))
+
     def test_regrading_a_capture_replaces_its_row(self):
         """A seed row and a graded row for one capture must not both survive."""
         self._capture("phase14_final_push/55c_probe_20261018_095816.txt")

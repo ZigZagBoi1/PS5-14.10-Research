@@ -100,9 +100,16 @@ def _read_state():
     if not os.path.exists(STATE):
         return list(DEFAULT_STATE)
     text = open(STATE, encoding="utf-8", errors="replace").read()
-    if BEGIN not in text or END not in text:
+    # Delimiters are whole lines. Searching for the marker as a substring would
+    # truncate the block when a value contains the marker text.
+    lines = text.splitlines()
+    try:
+        start = next(i for i, line in enumerate(lines) if line.strip() == BEGIN)
+        end = next(i for i, line in enumerate(lines[start + 1:], start + 1)
+                   if line.strip() == END)
+    except StopIteration:
         return list(DEFAULT_STATE)
-    block = text.split(BEGIN, 1)[1].split(END, 1)[0]
+    block = "\n".join(lines[start + 1:end])
     pairs = []
     for line in block.splitlines():
         line = line.strip()
@@ -113,9 +120,14 @@ def _read_state():
     return pairs or list(DEFAULT_STATE)
 
 
+_STATE_LINE_BREAKS = ("\r", "\n", "\v", "\f", "\x1c", "\x1d", "\x1e",
+                      "\x85", "\u2028", "\u2029")
+
+
 def _write_state(pairs):
     for key, value in pairs:
-        if "\n" in str(key) or "\n" in str(value) or "\r" in str(key) or "\r" in str(value):
+        if any(char in str(key) or char in str(value)
+               for char in _STATE_LINE_BREAKS):
             raise SystemExit(
                 "state values must fit on one line: %r" % (key,)
             )

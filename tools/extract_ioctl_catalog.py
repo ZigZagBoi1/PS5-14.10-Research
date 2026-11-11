@@ -50,25 +50,26 @@ def ioctl_like(imm):
     return direction in (1, 2, 3) or size == 0
 
 
-def main():
+def main(argv=None):
     ap = argparse.ArgumentParser()
     ap.add_argument("--text", type=Path, default=DEFAULT_TEXT)
     ap.add_argument("--out", type=Path, default=None)
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
     text = args.text.read_bytes()
     cand = [(o, i) for (o, i) in imm32_hits(text) if ioctl_like(i)]
     cand.sort()
 
     clusters = []
-    cur = [cand[0]]
-    for (o, i) in cand[1:]:
-        if o - cur[-1][0] <= 0x600:
-            cur.append((o, i))
-        else:
-            clusters.append(cur)
-            cur = [(o, i)]
-    clusters.append(cur)
+    if cand:
+        cur = [cand[0]]
+        for (o, i) in cand[1:]:
+            if o - cur[-1][0] <= 0x600:
+                cur.append((o, i))
+            else:
+                clusters.append(cur)
+                cur = [(o, i)]
+        clusters.append(cur)
 
     rows = []
     for c in clusters:
@@ -92,7 +93,8 @@ def main():
     if args.out:
         args.out.write_text(json.dumps(rows, indent=1), encoding="utf-8")
         print(f"wrote {args.out}")
+    return 0
 
 
 if __name__ == "__main__":
-    main()
+    raise SystemExit(main())

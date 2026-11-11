@@ -116,7 +116,7 @@ try{
     var lv=leakedValues[k];
     emit('B-LEAK','i='+lv.iter+',j='+lv.idx+',type='+lv.type+',hex='+lv.hex+',val='+String(lv.val).slice(0,30));
   }
-  if(leakedValues.length>0) emit('B-VERDICT','UNINIT-READ-CONFIRMED — '+leakedValues.length+' stale values');
+  if(leakedValues.length>0) emit('B-VERDICT','ENGINE-DIVERGENCE — '+leakedValues.length+' non-default values; inspect before CVE claim');
   else emit('B-VERDICT','no-leak (callback result undefined)');
 }catch(e){emit('B-ERR',e.name+':'+e.message);}
 flush();
@@ -159,7 +159,7 @@ try{
     var lv=leaksC[k];
     emit('C-LEAK','i='+lv.iter+',j='+lv.idx+',type='+lv.type+',hex='+lv.hex);
   }
-  if(leaksC.length>0) emit('C-VERDICT','LEAK-CONFIRMED');
+  if(leaksC.length>0) emit('C-VERDICT','ENGINE-DIVERGENCE — extended non-default values; inspect');
   else emit('C-VERDICT','no-leak-extended');
 }catch(e){emit('C-ERR',e.name+':'+e.message);}
 flush();
@@ -237,7 +237,7 @@ try{
     emit('D-OBJ','i='+objs[k].iter+',j='+objs[k].idx);
   }
 
-  if(ptrs.length>0) emit('D-VERDICT','POINTER-LEAK — '+ptrs.length+' pointer-shaped values!');
+  if(ptrs.length>0) emit('D-VERDICT','ENGINE-DIVERGENCE — '+ptrs.length+' pointer-shaped values; inspect');
   else if(leaksD.length>0) emit('D-VERDICT','DATA-LEAK — non-pointer stale data');
   else emit('D-VERDICT','no-leak-with-groom');
 }catch(e){emit('D-ERR',e.name+':'+e.message);}
@@ -303,7 +303,7 @@ try{
     var lv=leaksE[k];
     emit('E-LEAK',lv.src+',j='+lv.idx+',type='+lv.type+',hex='+lv.hex);
   }
-  if(leaksE.length>0) emit('E-VERDICT','ALT-TRIGGER-LEAK');
+  if(leaksE.length>0) emit('E-VERDICT','ENGINE-DIVERGENCE — alternate trigger produced non-default values');
   else emit('E-VERDICT','no-leak-alt');
 }catch(e){emit('E-ERR',e.name+':'+e.message);}
 flush();

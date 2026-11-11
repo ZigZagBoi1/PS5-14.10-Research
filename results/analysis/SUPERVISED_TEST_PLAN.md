@@ -30,42 +30,31 @@ Verify RAB, DataView, BigUint64Array, RegExp are all functional.
 - CRASH_CLASS: NONE
 - Expected: all available (already confirmed in p601)
 
-### Phase 2: p719 OOB Read Survey (15 min)
+### Phase 2: CVE-2023-41976 SVG Animation UAF — p686 (15 min)
 
-**Run p719 under supervision.**
-- Serve via beacon infrastructure
-- Monitor all beacon callbacks
-- CRASH_CLASS: MODERATE (WebProcess may crash on OOB access)
-- If WebProcess crashes: record beacon log up to crash point, do NOT auto-retry
-- Record: firmware, probe git hash, raw beacon output, crash/no-crash
-
-**Expected outcomes per vector:**
-| Vector | Expected | If Unexpected |
-|--------|----------|---------------|
-| A (RAB stale) | Bounds check catches, no OOB | If OOB succeeds: MAJOR FINDING — examine pointer values |
-| B (DFG string) | NO-OOB-CHARS (no DFG) | If OOB: re-examine JIT tier assumption |
-| C (RegExp) | Unknown | Any OOB data → examine for pointers |
-| D (Transfer) | Throws on detached buffer | If stale data: SIGNIFICANT — examine for pointers |
-| E (DataView RAB) | Bounds check catches | Same as A |
-| F (Clone valueOf) | Likely benign | Any length confusion → examine carefully |
-
-### Phase 3: CVE-2026-64718 Canvas UAF (15 min)
-
-**Run p721 under supervision.**
-- Tests 6 Canvas lifecycle patterns (A-F)
-- CRASH_CLASS: MODERATE
-- Record: which patterns trigger, any freed-memory reads
-
-### Phase 4: CVE-2023-41976 SVG Animation UAF (15 min)
-
-**Run p686 under supervision.**
+**Run p686 under supervision.** CVSS 8.8 ACE, Safari 17.1 fix, JIT-independent.
 - Different size class from FontFace (192B)
-- CRASH_CLASS: MODERATE
-- Record: UAF trigger, reclaim success, any info leak
+- Tests 5 SVG animation UAF patterns (A-E)
+- CRASH_CLASS: MODERATE (stale SVG element pointer)
+- Record: UAF trigger, reclaim success, any info leak, pointer candidates
+
+### Phase 3: CVE-2023-40447 DOM UAF — p692 (15 min)
+
+**Run p692 under supervision.** CVSS 8.8 ACE, Safari 17.1 fix, JIT-independent.
+- Tests 5 DOM mutation + layout patterns (A-E)
+- CRASH_CLASS: MODERATE (stale DOM/layout reference)
+- Same researcher as p686 (Junsung Lee) — related bugs likely
+
+### Phase 4: CVE-2023-42950 Heap UAF — p694 (15 min)
+
+**Run p694 under supervision.** CVSS 8.8 ACE, Safari 17.2 fix.
+- Tests 5 heap/GC UAF patterns (A-E)
+- CRASH_CLASS: MODERATE (heap UAF through stale JS/C++ object)
+- Proxy handler trap pattern (D) is highest-value vector
 
 ### Phase 5+: Lower priority probes (as time allows)
 
-p692 → p694 → p693 → p689/p690
+p693 (CVE-2023-42890, CWE-94 JIT-uncertain) → p689/p690 (CVE-2024-23213) → p721 (CVE-2026-64718, crash-only)
 
 ---
 

@@ -191,6 +191,14 @@ class StateToolTests(unittest.TestCase):
         self.assertIn("| V |", rows[0])
         self.assertIn("void: rejected at the entry check", rows[0])
 
+    def test_mtime_fallback_labels_the_utc_date(self):
+        path = self._capture("phase1/no_date_capture.txt")
+        os.utime(path, (1_700_000_000, 1_700_000_000))
+        _code, out = self._run(["seed"])
+        self.assertIn("seeded 1 row", out)
+        text = (self.root / "results" / "INDEX.md").read_text(encoding="utf-8")
+        self.assertIn("| 2023-11-14~ |", text)
+
     def test_underscore_files_are_logs_and_are_skipped(self):
         self._capture("_selftest_watchdog_log.txt")
         self._capture("phase1/1335a_claim_20261106_145651.txt")

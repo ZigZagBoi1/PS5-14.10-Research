@@ -215,7 +215,7 @@ def _capture_stamp(path):
     if not probe:
         return None, None, None
     try:
-        stamp = _dt.datetime.fromtimestamp(os.path.getmtime(path))
+        stamp = _dt.datetime.fromtimestamp(os.path.getmtime(path), _dt.timezone.utc)
     except OSError:
         return None, probe.group(0), None
     return stamp, probe.group(0), "mtime"

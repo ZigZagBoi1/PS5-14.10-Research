@@ -77,11 +77,11 @@ def render_archive(title: str, intro: str, base: Path, files: list[Path],
     return "\n".join(lines) + "\n"
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--check", action="store_true",
                         help="report staleness without writing")
-    args = parser.parse_args()
+    args = parser.parse_args(argv)
 
     probe_files = gather(ROOT / "probes", PROBE_GLOBS)
     result_files = gather(ROOT / "results", (RESULT_GLOB,))
@@ -101,11 +101,13 @@ def main() -> int:
         ROOT / "results", result_files, "results")
 
     if args.check:
+        stale = False
         for path, content in ((all_probes, probes_out), (all_results, results_out)):
             current = path.read_text(encoding="utf-8") if path.exists() else ""
             state = "current" if current == content else "STALE"
+            stale = stale or state == "STALE"
             print(f"{path.relative_to(ROOT)}: {state}")
-        return 0
+        return 1 if stale else 0
 
     all_probes.write_text(probes_out, encoding="utf-8")
     all_results.write_text(results_out, encoding="utf-8")

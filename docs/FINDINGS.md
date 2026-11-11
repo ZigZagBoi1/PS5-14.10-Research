@@ -400,7 +400,7 @@ Sony's `sceKernelMtypeprotect` (syscall 585) returned `ret=1` — a positive val
 
 **Probes:** 42i
 
-`mincore()` (syscall 78) returned `ret=0` with `vec=0x1F` (5 consecutive pages resident). This syscall reports whether virtual address pages are backed by physical memory. It can be used as a side-channel oracle: probing page residency at guessed kernel virtual addresses may detect the kernel base without a direct pointer leak (cache-based KASLR defeat). Even if kernel VA probing fails, it maps the full process VA space layout.
+`mincore()` (syscall 78) returned `ret=0` with `vec=0x1F`. The call mapped `0x4000` bytes and asked about that range, which is **one** 16 KiB page, so `0x1F` is that single page's flag byte (INCORE|REFERENCED|MODIFIED|REFERENCED_OTHER|MODIFIED_OTHER), not five pages. Corrected 2026-11-10 against `probes/phase9_kaslr_defeat/42i_vmquery.lua:130-141` and `docs/ALL_RESULTS.md:73730`. This syscall reports whether virtual address pages are backed by physical memory. It can be used as a side-channel oracle: probing page residency at guessed kernel virtual addresses may detect the kernel base without a direct pointer leak (cache-based KASLR defeat). Even if kernel VA probing fails, it maps the full process VA space layout.
 
 **Impact:** Side-channel KASLR oracle. Probe 43l tests kernel VA range probing and process VA space mapping.
 

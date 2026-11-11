@@ -465,3 +465,86 @@ Two method notes for later probes:
   which exits the whole process; that is what ended the first 769a run.
 - `lahf` only writes `AH`, so a stored `RAX` shows the preceding syscall's
   return value in the low three bytes.  Read `AH` for the flags.
+
+## Update 2026-11-09 — the Lua-thread API cannot run a loop, so it cannot race
+
+`run_lua_code_in_new_thread(src, {async=true, client_fd=fd})` starts a thread
+that stays usable for a short job — 1175a has one printing to the same socket
+while main printed — but it does **not** survive a long syscall loop, and a
+death in that thread takes the whole process with it.  Three shapes were run
+against the same 200 000-iteration loop, each removing one suspect:
+
+| capture | destination | closures | result |
+|---|---|---|---|
+| `1517a` `[C]` | `SOCK_DGRAM` socketpair | one per iteration | `spawn = OK`, then the connection ended |
+| `1518a` `[C]` | `/dev/zero` (never queues) | exactly one | `spawn = OK`, then the connection ended |
+| `1518a` `[B]` | `/dev/zero` | none — main only | completed, `sum=800000`, still alive |
+
+So it is neither the socket buffer filling nor Lua closure churn: a spawned Lua
+thread executing a syscall loop is the failure.  Main doing the identical loop
+is fine, which is what makes it a threading bug rather than a syscall bug.
+
+**Consequence for evidence already in the tree.**  Every probe that used a
+spawned Lua thread as the racy side has a racing phase that proves nothing,
+because the instrument fails on its own.  `1515a` and `1516a` were regraded
+**V** for exactly this reason; `1349a`/`1350a`/`1350b` used the same construct.
+Their *serial* controls remain valid and are the only part worth citing.
+
+A race on this platform needs a **native** child — `thr_new(455)` with a
+`start_func` gadget chain, the shape 396f/384b already used for five-argument
+syscalls — not a Lua thread.  Building one costs an unrolled chain (five
+gadgets per iteration, so a useful iteration count is a few hundred kilobytes
+of chain), and it should only be built if a race is the last hypothesis left.
+
+### Side result: `/dev/zero` write ignores its source pointer
+
+`write(zerofd, 0x400000000, 4)` on an unmapped user address returns **4**, not
+`EFAULT` (`1518a` `[A]`).  `/dev/zero`'s write path never touches the buffer,
+so it cannot be used as a fault generator, and a write there proves nothing
+about whether a pointer was valid.  Use a socket or a pipe when the fault
+itself is the measurement.
+
+## A child fault is NOT contained when the address is user-space (2026-11-10)
+
+The "a child contains an ordinary fault, not a call that terminates the process"
+line that has been in `CLAUDE.md` since 1331a is **true for kernel-half faults
+and false for user-space faults**.  One run settles it.
+
+**`results/phase36_realargs/1556a_child_fault_survivability_20261110_192412.txt`
+(grade M).**  A single `thr_create(430)` child was armed with `RIP` = the
+`mov [rdi],rax; ret` gadget at `eboot+0x92C67` and `RDI = 0x200000000`, an
+address `547` reports as unmapped.  The child faulted on its **first**
+instruction — the loader's dump shows `RIP = 0x2E856C67`, `RDI = 0x200000000`,
+`RSP = 0x3111BC000` still at the stack base, `RAX = 0x0011223344556677`, `CS = 0x43`,
+`SS = 0x3B` — and the parent never printed the next line.  The loader was dead:
+`9026` answered `CONNECTION_REFUSED` immediately afterwards.
+
+**`results/phase36_realargs/1553a_munmap_vs_store_race_20261110_192006.txt`
+(grade V).**  The same thing happened to a child whose fault was *caused* by the
+kernel: it stored into a page ~1938 times, `548 op 1` unmapped that page under
+it, the next store faulted at the same gadget with `RDI` = the unmapped page, and
+the capture ended.  That run proves nothing about the PTE question it was built
+for, because the verdict was printed after the lethal call — but it is a second
+independent instance of the same death.
+
+**Why this matters more than the fault itself.**  Every remaining race design on
+the VM map (delete versus store, delete versus first-touch fault, protect versus
+fault) has the losing child fault.  Under this measurement each negative run
+costs a physical relaunch, so the only affordable shape is one where **the death
+is the datum**: print the interpretation and every prerequisite *before* the
+lethal call, so that a capture which ends there is a positive result and a
+capture which continues is the anomaly.  `1557a` is built that way and is the
+first probe in the tree to treat its own death as the measurement.
+
+Two corollaries for probe authors:
+
+* Never place a conclusion, a verdict, or a "the process is still alive" check
+  after a call whose whole purpose is to make a child fault.
+* Never arm a child with a pointer that might be unmapped as a way of getting
+  "output after the race".  Use the heartbeat page (a second mapped page the
+  same child writes) as the survival signal instead; it is the only signal that
+  does not require surviving the fault.
+
+The `CLAUDE.md` sentence should be read as scoped to kernel-half faults from here
+on, and any probe that cites 1331a as licence to let a user-space fault happen
+should be corrected.

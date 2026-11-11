@@ -1,0 +1,11282 @@
+[
+{
+"num": 0,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 1,
+"narg": 1,
+"thunk_rva": 2512880,
+"body_rva": 12481088,
+"hits": [
+{
+"rva": 12481118,
+"uap_off": 0,
+"text": "mov ecx, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 63,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 2,
+"narg": 0,
+"thunk_rva": 2512888,
+"body_rva": 13308816,
+"hits": [],
+"insns": 40,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 3,
+"narg": 3,
+"thunk_rva": 2512896,
+"body_rva": 5160960,
+"hits": [
+{
+"rva": 5161002,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5161063,
+"uap_off": 8,
+"text": "mov rax, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5161117,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 71,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 4,
+"narg": 3,
+"thunk_rva": 2512904,
+"body_rva": 5162336,
+"hits": [
+{
+"rva": 5162378,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5162439,
+"uap_off": 8,
+"text": "mov rax, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5162493,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 71,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 5,
+"narg": 3,
+"thunk_rva": 2512912,
+"body_rva": 9399808,
+"hits": [
+{
+"rva": 9399816,
+"uap_off": 0,
+"text": "mov rdx, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9399819,
+"uap_off": 8,
+"text": "mov r8d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9399823,
+"uap_off": 16,
+"text": "mov r9d, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 13,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 6,
+"narg": 1,
+"thunk_rva": 2512920,
+"body_rva": 7520000,
+"hits": [
+{
+"rva": 7520004,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 38,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 7,
+"narg": 4,
+"thunk_rva": 2512928,
+"body_rva": 12485264,
+"hits": [
+{
+"rva": 12485347,
+"uap_off": 24,
+"text": "mov rax, qword ptr [r14 + 0x18]",
+"size": 8,
+"write": false
+},
+{
+"rva": 12485351,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 97,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 8,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 9,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 10,
+"narg": 1,
+"thunk_rva": 2512936,
+"body_rva": 9405776,
+"hits": [
+{
+"rva": 9405780,
+"uap_off": 0,
+"text": "mov rdx, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 160,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 11,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 12,
+"narg": 1,
+"thunk_rva": 2512944,
+"body_rva": 9399072,
+"hits": [
+{
+"rva": 9399126,
+"uap_off": 0,
+"text": "mov r8, qword ptr [r14]",
+"size": 8,
+"write": false
+}
+],
+"insns": 64,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 13,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 14,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 15,
+"narg": 2,
+"thunk_rva": 2512952,
+"body_rva": 9411392,
+"hits": [
+{
+"rva": 9411396,
+"uap_off": 0,
+"text": "mov rdx, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9411399,
+"uap_off": 8,
+"text": "movzx r8d, word ptr [rsi + 8]",
+"size": 2,
+"write": false
+}
+],
+"insns": 81,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 16,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 17,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 18,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 19,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 20,
+"narg": 0,
+"thunk_rva": 2511624,
+"body_rva": 2788064,
+"hits": [],
+"insns": 8,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 21,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 22,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 23,
+"narg": 1,
+"thunk_rva": 2511720,
+"body_rva": 2789872,
+"hits": [
+{
+"rva": 2789893,
+"uap_off": 0,
+"text": "mov r13d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 72,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 24,
+"narg": 0,
+"thunk_rva": 2511664,
+"body_rva": 2788704,
+"hits": [],
+"insns": 8,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 25,
+"narg": 0,
+"thunk_rva": 2511672,
+"body_rva": 2788736,
+"hits": [],
+"insns": 8,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 26,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 27,
+"narg": 3,
+"thunk_rva": 2512960,
+"body_rva": 5450208,
+"hits": [
+{
+"rva": 5450246,
+"uap_off": 8,
+"text": "mov r15, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5450321,
+"uap_off": 16,
+"text": "mov ecx, dword ptr [rbx + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5450359,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5450383,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 69,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 28,
+"narg": 3,
+"thunk_rva": 2512968,
+"body_rva": 5448160,
+"hits": [
+{
+"rva": 5448198,
+"uap_off": 8,
+"text": "mov r15, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5448284,
+"uap_off": 0,
+"text": "mov esi, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5448287,
+"uap_off": 16,
+"text": "mov ecx, dword ptr [r14 + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 52,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 29,
+"narg": 6,
+"thunk_rva": 2512976,
+"body_rva": 5449936,
+"hits": [
+{
+"rva": 5449975,
+"uap_off": 40,
+"text": "mov r15, qword ptr [rsi + 0x28]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5450034,
+"uap_off": 40,
+"text": "mov r15, qword ptr [r14 + 0x28]",
+"size": 8,
+"write": false
+}
+],
+"insns": 69,
+"reason": "ok",
+"max_off": 40
+},
+{
+"num": 30,
+"narg": 3,
+"thunk_rva": 2512984,
+"body_rva": 5443712,
+"hits": [
+{
+"rva": 5443716,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5443718,
+"uap_off": 8,
+"text": "mov rdx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5443722,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 98,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 31,
+"narg": 3,
+"thunk_rva": 2512992,
+"body_rva": 5452560,
+"hits": [
+{
+"rva": 5452600,
+"uap_off": 16,
+"text": "mov r15, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5452650,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5452689,
+"uap_off": 8,
+"text": "mov r12, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 63,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 32,
+"narg": 3,
+"thunk_rva": 2513000,
+"body_rva": 5451824,
+"hits": [
+{
+"rva": 5451864,
+"uap_off": 16,
+"text": "mov r15, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5451914,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5451953,
+"uap_off": 8,
+"text": "mov r12, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 63,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 33,
+"narg": 2,
+"thunk_rva": 2513008,
+"body_rva": 9407456,
+"hits": [],
+"insns": 14,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 34,
+"narg": 2,
+"thunk_rva": 2513016,
+"body_rva": 9409968,
+"hits": [
+{
+"rva": 9409972,
+"uap_off": 0,
+"text": "mov rdx, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9409975,
+"uap_off": 8,
+"text": "mov rcx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 79,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 35,
+"narg": 2,
+"thunk_rva": 2513024,
+"body_rva": 9410400,
+"hits": [
+{
+"rva": 9410457,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9410475,
+"uap_off": 8,
+"text": "mov edi, dword ptr [r14 + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9410484,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 49,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 36,
+"narg": 0,
+"thunk_rva": 2513032,
+"body_rva": 9395488,
+"hits": [],
+"insns": 43,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 37,
+"narg": 2,
+"thunk_rva": 2513040,
+"body_rva": 5633456,
+"hits": [
+{
+"rva": 5633515,
+"uap_off": 0,
+"text": "mov ecx, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5633549,
+"uap_off": 8,
+"text": "mov edi, dword ptr [r14 + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5633568,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5633576,
+"uap_off": 8,
+"text": "cmp dword ptr [r14 + 8], 0x80",
+"size": 4,
+"write": false
+},
+{
+"rva": 5633612,
+"uap_off": 8,
+"text": "mov esi, dword ptr [r14 + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5633661,
+"uap_off": 0,
+"text": "mov edx, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 68,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 38,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 39,
+"narg": 0,
+"thunk_rva": 2511632,
+"body_rva": 2788096,
+"hits": [],
+"insns": 33,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 40,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 41,
+"narg": 1,
+"thunk_rva": 2513048,
+"body_rva": 7511424,
+"hits": [],
+"insns": 14,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 42,
+"narg": 0,
+"thunk_rva": 2513056,
+"body_rva": 8400272,
+"hits": [],
+"insns": 26,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 43,
+"narg": 0,
+"thunk_rva": 2511688,
+"body_rva": 2788800,
+"hits": [],
+"insns": 9,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 44,
+"narg": 4,
+"thunk_rva": 2513064,
+"body_rva": 4580560,
+"hits": [
+{
+"rva": 4580574,
+"uap_off": 24,
+"text": "mov r13d, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4580663,
+"uap_off": 16,
+"text": "mov rax, qword ptr [r15 + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4580683,
+"uap_off": 24,
+"text": "mov eax, dword ptr [r15 + 0x18]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4580694,
+"uap_off": 0,
+"text": "mov rax, qword ptr [r15]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4580704,
+"uap_off": 8,
+"text": "mov rax, qword ptr [r15 + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 62,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 45,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 46,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 47,
+"narg": 0,
+"thunk_rva": 2511680,
+"body_rva": 2788768,
+"hits": [],
+"insns": 8,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 48,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 49,
+"narg": 2,
+"thunk_rva": 2511824,
+"body_rva": 2799248,
+"hits": [
+{
+"rva": 2799283,
+"uap_off": 8,
+"text": "cmp dword ptr [rsi + 8], 0x22",
+"size": 4,
+"write": false
+},
+{
+"rva": 2799293,
+"uap_off": 8,
+"text": "mov dword ptr [rbx + 8], 0x21",
+"size": 4,
+"write": true
+},
+{
+"rva": 2799354,
+"uap_off": 8,
+"text": "mov edx, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 2799420,
+"uap_off": 8,
+"text": "mov ecx, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 2799433,
+"uap_off": 0,
+"text": "mov rbx, qword ptr [rbx]",
+"size": 8,
+"write": false
+}
+],
+"insns": 73,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 50,
+"narg": 1,
+"thunk_rva": 2511832,
+"body_rva": 2799520,
+"hits": [
+{
+"rva": 2799576,
+"uap_off": 0,
+"text": "mov r14, qword ptr [r14]",
+"size": 8,
+"write": false
+}
+],
+"insns": 45,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 51,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 52,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 53,
+"narg": 2,
+"thunk_rva": 2513072,
+"body_rva": 5633024,
+"hits": [
+{
+"rva": 5633060,
+"uap_off": 0,
+"text": "mov r15, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5633116,
+"uap_off": 0,
+"text": "cmp qword ptr [rbx], 0",
+"size": 8,
+"write": false
+}
+],
+"insns": 77,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 54,
+"narg": 3,
+"thunk_rva": 2513080,
+"body_rva": 5164864,
+"hits": [
+{
+"rva": 5164905,
+"uap_off": 8,
+"text": "mov r14, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5164952,
+"uap_off": 8,
+"text": "mov r14d, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5164956,
+"uap_off": 8,
+"text": "mov qword ptr [rbx + 8], r14",
+"size": 8,
+"write": true
+}
+],
+"insns": 97,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 55,
+"narg": 1,
+"thunk_rva": 2513088,
+"body_rva": 8275984,
+"hits": [
+{
+"rva": 8276007,
+"uap_off": 3,
+"text": "test byte ptr [rbx + 3], 1",
+"size": 1,
+"write": false
+}
+],
+"insns": 19,
+"reason": "ok",
+"max_off": 3
+},
+{
+"num": 56,
+"narg": 1,
+"thunk_rva": 2513096,
+"body_rva": 9421968,
+"hits": [
+{
+"rva": 9422022,
+"uap_off": 0,
+"text": "mov r8, qword ptr [rbx]",
+"size": 8,
+"write": false
+}
+],
+"insns": 66,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 57,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 58,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 59,
+"narg": 3,
+"thunk_rva": 2513104,
+"body_rva": 7220672,
+"hits": [
+{
+"rva": 7220861,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [r12 + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 7220866,
+"uap_off": 0,
+"text": "mov rbx, qword ptr [r12]",
+"size": 8,
+"write": false
+},
+{
+"rva": 7220870,
+"uap_off": 8,
+"text": "mov r14, qword ptr [r12 + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 182,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 60,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 61,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 62,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 63,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 64,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 65,
+"narg": 3,
+"thunk_rva": 2513112,
+"body_rva": 11242224,
+"hits": [
+{
+"rva": 11242233,
+"uap_off": 0,
+"text": "mov rsi, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11242236,
+"uap_off": 8,
+"text": "mov rcx, qword ptr [rax + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11242240,
+"uap_off": 16,
+"text": "mov r8d, dword ptr [rax + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 46,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 66,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 67,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 68,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 69,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 70,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 71,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 72,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 73,
+"narg": 2,
+"thunk_rva": 2513120,
+"body_rva": 11242416,
+"hits": [
+{
+"rva": 11242416,
+"uap_off": 8,
+"text": "mov rcx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11242444,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 53,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 74,
+"narg": 3,
+"thunk_rva": 2513128,
+"body_rva": 11242784,
+"hits": [
+{
+"rva": 11242793,
+"uap_off": 0,
+"text": "mov rsi, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11242801,
+"uap_off": 8,
+"text": "mov rcx, qword ptr [rax + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11242840,
+"uap_off": 16,
+"text": "mov eax, dword ptr [rax + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 35,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 75,
+"narg": 3,
+"thunk_rva": 2513136,
+"body_rva": 11243008,
+"hits": [
+{
+"rva": 11243031,
+"uap_off": 16,
+"text": "mov ecx, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 25,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 76,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 77,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 78,
+"narg": 3,
+"thunk_rva": 2513144,
+"body_rva": 11243200,
+"hits": [
+{
+"rva": 11243249,
+"uap_off": 8,
+"text": "add r13, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11243257,
+"uap_off": 0,
+"text": "and r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11243299,
+"uap_off": 16,
+"text": "mov rax, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 194,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 79,
+"narg": 2,
+"thunk_rva": 2511696,
+"body_rva": 2788832,
+"hits": [
+{
+"rva": 2788853,
+"uap_off": 0,
+"text": "mov edx, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 2788873,
+"uap_off": 8,
+"text": "mov r14, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 40,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 80,
+"narg": 2,
+"thunk_rva": 2511752,
+"body_rva": 2792224,
+"hits": [
+{
+"rva": 2792267,
+"uap_off": 0,
+"text": "mov ebx, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 2792333,
+"uap_off": 8,
+"text": "mov r12, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 61,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 81,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 82,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 83,
+"narg": 3,
+"thunk_rva": 2513152,
+"body_rva": 7064768,
+"hits": [
+{
+"rva": 7064806,
+"uap_off": 8,
+"text": "mov r15, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 7064867,
+"uap_off": 0,
+"text": "mov r12d, dword ptr [rbx]",
+"size": 4,
+"write": false
+}
+],
+"insns": 61,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 84,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 85,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 86,
+"narg": 2,
+"thunk_rva": 2513160,
+"body_rva": 7064096,
+"hits": [
+{
+"rva": 7064128,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 7064139,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 31,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 87,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 88,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 89,
+"narg": 0,
+"thunk_rva": 2513168,
+"body_rva": 7510512,
+"hits": [],
+"insns": 23,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 90,
+"narg": 2,
+"thunk_rva": 2513176,
+"body_rva": 7510592,
+"hits": [
+{
+"rva": 7510641,
+"uap_off": 0,
+"text": "mov ecx, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 7510644,
+"uap_off": 8,
+"text": "mov r8d, dword ptr [r14 + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 105,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 91,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 92,
+"narg": 3,
+"thunk_rva": 2513184,
+"body_rva": 7511488,
+"hits": [
+{
+"rva": 7511526,
+"uap_off": 0,
+"text": "mov ebx, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 7511528,
+"uap_off": 8,
+"text": "mov r12d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 7511532,
+"uap_off": 16,
+"text": "mov r14, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 43,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 93,
+"narg": 5,
+"thunk_rva": 2513192,
+"body_rva": 5170352,
+"hits": [
+{
+"rva": 5170390,
+"uap_off": 32,
+"text": "mov r12, qword ptr [rsi + 0x20]",
+"size": 8,
+"write": false
+}
+],
+"insns": 46,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 94,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 95,
+"narg": 1,
+"thunk_rva": 2513200,
+"body_rva": 9417776,
+"hits": [
+{
+"rva": 9417780,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 5,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 96,
+"narg": 3,
+"thunk_rva": 2513208,
+"body_rva": 4849536,
+"hits": [
+{
+"rva": 4849553,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4849587,
+"uap_off": 8,
+"text": "mov edi, dword ptr [r14 + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4849640,
+"uap_off": 16,
+"text": "mov r14d, dword ptr [r13 + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 59,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 97,
+"narg": 3,
+"thunk_rva": 2513216,
+"body_rva": 5437680,
+"hits": [
+{
+"rva": 5437714,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5437717,
+"uap_off": 8,
+"text": "mov r13d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5437721,
+"uap_off": 16,
+"text": "mov r15d, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 81,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 98,
+"narg": 3,
+"thunk_rva": 2513224,
+"body_rva": 5444192,
+"hits": [
+{
+"rva": 5444206,
+"uap_off": 16,
+"text": "movsxd rbx, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5444237,
+"uap_off": 8,
+"text": "mov r12, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5444322,
+"uap_off": 0,
+"text": "mov edx, dword ptr [r13]",
+"size": 4,
+"write": false
+}
+],
+"insns": 52,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 99,
+"narg": 4,
+"thunk_rva": 2513232,
+"body_rva": 5438688,
+"hits": [
+{
+"rva": 5438692,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5438694,
+"uap_off": 8,
+"text": "mov edx, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5438697,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5438701,
+"uap_off": 24,
+"text": "mov r8d, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+}
+],
+"insns": 9,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 100,
+"narg": 2,
+"thunk_rva": 2513240,
+"body_rva": 4848880,
+"hits": [
+{
+"rva": 4848894,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4848930,
+"uap_off": 8,
+"text": "mov edi, dword ptr [r14 + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 55,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 101,
+"narg": 2,
+"thunk_rva": 2513248,
+"body_rva": 5438720,
+"hits": [
+{
+"rva": 5438756,
+"uap_off": 8,
+"text": "mov edx, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5438789,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5438797,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5438857,
+"uap_off": 8,
+"text": "mov edx, dword ptr [r14 + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 60,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 102,
+"narg": 4,
+"thunk_rva": 2513256,
+"body_rva": 5438976,
+"hits": [
+{
+"rva": 5439015,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5439017,
+"uap_off": 8,
+"text": "mov rdx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5439021,
+"uap_off": 16,
+"text": "mov ecx, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5439024,
+"uap_off": 24,
+"text": "mov r8d, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+}
+],
+"insns": 29,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 103,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 104,
+"narg": 3,
+"thunk_rva": 2513264,
+"body_rva": 5440640,
+"hits": [
+{
+"rva": 5440654,
+"uap_off": 16,
+"text": "movsxd rbx, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5440685,
+"uap_off": 8,
+"text": "mov r12, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5440770,
+"uap_off": 0,
+"text": "mov edx, dword ptr [r13]",
+"size": 4,
+"write": false
+}
+],
+"insns": 52,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 105,
+"narg": 5,
+"thunk_rva": 2513272,
+"body_rva": 5450688,
+"hits": [
+{
+"rva": 5450723,
+"uap_off": 32,
+"text": "mov edx, dword ptr [rsi + 0x20]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5450726,
+"uap_off": 24,
+"text": "mov rcx, qword ptr [rsi + 0x18]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5450761,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5450764,
+"uap_off": 8,
+"text": "mov eax, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5450767,
+"uap_off": 16,
+"text": "mov esi, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 74,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 106,
+"narg": 2,
+"thunk_rva": 2513280,
+"body_rva": 5441488,
+"hits": [
+{
+"rva": 5441521,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5441524,
+"uap_off": 8,
+"text": "mov r14d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 57,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 107,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 108,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 109,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 110,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 111,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 112,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 113,
+"narg": 4,
+"thunk_rva": 2513288,
+"body_rva": 5438176,
+"hits": [
+{
+"rva": 5438210,
+"uap_off": 0,
+"text": "mov rax, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5438213,
+"uap_off": 8,
+"text": "mov r15d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5438217,
+"uap_off": 16,
+"text": "mov r12d, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5438221,
+"uap_off": 24,
+"text": "mov r13d, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5438225,
+"uap_off": 32,
+"text": "mov r14d, dword ptr [rsi + 0x20]",
+"size": 4,
+"write": false
+}
+],
+"insns": 89,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 114,
+"narg": 1,
+"thunk_rva": 2513296,
+"body_rva": 7520576,
+"hits": [
+{
+"rva": 7520580,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 5,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 115,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 116,
+"narg": 2,
+"thunk_rva": 2513304,
+"body_rva": 7063552,
+"hits": [
+{
+"rva": 7063585,
+"uap_off": 0,
+"text": "cmp qword ptr [rsi], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 7063603,
+"uap_off": 0,
+"text": "mov r15, qword ptr [rbx]",
+"size": 8,
+"write": false
+},
+{
+"rva": 7063649,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 56,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 117,
+"narg": 2,
+"thunk_rva": 2513312,
+"body_rva": 4856736,
+"hits": [
+{
+"rva": 4856784,
+"uap_off": 0,
+"text": "mov r13d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 75,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 118,
+"narg": 5,
+"thunk_rva": 2513320,
+"body_rva": 5450960,
+"hits": [
+{
+"rva": 5450996,
+"uap_off": 24,
+"text": "cmp qword ptr [rsi + 0x18], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 5451003,
+"uap_off": 32,
+"text": "mov r15, qword ptr [rbx + 0x20]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5451055,
+"uap_off": 24,
+"text": "mov rdx, qword ptr [rbx + 0x18]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5451059,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5451062,
+"uap_off": 8,
+"text": "mov eax, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5451065,
+"uap_off": 16,
+"text": "mov ecx, dword ptr [rbx + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 46,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 119,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 120,
+"narg": 3,
+"thunk_rva": 2513328,
+"body_rva": 5161664,
+"hits": [
+{
+"rva": 5161706,
+"uap_off": 8,
+"text": "mov rdi, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5161710,
+"uap_off": 16,
+"text": "mov esi, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5161726,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 66,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 121,
+"narg": 3,
+"thunk_rva": 2513336,
+"body_rva": 5163232,
+"hits": [
+{
+"rva": 5163274,
+"uap_off": 8,
+"text": "mov rdi, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5163278,
+"uap_off": 16,
+"text": "mov esi, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5163294,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 66,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 122,
+"narg": 2,
+"thunk_rva": 2513344,
+"body_rva": 7063760,
+"hits": [
+{
+"rva": 7063798,
+"uap_off": 0,
+"text": "mov r12, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 85,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 123,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 124,
+"narg": 2,
+"thunk_rva": 2513352,
+"body_rva": 9411904,
+"hits": [
+{
+"rva": 9411961,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9411979,
+"uap_off": 8,
+"text": "movzx edi, word ptr [r14 + 8]",
+"size": 2,
+"write": false
+},
+{
+"rva": 9411989,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9412043,
+"uap_off": 8,
+"text": "movzx r15d, word ptr [r14 + 8]",
+"size": 2,
+"write": false
+}
+],
+"insns": 70,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 125,
+"narg": 3,
+"thunk_rva": 2513360,
+"body_rva": 5439088,
+"hits": [
+{
+"rva": 5439127,
+"uap_off": 0,
+"text": "mov rax, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5439130,
+"uap_off": 8,
+"text": "mov edx, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5439133,
+"uap_off": 16,
+"text": "mov ecx, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 28,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 126,
+"narg": 2,
+"thunk_rva": 2511760,
+"body_rva": 2792944,
+"hits": [
+{
+"rva": 2792965,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 2792968,
+"uap_off": 8,
+"text": "mov r13d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 92,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 127,
+"narg": 2,
+"thunk_rva": 2511768,
+"body_rva": 2793568,
+"hits": [
+{
+"rva": 2793585,
+"uap_off": 8,
+"text": "mov eax, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 2793592,
+"uap_off": 0,
+"text": "mov r12d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 84,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 128,
+"narg": 2,
+"thunk_rva": 2513368,
+"body_rva": 9417808,
+"hits": [
+{
+"rva": 9417812,
+"uap_off": 0,
+"text": "mov rdx, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9417815,
+"uap_off": 8,
+"text": "mov r8, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 208,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 129,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 130,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 131,
+"narg": 2,
+"thunk_rva": 2513376,
+"body_rva": 7529872,
+"hits": [
+{
+"rva": 7529926,
+"uap_off": 0,
+"text": "movsxd rbx, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 47,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 132,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 133,
+"narg": 6,
+"thunk_rva": 2513384,
+"body_rva": 5446448,
+"hits": [
+{
+"rva": 5446475,
+"uap_off": 32,
+"text": "mov rax, qword ptr [rsi + 0x20]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5446483,
+"uap_off": 40,
+"text": "mov eax, dword ptr [rsi + 0x28]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5446512,
+"uap_off": 8,
+"text": "mov rax, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5446520,
+"uap_off": 16,
+"text": "mov rax, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5446528,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5446530,
+"uap_off": 24,
+"text": "mov ecx, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+}
+],
+"insns": 31,
+"reason": "ok",
+"max_off": 40
+},
+{
+"num": 134,
+"narg": 2,
+"thunk_rva": 2513392,
+"body_rva": 5450480,
+"hits": [
+{
+"rva": 5450515,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5450518,
+"uap_off": 8,
+"text": "mov r14d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 60,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 135,
+"narg": 4,
+"thunk_rva": 2513400,
+"body_rva": 5445408,
+"hits": [
+{
+"rva": 5445446,
+"uap_off": 0,
+"text": "mov r13d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5445449,
+"uap_off": 8,
+"text": "mov r15d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5445453,
+"uap_off": 16,
+"text": "mov r12d, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 107,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 136,
+"narg": 2,
+"thunk_rva": 2513408,
+"body_rva": 9418976,
+"hits": [
+{
+"rva": 9418980,
+"uap_off": 0,
+"text": "mov rdx, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9418983,
+"uap_off": 8,
+"text": "mov r8d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 94,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 137,
+"narg": 1,
+"thunk_rva": 2513416,
+"body_rva": 9419712,
+"hits": [
+{
+"rva": 9419716,
+"uap_off": 0,
+"text": "mov rdx, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 7,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 138,
+"narg": 2,
+"thunk_rva": 2513424,
+"body_rva": 9413392,
+"hits": [
+{
+"rva": 9413396,
+"uap_off": 0,
+"text": "mov rdx, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9413399,
+"uap_off": 8,
+"text": "mov rcx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 100,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 139,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 140,
+"narg": 2,
+"thunk_rva": 2512184,
+"body_rva": 3346688,
+"hits": [
+{
+"rva": 3346721,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 88,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 141,
+"narg": 1,
+"thunk_rva": 2512112,
+"body_rva": 3223904,
+"hits": [],
+"insns": 54,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 142,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 143,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 144,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 145,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 146,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 147,
+"narg": 0,
+"thunk_rva": 2511704,
+"body_rva": 2788976,
+"hits": [],
+"insns": 64,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 148,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 149,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 150,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 151,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 152,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 153,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 154,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 155,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 156,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 157,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 158,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 159,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 160,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 161,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 162,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 163,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 164,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 165,
+"narg": 2,
+"thunk_rva": 2513432,
+"body_rva": 4698160,
+"hits": [
+{
+"rva": 4698208,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4698243,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r12]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4698279,
+"uap_off": 8,
+"text": "mov r13, qword ptr [r12 + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 78,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 166,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 167,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 168,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 169,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 170,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 171,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 172,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 173,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 174,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 175,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 176,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 177,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 178,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 179,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 180,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 181,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 182,
+"narg": 1,
+"thunk_rva": 2511744,
+"body_rva": 2791920,
+"hits": [
+{
+"rva": 2791938,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 65,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 183,
+"narg": 1,
+"thunk_rva": 2511728,
+"body_rva": 2791168,
+"hits": [
+{
+"rva": 2791189,
+"uap_off": 0,
+"text": "mov r13d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 71,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 184,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 185,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 186,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 187,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 188,
+"narg": 2,
+"thunk_rva": 2513440,
+"body_rva": 9408032,
+"hits": [
+{
+"rva": 9408078,
+"uap_off": 0,
+"text": "mov rcx, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9408100,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 35,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 189,
+"narg": 2,
+"thunk_rva": 2513448,
+"body_rva": 7520592,
+"hits": [
+{
+"rva": 7520636,
+"uap_off": 0,
+"text": "movsxd r12, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 52,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 190,
+"narg": 2,
+"thunk_rva": 2513456,
+"body_rva": 9409120,
+"hits": [
+{
+"rva": 9409170,
+"uap_off": 0,
+"text": "mov rcx, qword ptr [rbx]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9409213,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 43,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 191,
+"narg": 2,
+"thunk_rva": 2513464,
+"body_rva": 9409296,
+"hits": [
+{
+"rva": 9409352,
+"uap_off": 8,
+"text": "mov r12d, dword ptr [r14 + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9409356,
+"uap_off": 0,
+"text": "mov r8, qword ptr [r14]",
+"size": 8,
+"write": false
+}
+],
+"insns": 61,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 192,
+"narg": 2,
+"thunk_rva": 2513472,
+"body_rva": 7521248,
+"hits": [],
+"insns": 30,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 193,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 194,
+"narg": 2,
+"thunk_rva": 2513480,
+"body_rva": 4854752,
+"hits": [
+{
+"rva": 4854786,
+"uap_off": 0,
+"text": "mov ebx, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4854889,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 55,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 195,
+"narg": 2,
+"thunk_rva": 2513488,
+"body_rva": 4852784,
+"hits": [
+{
+"rva": 4852822,
+"uap_off": 8,
+"text": "mov r15, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4852868,
+"uap_off": 0,
+"text": "mov edx, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 38,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 196,
+"narg": 4,
+"thunk_rva": 2513496,
+"body_rva": 9419744,
+"hits": [
+{
+"rva": 9419788,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9419790,
+"uap_off": 8,
+"text": "mov rdx, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9419794,
+"uap_off": 16,
+"text": "mov ecx, dword ptr [rbx + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9419837,
+"uap_off": 16,
+"text": "mov eax, dword ptr [rbx + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9419890,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rbx]",
+"size": 4,
+"write": false
+}
+],
+"insns": 64,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 197,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 198,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 199,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 200,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 201,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 202,
+"narg": 6,
+"thunk_rva": 2513504,
+"body_rva": 5603808,
+"hits": [
+{
+"rva": 5603848,
+"uap_off": 8,
+"text": "mov r14d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5603864,
+"uap_off": 0,
+"text": "mov r12, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 41,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 203,
+"narg": 2,
+"thunk_rva": 2513512,
+"body_rva": 11244624,
+"hits": [
+{
+"rva": 11244639,
+"uap_off": 0,
+"text": "mov rdx, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11244642,
+"uap_off": 8,
+"text": "mov rcx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 81,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 204,
+"narg": 2,
+"thunk_rva": 2513520,
+"body_rva": 11245328,
+"hits": [
+{
+"rva": 11245359,
+"uap_off": 0,
+"text": "mov rsi, qword ptr [r14]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11245362,
+"uap_off": 8,
+"text": "mov rax, qword ptr [r14 + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 39,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 205,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 206,
+"narg": 2,
+"thunk_rva": 2513528,
+"body_rva": 9414880,
+"hits": [
+{
+"rva": 9414915,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9414918,
+"uap_off": 8,
+"text": "mov r14, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 73,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 207,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 208,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 209,
+"narg": 3,
+"thunk_rva": 2513536,
+"body_rva": 5170512,
+"hits": [
+{
+"rva": 5170535,
+"uap_off": 16,
+"text": "mov eax, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5170590,
+"uap_off": 0,
+"text": "mov rax, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5170593,
+"uap_off": 8,
+"text": "mov edx, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 35,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 210,
+"narg": 1,
+"thunk_rva": 2513544,
+"body_rva": 9422864,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 211,
+"narg": 1,
+"thunk_rva": 2513544,
+"body_rva": 9422864,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 212,
+"narg": 1,
+"thunk_rva": 2513544,
+"body_rva": 9422864,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 213,
+"narg": 1,
+"thunk_rva": 2513544,
+"body_rva": 9422864,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 214,
+"narg": 1,
+"thunk_rva": 2513544,
+"body_rva": 9422864,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 215,
+"narg": 1,
+"thunk_rva": 2513544,
+"body_rva": 9422864,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 216,
+"narg": 1,
+"thunk_rva": 2513544,
+"body_rva": 9422864,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 217,
+"narg": 1,
+"thunk_rva": 2513544,
+"body_rva": 9422864,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 218,
+"narg": 1,
+"thunk_rva": 2513544,
+"body_rva": 9422864,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 219,
+"narg": 1,
+"thunk_rva": 2513544,
+"body_rva": 9422864,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 220,
+"narg": 0,
+"thunk_rva": 2513552,
+"body_rva": 9422880,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 221,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 222,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 223,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 224,
+"narg": 0,
+"thunk_rva": 2513552,
+"body_rva": 9422880,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 225,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 226,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 227,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 228,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 229,
+"narg": 0,
+"thunk_rva": 2513552,
+"body_rva": 9422880,
+"hits": [],
+"insns": 4,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 230,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 231,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 232,
+"narg": 2,
+"thunk_rva": 2513560,
+"body_rva": 7059056,
+"hits": [
+{
+"rva": 7059088,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 7059099,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 31,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 233,
+"narg": 2,
+"thunk_rva": 2513568,
+"body_rva": 7060768,
+"hits": [
+{
+"rva": 7060804,
+"uap_off": 8,
+"text": "mov r15, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 7060865,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 60,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 234,
+"narg": 2,
+"thunk_rva": 2513576,
+"body_rva": 7061552,
+"hits": [
+{
+"rva": 7061577,
+"uap_off": 8,
+"text": "cmp qword ptr [rsi + 8], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 7061584,
+"uap_off": 0,
+"text": "mov ecx, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 46,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 235,
+"narg": 3,
+"thunk_rva": 2513584,
+"body_rva": 7066992,
+"hits": [
+{
+"rva": 7067036,
+"uap_off": 8,
+"text": "mov r12, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 192,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 236,
+"narg": 1,
+"thunk_rva": 2513592,
+"body_rva": 7069600,
+"hits": [
+{
+"rva": 7069604,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 5,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 237,
+"narg": 4,
+"thunk_rva": 2513600,
+"body_rva": 7069616,
+"hits": [
+{
+"rva": 7069655,
+"uap_off": 16,
+"text": "mov r14, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 38,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 238,
+"narg": 2,
+"thunk_rva": 2513608,
+"body_rva": 7070160,
+"hits": [
+{
+"rva": 7070203,
+"uap_off": 0,
+"text": "movsxd r14, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 7070439,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 94,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 239,
+"narg": 1,
+"thunk_rva": 2513616,
+"body_rva": 7070576,
+"hits": [
+{
+"rva": 7070594,
+"uap_off": 0,
+"text": "movsxd r12, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 60,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 240,
+"narg": 2,
+"thunk_rva": 2513624,
+"body_rva": 7062752,
+"hits": [
+{
+"rva": 7062791,
+"uap_off": 0,
+"text": "mov r15, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 38,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 241,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 242,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 243,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 244,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 245,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 246,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 247,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 248,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 249,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 250,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 251,
+"narg": 1,
+"thunk_rva": 2513632,
+"body_rva": 13310640,
+"hits": [
+{
+"rva": 13310692,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 13310748,
+"uap_off": 0,
+"text": "mov eax, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 52,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 252,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 253,
+"narg": 0,
+"thunk_rva": 2511808,
+"body_rva": 2795712,
+"hits": [],
+"insns": 29,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 254,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 255,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 256,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 257,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 258,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 259,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 260,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 261,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 262,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 263,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 264,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 265,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 266,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 267,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 268,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 269,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 270,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 271,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 272,
+"narg": 3,
+"thunk_rva": 2513640,
+"body_rva": 9421712,
+"hits": [
+{
+"rva": 9421735,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9421740,
+"uap_off": 8,
+"text": "mov rax, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9421748,
+"uap_off": 16,
+"text": "mov eax, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 23,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 273,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 274,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 275,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 276,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 277,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 278,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 279,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 280,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 281,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 282,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 283,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 284,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 285,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 286,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 287,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 288,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 289,
+"narg": 4,
+"thunk_rva": 2513648,
+"body_rva": 5162208,
+"hits": [
+{
+"rva": 5162245,
+"uap_off": 8,
+"text": "mov rdi, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5162249,
+"uap_off": 16,
+"text": "mov esi, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5162261,
+"uap_off": 0,
+"text": "mov esi, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5162268,
+"uap_off": 24,
+"text": "mov rcx, qword ptr [r14 + 0x18]",
+"size": 8,
+"write": false
+}
+],
+"insns": 36,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 290,
+"narg": 4,
+"thunk_rva": 2513656,
+"body_rva": 5164144,
+"hits": [
+{
+"rva": 5164181,
+"uap_off": 8,
+"text": "mov rdi, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5164185,
+"uap_off": 16,
+"text": "mov esi, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5164197,
+"uap_off": 0,
+"text": "mov esi, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5164204,
+"uap_off": 24,
+"text": "mov rcx, qword ptr [r14 + 0x18]",
+"size": 8,
+"write": false
+}
+],
+"insns": 36,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 291,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 292,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 293,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 294,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 295,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 296,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 297,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 298,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 299,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 300,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 301,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 302,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 303,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 304,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 305,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 306,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 307,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 308,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 309,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 310,
+"narg": 1,
+"thunk_rva": 2511656,
+"body_rva": 2788544,
+"hits": [
+{
+"rva": 2788557,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 40,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 311,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 312,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 313,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 314,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 315,
+"narg": 3,
+"thunk_rva": 2513664,
+"body_rva": 12052832,
+"hits": [
+{
+"rva": 12052888,
+"uap_off": 8,
+"text": "cmp dword ptr [r15 + 8], 0x10",
+"size": 4,
+"write": false
+},
+{
+"rva": 12052904,
+"uap_off": 16,
+"text": "mov rbx, qword ptr [r15 + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 71,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 316,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 317,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 318,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 319,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 320,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 321,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 322,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 323,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 324,
+"narg": 1,
+"thunk_rva": 2513672,
+"body_rva": 11244928,
+"hits": [
+{
+"rva": 11244977,
+"uap_off": 0,
+"text": "mov ecx, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11245091,
+"uap_off": 0,
+"text": "mov ecx, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11245130,
+"uap_off": 0,
+"text": "mov ecx, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 80,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 325,
+"narg": 0,
+"thunk_rva": 2513680,
+"body_rva": 11245200,
+"hits": [],
+"insns": 31,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 326,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 327,
+"narg": 2,
+"thunk_rva": 2513688,
+"body_rva": 5913184,
+"hits": [
+{
+"rva": 5913222,
+"uap_off": 8,
+"text": "mov r15, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5913268,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 60,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 328,
+"narg": 2,
+"thunk_rva": 2513696,
+"body_rva": 5913424,
+"hits": [
+{
+"rva": 5913462,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 47,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 329,
+"narg": 3,
+"thunk_rva": 2513704,
+"body_rva": 5913696,
+"hits": [
+{
+"rva": 5913736,
+"uap_off": 16,
+"text": "mov r14, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5913786,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r15]",
+"size": 4,
+"write": false
+}
+],
+"insns": 71,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 330,
+"narg": 1,
+"thunk_rva": 2513712,
+"body_rva": 5913984,
+"hits": [
+{
+"rva": 5914017,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 44,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 331,
+"narg": 0,
+"thunk_rva": 2513720,
+"body_rva": 5914224,
+"hits": [],
+"insns": 7,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 332,
+"narg": 1,
+"thunk_rva": 2513728,
+"body_rva": 5914256,
+"hits": [
+{
+"rva": 5914295,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 23,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 333,
+"narg": 1,
+"thunk_rva": 2513736,
+"body_rva": 5914352,
+"hits": [
+{
+"rva": 5914391,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 23,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 334,
+"narg": 2,
+"thunk_rva": 2513744,
+"body_rva": 5914448,
+"hits": [
+{
+"rva": 5914486,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 47,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 335,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 336,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 337,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 338,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 339,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 340,
+"narg": 3,
+"thunk_rva": 2513752,
+"body_rva": 5627328,
+"hits": [
+{
+"rva": 5627370,
+"uap_off": 16,
+"text": "mov r14, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5627374,
+"uap_off": 8,
+"text": "mov r13, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5627446,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5627471,
+"uap_off": 16,
+"text": "mov rbx, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 63,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 341,
+"narg": 1,
+"thunk_rva": 2513760,
+"body_rva": 5631344,
+"hits": [
+{
+"rva": 5631380,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 156,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 342,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 343,
+"narg": 1,
+"thunk_rva": 2513768,
+"body_rva": 5631120,
+"hits": [
+{
+"rva": 5631259,
+"uap_off": 0,
+"text": "mov rbx, qword ptr [rbx]",
+"size": 8,
+"write": false
+}
+],
+"insns": 57,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 344,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 345,
+"narg": 3,
+"thunk_rva": 2513776,
+"body_rva": 5629264,
+"hits": [
+{
+"rva": 5629305,
+"uap_off": 16,
+"text": "mov r12, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 75,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 346,
+"narg": 2,
+"thunk_rva": 2513784,
+"body_rva": 5629568,
+"hits": [
+{
+"rva": 5629609,
+"uap_off": 0,
+"text": "mov r15, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5629693,
+"uap_off": 8,
+"text": "mov r14, qword ptr [r14 + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 58,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 347,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 348,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 349,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 350,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 351,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 352,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 353,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 354,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 355,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 356,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 357,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 358,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 359,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 360,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 361,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 362,
+"narg": 0,
+"thunk_rva": 2512104,
+"body_rva": 3223248,
+"hits": [],
+"insns": 52,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 363,
+"narg": 6,
+"thunk_rva": 2512120,
+"body_rva": 3224800,
+"hits": [
+{
+"rva": 3224879,
+"uap_off": 40,
+"text": "mov r14, qword ptr [rsi + 0x28]",
+"size": 8,
+"write": false
+}
+],
+"insns": 224,
+"reason": "ok",
+"max_off": 40
+},
+{
+"num": 364,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 365,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 366,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 367,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 368,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 369,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 370,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 371,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 372,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 373,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 374,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 375,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 376,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 377,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 378,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 379,
+"narg": 4,
+"thunk_rva": 2513792,
+"body_rva": 11255168,
+"hits": [
+{
+"rva": 11255182,
+"uap_off": 0,
+"text": "mov rbx, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11255185,
+"uap_off": 8,
+"text": "mov rcx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11255226,
+"uap_off": 16,
+"text": "mov r15d, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11255256,
+"uap_off": 24,
+"text": "mov edx, dword ptr [r12 + 0x18]",
+"size": 4,
+"write": false
+}
+],
+"insns": 59,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 380,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 381,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 382,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 383,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 384,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 385,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 386,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 387,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 388,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 389,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 390,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 391,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 392,
+"narg": 2,
+"thunk_rva": 2512872,
+"body_rva": 4233104,
+"hits": [
+{
+"rva": 4233118,
+"uap_off": 8,
+"text": "mov r15d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 22,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 393,
+"narg": 7,
+"thunk_rva": 2513800,
+"body_rva": 8601824,
+"hits": [
+{
+"rva": 8601859,
+"uap_off": 16,
+"text": "cmp qword ptr [rsi + 0x10], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 8601900,
+"uap_off": 32,
+"text": "mov r15, qword ptr [rsi + 0x20]",
+"size": 8,
+"write": false
+},
+{
+"rva": 8602033,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 8602040,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 8602094,
+"uap_off": 8,
+"text": "mov esi, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 8602105,
+"uap_off": 16,
+"text": "mov r8, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 8602109,
+"uap_off": 24,
+"text": "mov r9, qword ptr [rbx + 0x18]",
+"size": 8,
+"write": false
+},
+{
+"rva": 8602113,
+"uap_off": 48,
+"text": "mov r13d, dword ptr [rbx + 0x30]",
+"size": 4,
+"write": false
+}
+],
+"insns": 120,
+"reason": "ok",
+"max_off": 48
+},
+{
+"num": 394,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 395,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 396,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 397,
+"narg": 2,
+"thunk_rva": 2513808,
+"body_rva": 9396512,
+"hits": [
+{
+"rva": 9396567,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [r12]",
+"size": 4,
+"write": false
+}
+],
+"insns": 49,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 398,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 399,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 400,
+"narg": 1,
+"thunk_rva": 2513816,
+"body_rva": 12857088,
+"hits": [
+{
+"rva": 12857130,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12857194,
+"uap_off": 0,
+"text": "mov esi, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 57,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 401,
+"narg": 1,
+"thunk_rva": 2513824,
+"body_rva": 12857360,
+"hits": [
+{
+"rva": 12857409,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 36,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 402,
+"narg": 1,
+"thunk_rva": 2513832,
+"body_rva": 12857712,
+"hits": [
+{
+"rva": 12857716,
+"uap_off": 0,
+"text": "mov rsi, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 48,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 403,
+"narg": 1,
+"thunk_rva": 2513840,
+"body_rva": 12858528,
+"hits": [
+{
+"rva": 12858532,
+"uap_off": 0,
+"text": "mov rsi, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 7,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 404,
+"narg": 2,
+"thunk_rva": 2513848,
+"body_rva": 12855136,
+"hits": [
+{
+"rva": 12855140,
+"uap_off": 0,
+"text": "mov rdx, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 12855143,
+"uap_off": 8,
+"text": "mov r8d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 54,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 405,
+"narg": 5,
+"thunk_rva": 2513856,
+"body_rva": 12856208,
+"hits": [
+{
+"rva": 12856212,
+"uap_off": 16,
+"text": "mov r9d, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 8,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 406,
+"narg": 1,
+"thunk_rva": 2513864,
+"body_rva": 12856256,
+"hits": [],
+"insns": 86,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 407,
+"narg": 2,
+"thunk_rva": 2513872,
+"body_rva": 12858560,
+"hits": [
+{
+"rva": 12858614,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 39,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 408,
+"narg": 1,
+"thunk_rva": 2513880,
+"body_rva": 12858912,
+"hits": [
+{
+"rva": 12858956,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 56,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 409,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 410,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 411,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 412,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 413,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 414,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 415,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 416,
+"narg": 3,
+"thunk_rva": 2513888,
+"body_rva": 5624000,
+"hits": [
+{
+"rva": 5624052,
+"uap_off": 16,
+"text": "mov rax, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5624056,
+"uap_off": 8,
+"text": "mov r14, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5624117,
+"uap_off": 0,
+"text": "mov r13d, dword ptr [rbx]",
+"size": 4,
+"write": false
+}
+],
+"insns": 159,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 417,
+"narg": 1,
+"thunk_rva": 2513896,
+"body_rva": 10515072,
+"hits": [
+{
+"rva": 10515121,
+"uap_off": 0,
+"text": "mov r15, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 48,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 418,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 419,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 420,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 421,
+"narg": 1,
+"thunk_rva": 2513904,
+"body_rva": 12810336,
+"hits": [
+{
+"rva": 12810371,
+"uap_off": 0,
+"text": "cmp qword ptr [rsi], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 12810511,
+"uap_off": 0,
+"text": "mov r14, qword ptr [r14]",
+"size": 8,
+"write": false
+}
+],
+"insns": 64,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 422,
+"narg": 1,
+"thunk_rva": 2513912,
+"body_rva": 12810608,
+"hits": [
+{
+"rva": 12810638,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 45,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 423,
+"narg": 2,
+"thunk_rva": 2513920,
+"body_rva": 12810784,
+"hits": [
+{
+"rva": 12810823,
+"uap_off": 0,
+"text": "cmp qword ptr [rsi], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 12810833,
+"uap_off": 8,
+"text": "cmp qword ptr [rsi + 8], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 12810974,
+"uap_off": 0,
+"text": "mov r13, qword ptr [r15]",
+"size": 8,
+"write": false
+},
+{
+"rva": 12811020,
+"uap_off": 8,
+"text": "mov r15, qword ptr [r15 + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 92,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 424,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 425,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 426,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 427,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 428,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 429,
+"narg": 2,
+"thunk_rva": 2513928,
+"body_rva": 5627568,
+"hits": [
+{
+"rva": 5627609,
+"uap_off": 0,
+"text": "mov r15, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 37,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 430,
+"narg": 3,
+"thunk_rva": 2513936,
+"body_rva": 4422896,
+"hits": [
+{
+"rva": 4422937,
+"uap_off": 0,
+"text": "mov r15, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4422985,
+"uap_off": 8,
+"text": "mov rax, qword ptr [r14 + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 41,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 431,
+"narg": 1,
+"thunk_rva": 2513944,
+"body_rva": 4424688,
+"hits": [
+{
+"rva": 4424706,
+"uap_off": 0,
+"text": "mov rdi, qword ptr [r14]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4424724,
+"uap_off": 0,
+"text": "mov rsi, qword ptr [r14]",
+"size": 8,
+"write": false
+}
+],
+"insns": 25,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 432,
+"narg": 1,
+"thunk_rva": 2513952,
+"body_rva": 4424640,
+"hits": [
+{
+"rva": 4424644,
+"uap_off": 0,
+"text": "mov rax, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 12,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 433,
+"narg": 2,
+"thunk_rva": 2513960,
+"body_rva": 4425056,
+"hits": [
+{
+"rva": 4425118,
+"uap_off": 8,
+"text": "mov eax, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4425164,
+"uap_off": 0,
+"text": "mov rdi, qword ptr [rbx]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4425187,
+"uap_off": 8,
+"text": "mov esi, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 63,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 434,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 435,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 436,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 437,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 438,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 439,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 440,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 441,
+"narg": 2,
+"thunk_rva": 2513968,
+"body_rva": 12858352,
+"hits": [
+{
+"rva": 12858390,
+"uap_off": 8,
+"text": "mov r12, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 42,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 442,
+"narg": 1,
+"thunk_rva": 2513976,
+"body_rva": 4425920,
+"hits": [
+{
+"rva": 4425954,
+"uap_off": 0,
+"text": "mov rdi, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 67,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 443,
+"narg": 1,
+"thunk_rva": 2513984,
+"body_rva": 4426416,
+"hits": [
+{
+"rva": 4426429,
+"uap_off": 0,
+"text": "mov rdi, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 21,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 444,
+"narg": 2,
+"thunk_rva": 2513992,
+"body_rva": 5581856,
+"hits": [],
+"insns": 15,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 445,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 446,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 447,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 448,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 449,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 450,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 451,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 452,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 453,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 454,
+"narg": 6,
+"thunk_rva": 2512384,
+"body_rva": 3664960,
+"hits": [
+{
+"rva": 3664960,
+"uap_off": 8,
+"text": "mov eax, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 13,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 455,
+"narg": 2,
+"thunk_rva": 2514000,
+"body_rva": 4423136,
+"hits": [
+{
+"rva": 4423176,
+"uap_off": 8,
+"text": "cmp dword ptr [rsi + 8], 0x68",
+"size": 4,
+"write": false
+},
+{
+"rva": 4423208,
+"uap_off": 0,
+"text": "mov r12, qword ptr [r14]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4423211,
+"uap_off": 8,
+"text": "movsxd r14, dword ptr [r14 + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 43,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 456,
+"narg": 3,
+"thunk_rva": 2514008,
+"body_rva": 5635104,
+"hits": [
+{
+"rva": 5635141,
+"uap_off": 8,
+"text": "cmp dword ptr [rsi + 8], 0x80",
+"size": 4,
+"write": false
+},
+{
+"rva": 5635157,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5635180,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5635192,
+"uap_off": 8,
+"text": "mov edx, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5635213,
+"uap_off": 8,
+"text": "cmp dword ptr [rbx + 8], 0",
+"size": 4,
+"write": false
+},
+{
+"rva": 5635254,
+"uap_off": 8,
+"text": "mov edx, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5635302,
+"uap_off": 16,
+"text": "mov rax, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 75,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 457,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 458,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 459,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 460,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 461,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 462,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 463,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 464,
+"narg": 2,
+"thunk_rva": 2514016,
+"body_rva": 4426592,
+"hits": [
+{
+"rva": 4426644,
+"uap_off": 8,
+"text": "mov r14, qword ptr [r15 + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4426710,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r15]",
+"size": 4,
+"write": false
+}
+],
+"insns": 74,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 465,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 466,
+"narg": 3,
+"thunk_rva": 2514024,
+"body_rva": 4850688,
+"hits": [
+{
+"rva": 4850740,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4850750,
+"uap_off": 16,
+"text": "mov r14, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4850797,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4850828,
+"uap_off": 8,
+"text": "mov edi, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4850940,
+"uap_off": 16,
+"text": "mov rbx, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 88,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 467,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 468,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 469,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 470,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 471,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 472,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 473,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 474,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 475,
+"narg": 4,
+"thunk_rva": 2514032,
+"body_rva": 5161248,
+"hits": [
+{
+"rva": 5161283,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5161340,
+"uap_off": 8,
+"text": "mov rax, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5161382,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5161384,
+"uap_off": 24,
+"text": "mov rcx, qword ptr [rsi + 0x18]",
+"size": 8,
+"write": false
+}
+],
+"insns": 40,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 476,
+"narg": 4,
+"thunk_rva": 2514040,
+"body_rva": 5162816,
+"hits": [
+{
+"rva": 5162851,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5162908,
+"uap_off": 8,
+"text": "mov rax, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5162950,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5162952,
+"uap_off": 24,
+"text": "mov rcx, qword ptr [rsi + 0x18]",
+"size": 8,
+"write": false
+}
+],
+"insns": 40,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 477,
+"narg": 6,
+"thunk_rva": 2514048,
+"body_rva": 11240384,
+"hits": [
+{
+"rva": 11240407,
+"uap_off": 0,
+"text": "mov rax, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11240414,
+"uap_off": 8,
+"text": "mov rax, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11240422,
+"uap_off": 16,
+"text": "mov eax, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11240428,
+"uap_off": 24,
+"text": "mov eax, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11240442,
+"uap_off": 32,
+"text": "mov eax, dword ptr [rsi + 0x20]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11240448,
+"uap_off": 40,
+"text": "mov rax, qword ptr [rsi + 0x28]",
+"size": 8,
+"write": false
+}
+],
+"insns": 29,
+"reason": "ok",
+"max_off": 40
+},
+{
+"num": 478,
+"narg": 3,
+"thunk_rva": 2514056,
+"body_rva": 9407152,
+"hits": [
+{
+"rva": 9407189,
+"uap_off": 16,
+"text": "cmp dword ptr [rsi + 0x10], 2",
+"size": 4,
+"write": false
+},
+{
+"rva": 9407223,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9407231,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9407300,
+"uap_off": 8,
+"text": "mov rsi, qword ptr [r14 + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9407304,
+"uap_off": 16,
+"text": "mov edx, dword ptr [r14 + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 71,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 479,
+"narg": 2,
+"thunk_rva": 2514064,
+"body_rva": 9416608,
+"hits": [
+{
+"rva": 9416642,
+"uap_off": 8,
+"text": "mov r15, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9416655,
+"uap_off": 0,
+"text": "mov r8, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 126,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 480,
+"narg": 2,
+"thunk_rva": 2514072,
+"body_rva": 5164832,
+"hits": [
+{
+"rva": 5164836,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5164838,
+"uap_off": 8,
+"text": "mov rdx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 7,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 481,
+"narg": 3,
+"thunk_rva": 2514080,
+"body_rva": 4425456,
+"hits": [
+{
+"rva": 4425514,
+"uap_off": 16,
+"text": "mov edi, dword ptr [rbx + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4425539,
+"uap_off": 16,
+"text": "mov eax, dword ptr [rbx + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4425587,
+"uap_off": 8,
+"text": "mov rdi, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4425597,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4425639,
+"uap_off": 16,
+"text": "mov edx, dword ptr [rbx + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4425653,
+"uap_off": 16,
+"text": "mov esi, dword ptr [rbx + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 76,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 482,
+"narg": 3,
+"thunk_rva": 2514088,
+"body_rva": 8443712,
+"hits": [
+{
+"rva": 8443743,
+"uap_off": 8,
+"text": "mov r14d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 28,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 483,
+"narg": 1,
+"thunk_rva": 2514096,
+"body_rva": 8444880,
+"hits": [],
+"insns": 73,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 484,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 485,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 486,
+"narg": 4,
+"thunk_rva": 2514104,
+"body_rva": 8640560,
+"hits": [
+{
+"rva": 8640593,
+"uap_off": 0,
+"text": "cmp dword ptr [rsi], 3",
+"size": 4,
+"write": false
+},
+{
+"rva": 8640596,
+"uap_off": 8,
+"text": "mov edi, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 8640620,
+"uap_off": 16,
+"text": "mov rsi, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 8640649,
+"uap_off": 8,
+"text": "mov ecx, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 8640687,
+"uap_off": 0,
+"text": "cmp dword ptr [rbx], 1",
+"size": 4,
+"write": false
+}
+],
+"insns": 62,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 487,
+"narg": 5,
+"thunk_rva": 2514112,
+"body_rva": 8642144,
+"hits": [],
+"insns": 6,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 488,
+"narg": 5,
+"thunk_rva": 2514120,
+"body_rva": 8643360,
+"hits": [],
+"insns": 5,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 489,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 490,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 491,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 492,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 493,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 494,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 495,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 496,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 497,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 498,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 499,
+"narg": 4,
+"thunk_rva": 2514128,
+"body_rva": 9399888,
+"hits": [
+{
+"rva": 9399919,
+"uap_off": 0,
+"text": "mov esi, dword ptr [r14]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9399922,
+"uap_off": 8,
+"text": "mov rdx, qword ptr [r14 + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 9399926,
+"uap_off": 16,
+"text": "mov r8d, dword ptr [r14 + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 9399930,
+"uap_off": 24,
+"text": "movzx r9d, word ptr [r14 + 0x18]",
+"size": 2,
+"write": false
+}
+],
+"insns": 24,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 500,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 501,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 502,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 503,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 504,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 505,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 506,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 507,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 508,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 509,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 510,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 511,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 512,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 513,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 514,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 515,
+"narg": 3,
+"thunk_rva": 2514136,
+"body_rva": 4829360,
+"hits": [],
+"insns": 5,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 516,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 517,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 518,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 519,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 520,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 521,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 522,
+"narg": 6,
+"thunk_rva": 2514144,
+"body_rva": 5166016,
+"hits": [
+{
+"rva": 5166054,
+"uap_off": 32,
+"text": "mov r14, qword ptr [rsi + 0x20]",
+"size": 8,
+"write": false
+}
+],
+"insns": 96,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 523,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 524,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 525,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 526,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 527,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 528,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 529,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 530,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 531,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 532,
+"narg": 5,
+"thunk_rva": 2514152,
+"body_rva": 11468864,
+"hits": [
+{
+"rva": 11468901,
+"uap_off": 24,
+"text": "mov rcx, qword ptr [rsi + 0x18]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11468905,
+"uap_off": 8,
+"text": "mov eax, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11468908,
+"uap_off": 32,
+"text": "mov rdx, qword ptr [rsi + 0x20]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11468912,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11468926,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 67,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 533,
+"narg": 3,
+"thunk_rva": 2514160,
+"body_rva": 7362688,
+"hits": [
+{
+"rva": 7362762,
+"uap_off": 8,
+"text": "mov r12, qword ptr [r14 + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 7362784,
+"uap_off": 16,
+"text": "mov r15d, dword ptr [r14 + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 120,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 534,
+"narg": 2,
+"thunk_rva": 2514168,
+"body_rva": 7363680,
+"hits": [
+{
+"rva": 7363779,
+"uap_off": 8,
+"text": "mov eax, dword ptr [r12 + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 7363797,
+"uap_off": 0,
+"text": "mov esi, dword ptr [r12]",
+"size": 4,
+"write": false
+}
+],
+"insns": 59,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 535,
+"narg": 4,
+"thunk_rva": 2514176,
+"body_rva": 5203440,
+"hits": [
+{
+"rva": 5203474,
+"uap_off": 8,
+"text": "mov rax, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5203485,
+"uap_off": 0,
+"text": "mov r13d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5203488,
+"uap_off": 16,
+"text": "mov r14d, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5203492,
+"uap_off": 24,
+"text": "mov r15, qword ptr [rsi + 0x18]",
+"size": 8,
+"write": false
+}
+],
+"insns": 67,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 536,
+"narg": 3,
+"thunk_rva": 2514184,
+"body_rva": 5204592,
+"hits": [
+{
+"rva": 5204634,
+"uap_off": 0,
+"text": "mov r12d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5204637,
+"uap_off": 8,
+"text": "mov r14, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5204641,
+"uap_off": 16,
+"text": "mov r15, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 59,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 537,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 538,
+"narg": 3,
+"thunk_rva": 2514192,
+"body_rva": 12253824,
+"hits": [
+{
+"rva": 12253861,
+"uap_off": 8,
+"text": "mov r14d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 26,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 539,
+"narg": 1,
+"thunk_rva": 2514200,
+"body_rva": 12254448,
+"hits": [
+{
+"rva": 12254496,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 41,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 540,
+"narg": 1,
+"thunk_rva": 2514208,
+"body_rva": 12256048,
+"hits": [
+{
+"rva": 12256087,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 35,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 541,
+"narg": 1,
+"thunk_rva": 2514216,
+"body_rva": 12256400,
+"hits": [
+{
+"rva": 12256448,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12256490,
+"uap_off": 0,
+"text": "mov esi, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 64,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 542,
+"narg": 5,
+"thunk_rva": 2514224,
+"body_rva": 12254800,
+"hits": [
+{
+"rva": 12254842,
+"uap_off": 16,
+"text": "mov r15d, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12254895,
+"uap_off": 8,
+"text": "cmp qword ptr [rsi + 8], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 12254906,
+"uap_off": 32,
+"text": "mov r14, qword ptr [rsi + 0x20]",
+"size": 8,
+"write": false
+},
+{
+"rva": 12254981,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 102,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 543,
+"narg": 4,
+"thunk_rva": 2514232,
+"body_rva": 12255280,
+"hits": [
+{
+"rva": 12255319,
+"uap_off": 16,
+"text": "mov r14d, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12255372,
+"uap_off": 8,
+"text": "cmp qword ptr [rsi + 8], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 12255386,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12255407,
+"uap_off": 24,
+"text": "cmp qword ptr [rbx + 0x18], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 12255412,
+"uap_off": 8,
+"text": "mov rsi, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 12255442,
+"uap_off": 24,
+"text": "mov r15, qword ptr [r15 + 0x18]",
+"size": 8,
+"write": false
+}
+],
+"insns": 70,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 544,
+"narg": 2,
+"thunk_rva": 2514240,
+"body_rva": 12255568,
+"hits": [
+{
+"rva": 12255609,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12255628,
+"uap_off": 8,
+"text": "mov rsi, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 32,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 545,
+"narg": 2,
+"thunk_rva": 2514248,
+"body_rva": 12255696,
+"hits": [
+{
+"rva": 12255743,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12255765,
+"uap_off": 8,
+"text": "mov r12, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 51,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 546,
+"narg": 3,
+"thunk_rva": 2514256,
+"body_rva": 12255872,
+"hits": [
+{
+"rva": 12255913,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12255932,
+"uap_off": 8,
+"text": "mov rsi, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 12255956,
+"uap_off": 16,
+"text": "mov rbx, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 43,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 547,
+"narg": 2,
+"thunk_rva": 2514264,
+"body_rva": 11248960,
+"hits": [
+{
+"rva": 11249009,
+"uap_off": 0,
+"text": "and r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11249306,
+"uap_off": 96,
+"text": "mov eax, dword ptr [rsi + 0x60]",
+"size": 4,
+"write": false
+}
+],
+"insns": 86,
+"reason": "ok",
+"max_off": 96
+},
+{
+"num": 548,
+"narg": 5,
+"thunk_rva": 2514272,
+"body_rva": 11255392,
+"hits": [
+{
+"rva": 11255429,
+"uap_off": 24,
+"text": "mov r13d, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11255468,
+"uap_off": 8,
+"text": "test dword ptr [rbx + 8], ecx",
+"size": 4,
+"write": false
+}
+],
+"insns": 151,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 549,
+"narg": 4,
+"thunk_rva": 2514280,
+"body_rva": 12673056,
+"hits": [
+{
+"rva": 12673093,
+"uap_off": 8,
+"text": "mov r14d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 26,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 550,
+"narg": 1,
+"thunk_rva": 2514288,
+"body_rva": 12673648,
+"hits": [
+{
+"rva": 12673696,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 41,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 551,
+"narg": 1,
+"thunk_rva": 2514296,
+"body_rva": 12674848,
+"hits": [
+{
+"rva": 12674887,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 35,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 552,
+"narg": 1,
+"thunk_rva": 2514304,
+"body_rva": 12675200,
+"hits": [
+{
+"rva": 12675248,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12675290,
+"uap_off": 0,
+"text": "mov esi, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 64,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 553,
+"narg": 3,
+"thunk_rva": 2514312,
+"body_rva": 12674000,
+"hits": [
+{
+"rva": 12674030,
+"uap_off": 8,
+"text": "cmp dword ptr [rsi + 8], 0",
+"size": 4,
+"write": false
+},
+{
+"rva": 12674044,
+"uap_off": 16,
+"text": "mov r15, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 12674111,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12674135,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 12674139,
+"uap_off": 8,
+"text": "mov esi, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12674173,
+"uap_off": 16,
+"text": "mov rbx, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 71,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 554,
+"narg": 2,
+"thunk_rva": 2514320,
+"body_rva": 12674288,
+"hits": [
+{
+"rva": 12674320,
+"uap_off": 8,
+"text": "cmp dword ptr [rsi + 8], 0",
+"size": 4,
+"write": false
+},
+{
+"rva": 12674333,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12674364,
+"uap_off": 8,
+"text": "mov r13d, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 60,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 555,
+"narg": 2,
+"thunk_rva": 2514328,
+"body_rva": 12674512,
+"hits": [
+{
+"rva": 12674537,
+"uap_off": 8,
+"text": "cmp dword ptr [rsi + 8], 0",
+"size": 4,
+"write": false
+},
+{
+"rva": 12674550,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12674578,
+"uap_off": 8,
+"text": "mov esi, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 35,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 556,
+"narg": 3,
+"thunk_rva": 2514336,
+"body_rva": 12674656,
+"hits": [
+{
+"rva": 12674699,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12674718,
+"uap_off": 8,
+"text": "mov esi, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 12674753,
+"uap_off": 16,
+"text": "mov rbx, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 49,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 557,
+"narg": 3,
+"thunk_rva": 2514344,
+"body_rva": 11301440,
+"hits": [
+{
+"rva": 11301471,
+"uap_off": 0,
+"text": "cmp qword ptr [rsi], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 11301491,
+"uap_off": 16,
+"text": "or r12d, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11301534,
+"uap_off": 0,
+"text": "mov r13, qword ptr [r15]",
+"size": 8,
+"write": false
+}
+],
+"insns": 55,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 558,
+"narg": 2,
+"thunk_rva": 2514352,
+"body_rva": 11301824,
+"hits": [
+{
+"rva": 11301865,
+"uap_off": 8,
+"text": "movzx edx, word ptr [rsi + 8]",
+"size": 2,
+"write": false
+},
+{
+"rva": 11301869,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11301897,
+"uap_off": 0,
+"text": "mov esi, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 47,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 559,
+"narg": 1,
+"thunk_rva": 2514360,
+"body_rva": 11257104,
+"hits": [
+{
+"rva": 11257227,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 60,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 560,
+"narg": 1,
+"thunk_rva": 2514368,
+"body_rva": 5201504,
+"hits": [
+{
+"rva": 5201508,
+"uap_off": 0,
+"text": "mov ecx, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 12,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 561,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 562,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 563,
+"narg": 1,
+"thunk_rva": 2514376,
+"body_rva": 6303712,
+"hits": [
+{
+"rva": 6303722,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 40,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 564,
+"narg": 1,
+"thunk_rva": 2514384,
+"body_rva": 6304352,
+"hits": [
+{
+"rva": 6304362,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 40,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 565,
+"narg": 3,
+"thunk_rva": 2514392,
+"body_rva": 6304992,
+"hits": [
+{
+"rva": 6305006,
+"uap_off": 8,
+"text": "mov r12d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 6305010,
+"uap_off": 16,
+"text": "mov r13, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 6305051,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 63,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 566,
+"narg": 3,
+"thunk_rva": 2514400,
+"body_rva": 6305552,
+"hits": [
+{
+"rva": 6305566,
+"uap_off": 8,
+"text": "mov r13d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 6305589,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 6305592,
+"uap_off": 16,
+"text": "mov r12, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 50,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 567,
+"narg": 3,
+"thunk_rva": 2514408,
+"body_rva": 6306256,
+"hits": [
+{
+"rva": 6306293,
+"uap_off": 8,
+"text": "mov r13d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 6306314,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 105,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 568,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 569,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 570,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 571,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 572,
+"narg": 4,
+"thunk_rva": 2514416,
+"body_rva": 11250768,
+"hits": [
+{
+"rva": 11250806,
+"uap_off": 8,
+"text": "mov ecx, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11250861,
+"uap_off": 0,
+"text": "mov r15, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11251403,
+"uap_off": 32,
+"text": "mov rax, qword ptr [rsi + 0x20]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11251426,
+"uap_off": 40,
+"text": "mov rcx, qword ptr [rsi + 0x28]",
+"size": 8,
+"write": false
+}
+],
+"insns": 137,
+"reason": "ok",
+"max_off": 40
+},
+{
+"num": 573,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 574,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 575,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 576,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 577,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 578,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 579,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 580,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 581,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 582,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 583,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 584,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 585,
+"narg": 0,
+"thunk_rva": 2514424,
+"body_rva": 9422352,
+"hits": [],
+"insns": 31,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 586,
+"narg": 1,
+"thunk_rva": 2512784,
+"body_rva": 3989840,
+"hits": [
+{
+"rva": 3989890,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 35,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 587,
+"narg": 2,
+"thunk_rva": 2514432,
+"body_rva": 5118576,
+"hits": [
+{
+"rva": 5118634,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rbx]",
+"size": 4,
+"write": false
+}
+],
+"insns": 47,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 588,
+"narg": 3,
+"thunk_rva": 2514440,
+"body_rva": 11257328,
+"hits": [
+{
+"rva": 11257364,
+"uap_off": 0,
+"text": "mov r13, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11257393,
+"uap_off": 8,
+"text": "mov r15, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11257421,
+"uap_off": 16,
+"text": "mov r14, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 77,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 589,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 590,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 591,
+"narg": 3,
+"thunk_rva": 2512240,
+"body_rva": 3452560,
+"hits": [
+{
+"rva": 3452599,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3452602,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 135,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 592,
+"narg": 3,
+"thunk_rva": 2512248,
+"body_rva": 3454224,
+"hits": [
+{
+"rva": 3454228,
+"uap_off": 0,
+"text": "mov rax, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3454235,
+"uap_off": 8,
+"text": "mov rdx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3454239,
+"uap_off": 16,
+"text": "mov r8, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 59,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 593,
+"narg": 2,
+"thunk_rva": 2512264,
+"body_rva": 3454896,
+"hits": [
+{
+"rva": 3454966,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3454969,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 63,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 594,
+"narg": 4,
+"thunk_rva": 2512224,
+"body_rva": 3449968,
+"hits": [],
+"insns": 30,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 595,
+"narg": 3,
+"thunk_rva": 2512232,
+"body_rva": 3452208,
+"hits": [
+{
+"rva": 3452277,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 81,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 596,
+"narg": 0,
+"thunk_rva": 2512304,
+"body_rva": 3458896,
+"hits": [],
+"insns": 46,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 597,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 598,
+"narg": 2,
+"thunk_rva": 2512336,
+"body_rva": 3459472,
+"hits": [
+{
+"rva": 3459544,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3459547,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 56,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 599,
+"narg": 0,
+"thunk_rva": 2512344,
+"body_rva": 3459744,
+"hits": [],
+"insns": 108,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 600,
+"narg": 1,
+"thunk_rva": 2514448,
+"body_rva": 10708960,
+"hits": [
+{
+"rva": 10709036,
+"uap_off": 0,
+"text": "mov r14, qword ptr [r14]",
+"size": 8,
+"write": false
+}
+],
+"insns": 56,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 601,
+"narg": 3,
+"thunk_rva": 2514456,
+"body_rva": 13239856,
+"hits": [
+{
+"rva": 13239896,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 13239915,
+"uap_off": 8,
+"text": "mov r15, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 13239919,
+"uap_off": 16,
+"text": "mov r12, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 100,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 602,
+"narg": 3,
+"thunk_rva": 2514464,
+"body_rva": 10709216,
+"hits": [
+{
+"rva": 10709257,
+"uap_off": 0,
+"text": "cmp qword ptr [rsi], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 10709304,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rbx]",
+"size": 8,
+"write": false
+},
+{
+"rva": 10709363,
+"uap_off": 8,
+"text": "cmp qword ptr [rbx + 8], 0",
+"size": 8,
+"write": false
+}
+],
+"insns": 117,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 603,
+"narg": 2,
+"thunk_rva": 2514472,
+"body_rva": 7531712,
+"hits": [],
+"insns": 30,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 604,
+"narg": 5,
+"thunk_rva": 2514480,
+"body_rva": 5206896,
+"hits": [
+{
+"rva": 5206930,
+"uap_off": 32,
+"text": "mov rax, qword ptr [rsi + 0x20]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5206941,
+"uap_off": 0,
+"text": "mov r12d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 5206944,
+"uap_off": 8,
+"text": "mov r13, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5206948,
+"uap_off": 16,
+"text": "mov r15, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 5206952,
+"uap_off": 24,
+"text": "mov r14d, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+}
+],
+"insns": 99,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 605,
+"narg": 1,
+"thunk_rva": 2514488,
+"body_rva": 10709760,
+"hits": [
+{
+"rva": 10709793,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 28,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 606,
+"narg": 0,
+"thunk_rva": 2514496,
+"body_rva": 10709904,
+"hits": [],
+"insns": 14,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 607,
+"narg": 2,
+"thunk_rva": 2514504,
+"body_rva": 11257616,
+"hits": [
+{
+"rva": 11257668,
+"uap_off": 0,
+"text": "mov r12, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 49,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 608,
+"narg": 3,
+"thunk_rva": 2512280,
+"body_rva": 3456448,
+"hits": [
+{
+"rva": 3456518,
+"uap_off": 8,
+"text": "mov eax, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3456521,
+"uap_off": 0,
+"text": "mov r12d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3456524,
+"uap_off": 16,
+"text": "mov r14, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 180,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 609,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 610,
+"narg": 1,
+"thunk_rva": 2514512,
+"body_rva": 5930848,
+"hits": [
+{
+"rva": 5930899,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 61,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 611,
+"narg": 3,
+"thunk_rva": 2514520,
+"body_rva": 10709952,
+"hits": [
+{
+"rva": 10710009,
+"uap_off": 0,
+"text": "mov rax, qword ptr [r12]",
+"size": 8,
+"write": false
+},
+{
+"rva": 10710032,
+"uap_off": 8,
+"text": "movsxd rax, dword ptr [r12 + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 115,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 612,
+"narg": 1,
+"thunk_rva": 2512352,
+"body_rva": 3460688,
+"hits": [
+{
+"rva": 3460721,
+"uap_off": 0,
+"text": "mov rbx, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 91,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 613,
+"narg": 3,
+"thunk_rva": 2514528,
+"body_rva": 11258384,
+"hits": [
+{
+"rva": 11258439,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11258709,
+"uap_off": 8,
+"text": "mov r14, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11258757,
+"uap_off": 16,
+"text": "mov rbx, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 115,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 614,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 615,
+"narg": 3,
+"thunk_rva": 2514536,
+"body_rva": 11258880,
+"hits": [
+{
+"rva": 11258920,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11258931,
+"uap_off": 8,
+"text": "mov r14, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11258982,
+"uap_off": 16,
+"text": "mov rbx, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 45,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 616,
+"narg": 2,
+"thunk_rva": 2514544,
+"body_rva": 4426896,
+"hits": [
+{
+"rva": 4426950,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4427019,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 56,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 617,
+"narg": 1,
+"thunk_rva": 2514552,
+"body_rva": 9250160,
+"hits": [
+{
+"rva": 9250178,
+"uap_off": 0,
+"text": "movzx edi, byte ptr [rbx]",
+"size": 1,
+"write": false
+}
+],
+"insns": 15,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 618,
+"narg": 3,
+"thunk_rva": 2514560,
+"body_rva": 11260144,
+"hits": [
+{
+"rva": 11260201,
+"uap_off": 0,
+"text": "mov rax, qword ptr [r15]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11260229,
+"uap_off": 8,
+"text": "movsxd rcx, dword ptr [r15 + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 142,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 619,
+"narg": 5,
+"thunk_rva": 2514568,
+"body_rva": 10712656,
+"hits": [],
+"insns": 5,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 620,
+"narg": 0,
+"thunk_rva": 2514576,
+"body_rva": 11260976,
+"hits": [],
+"insns": 51,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 621,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 622,
+"narg": 6,
+"thunk_rva": 2514584,
+"body_rva": 8244544,
+"hits": [
+{
+"rva": 8244578,
+"uap_off": 16,
+"text": "mov rax, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 8244582,
+"uap_off": 0,
+"text": "mov r14d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 8244585,
+"uap_off": 8,
+"text": "mov r15d, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 8244589,
+"uap_off": 24,
+"text": "mov r13, qword ptr [rsi + 0x18]",
+"size": 8,
+"write": false
+},
+{
+"rva": 8244593,
+"uap_off": 32,
+"text": "mov r12, qword ptr [rsi + 0x20]",
+"size": 8,
+"write": false
+}
+],
+"insns": 50,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 623,
+"narg": 1,
+"thunk_rva": 2514592,
+"body_rva": 9250208,
+"hits": [
+{
+"rva": 9250277,
+"uap_off": 0,
+"text": "mov rbx, qword ptr [rbx]",
+"size": 8,
+"write": false
+}
+],
+"insns": 37,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 624,
+"narg": 0,
+"thunk_rva": 2514600,
+"body_rva": 11261168,
+"hits": [],
+"insns": 22,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 625,
+"narg": 4,
+"thunk_rva": 2514608,
+"body_rva": 6306960,
+"hits": [
+{
+"rva": 6306977,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 6306997,
+"uap_off": 16,
+"text": "mov r14d, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+}
+],
+"insns": 27,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 626,
+"narg": 5,
+"thunk_rva": 2514616,
+"body_rva": 6311152,
+"hits": [
+{
+"rva": 6311182,
+"uap_off": 16,
+"text": "mov ebx, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 6311501,
+"uap_off": 0,
+"text": "mov ecx, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 6311535,
+"uap_off": 8,
+"text": "mov edi, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 6311566,
+"uap_off": 24,
+"text": "cmp qword ptr [rsi + 0x18], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 6311577,
+"uap_off": 32,
+"text": "cmp qword ptr [rsi + 0x20], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 6311850,
+"uap_off": 24,
+"text": "mov rbx, qword ptr [rsi + 0x18]",
+"size": 8,
+"write": false
+}
+],
+"insns": 89,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 627,
+"narg": 2,
+"thunk_rva": 2514624,
+"body_rva": 4859984,
+"hits": [
+{
+"rva": 4860050,
+"uap_off": 0,
+"text": "cmp qword ptr [r14], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 4860060,
+"uap_off": 8,
+"text": "mov rdi, qword ptr [r14 + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4860086,
+"uap_off": 0,
+"text": "mov rcx, qword ptr [r14]",
+"size": 8,
+"write": false
+}
+],
+"insns": 132,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 628,
+"narg": 6,
+"thunk_rva": 2514632,
+"body_rva": 11261248,
+"hits": [
+{
+"rva": 11261282,
+"uap_off": 0,
+"text": "mov r12, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11261289,
+"uap_off": 8,
+"text": "mov rax, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11261293,
+"uap_off": 32,
+"text": "mov ecx, dword ptr [rsi + 0x20]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11261296,
+"uap_off": 40,
+"text": "mov r15, qword ptr [rsi + 0x28]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11261304,
+"uap_off": 16,
+"text": "mov eax, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11261315,
+"uap_off": 24,
+"text": "mov eax, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+}
+],
+"insns": 46,
+"reason": "ok",
+"max_off": 40
+},
+{
+"num": 629,
+"narg": 4,
+"thunk_rva": 2514640,
+"body_rva": 9553472,
+"hits": [
+{
+"rva": 9553483,
+"uap_off": 0,
+"text": "cmp qword ptr [rsi], 1",
+"size": 8,
+"write": false
+},
+{
+"rva": 9553521,
+"uap_off": 0,
+"text": "mov r12, qword ptr [r14]",
+"size": 8,
+"write": false
+}
+],
+"insns": 57,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 630,
+"narg": 1,
+"thunk_rva": 2514648,
+"body_rva": 9555056,
+"hits": [
+{
+"rva": 9555094,
+"uap_off": 0,
+"text": "mov r15, qword ptr [r15]",
+"size": 8,
+"write": false
+}
+],
+"insns": 53,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 631,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 632,
+"narg": 1,
+"thunk_rva": 2514656,
+"body_rva": 4427312,
+"hits": [
+{
+"rva": 4427329,
+"uap_off": 0,
+"text": "mov rdi, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4427605,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r15]",
+"size": 4,
+"write": false
+}
+],
+"insns": 118,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 633,
+"narg": 1,
+"thunk_rva": 2514664,
+"body_rva": 4427888,
+"hits": [
+{
+"rva": 4427891,
+"uap_off": 0,
+"text": "mov rdi, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 50,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 634,
+"narg": 2,
+"thunk_rva": 2514672,
+"body_rva": 4428112,
+"hits": [
+{
+"rva": 4428157,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 4428344,
+"uap_off": 0,
+"text": "mov edi, dword ptr [rbx]",
+"size": 4,
+"write": false
+}
+],
+"insns": 79,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 635,
+"narg": 2,
+"thunk_rva": 2514680,
+"body_rva": 4428704,
+"hits": [],
+"insns": 5,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 636,
+"narg": 2,
+"thunk_rva": 2514688,
+"body_rva": 7070928,
+"hits": [
+{
+"rva": 7070966,
+"uap_off": 8,
+"text": "add ecx, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 7071004,
+"uap_off": 8,
+"text": "mov r15d, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 7071008,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rbx]",
+"size": 8,
+"write": false
+},
+{
+"rva": 7071063,
+"uap_off": 8,
+"text": "mov esi, dword ptr [rbx + 8]",
+"size": 4,
+"write": false
+}
+],
+"insns": 53,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 637,
+"narg": 2,
+"thunk_rva": 2514696,
+"body_rva": 11262256,
+"hits": [
+{
+"rva": 11262270,
+"uap_off": 8,
+"text": "cmp qword ptr [rsi + 8], 0x11",
+"size": 8,
+"write": false
+},
+{
+"rva": 11262287,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11262462,
+"uap_off": 8,
+"text": "mov rax, qword ptr [r13 + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 93,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 638,
+"narg": 4,
+"thunk_rva": 2514704,
+"body_rva": 7071168,
+"hits": [
+{
+"rva": 7071247,
+"uap_off": 0,
+"text": "mov rsi, qword ptr [rbx]",
+"size": 8,
+"write": false
+}
+],
+"insns": 126,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 639,
+"narg": 5,
+"thunk_rva": 2514712,
+"body_rva": 7071744,
+"hits": [
+{
+"rva": 7071829,
+"uap_off": 0,
+"text": "mov rdx, qword ptr [rbx]",
+"size": 8,
+"write": false
+}
+],
+"insns": 164,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 640,
+"narg": 8,
+"thunk_rva": 2514720,
+"body_rva": 11079184,
+"hits": [],
+"insns": 5,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 641,
+"narg": 2,
+"thunk_rva": 2514728,
+"body_rva": 4861408,
+"hits": [
+{
+"rva": 4861488,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r13]",
+"size": 4,
+"write": false
+}
+],
+"insns": 111,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 642,
+"narg": 4,
+"thunk_rva": 2514736,
+"body_rva": 11262672,
+"hits": [
+{
+"rva": 11262729,
+"uap_off": 0,
+"text": "mov edi, dword ptr [r14]",
+"size": 4,
+"write": false
+}
+],
+"insns": 144,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 643,
+"narg": 1,
+"thunk_rva": 2514744,
+"body_rva": 10712672,
+"hits": [
+{
+"rva": 10712682,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 10712701,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rbx]",
+"size": 4,
+"write": false
+}
+],
+"insns": 18,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 644,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 645,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 646,
+"narg": 1,
+"thunk_rva": 2514752,
+"body_rva": 11264448,
+"hits": [
+{
+"rva": 11264517,
+"uap_off": 0,
+"text": "mov rbx, qword ptr [rbx]",
+"size": 8,
+"write": false
+}
+],
+"insns": 37,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 647,
+"narg": 1,
+"thunk_rva": 2514760,
+"body_rva": 11265968,
+"hits": [
+{
+"rva": 11266036,
+"uap_off": 0,
+"text": "mov rsi, qword ptr [r14]",
+"size": 8,
+"write": false
+}
+],
+"insns": 33,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 648,
+"narg": 1,
+"thunk_rva": 2514768,
+"body_rva": 10453488,
+"hits": [
+{
+"rva": 10453534,
+"uap_off": 0,
+"text": "cmp dword ptr [r14], 7",
+"size": 4,
+"write": false
+}
+],
+"insns": 31,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 649,
+"narg": 3,
+"thunk_rva": 2512360,
+"body_rva": 3461024,
+"hits": [
+{
+"rva": 3461129,
+"uap_off": 0,
+"text": "movsxd rax, dword ptr [rbx]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3461139,
+"uap_off": 8,
+"text": "movzx eax, byte ptr [rbx + 8]",
+"size": 1,
+"write": false
+}
+],
+"insns": 70,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 650,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 651,
+"narg": 0,
+"thunk_rva": 2512736,
+"body_rva": 5644512,
+"hits": [],
+"insns": 45,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 652,
+"narg": 2,
+"thunk_rva": 2514776,
+"body_rva": 12490000,
+"hits": [
+{
+"rva": 12490044,
+"uap_off": 0,
+"text": "mov r12d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 97,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 653,
+"narg": 1,
+"thunk_rva": 2514784,
+"body_rva": 10124560,
+"hits": [
+{
+"rva": 10124596,
+"uap_off": 0,
+"text": "mov r15d, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 107,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 654,
+"narg": 5,
+"thunk_rva": 2514792,
+"body_rva": 10130784,
+"hits": [
+{
+"rva": 10130819,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+}
+],
+"insns": 28,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 655,
+"narg": 3,
+"thunk_rva": 2514800,
+"body_rva": 10133008,
+"hits": [
+{
+"rva": 10133044,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 10133073,
+"uap_off": 8,
+"text": "mov r15, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 10133116,
+"uap_off": 16,
+"text": "cmp dword ptr [rsi + 0x10], 0",
+"size": 4,
+"write": false
+}
+],
+"insns": 85,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 656,
+"narg": 2,
+"thunk_rva": 2512288,
+"body_rva": 3457872,
+"hits": [
+{
+"rva": 3457908,
+"uap_off": 0,
+"text": "mov r13d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3457911,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 165,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 657,
+"narg": 4,
+"thunk_rva": 2514808,
+"body_rva": 10133312,
+"hits": [
+{
+"rva": 10133349,
+"uap_off": 24,
+"text": "cmp dword ptr [rsi + 0x18], 0",
+"size": 4,
+"write": false
+},
+{
+"rva": 10133353,
+"uap_off": 0,
+"text": "mov rbx, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 10133361,
+"uap_off": 16,
+"text": "mov rdi, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 37,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 658,
+"narg": 1,
+"thunk_rva": 2514816,
+"body_rva": 9417792,
+"hits": [
+{
+"rva": 9417796,
+"uap_off": 0,
+"text": "mov esi, dword ptr [rsi]",
+"size": 4,
+"write": false
+}
+],
+"insns": 5,
+"reason": "ok",
+"max_off": 0
+},
+{
+"num": 659,
+"narg": 3,
+"thunk_rva": 2512256,
+"body_rva": 3454864,
+"hits": [
+{
+"rva": 3454868,
+"uap_off": 0,
+"text": "mov rax, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3454875,
+"uap_off": 8,
+"text": "mov rdx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3454879,
+"uap_off": 16,
+"text": "mov r8, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 10,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 660,
+"narg": 2,
+"thunk_rva": 2512272,
+"body_rva": 3456096,
+"hits": [
+{
+"rva": 3456166,
+"uap_off": 0,
+"text": "mov r12d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3456169,
+"uap_off": 8,
+"text": "mov rbx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 65,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 661,
+"narg": 4,
+"thunk_rva": 2512656,
+"body_rva": 3864816,
+"hits": [],
+"insns": 5,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 662,
+"narg": 3,
+"thunk_rva": 2512664,
+"body_rva": 3864832,
+"hits": [
+{
+"rva": 3864836,
+"uap_off": 0,
+"text": "mov rax, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3864839,
+"uap_off": 8,
+"text": "mov edx, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3864842,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 75,
+"reason": "ok",
+"max_off": 1184
+},
+{
+"num": 663,
+"narg": 5,
+"thunk_rva": 2512672,
+"body_rva": 3867120,
+"hits": [
+{
+"rva": 3867124,
+"uap_off": 0,
+"text": "mov rax, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3867127,
+"uap_off": 8,
+"text": "mov edx, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3867130,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3867134,
+"uap_off": 24,
+"text": "mov r8d, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3867138,
+"uap_off": 32,
+"text": "mov r9, qword ptr [rsi + 0x20]",
+"size": 8,
+"write": false
+}
+],
+"insns": 84,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 664,
+"narg": 3,
+"thunk_rva": 2512680,
+"body_rva": 3870640,
+"hits": [
+{
+"rva": 3870644,
+"uap_off": 0,
+"text": "mov rax, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3870647,
+"uap_off": 8,
+"text": "mov edx, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3870650,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 80,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 665,
+"narg": 2,
+"thunk_rva": 2512688,
+"body_rva": 3872368,
+"hits": [],
+"insns": 5,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 666,
+"narg": 3,
+"thunk_rva": 2512696,
+"body_rva": 3872384,
+"hits": [
+{
+"rva": 3872388,
+"uap_off": 0,
+"text": "mov rax, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3872391,
+"uap_off": 8,
+"text": "mov edx, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3872394,
+"uap_off": 16,
+"text": "mov rcx, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 77,
+"reason": "ok",
+"max_off": 1184
+},
+{
+"num": 667,
+"narg": 2,
+"thunk_rva": 2514824,
+"body_rva": 4862368,
+"hits": [
+{
+"rva": 4862425,
+"uap_off": 0,
+"text": "cmp qword ptr [r15], 0",
+"size": 8,
+"write": false
+},
+{
+"rva": 4862435,
+"uap_off": 8,
+"text": "mov rdi, qword ptr [r15 + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 4862478,
+"uap_off": 0,
+"text": "mov rax, qword ptr [r15]",
+"size": 8,
+"write": false
+}
+],
+"insns": 155,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 668,
+"narg": 2,
+"thunk_rva": 2512648,
+"body_rva": 3864800,
+"hits": [],
+"insns": 5,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 669,
+"narg": 5,
+"thunk_rva": 2512704,
+"body_rva": 3874912,
+"hits": [
+{
+"rva": 3874916,
+"uap_off": 0,
+"text": "mov eax, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3874918,
+"uap_off": 8,
+"text": "mov rdx, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3874922,
+"uap_off": 16,
+"text": "mov ecx, dword ptr [rsi + 0x10]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3874925,
+"uap_off": 24,
+"text": "mov r8d, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3874929,
+"uap_off": 32,
+"text": "mov r9, qword ptr [rsi + 0x20]",
+"size": 8,
+"write": false
+}
+],
+"insns": 86,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 670,
+"narg": 4,
+"thunk_rva": 2512712,
+"body_rva": 3877072,
+"hits": [
+{
+"rva": 3877111,
+"uap_off": 8,
+"text": "mov eax, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 3877114,
+"uap_off": 0,
+"text": "mov r12, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3877117,
+"uap_off": 16,
+"text": "mov r13, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3877121,
+"uap_off": 24,
+"text": "mov r14d, dword ptr [rsi + 0x18]",
+"size": 4,
+"write": false
+}
+],
+"insns": 62,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 671,
+"narg": 4,
+"thunk_rva": 2514832,
+"body_rva": 11266224,
+"hits": [
+{
+"rva": 11266261,
+"uap_off": 24,
+"text": "mov rax, qword ptr [rsi + 0x18]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11266265,
+"uap_off": 0,
+"text": "mov r12d, dword ptr [rsi]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11266268,
+"uap_off": 8,
+"text": "mov ebx, dword ptr [rsi + 8]",
+"size": 4,
+"write": false
+},
+{
+"rva": 11266271,
+"uap_off": 16,
+"text": "mov r14, qword ptr [rsi + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 45,
+"reason": "ok",
+"max_off": 24
+},
+{
+"num": 672,
+"narg": 3,
+"thunk_rva": 2512296,
+"body_rva": 3458672,
+"hits": [
+{
+"rva": 3458740,
+"uap_off": 0,
+"text": "mov rsi, qword ptr [rbx]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3458743,
+"uap_off": 8,
+"text": "mov rdx, qword ptr [rbx + 8]",
+"size": 8,
+"write": false
+},
+{
+"rva": 3458747,
+"uap_off": 16,
+"text": "mov r8, qword ptr [rbx + 0x10]",
+"size": 8,
+"write": false
+}
+],
+"insns": 32,
+"reason": "ok",
+"max_off": 16
+},
+{
+"num": 673,
+"narg": 4,
+"thunk_rva": 2514840,
+"body_rva": 10138096,
+"hits": [
+{
+"rva": 10138132,
+"uap_off": 0,
+"text": "mov r14, qword ptr [rsi]",
+"size": 8,
+"write": false
+},
+{
+"rva": 10138160,
+"uap_off": 8,
+"text": "mov r15, qword ptr [rsi + 8]",
+"size": 8,
+"write": false
+}
+],
+"insns": 41,
+"reason": "ok",
+"max_off": 8
+},
+{
+"num": 674,
+"narg": 5,
+"thunk_rva": 2514848,
+"body_rva": 11254144,
+"hits": [
+{
+"rva": 11254208,
+"uap_off": 0,
+"text": "mov rcx, qword ptr [r14]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11254216,
+"uap_off": 16,
+"text": "mov rax, qword ptr [r14 + 0x10]",
+"size": 8,
+"write": false
+},
+{
+"rva": 11254227,
+"uap_off": 32,
+"text": "cmp dword ptr [r14 + 0x20], 0x40000000",
+"size": 4,
+"write": false
+}
+],
+"insns": 38,
+"reason": "ok",
+"max_off": 32
+},
+{
+"num": 675,
+"narg": 2,
+"thunk_rva": 2511960,
+"body_rva": 2963184,
+"hits": [],
+"insns": 8,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 676,
+"narg": 0,
+"thunk_rva": 2514856,
+"body_rva": 7312096,
+"hits": [],
+"insns": 6,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 677,
+"narg": 2353626712,
+"thunk_rva": 2481192,
+"body_rva": 4417344,
+"hits": [],
+"insns": 82,
+"reason": "ok",
+"max_off": null
+},
+{
+"num": 678,
+"narg": 2353626808,
+"thunk_rva": 2481216,
+"body_rva": 4419664,
+"hits": [],
+"insns": 5,
+"reason": "ok",
+"max_off": null
+}
+]

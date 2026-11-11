@@ -254,3 +254,96 @@ of absence.
 
 Skipped in every run as measured lethal or measured elsewhere: 561, 562, 570,
 571, 573, 609, 614, 621, 622, 631, 650, 651, 668, 673.
+
+## Sibling page
+
+`docs/ARG1_CLASSES_BSD_14_10.md` applies the same method to the BSD-native range 1-531:
+507 of 531 numbers measured, 346 of them the shared `nosys` stub, 24 live handlers, and the
+same negative result -- every handler that copies out rejects a supervisor destination with
+EFAULT, and no handler's answer depends on the class of `arg1`.
+
+## The K class in every pointer slot (1391a, 2026-11-09)
+
+The N/U matrix above left the K class - a **mapped supervisor page** - covered by only eleven
+numbers. `1391a` (`results/phase35_dead_end_reruns/1391a_kernel_arg_sweep_20261109_141210.txt`)
+closed that gap for the whole callable range, using this boot's presence map
+(`results/1331a_20261109_141053.txt`: image `0xFFFFFFFFC1000000`-`0xFFFFFFFFC6C00000`, stub
+`0xFFFFFFFFC0000000`, `0xFFFFFFFFD0000000` absent).
+
+Every number in 532..676 outside the 1342a skip list and outside the command dispatchers was
+called three times with `arg1` = image base, `arg1` = stub page, `arg1` = **absent** kernel page,
+and `arg2` = a mapped user buffer of 0x800 painted 0xA5. Not one number answered a mapped kernel
+address differently from an absent one: identical return value, identical errno, identical buffer.
+
+The dispatchers got the same treatment in their own pointer slots:
+
+| call | rv | why |
+|---|---|---|
+| `532(0x18/0x19/0x20/0x2F, 0, out=K, in=K, 0x40)` | `-1` EFAULT | both pointer slots validated |
+| `532(0x1F, ...)` | `-1` EPERM | gated before the pointers |
+| `532(0x2F, 0, out=U, in=K, 0x40)` | `0` | the status word `0x800D0210` **is** copied into the user out-pointer while the kernel input pointer fails |
+| `532(0x2F, 0, out=K, in=U, 0x40)` | `-1` EFAULT | 16 dwords still zeroed at the user argument, so `0x2F`'s payload buffer is the *third* slot and its size is arg4 |
+| `601(0x00..0x1A, K, K)` | as with user pointers | no branch behaves differently |
+
+`532(0x2F)` is the one place a status dword reaches a caller buffer even after the payload copy
+fails, and it is a constant (`0x800D0210`, "invalid destination"), not data.
+
+**Conclusion**: no handler in 532..676 uses an argument as a kernel pointer. The supervisor/user
+boundary is enforced on every measured path, which is the same statement as the 14.10 hardening
+seen everywhere else in this tree - and it removes "hand a kernel address to a handler that trusts
+it" from the leak list for good.
+
+## Update 2026-11-09 — the address+length wraparound is also closed
+
+Every measurement above passed a kernel address with a *small* length, which a correct
+predicate rejects for the obvious reason. The one shape that had never been run is the
+classic wrap: pass `udaddr` in the kernel half and `len = 2^64 - udaddr`, so a check that
+compares only `udaddr + len` against the user boundary sees 0 and passes while the copy
+still begins at the kernel address.
+
+The 13.60 dump answers it before the console does. Both wrappers carry the overflow:
+
+```
+copyin  0xffffffff8ac19280
+  mov rax, rdi        ; rax = udaddr
+  add rax, rdx        ; rax = udaddr + len
+  jb  0x8ac19340      ; carry out  -> fail (clac, clears pcb_onfault, returns)
+  movabs rcx, 0x800000000000
+  cmp rax, rcx
+  ja  0x8ac19340      ; above the canonical split -> fail
+
+copyout 0xffffffff8ac191d0
+  0x8ac191f0 mov rax, rsi / add rax, rdx / jb 0x8ac19260
+  0x8ac191f8 movabs rcx, 0x800000000000 / cmp rax, rcx / ja 0x8ac19260
+```
+
+The `jb` is the whole answer: the sum cannot wrap, so the only way past the comparison is
+`udaddr < 0x800000000000`, which is user space by definition.
+
+Measured (`results/phase36_realargs/1426a_range_predicate_wrap_20261109_161403.txt`), with
+the image base 2 MB aligned so the wrap lengths are exact:
+
+| call | shape | rv |
+|---|---|---|
+| `write`/`sendto` | user page, 0x40 | `64` (control) |
+| `write` | kernel base, 0x40 | `-1` EFAULT |
+| `write` | `0xFFFFFFFFC1000000 + 0x3F000000` (sum 0) | `-1` EFAULT |
+| `write` | `0xFFFFFFFFC1000000 + 0x3F001000` (sum 0x1000) | `-1` EFAULT |
+| `write` | stub `0xFFFFFFFFC0000000 + 0x40000000` (sum 0) | `-1` EFAULT |
+| `sendto` | kernel base 0x40, and the sum-0 wrap | `-1` EFAULT |
+| `getsockopt` | destination = kernel base / stub | `-1` EFAULT |
+| `kevent` | changelist = kernel base, n = 4 / 0x400 / 0x4000000 | `-1` EFAULT |
+
+`kevent` matters because its length is computed kernel-side (`n * sizeof(struct kevent)`)
+rather than passed by the caller, so it is the one path where the predicate sees a length
+the call site derived. It refuses identically.
+
+Two side facts from the same disassembly, recorded because they are about the copy layer
+rather than about this probe:
+
+- `copyout` refuses outright when `proc+0x591` is non-zero (`mov rax,gs:[0] / mov rax,[rax+8]
+  / cmp byte [rax+0x591],0 / jne fail`). Ours is zero — 593/662/674 all write — so it is a
+  per-process copyout kill switch that nothing in the measured set can set.
+- The success path **zeroes** `[pcb+0x108]` instead of restoring the caller's previous
+  `pcb_onfault`, so a nested `copyin` disarms the outer caller's fault guard. That is a
+  panic shape, not a privilege one, and no caller in the corpus nests.

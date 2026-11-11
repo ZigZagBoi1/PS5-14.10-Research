@@ -1,0 +1,7 @@
+=== PROBE 1400a: IPv6 PKTOPTS RACE ===
+
+[0] eboot_base = 0x74D0000
+[1] fn_addr (loader syscall stub) = 0x310B7DFD0
+[!] No syscall;ret gadget found — cannot run child thread syscalls
+[!] This probe needs the syscall;ret address from docs/CHAIN_14_10.md
+=== PROBE 1400a ABORTED ===

@@ -138,6 +138,12 @@ class StateToolTests(unittest.TestCase):
         line = [l for l in self._ledger() if "9999z" in l][0]
         self.assertEqual(line.count("|") - line.count("\\|"), 7)
 
+    def test_every_line_separator_in_a_claim_cannot_add_a_row(self):
+        for separator in "\v\f\x1c\x1d\x1e\x85\u2028\u2029":
+            self._run(["row", "9999z", "--claim", "first" + separator + "injected",
+                       "--result", "r", "--grade", "M"])
+        self.assertEqual(len([l for l in self._ledger() if l.startswith("| 20")]), 8)
+
     def test_newline_in_a_claim_cannot_add_a_row(self):
         self._run(["row", "9999z", "--claim", "first\n| 2026-01-01 | injected |",
                    "--result", "r", "--grade", "M"])
@@ -148,6 +154,43 @@ class StateToolTests(unittest.TestCase):
         before = (self.root / "results" / "STATE.md").read_text(encoding="utf-8")
         with self.assertRaises(SystemExit):
             self._run(["set", "notes=first\n- injected: yes"])
+        self.assertEqual(
+            before, (self.root / "results" / "STATE.md").read_text(encoding="utf-8"))
+
+    def test_check_prints_ten_ledger_rows(self):
+        for i in range(12):
+            self._capture(f"phase1/1350a_run_{i:02d}_20261106_{140000 + i:06d}.txt")
+        self._run(["seed"])
+        code, out = self._run(["check"])
+        self.assertEqual(code, 0)
+        tail = out.split("== ledger tail ==", 1)[1].split("== console ==", 1)[0]
+        rows = [line for line in tail.splitlines() if line.strip().startswith("| 20")]
+        self.assertEqual(len(rows), 10)
+
+    def test_state_key_with_a_colon_is_refused(self):
+        before = (self.root / "results" / "STATE.md")
+        with self.assertRaises(SystemExit):
+            self._run(["set", "bad:key=value"])
+        self.assertFalse(before.exists())
+
+    def test_state_key_with_surrounding_space_is_refused(self):
+        for key in (" leading", "trailing ", " both "):
+            with self.assertRaises(SystemExit):
+                self._run(["set", key + "=value"])
+        self.assertFalse((self.root / "results" / "STATE.md").exists())
+
+
+    def test_state_marker_in_a_value_round_trips(self):
+        value = "<!-- STATE:END -->"
+        self._run(["set", "notes=" + value])
+        self.assertEqual(dict(state._read_state())["notes"], value)
+
+    def test_every_splitlines_separator_is_refused_in_state(self):
+        self._run(["set", "notes=calm"])
+        before = (self.root / "results" / "STATE.md").read_text(encoding="utf-8")
+        for separator in "\v\f\x1c\x1d\x1e\x85\u2028\u2029":
+            with self.assertRaises(SystemExit):
+                self._run(["set", "notes=first" + separator + "second"])
         self.assertEqual(
             before, (self.root / "results" / "STATE.md").read_text(encoding="utf-8"))
 
@@ -166,6 +209,22 @@ class StateToolTests(unittest.TestCase):
         self.assertEqual(len(rows), 1)
         self.assertIn("| V |", rows[0])
         self.assertIn("void: rejected at the entry check", rows[0])
+
+    def test_invalid_name_date_falls_back_to_mtime(self):
+        self._capture("phase1/p690_bad_20260230.txt")
+        _code, out = self._run(["seed"])
+        self.assertIn("seeded 1 row", out)
+        text = (self.root / "results" / "INDEX.md").read_text(encoding="utf-8")
+        self.assertIn("p690_bad_20260230.txt", text)
+        self.assertIn("~ |", text)
+
+    def test_mtime_fallback_labels_the_utc_date(self):
+        path = self._capture("phase1/no_date_capture.txt")
+        os.utime(path, (1_700_000_000, 1_700_000_000))
+        _code, out = self._run(["seed"])
+        self.assertIn("seeded 1 row", out)
+        text = (self.root / "results" / "INDEX.md").read_text(encoding="utf-8")
+        self.assertIn("| 2023-11-14~ |", text)
 
     def test_underscore_files_are_logs_and_are_skipped(self):
         self._capture("_selftest_watchdog_log.txt")

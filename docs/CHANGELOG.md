@@ -1,3 +1,10 @@
+## 2026-11-11: era close posted to #216 - all escalation lanes falsified by device measurement; kstuff/etaHEN port blocked; APNG killer publicable a Sony
+
+- Posted era-close to #216 (comment 6792301785): v931 falsified the partial-overwrite hypothesis (zero-at-free comprehensive over FontFace surface), v927-C and v927-G retracted with named detector flaws, the full 14.22 scoreboard declared, and the kstuff/etaHEN port definitionally blocked without a non-WebKit attack surface.
+- Fork synced: TFujiwara/PS5-14.10-Research branch research/tfujiwara-v919-v929-campaign carries every row, log and probe cited in this thread.
+- The day-'s deliverables that survive: 1 self-found characterized vuln (APNG no-IDAT DoS, cross-FW, publishable to Sony), 2 minor bug rows (stale nav-timing, glyph-cache 10.93x), the zero-at-free comprehensiveness law, the LLInt-only three-FW confirmation, and the full 14.22 measured scoreboard.
+- Open: the Sony report decision (APNG killer), the p719/p720/p721 watcher, and the pending push to origin/master (85+ local commits).
+
 ## 2026-11-11: v931 style map - zero-at-free is COMPREHENSIVE over the FontFace surface; partial-overwrite hypothesis FALSIFIED
 
 - v931 (results/phase13_webkit/v931_style_map_selective_zeroing_20261111.txt): 160 carriers, alternating italic/oblique/normal. ALL non-default (107/107) degraded to normal. ALL default (53/53) intact-indistinguishable. ZERO anomalous values. The zero-at-free scrubs the CSSFontFace style property COMPREHENSIVELY - any attacker-supplied non-default value is mapped to the default fallback. Zero attacker bits survive the transition.

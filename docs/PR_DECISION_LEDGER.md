@@ -40,8 +40,9 @@
 3. Eleven zero-byte beacon logs as evidence
 No CI results. No reviews submitted. Valuable research but needs encoding fixes, deduplication, and empty-file cleanup before merge.
 
-## Action Items
-- [ ] Merge #264 and #263 (owner approval needed)
-- [ ] Close #243 and #245 with explanation
-- [ ] Comment on #246 re: CLAUDE.md restructure, request rebase
-- [ ] Comment on #250 re: three blockers
+## Action Items — COMPLETED 2026-11-11
+- [x] Merge #264 and #263 — merged via gh CLI
+- [x] Close #243 and #245 with explanation — closed with detailed rationale
+- [x] Cherry-pick #246 corrections into integration branch, close with credit
+- [x] Comment on #250 re: remaining blockers (p704 naming, 29 zero-byte logs)
+- [x] Integration PR #265 created, CI 6/6 pass, merged into master

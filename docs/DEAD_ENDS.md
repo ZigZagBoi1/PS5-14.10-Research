@@ -190,7 +190,7 @@
 - **FontFace T-W delta (p651)** — T-W varies 808K-841K across runs, too unstable to derive the spray AB address from T.
 - **FontFace GC free-list leak (p653 v1-v5)** — dead by design: `fonts.load()` builds an internal Promise.all over face loaded promises; the freed "sa" CSSFontFace's promise never settles → LoadRequest holds refs → GC never collects the wrapper. The UAF creates the condition preventing its own GC path.
 - **FontFace load() GC leak (p654)** — no stale pointers after load + GC.
-- **CVE-2026-43740 (YARR backreference OOB read, p659)** — patched; Sony cherry-picked Safari 26.3 (Feb 2026) fixes. The 26.4 (Mar 2026) set is NOT included.
+- **CVE-2026-43740 (YARR backreference OOB read, p659)** — CONFIG-SILENT, patch state unknown: `ENABLE_YARR_JIT` is compiled out with `ENABLE(JIT)` OFF (`PlatformEnable.h:774-777`, `YarrJIT.cpp:46`; `OptionsPlayStation.cmake:206`), so p659's interp-vs-JIT discriminator runs the interpreter on both legs and cannot detect the fix. The earlier "patched; Sony cherry-picked Safari 26.3 fixes" reading was vacuous — the 26.3-in/26.4-out cutoff rests on the p660 presence rows alone. (Regraded per cobrajet302gt, issue #181, 2026-11-10.)
 - **CVE-2026-84635 (TypedArray Reflect.set, p661/p662)** — spec violation confirmed (valueOf fires) but not weaponizable: `toNativeFromValue` coercion plus a post-coercion bounds check block every OOB write path (resize, detach, proto chain TOCTOU).
 - **CVE-2026-28905 (FTL PhantomNewArrayWithButterfly, p663-p666)** — confirmed live, but stale slots contain the previous iteration's own map callback results, not heap data. No pointer disclosure.
 - **OOB state stack read (p667-p669)** — Canvas2D state API is typed; no OOB index reachable through last()/save() on the stale ref.

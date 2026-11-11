@@ -12,7 +12,9 @@
 1. Fixed AFTER Safari 26.3 (Feb 2026) = definitely unpatched on PS5
 2. In JSC or WebCore, reachable from a web page without Wasm or SharedArrayBuffer
 3. Provides info leak / address disclosure (not just crash/DoS)
-4. DFG JIT active, FTL likely absent, no WebAssembly on PS5
+4. [ERRATUM 2026-11-10: was "DFG JIT active" — retracted. LLInt-only, all JIT
+   tiers OFF (`ENABLE_JIT` PRIVATE OFF); DFG/FTL-family candidates are
+   config-silent on this build] FTL absent, no WebAssembly on PS5
 
 ---
 

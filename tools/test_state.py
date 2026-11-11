@@ -138,6 +138,12 @@ class StateToolTests(unittest.TestCase):
         line = [l for l in self._ledger() if "9999z" in l][0]
         self.assertEqual(line.count("|") - line.count("\\|"), 7)
 
+    def test_every_line_separator_in_a_claim_cannot_add_a_row(self):
+        for separator in "\v\f\x1c\x1d\x1e\x85\u2028\u2029":
+            self._run(["row", "9999z", "--claim", "first" + separator + "injected",
+                       "--result", "r", "--grade", "M"])
+        self.assertEqual(len([l for l in self._ledger() if l.startswith("| 20")]), 8)
+
     def test_newline_in_a_claim_cannot_add_a_row(self):
         self._run(["row", "9999z", "--claim", "first\n| 2026-01-01 | injected |",
                    "--result", "r", "--grade", "M"])

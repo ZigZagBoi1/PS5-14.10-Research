@@ -77,9 +77,15 @@ CAPTURE_RE = re.compile(r"^(?P<probe>[A-Za-z0-9]+).*?(?P<d>\d{8})(?:_(?P<t>\d{6}
 # Fields go into a Markdown table, so a pipe would add a column and a newline would
 # add a row. Both are sanitised on the way in; the ledger is append-only and cannot
 # be repaired afterwards.
+_LINE_BREAKS = ("\r", "\n", "\v", "\f", "\x1c", "\x1d", "\x1e",
+                "\x85", "\u2028", "\u2029")
+
+
 def _cell(value):
-    text = str(value).replace("\r", " ").replace("\n", " ").replace("|", "\\|")
-    return text.strip() or "-"
+    text = str(value)
+    for char in _LINE_BREAKS:
+        text = text.replace(char, " ")
+    return text.replace("|", "\\|").strip() or "-"
 
 
 
@@ -120,8 +126,7 @@ def _read_state():
     return pairs or list(DEFAULT_STATE)
 
 
-_STATE_LINE_BREAKS = ("\r", "\n", "\v", "\f", "\x1c", "\x1d", "\x1e",
-                      "\x85", "\u2028", "\u2029")
+_STATE_LINE_BREAKS = _LINE_BREAKS
 
 
 def _write_state(pairs):

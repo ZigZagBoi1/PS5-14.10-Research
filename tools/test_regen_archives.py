@@ -45,6 +45,15 @@ class RegenArchivesCheckTests(unittest.TestCase):
         self.assertEqual(code, 1)
         self.assertIn("STALE", out)
 
+    def test_archive_output_does_not_depend_on_the_calendar_day(self):
+        source = self.root / "probes" / "probe.lua"
+        first = regen_archives.render_archive(
+            "Title", "Intro", self.root / "probes", [source], "probes")
+        second = regen_archives.render_archive(
+            "Title", "Intro", self.root / "probes", [source], "probes")
+        self.assertEqual(first, second)
+        self.assertNotIn("Regenerated 20", first)
+
     def test_write_then_check_is_current(self):
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(regen_archives.main([]), 0)

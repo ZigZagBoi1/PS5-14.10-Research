@@ -151,6 +151,16 @@ class StateToolTests(unittest.TestCase):
         self.assertEqual(
             before, (self.root / "results" / "STATE.md").read_text(encoding="utf-8"))
 
+    def test_check_prints_ten_ledger_rows(self):
+        for i in range(12):
+            self._capture(f"phase1/1350a_run_{i:02d}_20261106_{140000 + i:06d}.txt")
+        self._run(["seed"])
+        code, out = self._run(["check"])
+        self.assertEqual(code, 0)
+        tail = out.split("== ledger tail ==", 1)[1].split("== console ==", 1)[0]
+        rows = [line for line in tail.splitlines() if line.strip().startswith("| 20")]
+        self.assertEqual(len(rows), 10)
+
     def test_state_marker_in_a_value_round_trips(self):
         value = "<!-- STATE:END -->"
         self._run(["set", "notes=" + value])

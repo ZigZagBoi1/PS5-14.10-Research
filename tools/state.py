@@ -329,7 +329,7 @@ def cmd_check(args):
     if os.path.exists(INDEX):
         lines = [line.rstrip() for line in
                  open(INDEX, encoding="utf-8", errors="replace")]
-        for line in lines[-11:]:
+        for line in lines[-10:]:
             print("  " + line)
     else:
         print("  (no %s yet)" % _rel(INDEX))

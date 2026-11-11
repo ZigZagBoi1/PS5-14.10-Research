@@ -35,6 +35,23 @@ Ivan Milinski  ·  Felix Dietz  ·  Brian Alejandro Camacho  ·  Jonathan Moreau
 
 ---
 
+## Contributors
+
+- **[ng643](https://github.com/ng643)** (Rithik Janarthanan) · [Ko-fi](https://ko-fi.com/ng643) - PRs #6-8, #11-18, #21-27, #37, #39, #40, #44, #55-57, #69-77, #95-#203: Evidence corrections, sysctl MIB fixes, Tier 1/2/3 handler claim audits, CVE assessments, thr_create(430) full decode, kevent timeout matrix, syscall label table (153 entries), WebKit OOB audit, 14.10 WebKit fingerprint, crash corpus harvester, device inventory (34/76 nodes), UMTX high ops, netcontrol UAF closure, Sony object family sweep, thread budget measurement, JSC corpus, msync syscall correction, sysent tail resolution, fault-code kernel base oracle (`docs/FAULT_CODE_ORACLE_14_10.md`), progress rubric pinning gate
+- **[AJV20](https://github.com/AJV20)** - PRs #47-54: PowerShell capture path fixes, CI bounded hardware-free verification, ledger JSON validation, p161 chunk regression coverage, ledger-to-artifact binding, AIO/kevent evidence reconciliation, colliding capture preservation, failed evidence pair cleanup
+- **[4TheDoctor](https://github.com/4TheDoctor)** (The Doc) - PRs #19-20, #28: CVE-2026-49418 msync device-pager UAF assessment (top exploit candidate), CVE assessments (58093/49427/49428/49424/49422), thr_* family survey (13 undocumented syscalls), probes 58a/58d/59a/59b
+- **[pastawithpesto](https://github.com/pastawithpesto)** - PRs #4-5: Complete kernel handler reverse engineering (145/145 syscalls fw 13.60), WebKit entry vector analysis
+- **[cobrajet302gt](https://github.com/cobrajet302gt)** - PRs #30, #32-33, #36, #46: CS=0/iretq thr_create(430) panic hypothesis + probes, live 14.10 WebKit stage-1 test, WebKit canary battery (11 probes), browser entry infrastructure, unattended console control via Remote Play
+- **[Unkown607](https://github.com/Unkown607)** - PRs #9, #31, #34-35: 13.60 syscall name maps, compat-table capture identification, static thr_create(430) panic root-cause analysis (13.60 decompile), exploit surface analysis (CVE-2019-5607 + 3 CVEs + 5 race windows)
+- **[Portablelle](https://github.com/Portablelle)** - PRs #41-43, #45: umtx 454 evidence correction (phase 1-2 probes called syscall 557 not 454), corrected probes, UMTX_OP_SHM/ROBUST_LISTS reachability probe, WebKit cross-link refresh, p161 blob fix
+- **[kaydzer0305-png](https://github.com/kaydzer0305-png)** - PR #10: Offline evidence auditing framework
+- **[wsjardijn](https://github.com/wsjardijn)** - Early research contributions
+- **[ArjunD717](https://github.com/ArjunD717)** (Arjun Dhir) · [Ko-fi](https://ko-fi.com/arjund717) - PRs #185-189, #201-203: send_probe tooling parity (helper API restored, collision-safe capture publication, CRLF framing, loader-alive resume), Lua 5.1 syntax gate in CI plus the three probes it caught, probe-ID and count corrections across the living docs, AIO double-free retraction, progress-artifact re-pin with the CI check that keeps it honest, `kptr_hunt` output portability
+- **[jsrkamal2002](https://github.com/jsrkamal2002)** - PRs #197-198: sys 601 `mdbg_service` limits-of-evidence write-up, OBJECT-sourced kernel-pointer candidate audit closure, sysent tail contracts for 677-734 (13.60 static)
+- **[Mohabbadi11](https://github.com/Mohabbadi11)** - PR #199: V88 forge geometry reconciliation, `urllib` fallback in the crash-corpus harvester, the first automated test for the geometry derivation
+
+---
+
 ## Attack Surface Overview
 
 The PS5 security stack has multiple layers. This project researches all of them:
@@ -509,21 +526,6 @@ The companion [PS5 V13.60 Research](https://github.com/ZigZagBoi1/PS5-V13.60-Res
 - **Port binding restricted** - bind() returns -1 for ports >= 40000, use 1024-32767
 
 ---
-
-## Contributors
-
-- **[ng643](https://github.com/ng643)** (Rithik Janarthanan) · [Ko-fi](https://ko-fi.com/ng643) - PRs #6-8, #11-18, #21-27, #37, #39, #40, #44, #55-57, #69-77, #95-#203: Evidence corrections, sysctl MIB fixes, Tier 1/2/3 handler claim audits, CVE assessments, thr_create(430) full decode, kevent timeout matrix, syscall label table (153 entries), WebKit OOB audit, 14.10 WebKit fingerprint, crash corpus harvester, device inventory (34/76 nodes), UMTX high ops, netcontrol UAF closure, Sony object family sweep, thread budget measurement, JSC corpus, msync syscall correction, sysent tail resolution, fault-code kernel base oracle (`docs/FAULT_CODE_ORACLE_14_10.md`), progress rubric pinning gate
-- **[AJV20](https://github.com/AJV20)** - PRs #47-54: PowerShell capture path fixes, CI bounded hardware-free verification, ledger JSON validation, p161 chunk regression coverage, ledger-to-artifact binding, AIO/kevent evidence reconciliation, colliding capture preservation, failed evidence pair cleanup
-- **[4TheDoctor](https://github.com/4TheDoctor)** (The Doc) - PRs #19-20, #28: CVE-2026-49418 msync device-pager UAF assessment (top exploit candidate), CVE assessments (58093/49427/49428/49424/49422), thr_* family survey (13 undocumented syscalls), probes 58a/58d/59a/59b
-- **[pastawithpesto](https://github.com/pastawithpesto)** - PRs #4-5: Complete kernel handler reverse engineering (145/145 syscalls fw 13.60), WebKit entry vector analysis
-- **[cobrajet302gt](https://github.com/cobrajet302gt)** - PRs #30, #32-33, #36, #46: CS=0/iretq thr_create(430) panic hypothesis + probes, live 14.10 WebKit stage-1 test, WebKit canary battery (11 probes), browser entry infrastructure, unattended console control via Remote Play
-- **[Unkown607](https://github.com/Unkown607)** - PRs #9, #31, #34-35: 13.60 syscall name maps, compat-table capture identification, static thr_create(430) panic root-cause analysis (13.60 decompile), exploit surface analysis (CVE-2019-5607 + 3 CVEs + 5 race windows)
-- **[Portablelle](https://github.com/Portablelle)** - PRs #41-43, #45: umtx 454 evidence correction (phase 1-2 probes called syscall 557 not 454), corrected probes, UMTX_OP_SHM/ROBUST_LISTS reachability probe, WebKit cross-link refresh, p161 blob fix
-- **[kaydzer0305-png](https://github.com/kaydzer0305-png)** - PR #10: Offline evidence auditing framework
-- **[wsjardijn](https://github.com/wsjardijn)** - Early research contributions
-- **[ArjunD717](https://github.com/ArjunD717)** (Arjun Dhir) · [Ko-fi](https://ko-fi.com/arjund717) - PRs #185-189, #201-203: send_probe tooling parity (helper API restored, collision-safe capture publication, CRLF framing, loader-alive resume), Lua 5.1 syntax gate in CI plus the three probes it caught, probe-ID and count corrections across the living docs, AIO double-free retraction, progress-artifact re-pin with the CI check that keeps it honest, `kptr_hunt` output portability
-- **[jsrkamal2002](https://github.com/jsrkamal2002)** - PRs #197-198: sys 601 `mdbg_service` limits-of-evidence write-up, OBJECT-sourced kernel-pointer candidate audit closure, sysent tail contracts for 677-734 (13.60 static)
-- **[Mohabbadi11](https://github.com/Mohabbadi11)** - PR #199: V88 forge geometry reconciliation, `urllib` fallback in the crash-corpus harvester, the first automated test for the geometry derivation
 
 ---
 

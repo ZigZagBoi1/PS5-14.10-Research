@@ -285,7 +285,7 @@ def cmd_seed(_args):
 
 
 def cmd_row(args):
-    capture = args.capture
+    capture = args.capture.replace("\\", "/") if args.capture else None
     if not capture:
         newest = None
         for path in _iter_captures():

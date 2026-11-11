@@ -14,6 +14,10 @@
 
 ## Active Hypothesis
 
+[ERRATUM 2026-11-10: the "DFG JIT confirmed active (p602)" premise is retracted
+— the engine is LLInt-only (`ENABLE_JIT` PRIVATE OFF, baseline included), so
+CVE-2023-42916's DFG-tier trigger is unreachable on this build and this
+hypothesis is closed.]
 CVE-2023-42916 (DFG JIT OOB read, fixed Safari 17.1.2) may provide the ASLR
 bypass needed to derive the WebProcess text base. PS5 has Safari 17.0 (605.1.15)
 with DFG JIT confirmed active (p602). This CVE was used alongside CVE-2023-42917

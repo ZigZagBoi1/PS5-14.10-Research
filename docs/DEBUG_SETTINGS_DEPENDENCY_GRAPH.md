@@ -138,7 +138,11 @@ Without this address:
 
 ### Top Candidates (2026-11-09)
 
-1. **CVE-2023-42916** (DFG JIT OOB read) -- fixed Safari 17.1.2, PS5 has 17.0.
+1. [ERRATUM 2026-11-10: this candidate is CONFIG-SILENT — DFG JIT is NOT active
+   on PS5 (`ENABLE_JIT` PRIVATE OFF, baseline included; the engine is LLInt-only),
+   so CVE-2023-42916's DFG-tier trigger is unreachable. The "DFG JIT is active on
+   PS5 (p602)" line and the TOP PRIORITY tag are retracted.]
+   **CVE-2023-42916** (DFG JIT OOB read) -- fixed Safari 17.1.2, PS5 has 17.0.
    Red Hat confirms it "exposes addresses that help bypass ASLR." Used in
    targeted attacks alongside CVE-2023-42917 as the info-leak stage. DFG JIT is
    active on PS5 (p602). **TOP PRIORITY.**
@@ -147,18 +151,31 @@ Without this address:
    in newer WebKit), a fakeobj primitive becomes possible without needing addrof.
    This is a CVE-independent technique.
 
-3. **JIT CodeBlock pointer leak** -- DFG compilation creates CodeBlock objects on
+3. [ERRATUM 2026-11-10: config-silent — with `ENABLE_JIT` OFF there is no DFG
+   compilation and no JIT CodeBlock heap residue. Retracted.]
+   **JIT CodeBlock pointer leak** -- DFG compilation creates CodeBlock objects on
    the heap. If a GC-related race can expose a CodeBlock pointer, the text base
    can be derived from it.
+
+3b. **FontFace UAF walk chain (p691) — NOW THE TOP ROUTE (2026-11-09/10).** VP
+   (CSSFontFaceSet vtable pointer) leaked per-boot [M]; delta invariance
+   beacon-backed [M@16] (p804). Remaining: the vtable RVA anchor — p807's
+   `0x724DB28` claim is [I] (no base/scan beacons committed), needs a
+   magic-bearing fresh-boot capture.
 
 4. **Community contribution** -- a decrypted 14.00/14.10 WebProcess binary would
    immediately resolve the offset table and unblock the entire chain.
 
 ## Minimum Path to Debug Settings
 
-Assuming CVE-2023-42916 provides the info leak:
+[ERRATUM 2026-11-10: CVE-2023-42916 is config-silent (LLInt-only build) — the
+info-leak stage is now the FontFace UAF walk chain (p691 VP leak + p804 delta
+invariance), with the vtable RVA anchor still open (p807 claim regraded [I]).]
 
-1. Trigger DFG OOB read to leak WebProcess text base (1 probe)
+Assuming the FontFace walk chain provides the info leak:
+
+1. Pin the vtable RVA with a magic-bearing fresh-boot base-search capture,
+   then derive the text base per boot as VP - RVA (1 probe)
 2. Use FontFace UAF forge with known gadget addresses (existing code)
 3. Build arbitrary R/W in WebProcess via forged vtable dispatch
 4. Pivot to kernel: use WebProcess sandbox escape or direct syscall
@@ -166,9 +183,9 @@ Assuming CVE-2023-42916 provides the info leak:
 6. Write registry flag to enable Debug Settings
 7. Navigate to Settings -> Debug Settings is now visible
 
-**Estimated probe count to Debug Settings:** 3-5 new probes IF CVE-2023-42916
-works. The chain infrastructure (FontFace forge, Canvas UAF, thread ROP) is
-already built.
+**Estimated probe count to Debug Settings:** 3-5 new probes once the RVA anchor
+is measured. The chain infrastructure (FontFace forge, Canvas UAF, thread ROP)
+is already built.
 
 ## Is a Full Jailbreak Necessary?
 

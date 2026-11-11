@@ -1,3 +1,45 @@
+## 2026-11-10 (second pass): cobrajet302gt correction sweep — LLInt-only, RVA regrade, page-frame erratum
+
+Source: cobrajet302gt comments on PR #243, PR #244, and issue #181 (2026-11-10, all
+source-verified [S] against the 616-era drop). No console involved.
+
+- **JIT tier correction (issue #181, PR #244 item 3).** The "LLInt + baseline only"
+  framing (CLAUDE.md:111 and commit fa834434's message) was wrong: in the 616-era tree
+  there is no `BASELINE_JIT` feature and baseline codegen is gated by `ENABLE(JIT)`
+  itself (`CodeBlock.cpp:269/:321/:414/:762`), so `ENABLE_JIT` PRIVATE OFF
+  (`OptionsPlayStation.cmake:206`) removes baseline along with DFG/FTL. Shipped tier is
+  **LLInt-only**; the p602 49 ms timing does not discriminate tiers under any config.
+  CLAUDE.md row rewritten; the stale "DFG JIT active (p602)" premises erratum'd in
+  `docs/WEBKIT_CVE_RESEARCH_2026-11-09.md`, `docs/RESEARCH_DIRECTIONS_2026-11-09.md`,
+  `docs/AUTONOMOUS_RESEARCH_STATE.md`, `docs/NEW_CVE_CANDIDATES_2026_11.md`, and
+  `docs/DEBUG_SETTINGS_DEPENDENCY_GRAPH.md` (whose CVE-2023-42916 "TOP PRIORITY"
+  candidate and JIT-CodeBlock-residue angle are config-silent; its minimum path now
+  routes through the FontFace walk chain).
+- **p659 YARR verdict vacuous (issue #181 item 2).** `ENABLE_YARR_JIT` exists only
+  under `ENABLE(JIT)` (`PlatformEnable.h:774-777`, `YarrJIT.cpp:46`), so p659's
+  interp-vs-warm-JIT discriminator runs the interpreter on both legs and scores
+  PATCHED whether or not the CVE-2026-43740 fix is present. PROBE_INDEX p659 row
+  regraded CONFIG-SILENT; DEAD_ENDS.md and `docs/WEBKIT_CVE_POSTCHERRY_INFOLEAKS_2026-11-10.md`
+  corrected; the p660 row's 26.3-in/26.4-out cutoff now rests on the presence rows alone.
+- **p807 "text base SOLVED" overclaim retracted (PR #244 item 1, PR #243 base note).**
+  The committed corpus contains zero `P807-BASE=`/`RVA=`/`SCAN`/`HIT` beacons (the only
+  committed p807 lines are 19 `L1-0x0, L2-0x0, NOLEAK` rows inside the p804 capture),
+  and both terminal branches of the p807 scan bypass its own ELF-magic discriminator.
+  RVA `0x724DB28` regraded **[I] pending magic-bearing fresh-boot captures**.
+  CLAUDE.md HARD BLOCKERS item 1 and `docs/EXPLOITATION_STATUS.md` (summary, chain
+  diagram, primitive 16, blocker 2, Next Actions 1/2) rewritten to "VP leaked [M],
+  deltas [M@16], RVA open".
+- **Page-size mis-frame (PR #244 item 2).** The p710 result txt line "the 16 KB gap is
+  one PS5 page" and the "16 KiB resolution" labels in the p691 rows were wrong for
+  userland: amd64 4 KiB pages; `0x4000` is the scan stride (= 4 pages), not a page
+  identity. Erratum appended to `results/phase13_webkit/p710_base_discovery_20261110_013236.txt`;
+  p691 rows in CLAUDE.md and PROBE_INDEX restated as 17 committed VP values (UHOGII +
+  16 p804 boots) ≡ `0x1B28` mod `0x4000` at scan-stride resolution.
+- **PROBE_INDEX rows added:** p804 (`DELTA INVARIANT [M@16]`, 16 distinct per-boot VPs,
+  capture `results/phase13_webkit/p804_vtable_verify_20261110_034251.log`, with the
+  probe-self-check caveat), p807 (`RVA [I], SOLVED banner retracted`), p710 (`boundary
+  measured, page-frame erratum`, arithmetic closes).
+
 ## 2026-11-10: index sync — phase35 console campaign + p685-p802 WebKit queue
 
 ### PROBE_INDEX rows added (19 rows)

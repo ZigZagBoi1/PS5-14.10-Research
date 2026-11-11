@@ -1,3 +1,10 @@
+## 2026-11-11: cobrajet inversion - v904 IS the band answer; Gigacage Primitive cage inactive on PS5 WebView (both generations)
+
+- v904 (AB(768) takes the freed 768B ctx slot) is reclaim IDENTITY - same allocator, same slot - possible only with the Gigacage fallback active => Gigacage::isEnabled() was false in that WebProcess. cobrajet re-grepped the routing chain (ArrayBuffer.cpp:132 -> WTF/Gigacage.cpp:92-96 -> bmalloc/Cache.h:101-106 -> HeapKind fallback) in the pinned drop.
+- LAW: Runtime Primitive-gigacage inactive on PS5 WebView, both generations. Live-AB backing stores share the Primary heap with WebCore chunks - NO disjoint cage band to sweep.
+- Pointer shape corollary: ArrayBufferContents::m_data is CagedPtr<Gigacage::Primitive, void, tagCagedPtr> but caged() is IDENTITY while the cage is disabled - the stored backing qword is PLAINTEXT VA. When the future leak reads the impl slot, there is no cage tag to strip.
+- Scoreboard relabel: the one band-miss lane resolves IN-BAND [M-derived, our v904]; the cage is inactive => leaked pointer reads plaintext; direct value read remains leak-gated (the standing blocker, now re-scoped: band known, value missing).
+
 ## 2026-11-11: era close posted to #216 - all escalation lanes falsified by device measurement; kstuff/etaHEN port blocked; APNG killer publicable a Sony
 
 - Posted era-close to #216 (comment 6792301785): v931 falsified the partial-overwrite hypothesis (zero-at-free comprehensive over FontFace surface), v927-C and v927-G retracted with named detector flaws, the full 14.22 scoreboard declared, and the kstuff/etaHEN port definitionally blocked without a non-WebKit attack surface.

@@ -77,9 +77,15 @@ CAPTURE_RE = re.compile(r"^(?P<probe>[A-Za-z0-9]+).*?(?P<d>\d{8})(?:_(?P<t>\d{6}
 # Fields go into a Markdown table, so a pipe would add a column and a newline would
 # add a row. Both are sanitised on the way in; the ledger is append-only and cannot
 # be repaired afterwards.
+_LINE_BREAKS = ("\r", "\n", "\v", "\f", "\x1c", "\x1d", "\x1e",
+                "\x85", "\u2028", "\u2029")
+
+
 def _cell(value):
-    text = str(value).replace("\r", " ").replace("\n", " ").replace("|", "\\|")
-    return text.strip() or "-"
+    text = str(value)
+    for char in _LINE_BREAKS:
+        text = text.replace(char, " ")
+    return text.replace("|", "\\|").strip() or "-"
 
 
 
@@ -100,9 +106,16 @@ def _read_state():
     if not os.path.exists(STATE):
         return list(DEFAULT_STATE)
     text = open(STATE, encoding="utf-8", errors="replace").read()
-    if BEGIN not in text or END not in text:
+    # Delimiters are whole lines. Searching for the marker as a substring would
+    # truncate the block when a value contains the marker text.
+    lines = text.splitlines()
+    try:
+        start = next(i for i, line in enumerate(lines) if line.strip() == BEGIN)
+        end = next(i for i, line in enumerate(lines[start + 1:], start + 1)
+                   if line.strip() == END)
+    except StopIteration:
         return list(DEFAULT_STATE)
-    block = text.split(BEGIN, 1)[1].split(END, 1)[0]
+    block = "\n".join(lines[start + 1:end])
     pairs = []
     for line in block.splitlines():
         line = line.strip()
@@ -113,9 +126,18 @@ def _read_state():
     return pairs or list(DEFAULT_STATE)
 
 
+_STATE_LINE_BREAKS = _LINE_BREAKS
+
+
 def _write_state(pairs):
     for key, value in pairs:
-        if "\n" in str(key) or "\n" in str(value) or "\r" in str(key) or "\r" in str(value):
+        key = str(key)
+        if not key or key != key.strip() or ":" in key:
+            raise SystemExit(
+                "state keys must be trimmed, nonempty, and contain no colon: %r" % (key,)
+            )
+        if any(char in key or char in str(value)
+               for char in _STATE_LINE_BREAKS):
             raise SystemExit(
                 "state values must fit on one line: %r" % (key,)
             )
@@ -197,13 +219,18 @@ def _capture_stamp(path):
         try:
             stamp = _dt.datetime.strptime(match.group("d") + clock, "%Y%m%d%H%M%S")
         except ValueError:
-            return None, probe, None
+            # A malformed date/time in the filename must not hide the capture.
+            try:
+                stamp = _dt.datetime.fromtimestamp(os.path.getmtime(path), _dt.timezone.utc)
+            except OSError:
+                return None, probe, None
+            return stamp, probe, "mtime"
         return stamp, probe, "clock" if match.group("t") else "date"
     probe = re.match(r"[A-Za-z0-9]+", name)
     if not probe:
         return None, None, None
     try:
-        stamp = _dt.datetime.fromtimestamp(os.path.getmtime(path))
+        stamp = _dt.datetime.fromtimestamp(os.path.getmtime(path), _dt.timezone.utc)
     except OSError:
         return None, probe.group(0), None
     return stamp, probe.group(0), "mtime"
@@ -317,7 +344,7 @@ def cmd_check(args):
     if os.path.exists(INDEX):
         lines = [line.rstrip() for line in
                  open(INDEX, encoding="utf-8", errors="replace")]
-        for line in lines[-11:]:
+        for line in lines[-10:]:
             print("  " + line)
     else:
         print("  (no %s yet)" % _rel(INDEX))

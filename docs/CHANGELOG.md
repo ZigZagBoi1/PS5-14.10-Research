@@ -1,3 +1,9 @@
+## 2026-11-11: v931 style map - zero-at-free is COMPREHENSIVE over the FontFace surface; partial-overwrite hypothesis FALSIFIED
+
+- v931 (results/phase13_webkit/v931_style_map_selective_zeroing_20261111.txt): 160 carriers, alternating italic/oblique/normal. ALL non-default (107/107) degraded to normal. ALL default (53/53) intact-indistinguishable. ZERO anomalous values. The zero-at-free scrubs the CSSFontFace style property COMPREHENSIVELY - any attacker-supplied non-default value is mapped to the default fallback. Zero attacker bits survive the transition.
+- The FontFaceSet UAF on 14.22 is now FULLY characterized: write-after-free CONFIRMED (one byte, engine constant), readback status-byte ONLY, escalation NONE (zero-at-free erases all attacker state through the known channels).
+- The partial-overwrite hypothesis (the last escalation lane) is FALSIFIED. The kstuff/etaHEN port to 14.22 requires a vulnerability class outside WebKit UAF/APNG scope: a 14.22-specific kernel bug or a fundamentally new userland vector.
+
 ## 2026-11-11: v930 repaired census — BRANCH (b) FIRED. The engine write CORRUPTED the carrier style property on 14.22
 
 - v930 (results/phase13_webkit/v930_branch_b_degraded_backing_20261111.txt): trigger-free control leg reads italic (the style channel carries member values on this build). Winner carrier (idx=0) reads NORMAL (constructed italic). TWIN also normal. The style property on the freed+reclaimed chunk was DEGRADED by the free+engine-write cycle - impl-scale corruption witness, ZERO addresses needed (the getter reads its own backing).

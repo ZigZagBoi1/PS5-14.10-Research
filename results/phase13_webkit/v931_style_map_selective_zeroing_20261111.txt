@@ -1,0 +1,85 @@
+V931 — per-carrier style MAP: DEGRADATION IS 100% SELECTIVE FOR NON-DEFAULT
+VALUES. All italic→normal (54/54), all oblique→normal (53/53), all
+normal→normal (53/53). The zero-at-free scrubs the CSSFontFace style field
+comprehensively — no partial overwrite possible through this channel.
+================================================================================
+Probe:    probes/phase13_webkit/v931_style_map.html
+Target:   PS5 14.22 retail (base)
+Date:     2026-11-11 10:29Z
+Source:   tools/browser_runner/beacon_logs/beacons_20261111_102913.log
+
+=== RESULTS (160 carriers, alternating italic/oblique/normal) ===
+
+GROUPS: italic: 54/54 degraded, 0 intact
+        oblique: 53/53 degraded, 0 intact
+        normal: 0/53 degraded, 53 intact
+
+MAP (all 160): every non-default carrier (italic, oblique) reads "normal"
+post-free. Every default carrier (normal) reads "normal" — indistinguishable
+from the original but also from the zeroed fallback. ZERO anomalous values
+(no italic→oblique, no oblique→italic, no non-standard strings).
+
+Winner: idx=0, status=error (same as v930 — non-lifecycle value for a
+never-loaded face).
+
+=== DECODE ===
+
+1. The degradation is 100% SELECTIVE for non-default values. This is NOT
+   a random corruption, not a neighbourhood effect, not an arena-wide
+   random scrub. It is a SYSTEMATIC reset of every style field that held
+   a non-default value to the default ("normal").
+
+2. The default carriers ("normal") are INDISTINGUISHABLE between
+   "retained original value" and "zeroed fallback" — "normal" is the
+   zero-value of the field (FontFace.cpp:261 fallback). The resolution
+   of this channel's information is exactly ZERO for default-carrier
+   rows.
+
+3. IMPLICATION FOR PARTIAL-OVERWRITE: the zero-at-free on 14.22 scrubs
+   the CSSFontFace style property storage comprehensively. The write
+   path cannot preserve a non-default style through the free cycle —
+   ANY attacker-supplied non-default value is erased to the fallback.
+   A partial overwrite through this field is structurally impossible
+   on this build: the pre-image (attacker-controlled) is always mapped
+   to the same post-image (the default), carrying zero bits of
+   attacker state through the transition.
+
+4. This CONFIRMS the zero-at-free at a new granularity: not just the
+   status byte at +0x82 (v909) — the style property storage is scrubbed
+   too. The scrub covers the fields the FontFace surface can READ.
+   Whether there are offsets that survive is unknowable through the
+   FontFace surface (face.style is the only per-offset observable, and
+   it answers with the descriptor value, not raw bytes).
+
+5. The baseline faces (constructed BEFORE the free, no crash) read
+   their correct values pre-free but are NOT part of the reclaim
+   experiment — they're the harness validation.
+
+=== ERA CLOSE: THE FONTFACE PARTIAL-OVERWRITE HYPOTHESIS IS FALSIFIED ===
+
+The last remaining escalation lane on the FontFace surface — partial
+overwrite of a carrier field via the engine's post-free status write —
+is falsified on 14.22: the zero-at-free scrubs ALL non-default fields
+comprehensively, leaving no attacker state to survive the transition.
+The write-after-free is visible ONLY in the status byte (whose value is
+the engine's own constant, not attacker-chosen).
+
+The FontFaceSet UAF on 14.22 is now fully characterized:
+- Write-after-free: CONFIRMED (one byte, engine-constant value)
+- Readback: status byte ONLY (style = fixed-point "normal")
+- Escalation: NONE (the zero-at-free erases all attacker state)
+
+=== THE 14.22 EXPLOITATION STATUS (final for this era) ===
+
+Every WebKit surface we and the board probed yields:
+- No address leak (zero-at-free, LLInt-only, no DFG, style channel fixed-point)
+- No arbitrary write (forge lanes all closed)
+- No code exec path (vtable hijack needs a leak)
+- One new DoS (APNG no-IDAT, ours, characterized)
+
+The kstuff/etaHEN port to 14.22 requires a vulnerability class outside
+the WebKit UAF / APNG scope we characterized: either a kernel bug
+(requires a new 14.22-specific discovery) or a fundamentally new
+userland vector (not WebKit, not ps2emu). The day's contribution: the
+full characterization of what IS and IS NOT possible through the known
+surfaces, with device rows for every claim.

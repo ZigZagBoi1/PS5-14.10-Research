@@ -1,0 +1,20 @@
+{
+  "ps5_ip": "10.0.0.96",
+  "lua_port": 9026,
+  "server_ip": "10.0.0.80",
+  "server_user": "marwanserver",
+  "beacon_port": 8082,
+  "serve_port": 443,
+  "firmware": "14.10",
+  "max_retries_per_experiment": 3,
+  "max_consecutive_crashes": 5,
+  "global_stop": false,
+  "dangerous_experiments_opt_in": false,
+  "max_experiment_runtime_seconds": 300,
+  "chiaki_recovery_enabled": true,
+  "chiaki_recovery_timeout_seconds": 120,
+  "reboot_detection_enabled": true,
+  "telemetry_dir": "results/lab_runs",
+  "hypothesis_file": "results/hypotheses.json",
+  "experiment_queue": []
+}

@@ -1,5 +1,5 @@
 <!--
-  p681: CVE-2023-42916 — DFG TypedArray OOB read via ResizableArrayBuffer resize
+  p704: CVE-2023-42916 — DFG TypedArray OOB read via ResizableArrayBuffer resize
 
   CVE-2023-42916: OOB read, JIT-related, fixed Safari 17.1.2. PS5 has DFG + RAB.
 
@@ -26,7 +26,7 @@
   prior art: p601 (RAB confirmed), p608 (CVE-2024-44308 write test — DEAD),
              p680 (DFG array bounds elim)
 -->
-<!DOCTYPE html><html><head><meta charset="utf-8"><title>p681</title>
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p704</title>
 <script>
 function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
 
@@ -289,4 +289,4 @@ function main(){
 
 setTimeout(main, 100);
 </script>
-</head><body><pre id="log">p681: CVE-2023-42916 RAB resize OOB read</pre></body></html>
+</head><body><pre id="log">p704: CVE-2023-42916 RAB resize OOB read</pre></body></html>

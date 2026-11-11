@@ -8,8 +8,8 @@
 
 ## Validated Discoveries
 
-### 1. CVE-2025-43265 (OOB Read) — TOP PRIORITY NEW VECTOR
-**Upgraded from HIGH to TOP PRIORITY.** JIT-independent info-leak via out-of-bounds read. Apple advisory: "disclose internal states of the app." Probe p719 written with 6 vectors, 4 of which are JIT-independent (TypedArray detached buffer, ArrayBuffer.slice after transfer, DataView on resized buffer, structured clone deserialization). ResizableArrayBuffer confirmed available on PS5 (p601/p608). If this OOB read can expose a vtable or code pointer, it directly unblocks the WebProcess text base RVA — our #1 hard blocker.
+### 1. CVE-2025-43265 — DEAD (CONFIG-SILENT)
+**Initially upgraded to TOP PRIORITY, then DOWNGRADED to DEAD after preflight verification.** Root cause is YARR JIT sentinel tracking in `YarrJIT.cpp` (commit d96ab2fa64c6), gated on `ENABLE(JIT)` which is OFF on PS5 14.10. The vulnerable code is never compiled into the PS5 binary. Probe p719 tests 6 generic OOB vectors — none match the actual bug. See `results/analysis/cve_2025_43265_preflight.md` for full analysis. **This demonstrates why CVE-specific preflight verification is essential before prioritizing probes.**
 
 ### 2. Kernel Address Trust Boundary
 **Only `kernel_text` (0xFFFFFFFFD5000000) is device-measured.** The other 4 key addresses — `kernel_data` (TEXT+0xCE0000), `allproc`, `security_flags`, `rootvnode` — are ALL derived from "SDK v0.45" and never validated on 14.10 hardware. The TEXT-to-DATA offset (0xCE0000) is a single point of failure: if wrong, all kernel structure targeting fails. The `EXTERNAL_AUDIT` document mislabeled `allproc` as measured.
@@ -88,13 +88,13 @@ The offline analysis confirmed existing classifications, found no overlooked ker
 
 | Priority | Probe | CVE | What It Tests |
 |---|---|---|---|
-| 1 | **p719** | CVE-2025-43265 | OOB read info leak (WebProcess base?) |
-| 2 | **p721** | CVE-2026-64718 | Second Canvas UAF (info leak properties?) |
-| 3 | **p686** | CVE-2023-41976 | SVG animation UAF (different size class) |
-| 4 | p692 | CVE-2023-40447 | WebKit UAF |
-| 5 | p694 | CVE-2023-42950 | Heap UAF |
-| 6 | p693 | CVE-2023-42890 | Memory handling |
-| 7 | p689/p690 | CVE-2024-23213 | Memory handling ACE |
+| 1 | **p721** | CVE-2026-64718 | Canvas UAF — DEFINITELY unpatched (post-cutoff) |
+| 2 | **p686** | CVE-2023-41976 | SVG animation UAF (different size class) |
+| 3 | p692 | CVE-2023-40447 | WebKit UAF |
+| 4 | p694 | CVE-2023-42950 | Heap UAF |
+| 5 | p693 | CVE-2023-42890 | Memory handling |
+| 6 | p689/p690 | CVE-2024-23213 | Memory handling ACE |
+| ~~7~~ | ~~p719~~ | ~~CVE-2025-43265~~ | ~~DEAD: YARR JIT bug, CONFIG-SILENT. Generic vectors low-priority survey only~~ |
 
 ---
 
@@ -103,7 +103,7 @@ The offline analysis confirmed existing classifications, found no overlooked ker
 - **Tasks executed:** 54/54 (0 failures)
 - **Culled (no research value):** 14 blocker-doc tasks
 - **Marked dead/low:** 19 CVEs
-- **Elevated:** 3 CVEs (43265→TOP, 41976→MEDIUM-HIGH, 23213→HIGH)
+- **Elevated then corrected:** 43265→TOP→DEAD (YARR JIT, verified via bug 294182). 41976→MEDIUM-HIGH, 23213→HIGH
 - **Confirmed:** 2 (43720, KASLR)
 - **New finding:** SDK-derived kernel offsets unvalidated (trust boundary issue)
 - **Agent batches:** 3 batches, 7 parallel fork agents total

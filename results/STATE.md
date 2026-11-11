@@ -22,6 +22,7 @@ were measured; they are measurements, not truths.
 - notes: all kernel addresses valid this boot only; if rebooted re-measure with fault oracle first
 - ipv6_options: 2292PKTOPTIONS(6)=BLOCKED, PKTINFO(46)=OK, TCLASS(61)=OK, RTHDR(51)=partial, DSTOPTS/HOPOPTS=BLOCKED
 - phase34_results: 56 captures examined 2026-11-10; 0 anomalies across all SHM/socket/VM/mmap races
+- repo_overhaul: COMPLETE 2026-11-11: CLAUDE.md slim, PRs resolved, search index built, capability graph pending
 <!-- STATE:END -->
 
 Session start: this block, then the last ten rows of `results/INDEX.md`,

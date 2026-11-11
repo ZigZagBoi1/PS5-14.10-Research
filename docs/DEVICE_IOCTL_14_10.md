@@ -192,3 +192,134 @@ python tools/send_probe.py --save probes/phase17_new_vectors/287a_gc_struct_comm
 Each probe runs in one connection, and the loader process persists across
 connections, so a probe that wedges the Lua thread ends the session for every
 later probe until the game is relaunched.
+
+## The real command words, recovered from the 13.60 dispatcher (2026-11-10)
+
+Every sweep above fired 16-bit numbers or 32-bit words built from a fixed length
+set `{0, 4, 8, 0x10, 0x20, 0x40, 0x100}`, which is why only `0x80088209`
+answered on `/dev/dce`: the dispatcher compares the command register against
+**thirteen 32-bit constants**, and most of them carry a length field the sweeps
+never generated.  Straight from `.local/ktext_ins.pkl`:
+
+| VA | instruction | word | group | len field |
+|---|---|---|---|---|
+| `0xffffffff8b05585b` | `mov ecx, 0x9ce88210` | `0x9CE88210` | `0x82` | `0x0ce8` |
+| `0xffffffff8b055865` | `mov ecx, 0x80208217` | `0x80208217` | `0x82` | `0x20` |
+| `0xffffffff8b05586f` | `mov ecx, 0x80208218` | `0x80208218` | `0x82` | `0x20` |
+| `0xffffffff8b05587d` | `mov ecx, 0x80288208` | `0x80288208` | `0x82` | `0x28` |
+| `0xffffffff8b05588b` | `mov ecx, 0x80308217` | `0x80308217` | `0x82` | `0x30` |
+| `0xffffffff8b055892` | `mov ecx, 0xc0188212` | `0xC0188212` | `0x82` | `0x18` |
+| `0xffffffff8b05589c` | `mov eax, 0xc0188213` | `0xC0188213` | `0x82` | `0x18` |
+| `0xffffffff8b0558aa` | `mov eax, 0xc0588212` | `0xC0588212` | `0x82` | `0x58` |
+| `0xffffffff8b0558b8` | `mov eax, 0xc0208219` | `0xC0208219` | `0x82` | `0x20` |
+| `0xffffffff8b0558cc` | `cmp r15, 0x40d08214` | `0x40D08214` | `0x82` | `0xd0` |
+| `0xffffffff8b0558d5` | `mov ecx, 0x80088209` | `0x80088209` | `0x82` | `8` |
+| `0xffffffff8b0558f6` | `mov ecx, 0x9ce88211` | `0x9CE88211` | `0x82` | `0x0ce8` |
+| `0xffffffff8b055900` | `mov ecx, 0xc008820b` | `0xC008820B` | `0x82` | `8` |
+
+The dispatch is a compare tree over `r15` (the command), with `0x16` (EINVAL)
+as the fallthrough — `0xffffffff8b0558c0 mov eax, 0x16` before the final
+`jmp 0xffffffff8b055839`.
+
+**First measurement (`1566a`, `results/phase36_realargs/1566a_dce_real_ioctl_words_20261110_201038.txt`, grade M):** `0x80088209` still answers `0`
+(positive control), `0x9CE88210` answers `-1`, and **`0x80208217` blocks the
+calling thread forever** — `IDLE_TIMEOUT` after 30 s, then `CONNECT_TIMEOUT`, the
+same wedge `0xC0048125` produced on `/dev/gc`.  So `/dev/dce` has a blocking
+command too, and it is the `0x17` function in group `0x82`.
+
+Consequence for the remaining ten words: **one blocking word costs a relaunch**,
+because the wedged thread *is* the loader.  They must be tested either one per
+run with the suspect ordered last, or from a `thr_create`-spawned ROP child that
+can block without taking the session with it.
+
+### CONSOLE-FATAL commands (do not send)
+
+| node | command | effect |
+|---|---|---|
+| `/dev/gc` | `0xC0048125` | blocks the calling thread forever; exit fails, black screen (286a) |
+| `/dev/dce` | `0x80208217` | blocks the calling thread forever; the 9026 listener dies and **the whole console has to be rebooted** (1566a, 2026-11-10) |
+
+`0x80208217` is the `0x17` function of group `0x82` with a `0x20` byte payload
+(`0x80308217` is the same function with a `0x30` payload, so it is presumed to
+block as well and must be treated as fatal too).
+
+Everything in the table above about sweeps being "safe" was safe for a boring
+reason: a 16-bit command number never matched a real handler, so the driver was
+never entered.  The moment a recovered 32-bit word reached a real handler
+(`1566a`), it blocked.  **Any command word that has not been measured must be
+assumed console-fatal.**  The remaining twelve `/dev/dce` words are unmeasured
+and therefore in that class.
+
+### Complete 13.60 route for every `/dev/dce` word
+
+Resolved to the callee (13.60 text; `rbx` = the ioctl data pointer, `r14` = td,
+`[rbp-0x38]` = the cdev):
+
+| word | route |
+|---|---|
+| `0x80088209` | `0x8b6081c0(proc, *(u64*)arg)` -> 0 |
+| `0x80208218` | generic `0x8b225380(cdev+0x18, cmd, arg, flags, td)` |
+| `0xC0208219` | same generic entry |
+| `0x80308217` | same generic entry |
+| `0xC008820B` | same generic entry |
+| `0x9CE88211` | `0x8afc8f90(*(td+0x140))` gate, then `0x8b224ed0(arg)` |
+| `0x40D08214` | same gate, then `0x8b224ed0(arg)` |
+| `0xC0188213` | `0x8afc8f90(*(td+0x140))` gate, then `0x8b227980(arg)` |
+| `0x80288208` | `0x8b607ef0(cdev, arg)` |
+| `0xC0588212` | `0x8b0549f0(cdev, arg)` |
+| `0x9CE88210` | **no case**: first `cmp`, `jg` never re-tests it -> `0x16` EINVAL |
+| `0x80208217` | **no case**: `jle 0x8b0558cc` lands in the `0x40d08214`/`0x80088209` compares and `jne`s out -> `0x16` EINVAL |
+
+The stack-protector epilogue is at `0x8b055839` (`cmp rcx,[rbp-0x30]; jne
+0x8b0559c6 -> __stack_chk_fail 0x8b0bd6b0`), so every case returns through one
+exit with `eax` set by its callee.
+
+### Measured on 14.10, word by word (2026-11-10/11)
+
+| word | 13.60 route | 14.10 result | capture |
+|---|---|---|---|
+| `0x80088209` | `0x8b6081c0(proc, *(u64*)arg)` | `rv=0`, buffer untouched | 277a, 1566a, and the control in every 1567a+ run |
+| `0x9CE88210` | no case -> EINVAL | `rv=-1` | 1566a |
+| `0x40D08214` | gate `0x8afc8f90(td+0x140)` then `0x8b224ed0(arg)` | `rv=-1`, `buf[0]=0` | 1567a |
+| `0xC008820B` | generic `0x8b225380` | `rv=-1`, `buf[0]=0` | 1568a |
+| `0x80208217` | no case -> EINVAL | **BLOCKED -> console dead** | 1566a |
+| `0x80288208` | `0x8b607ef0(cdev, arg)` | **BLOCKED -> console dead** | 1569a |
+
+**Two of two words that reach a real handler hung the machine; every word that
+returned `-1` was a gate reject or a no-case fallthrough.** That is the shape of
+a driver whose entry points wait on hardware state a game process cannot
+provide, not the shape of a call that validates its arguments and returns.
+
+Cost so far: two console reboots for two data points, both negative. The
+remaining seven words (`0xC0588212`, `0xC0188213`, `0xC0188212`, `0x80208218`,
+`0xC0208219`, `0x9CE88211`, `0x80308217`) are all of the same two classes:
+generic-dispatch or direct-handler (likely hang, like `0x80288208`) and
+gate-first (likely `-1`, no information). **Recommendation: park this space.**
+The grinder only buys `-1` rows, and each may cost a console.
+
+### The 13.60 dispatcher does not model the 14.10 driver
+
+Routing recovered for the thirteen constants (13.60 text):
+
+| word | 13.60 route | 14.10 measurement |
+|---|---|---|
+| `0x80088209` | `0x8b6081c0(proc, *(u64*)arg)` | `rv=0` (277a, 1566a) |
+| `0x80208218` | generic `0x8b225380(dev+0x18, cmd, arg, flags, td)` | untested |
+| `0xC0208219` | same generic entry | untested |
+| `0xC008820B` | same generic entry | untested |
+| `0x9CE88211` | `0x8afc8f90(*(td+0x140))` then `0x8b224ed0(arg)` | untested |
+| `0x40D08214` | same pair | untested |
+| `0x9CE88210` | **falls through to `0x16` EINVAL** (it is the first `cmp`, and its `jg` target never re-tests it) | **`rv=-1`**, i.e. agrees |
+| `0x80208217` | **`jle 0x8b0558cc` → `cmp 0x40d08214` / `cmp 0x80088209` → `jne` → `0x16` EINVAL** | **BLOCKS FOREVER, console down** |
+
+So on the text we hold, `0x80208217` is an explicit EINVAL and `0x80088209` is a
+two-argument call into `0x8b6081c0`. On 14.10 the first of those entered a
+handler that never returns. **The 14.10 driver implements commands the 13.60
+dispatcher maps to EINVAL**, so this table cannot be used to predict which words
+are safe — it can only tell us which words the 13.60 build knew about.
+
+That settles the method question: **static screening of the remaining words is
+not possible**, and every unmeasured word is a lottery whose stake is a console
+reboot. The `/dev/dce` and `/dev/gc` command spaces are **parked** until a
+harness exists that cannot take the machine down, or until the operator
+explicitly accepts the reboot cost per word.

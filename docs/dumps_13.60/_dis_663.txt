@@ -1,0 +1,6 @@
+003b0100  204531                   and byte ptr [rbp + 0x31], al
+003b0103  ffc7                     inc edi
+003b0105  432800                   sub byte ptr [r8], al
+003b0108  0000                     add byte ptr [rax], al
+003b010a  00e9                     add cl, ch
+003b010c  8bfa                     mov edi, edx

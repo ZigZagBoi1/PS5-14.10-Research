@@ -96,6 +96,39 @@ class HttpFixtureTests(unittest.TestCase):
     def events(self):
         return [r['request'] for r in self.rows() if r['record_type'] == 'event']
 
+    def test_state_reset_path_and_query_forms(self):
+        cases = [
+            ('p686reset', serve.P686_STATE),
+            ('p688reset', serve.P688_STATE),
+            ('p689reset', serve.P689_STATE),
+            ('p690reset', serve.P690_STATE),
+        ]
+        for name, state in cases:
+            original = dict(state)
+            try:
+                state.update(pendingArm=7, alive=True, armFrom=None, mode=None)
+                self.assertEqual(self.request('/%s=1' % name), 200)
+                self.assertEqual(state, {'pendingArm': None, 'alive': False,
+                                         'armFrom': None, 'mode': None})
+
+                state.update(pendingArm=8, alive=True, armFrom=None, mode=None)
+                self.assertEqual(
+                    self.request('/?%s=1&arm=3&mode=reclaim' % name), 200)
+                self.assertEqual(state['pendingArm'], None)
+                self.assertFalse(state['alive'])
+                self.assertEqual(state['armFrom'], 3)
+                self.assertEqual(state['mode'], 'reclaim')
+
+                state.update(pendingArm=9, alive=True, armFrom=4, mode='keep')
+                self.assertEqual(self.request('/not-a-route?note=%s=1' % name), 404)
+                self.assertEqual(state['pendingArm'], 9)
+                self.assertTrue(state['alive'])
+                self.assertEqual(state['armFrom'], 4)
+                self.assertEqual(state['mode'], 'keep')
+            finally:
+                state.clear()
+                state.update(original)
+
     def test_original_p560_tagged_d(self):
         target='/beacon/P560-B-POST?d=1%2C2%2C3%2C4'
         self.assertEqual(self.request(target), 204)

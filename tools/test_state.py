@@ -161,6 +161,12 @@ class StateToolTests(unittest.TestCase):
         rows = [line for line in tail.splitlines() if line.strip().startswith("| 20")]
         self.assertEqual(len(rows), 10)
 
+    def test_state_key_with_a_colon_is_refused(self):
+        before = (self.root / "results" / "STATE.md")
+        with self.assertRaises(SystemExit):
+            self._run(["set", "bad:key=value"])
+        self.assertFalse(before.exists())
+
     def test_state_marker_in_a_value_round_trips(self):
         value = "<!-- STATE:END -->"
         self._run(["set", "notes=" + value])

@@ -126,7 +126,12 @@ _STATE_LINE_BREAKS = ("\r", "\n", "\v", "\f", "\x1c", "\x1d", "\x1e",
 
 def _write_state(pairs):
     for key, value in pairs:
-        if any(char in str(key) or char in str(value)
+        key = str(key)
+        if not key.strip() or ":" in key:
+            raise SystemExit(
+                "state keys must be nonempty and contain no colon: %r" % (key,)
+            )
+        if any(char in key or char in str(value)
                for char in _STATE_LINE_BREAKS):
             raise SystemExit(
                 "state values must fit on one line: %r" % (key,)

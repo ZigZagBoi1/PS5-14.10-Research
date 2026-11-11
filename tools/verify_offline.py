@@ -24,6 +24,7 @@ SAFE_TEST_MODULES = (
     "tools.test_browser_runner_http",
     "tools.test_browser_runner_paths",
     "tools.test_canvas_state_geometry",
+    "tools.test_check_lua_syntax",
     "tools.test_decode_fault_scan",
     "tools.test_deep_result_scanner",
     "tools.test_dns_tools",

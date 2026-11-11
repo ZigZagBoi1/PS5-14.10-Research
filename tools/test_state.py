@@ -148,6 +148,17 @@ class StateToolTests(unittest.TestCase):
         _code, _out = self._run(["row", "9999z", "--claim", "c", "--result", "r"])
         lines = index.read_text(encoding="utf-8").splitlines()
         self.assertEqual(len([line for line in lines if line.startswith("| 20")]), 2)
+    def test_explicit_windows_capture_path_is_normalized(self):
+        self._capture("phase1/1a_cap_20260101_000000.txt")
+        capture = r"results\phase1\1a_cap_20260101_000000.txt"
+        _code, out = self._run([
+            "row", "1a", "--claim", "c", "--result", "r", "--capture", capture,
+        ])
+        self.assertIn("appended", out)
+        _code, out = self._run(["seed"])
+        self.assertIn("seeded 0 row", out)
+        self.assertEqual(
+            len([line for line in self._ledger() if "1a_cap_20260101" in line]), 1)
 
     def test_pipe_in_a_claim_cannot_add_a_column(self):
         self._run(["row", "9999z", "--claim", "left | forged-column",

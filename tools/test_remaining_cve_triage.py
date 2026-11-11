@@ -10,6 +10,7 @@ Offline and read-only.
 """
 
 import json
+import re
 import struct
 import unittest
 from pathlib import Path
@@ -112,15 +113,16 @@ class CorpusAbsenceTests(unittest.TestCase):
         self.assertIn("sendfile(flags=0): ret=-1", output)
         self.assertIn("sendfile(SF_NOCACHE): ret=-1", output)
 
-    def test_no_execve_call_in_the_corpus(self):
+    def test_execve_captures_are_documented_reachability_checks(self):
         corpus = self._corpus_text().lower()
         for needle in ("make_syscall(59)", "sc_execve"):
             self.assertNotIn(needle, corpus, needle)
         capture_name = "184a_new_cve_reachability_20261022_122318.txt"
         allowed = {
             capture_name,
-            # 93d5/93d8 record execve(NULL)/fexecve reachability only; the
-            # probes deliberately pass null arguments and do not execute.
+            # 93d5/93d8 record execve(NULL)/fexecve(0) reachability only;
+            # none executes a file. 93d6/93d7 make the same fexecve(0) call
+            # but their captures do not contain an execve line.
             "93d5_rack_tcp_probe_20261105_090502.txt",
             "93d8_mmap_noread_20261105_091044.txt",
         }
@@ -136,6 +138,22 @@ class CorpusAbsenceTests(unittest.TestCase):
         ).read_text(encoding="utf-8", errors="replace")
         self.assertIn("execve(/nonexistent)=-1", capture)
         self.assertIn("execve(/bin/sh)=-1", capture)
+
+    def test_execve_probe_calls_are_limited_to_reachability_probes(self):
+        allowed = {
+            "93d5_rack_tcp_probe.lua",
+            "93d6_dev_mmap_scan.lua",
+            "93d7_dev_mmap_safe.lua",
+            "93d8_mmap_noread.lua",
+        }
+        call = re.compile(r"\bmk\s*\(\s*(?:59|492)\s*\)")
+        offenders = []
+        for path in (ROOT / "probes").rglob("*.lua"):
+            if path.name in allowed:
+                continue
+            if call.search(path.read_text(encoding="utf-8", errors="replace")):
+                offenders.append(str(path.relative_to(ROOT)))
+        self.assertEqual(offenders, [], "exec probe call outside reachability probes")
 
     def test_no_setuid_mention_in_the_corpus(self):
         self.assertNotIn("setuid", self._corpus_text().lower())

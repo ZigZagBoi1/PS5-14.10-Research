@@ -121,8 +121,10 @@ command has never been issued, and no vt device has been opened.
 
 **Repo evidence.** Nothing in this repository addresses either half:
 
-- No probe in `probes/**/*.lua` issues `execve` (59) or any `exec*` variant,
-  and no result records one.
+- Reachability probes `93d5`, `93d6`, `93d7`, and `93d8` call `execve` (59) or
+  `fexecve` (492) with null/zero arguments only. The recorded `93d5`/`93d8`
+  calls returned -1, and no probe supplies a real executable path; no probe
+  executes a file.
 - No document records a setuid binary on the PS5 filesystem, an ELF header
   with the setuid bit, or a PIE binary reachable for exec.
 

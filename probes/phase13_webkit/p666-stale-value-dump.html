@@ -2,12 +2,14 @@
   p666: Dump exact values from CVE-2026-28905 stale slots
   p665's former "250 stale NUMBER values" were normal `elem * 2` map
   results, not unwritten slots. The corrected gate uses the callback count:
-  only indices at or after the number of callbacks actually invoked are
-  treated as stale. With a dense source this set is structurally empty:
-  map invokes every callback and an OSR exit is a deopt continuation, not an
-  exception. A fresh map result is also pre-initialized, and the public PS5
-  port disables JIT/DFG/FTL. Expected dense run: TOTAL stale=0. A non-empty
-  set is an engine/config divergence, not CVE evidence. Sparse source is the
+  indices at or after the number of callbacks actually invoked are treated as
+  candidates, and the trigger slot is checked separately because a callback
+  is counted before its result write. With a dense source this set is
+  structurally empty: map invokes every callback and an OSR exit is a deopt
+  continuation, not an exception. A fresh map result is also pre-initialized,
+  and the public PS5 port disables JIT/DFG/FTL. Expected dense run:
+  TOTAL stale=0. A non-empty set is an engine/config divergence, not CVE
+  evidence. Sparse source is the
   only proposed re-arm (not implemented here).
   CRASH_CLASS: LOW
 -->
@@ -49,11 +51,15 @@ try{
   var allStale=[];
   for(var trial=0;trial<100;trial++){
     var exitAt=3+(trial%5);
-    var out=triggerOSR([1,2,3,4,5,6,7,8,9,10],exitAt);
+    var testArr=[1,2,3,4,5,6,7,8,9,10];
+    var out=triggerOSR(testArr,exitAt);
     var r=out.result;
-    for(var j=out.calls;j<r.length;j++){
+    for(var j=0;j<r.length;j++){
       var v=r[j];
-      // This is a post-callback slot — should be hole but might be stale
+      // Trigger slot: expected to be the source array only when its callback
+      // ran. A different value there is an unwritten slot, not a callback
+      // result.
+      if(j<out.calls && (j!==exitAt-1 || v===testArr)) continue;
       allStale.push({trial:trial,j:j,type:typeof v,
         hex:typeof v==='number'?d2hex(v):'N/A',
         val:typeof v==='number'?v:String(v).slice(0,20)});
@@ -61,9 +67,9 @@ try{
   }
 
   emit('TOTAL','stale='+allStale.length);
-  emit('EXPECTED','dense: zero post-callback slots');
+  emit('EXPECTED','dense: zero callback-unwritten slots');
   if(allStale.length===0) emit('VERDICT','STRUCTURAL-NEGATIVE — no callback-unwritten slots on a dense source');
-  else emit('VERDICT','ENGINE-DIVERGENCE — non-empty post-callback set; inspect before claiming evidence');
+  else emit('VERDICT','ENGINE-DIVERGENCE — non-empty callback-unwritten set; inspect before claiming evidence');
 
   // Categorize
   var nums=allStale.filter(function(x){return x.type==='number';});
@@ -133,10 +139,12 @@ try{
 
   var stale2=[];
   for(var trial=0;trial<50;trial++){
-    var out=triggerOSR2([10,20,30,40,50,60,70,80,90,100],4);
+    var testArr2=[10,20,30,40,50,60,70,80,90,100];
+    var out=triggerOSR2(testArr2,4);
     var r=out.result;
-    for(var j=out.calls;j<r.length;j++){
+    for(var j=0;j<r.length;j++){
       var v=r[j];
+      if(j<out.calls && (j!==3 || v===testArr2)) continue;
       if(typeof v==='number')
         stale2.push({j:j,hex:d2hex(v),val:v});
     }
@@ -180,10 +188,12 @@ try{
 
   var stale3=[];
   for(var trial=0;trial<50;trial++){
-    var out=triggerOSR3([1,2,3,4,5,6,7,8,9,10],4);
+    var testArr3=[1,2,3,4,5,6,7,8,9,10];
+    var out=triggerOSR3(testArr3,4);
     var r=out.result;
-    for(var j=out.calls;j<r.length;j++){
+    for(var j=0;j<r.length;j++){
       var v=r[j];
+      if(j<out.calls && (j!==3 || v===testArr3)) continue;
       stale3.push({j:j,type:typeof v,hex:typeof v==='number'?d2hex(v):'N/A',val:String(v).slice(0,20)});
     }
   }

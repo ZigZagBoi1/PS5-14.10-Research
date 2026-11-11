@@ -1,0 +1,130 @@
+[
+  {
+    "id": 1,
+    "name": "fontface-uaf-read-primitive",
+    "claim": "FontFace UAF + ArrayBuffer(192) reclaim + forgeRead gives arbitrary read in WebProcess via CSS serialization of face.style",
+    "evidence": [
+      "p691: 4-step walk chain reads VP at 0x80f4b9b28 (CSSFontFaceSet vtable)",
+      "p691: h4 hex correctly decodes 72 bytes from 175-char CSS string",
+      "p599 v4i: two-phase UAF 100% survival without 80B spray",
+      "p692 forgeRead returns data, but CSS decode is broken (charCodeAt bug)"
+    ],
+    "contradictions": [
+      "p692 CSS decoder produces 175 chars instead of 72 bytes \u2014 garbled data",
+      "p691 source HTML was never saved to disk"
+    ],
+    "next_experiment": "Deploy p692 with decodeCSSString fix, verify 72 decoded bytes from walk chain read",
+    "status": "open",
+    "created": "2026-11-10T21:00:00Z",
+    "updated": "2026-11-10T21:21:35.627521+00:00"
+  },
+  {
+    "id": 2,
+    "name": "webprocess-text-base-via-vp",
+    "claim": "VP (CSSFontFaceSet vtable pointer) = WebProcess_base + constant_RVA, so text base can be computed once RVA is known",
+    "evidence": [
+      "p691: VP = 0x80f4b9b28 (1 committed boot), low 12 bits 0xB28 constant across 5 claimed boots",
+      "VP is in WebProcess code segment (above 0x800000000)"
+    ],
+    "contradictions": [
+      "Only 1 boot in beacon logs, 5 boots claimed but only 1 committed",
+      "No 14.10 decrypted WebProcess binary available for RVA determination"
+    ],
+    "next_experiment": "Source-analyze WebKit 605.1.15 CSSFontFaceSet vtable layout to determine RVA from source offsets",
+    "status": "open",
+    "created": "2026-11-10T21:00:00Z",
+    "updated": "2026-11-10T21:00:00Z"
+  },
+  {
+    "id": 3,
+    "name": "kaslr-defeat-fault-oracle",
+    "claim": "Kernel image base discoverable per-boot via x86 #PF error code discrimination in signal handler",
+    "evidence": [
+      "1199a-1199c: 512 probes/connection in 33s, 2MB alignment confirmed",
+      "Two boots: 0xFFFFFFFF91800000 and 0xFFFFFFFFD4000000",
+      "Current boot (2026-11-10): 0xFFFFFFFFD5000000, slide +0x55000000"
+    ],
+    "contradictions": [],
+    "next_experiment": null,
+    "status": "confirmed",
+    "created": "2026-11-10T21:00:00Z",
+    "updated": "2026-11-10T21:00:00Z"
+  },
+  {
+    "id": 4,
+    "name": "nx-heap-code-reuse",
+    "claim": "Heap NX enforcement requires code-reuse chain (not shellcode) through existing code pointers after vtable forge",
+    "evidence": [
+      "bmalloc/libpas zero PROT_EXEC, OSAllocatorPlayStation asserts !executable",
+      "DFG/FTL/JIT all OFF on PS5 WebKit",
+      "Forged vtable dispatch dies on NX heap (p599 series)"
+    ],
+    "contradictions": [],
+    "next_experiment": "With WebProcess base known, identify gadget chain in WebProcess .text for kernel syscall from WebProcess context",
+    "status": "open",
+    "created": "2026-11-10T21:00:00Z",
+    "updated": "2026-11-10T21:00:00Z"
+  },
+  {
+    "id": 5,
+    "name": "kernel-rw-via-webkit",
+    "claim": "Kernel R/W achievable from WebProcess by chaining: FontFace UAF read \u2192 text base \u2192 ROP \u2192 kernel exploit",
+    "evidence": [
+      "FontFace UAF read primitive works (p691 walk chain)",
+      "KASLR defeated (fault oracle)",
+      "Kernel offsets derived from SDK v0.45 (docs/KERNEL_OFFSETS_14_10_SDK_V045.md)"
+    ],
+    "contradictions": [
+      "WebProcess text base NOT YET known (VP RVA pending)",
+      "No kernel vulnerability identified reachable from WebProcess",
+      "W^X prevents shellcode, need ROP/JOP chain"
+    ],
+    "next_experiment": "1) Fix forgeRead decoder 2) Determine VP RVA 3) Scan WebProcess .text for gadgets",
+    "status": "open",
+    "created": "2026-11-10T21:00:00Z",
+    "updated": "2026-11-10T21:00:00Z"
+  },
+  {
+    "id": 6,
+    "name": "lua-side-kernel-read-exhausted",
+    "claim": "All Lua-side syscall info-leak paths exhausted \u2014 zero kernel pointers in any output",
+    "evidence": [
+      "~400 BSD + all Sony syscalls tested",
+      "1300a/1300b comprehensive survey",
+      "sysctl deep scan (56g3), getsockopt (56n), sigframe (56r) all clean"
+    ],
+    "contradictions": [],
+    "next_experiment": null,
+    "status": "confirmed",
+    "created": "2026-11-10T21:00:00Z",
+    "updated": "2026-11-10T21:00:00Z"
+  },
+  {
+    "id": 7,
+    "name": "aio-double-free-dead",
+    "claim": "aio_multi_delete(662) race is double-STATUS-report, not double-free; Zone-64 UMA makes spray impossible",
+    "evidence": [
+      "75c-75e: exclusive lock in entry_dispose serializes frees",
+      "Type-partitioned UMA isolates zone-64 allocations"
+    ],
+    "contradictions": [],
+    "next_experiment": null,
+    "status": "dead",
+    "created": "2026-11-10T21:00:00Z",
+    "updated": "2026-11-10T21:00:00Z"
+  },
+  {
+    "id": 8,
+    "name": "poll-close-uaf-dead",
+    "claim": "CVE-2026-45251 poll/close UAF confirmed but unexploitable \u2014 zone isolation blocks every spray path",
+    "evidence": [
+      "500c: seldrain absent 150/150",
+      "0/35 reclaim across same-CPU readback and safe-reclaim oracles (500n/500o)"
+    ],
+    "contradictions": [],
+    "next_experiment": null,
+    "status": "dead",
+    "created": "2026-11-10T21:00:00Z",
+    "updated": "2026-11-10T21:00:00Z"
+  }
+]

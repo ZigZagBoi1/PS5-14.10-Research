@@ -214,7 +214,12 @@ def _capture_stamp(path):
         try:
             stamp = _dt.datetime.strptime(match.group("d") + clock, "%Y%m%d%H%M%S")
         except ValueError:
-            return None, probe, None
+            # A malformed date/time in the filename must not hide the capture.
+            try:
+                stamp = _dt.datetime.fromtimestamp(os.path.getmtime(path), _dt.timezone.utc)
+            except OSError:
+                return None, probe, None
+            return stamp, probe, "mtime"
         return stamp, probe, "clock" if match.group("t") else "date"
     probe = re.match(r"[A-Za-z0-9]+", name)
     if not probe:

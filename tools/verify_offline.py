@@ -31,6 +31,7 @@ SAFE_TEST_MODULES = (
     "tools.test_fault_oracle_boundary",
     "tools.test_fontface_abi_contracts",
     "tools.test_handler_claim_audit",
+    "tools.test_handler_ptrfree",
     "tools.test_layout_pages",
     "tools.test_remaining_cve_triage",
     "tools.test_state",

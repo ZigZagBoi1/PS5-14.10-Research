@@ -1,0 +1,25 @@
+{
+  "status": "idle",
+  "current_experiment": null,
+  "retry_count": 0,
+  "completed": [
+    {
+      "name": "identity-validation",
+      "run_id": "20261110_212113_b76ffdf7",
+      "ts": "2026-11-10T21:21:13.963554+00:00"
+    }
+  ],
+  "failed": [
+    {
+      "name": "system-id-validation",
+      "outcome": "MAX_RETRIES",
+      "ts": "2026-11-10T21:20:19.630960+00:00"
+    },
+    {
+      "name": "system-id-validation",
+      "outcome": "MAX_RETRIES",
+      "ts": "2026-11-10T21:20:56.380224+00:00"
+    }
+  ],
+  "last_run_id": "20261110_212113_b76ffdf7"
+}

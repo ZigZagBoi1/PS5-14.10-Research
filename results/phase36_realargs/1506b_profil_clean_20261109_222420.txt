@@ -1,0 +1,26 @@
+=== PROBE 1506b: CLEAN profil TICK TEST ===
+[0] pid=125
+  mmap(0x800000) -> 0x314C70000 
+
+--- [A] baseline: zero everything, expect 0 ---
+  [A] nonzero bytes: 0
+
+--- [B] arm scale 1, pr_off 0, pr_size 0x200000 ---
+  arm rv=0 
+  spin done (sink=450000015000001)
+  disable rv=0 
+  [B] nonzero bytes: 2
+      byte=0x9B2 idx=0x4D9 val=0x06A4
+      byte=0x9B3 idx=0x4D9 val=0x06A4
+
+--- [C] re-zero, expect 0 ---
+  [C] nonzero bytes: 0
+
+--- [D] arm pr_off 0x10000000, same size/scale ---
+  arm rv=0 
+  [D] nonzero bytes: 0
+  the tick index must be 0x1000 LOWER than in [B]; identical indices mean no new ticks
+
+SUMMARY  baseline=0  armB=2  rezero=0  armD=0
+final canary pid 125
+=== PROBE 1506b COMPLETE ===

@@ -1,0 +1,17 @@
+=== PROBE 1518a: WHAT KILLS A SPAWNED LUA THREAD ===
+[0] pid=113
+
+[A] /dev/zero destination and the fault page
+   /dev/zero fd = 22 
+   socketpair = 0 
+   socket fds = 23 / 24
+   V = 0x311458000   SH = 0x31145C000
+   write(V+0x1000) -> /dev/zero = 4
+   write(unmapped)  -> /dev/zero = 4 2 No such file or directory
+
+[B] CONTROL: main alone, 200000 writes to /dev/zero, no thread
+   finished 200000 serial writes (sum=800000), still alive
+
+[C] CHILD: 200000 writes to /dev/zero, one closure total
+   client fd = 21
+   spawn = OK

@@ -1,0 +1,27 @@
+=== PROBE 1460a: SYS 601 COMMAND 0x12 WITH THE MAGIC TAG ===
+
+[0] pid=481
+[A] control: 601(0x00, buf)
+[A] rv=0
+[A] buf[0]=256 buf[4]=00000000
+
+[B] 601(0x12, 0xA0020102, struct)  <- magic in arg1
+[B] rv=-1 errno=22 Invalid argument
+[B] struct unchanged? 00000000 00000000
+
+[C] same call again (the branch sets 0x1000000, the gate bit is 0x400)
+[C] rv=-1 errno=22 Invalid argument
+
+[D] byte-swapped magic 0x020102A0, for completeness
+[D] rv=-1 errno=22 Invalid argument
+
+[E] magic in arg2 instead (601(0x12, struct, MAGIC))
+[E] rv=-1 errno=22 Invalid argument
+
+[F] 0x11 with the magic, since 0x11 killed on a zero page in 1400a
+[F1] rv=-1 errno=22 Invalid argument
+[F2] rv=-1 errno=22 Invalid argument
+
+[G] alive pid=481 (was 481)
+
+=== PROBE 1460a COMPLETE ===

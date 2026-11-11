@@ -1,0 +1,20 @@
+=== PROBE 1481g: 548 OP-2 PROTECTION MATRIX ===
+[0] pid=87
+
+[A] anon page 0x31137C000, value 3
+--- [A] anon mmap(prot 3) at 0x31137C000 ---
+    prot before = 3
+    prot 0x0   -> rv=0    processed=1    547=0  <<< TAKEN
+    prot 0x1   -> rv=0    processed=1    547=1  <<< TAKEN
+    prot 0x2   -> rv=0    processed=1    547=3  (rv 0, prot unchanged)
+    prot 0x3   -> rv=0    processed=1    547=3  <<< TAKEN
+    prot 0x4   -> rv=-1   processed=0    547=3  read=41424344
+    prot 0x5   -> rv=-1   processed=0    547=3
+    prot 0x6   -> rv=-1   processed=0    547=3
+    prot 0x7   -> rv=-1   processed=0    547=3
+    prot 0x8   -> rv=-1   processed=0    547=3
+    prot 0x9   -> rv=-1   processed=0    547=3
+    prot 0xA   -> rv=-1   processed=0    547=3
+    prot 0xC   -> rv=-1   processed=0    547=3
+    prot 0xF   -> rv=-1   processed=0    547=3
+

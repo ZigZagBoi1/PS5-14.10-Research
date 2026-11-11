@@ -1,0 +1,83 @@
+=== PROBE 1402a: 601 CMD 0x12 FIELD GATE ===
+[0] pid=364
+  struct=0x310660000 out=0x310720000
+
+[A] one qword at a time (qword0 stays 0), arg2 = 0
+  base (all zero)          rv=-1 errno=22 Invalid argument
+  q1 = 0x1          rv=-1 errno=22 Invalid argument
+  q1 = 0x2          rv=-1 errno=22 Invalid argument
+  q1 = 0x3          rv=-1 errno=22 Invalid argument
+  q1 = 0x8          rv=-1 errno=22 Invalid argument
+  q1 = 0x10         rv=-1 errno=22 Invalid argument
+  q1 = 0x20         rv=-1 errno=22 Invalid argument
+  q1 = 0x100        rv=-1 errno=22 Invalid argument
+  q1 = 0x400        rv=-1 errno=22 Invalid argument
+  q1 = 0x1000       rv=-1 errno=22 Invalid argument
+  q1 = 0x4000       rv=-1 errno=22 Invalid argument
+  q1 = 0x10000      rv=-1 errno=22 Invalid argument
+  q1 = 0xFFFFFFFF   rv=-1 errno=22 Invalid argument
+  q2 = 0x1          rv=-1 errno=22 Invalid argument
+  q2 = 0x2          rv=-1 errno=22 Invalid argument
+  q2 = 0x3          rv=-1 errno=22 Invalid argument
+  q2 = 0x8          rv=-1 errno=22 Invalid argument
+  q2 = 0x10         rv=-1 errno=22 Invalid argument
+  q2 = 0x20         rv=-1 errno=22 Invalid argument
+  q2 = 0x100        rv=-1 errno=22 Invalid argument
+  q2 = 0x400        rv=-1 errno=22 Invalid argument
+  q2 = 0x1000       rv=-1 errno=22 Invalid argument
+  q2 = 0x4000       rv=-1 errno=22 Invalid argument
+  q2 = 0x10000      rv=-1 errno=22 Invalid argument
+  q2 = 0xFFFFFFFF   rv=-1 errno=22 Invalid argument
+  q3 = 0x1          rv=-1 errno=22 Invalid argument
+  q3 = 0x2          rv=-1 errno=22 Invalid argument
+  q3 = 0x3          rv=-1 errno=22 Invalid argument
+  q3 = 0x8          rv=-1 errno=22 Invalid argument
+  q3 = 0x10         rv=-1 errno=22 Invalid argument
+  q3 = 0x20         rv=-1 errno=22 Invalid argument
+  q3 = 0x100        rv=-1 errno=22 Invalid argument
+  q3 = 0x400        rv=-1 errno=22 Invalid argument
+  q3 = 0x1000       rv=-1 errno=22 Invalid argument
+  q3 = 0x4000       rv=-1 errno=22 Invalid argument
+  q3 = 0x10000      rv=-1 errno=22 Invalid argument
+  q3 = 0xFFFFFFFF   rv=-1 errno=22 Invalid argument
+  (shapes that printed nothing were EINVAL like the base)
+
+[B] qword1 = a mapped user page (possible copyout destination)
+  q1 = out page            rv=-1 errno=22 Invalid argument changed_dwords=0
+
+[C] arg2 variants with an all-zero struct
+  arg2=0x0                  rv=-1 errno=22 Invalid argument
+  arg2=0x1                  rv=-1 errno=22 Invalid argument
+  arg2=0x8                  rv=-1 errno=22 Invalid argument
+  arg2=0x100                rv=-1 errno=22 Invalid argument
+  arg2=0x4000               rv=-1 errno=22 Invalid argument
+  arg2=0x310720000           rv=-1 errno=22 Invalid argument
+
+[D] two-field pairs: q1 = out page plus one q2/q3 value
+  q1=out q2=0x1      rv=-1 errno=22 Invalid argument
+  q1=out q2=0x2      rv=-1 errno=22 Invalid argument
+  q1=out q2=0x3      rv=-1 errno=22 Invalid argument
+  q1=out q2=0x8      rv=-1 errno=22 Invalid argument
+  q1=out q2=0x10     rv=-1 errno=22 Invalid argument
+  q1=out q2=0x20     rv=-1 errno=22 Invalid argument
+  q1=out q2=0x100    rv=-1 errno=22 Invalid argument
+  q1=out q2=0x400    rv=-1 errno=22 Invalid argument
+  q1=out q2=0x1000   rv=-1 errno=22 Invalid argument
+  q1=out q2=0x4000   rv=-1 errno=22 Invalid argument
+  q1=out q2=0x10000  rv=-1 errno=22 Invalid argument
+  q1=out q2=0xFFFFFFFF rv=-1 errno=22 Invalid argument
+  q1=out q3=0x1      rv=-1 errno=22 Invalid argument
+  q1=out q3=0x2      rv=-1 errno=22 Invalid argument
+  q1=out q3=0x3      rv=-1 errno=22 Invalid argument
+  q1=out q3=0x8      rv=-1 errno=22 Invalid argument
+  q1=out q3=0x10     rv=-1 errno=22 Invalid argument
+  q1=out q3=0x20     rv=-1 errno=22 Invalid argument
+  q1=out q3=0x100    rv=-1 errno=22 Invalid argument
+  q1=out q3=0x400    rv=-1 errno=22 Invalid argument
+  q1=out q3=0x1000   rv=-1 errno=22 Invalid argument
+  q1=out q3=0x4000   rv=-1 errno=22 Invalid argument
+  q1=out q3=0x10000  rv=-1 errno=22 Invalid argument
+  q1=out q3=0xFFFFFFFF rv=-1 errno=22 Invalid argument
+  (pairs that printed nothing were EINVAL)
+
+=== 1402a DONE ===

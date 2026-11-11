@@ -1,0 +1,28 @@
+=== PROBE 1502a: DMEM APERTURE EDGE ===
+[0] pid=125
+
+--- [A] open /dev/dmem0 ---
+  fd=24 
+
+--- [B] baseline: offset 0, prot 1 ---
+  offset 0 refused rv=-1 22 Invalid argument
+
+--- [C] which offsets above the cap map at prot 1 ---
+  off 0x11FFF0000 -> rv=-1 22 Invalid argument
+  off 0x11FFC000 -> rv=-1 22 Invalid argument
+  off 0x11FF0000 -> rv=-1 22 Invalid argument
+  off 0x120000000 -> rv=-1 22 Invalid argument
+  off 0x140000000 -> rv=-1 22 Invalid argument
+  off 0x180000000 -> rv=-1 22 Invalid argument
+  off 0x200000000 -> rv=-1 22 Invalid argument
+  off 0x400000000 -> rv=-1 22 Invalid argument
+  off 0x800000000 -> rv=-1 22 Invalid argument
+
+--- [D] the 0x1000000000 rung ---
+  rung refused rv=-1 22 Invalid argument
+
+--- [E] length that ends past the cap: off 0x11FFC000 len 0x10000 ---
+  over-cap length refused rv=-1 22 Invalid argument
+
+final canary live: true (pid 125)
+=== PROBE 1502a COMPLETE ===

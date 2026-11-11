@@ -1,0 +1,57 @@
+=== PROBE 1479a: SYS 548 BATCH VM CONTRACT ===
+[0] pid=80
+[0] mmap page=0x310A54000
+[0] page filled with 0x1111xxxx markers
+
+--- [A] baseline: count 0 must return 0 and do nothing ---
+    before: page dword0 ok=true val=0x11110000 | 547 rv=0 prot=3
+    count=0 flags=0                    rv=0  out=0
+    after: page dword0 ok=true val=0x11110000 | 547 rv=0 prot=3
+
+--- [B] count 1, all-zero entry (op=0, addr=0, len=0) ---
+    zero entry count=1                 rv=-1 22 Invalid argument out=0
+    after: page dword0 ok=true val=0x11110000 | 547 rv=0 prot=3
+
+--- [C] op byte at entry+0x1C, everything else zero ---
+    op=1 addr=0 len=0                  rv=-1 22 Invalid argument out=0
+    op=2 addr=0 len=0                  rv=0  out=1
+    op=3 addr=0 len=0                  rv=-1 22 Invalid argument out=0
+    op=4 addr=0 len=0                  rv=-1 22 Invalid argument out=0
+    op=5 addr=0 len=0                  rv=-1 22 Invalid argument out=0
+
+--- [D] op 0..4 with addr=our page, len=0x1000, prot=3 ---
+    op=0 addr=page len=0x1000          rv=-1 22 Invalid argument out=0
+      after: page dword0 ok=true val=0x11110000 | 547 rv=0 prot=3
+    op=1 addr=page len=0x1000          rv=-1 22 Invalid argument out=0
+      after: page dword0 ok=true val=0x11110000 | 547 rv=0 prot=3
+    op=2 addr=page len=0x1000          rv=-1 22 Invalid argument out=0
+      after: page dword0 ok=true val=0x11110000 | 547 rv=0 prot=3
+    op=3 addr=page len=0x1000          rv=-1 22 Invalid argument out=0
+      after: page dword0 ok=true val=0x11110000 | 547 rv=0 prot=3
+    op=4 addr=page len=0x1000          rv=-1 22 Invalid argument out=0
+      after: page dword0 ok=true val=0x11110000 | 547 rv=0 prot=3
+
+--- [E] two entries at once, count=2, both zero ---
+    count=2 zero entries               rv=-1 22 Invalid argument out=0
+    after: page dword0 ok=true val=0x11110000 | 547 rv=0 prot=3
+
+--- [F] the flag mask: arg2 values with and without 0xe0bffb6f bits ---
+    flags=0x0 count=0                  rv=0  out=0
+    flags=0x1 count=0                  rv=-1 22 Invalid argument out=0
+    flags=0x1000 count=0               rv=-1 22 Invalid argument out=0
+    flags=0x20000000 count=0           rv=-1 22 Invalid argument out=0
+    flags=0x10000000 count=0           rv=0  out=0
+    flags=0xFFFFFFFF count=0           rv=-1 22 Invalid argument out=0
+    (0xe0bffb6f is the mask when byte[proc+0xc81]==0; bit 29 + bits 30/31 are refused)
+
+--- [G] arg1 class, count=0 and count=1 ---
+    arg1=0x0 count=0                   rv=0  out=0
+    arg1=0x1 count=0                   rv=0  out=0
+    arg1=0x310000000 count=0           rv=0  out=0
+    arg1=0xFFFFFFFFC1000000 count=0    rv=0  out=0
+
+--- [H] canary ---
+    final: page dword0 ok=true val=0x11110000 | 547 rv=0 prot=3
+
+final canary: pid=80
+=== PROBE 1479a COMPLETE ===

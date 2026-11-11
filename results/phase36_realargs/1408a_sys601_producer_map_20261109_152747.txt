@@ -1,0 +1,56 @@
+=== PROBE 1408a: 601 PRODUCER MAP ===
+[0] pid=371
+  in=0x310E20000 out=0x310E28000
+
+[A] canary pattern in arg1 (every field non-zero) and canary in arg2
+  0x00 pat=0x5A5A5A5A rv=0x0_00000000 errno=2 No such file or directory arg1_ch=2    arg2_ch=0     <-- wrote arg1
+  0x01 pat=0x5A5A5A5A rv=-1         errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x02 pat=0x5A5A5A5A rv=-1         errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x05 pat=0x5A5A5A5A rv=-1         errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x06 pat=0x5A5A5A5A rv=-1         errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x07 pat=0x5A5A5A5A rv=0x0_00000000 errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x09 pat=0x5A5A5A5A rv=0x0_00000000 errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x0A pat=0x5A5A5A5A rv=-1         errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x0B pat=0x5A5A5A5A rv=0x0_00000000 errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x0D pat=0x5A5A5A5A rv=0x0_00000000 errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x0E pat=0x5A5A5A5A rv=0x0_00000000 errno=1 Operation not permitted  arg1_ch=2    arg2_ch=0     <-- wrote arg1
+  0x0F pat=0x5A5A5A5A rv=-1         errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x10 pat=0x5A5A5A5A rv=-1         errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x12 pat=0x5A5A5A5A rv=-1         errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x13 pat=0x5A5A5A5A rv=0x0_00000000 errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x14 pat=0x5A5A5A5A rv=0x0_00000000 errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x15 pat=0x5A5A5A5A rv=-1         errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x16 pat=0x5A5A5A5A rv=-1         errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x17 pat=0x5A5A5A5A rv=-1         errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x18 pat=0x5A5A5A5A rv=-1         errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x19 pat=0x5A5A5A5A rv=0x0_00000000 errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x1A pat=0x5A5A5A5A rv=0x0_00000000 errno=1 Operation not permitted  arg1_ch=1    arg2_ch=0     <-- wrote arg1
+
+[B] zero pattern in arg1, canary arg2 (the shape 0x00 answered rv=0 to in 1403a)
+  0x00 pat=0x00000000 rv=0x0_00000000 errno=1 Operation not permitted  arg1_ch=1    arg2_ch=0     <-- wrote arg1
+  0x01 pat=0x00000000 rv=-1         errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x02 pat=0x00000000 rv=-1         errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x05 pat=0x00000000 rv=-1         errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x06 pat=0x00000000 rv=-1         errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x07 pat=0x00000000 rv=0x0_00000000 errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x09 pat=0x00000000 rv=0x0_00000000 errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x0A pat=0x00000000 rv=-1         errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x0B pat=0x00000000 rv=0x0_00000000 errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x0D pat=0x00000000 rv=0x0_00000000 errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x0E pat=0x00000000 rv=0x0_00000000 errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x0F pat=0x00000000 rv=-1         errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x10 pat=0x00000000 rv=-1         errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x12 pat=0x00000000 rv=-1         errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x13 pat=0x00000000 rv=0x0_00000000 errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x14 pat=0x00000000 rv=0x0_00000000 errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x15 pat=0x00000000 rv=-1         errno=22 Invalid argument        arg1_ch=0    arg2_ch=0   
+  0x16 pat=0x00000000 rv=-1         errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x17 pat=0x00000000 rv=-1         errno=78 Function not implemented arg1_ch=0    arg2_ch=0   
+  0x18 pat=0x00000000 rv=-1         errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x19 pat=0x00000000 rv=0x0_00000000 errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+  0x1A pat=0x00000000 rv=0x0_00000000 errno=1 Operation not permitted  arg1_ch=0    arg2_ch=0   
+
+[C] arg1 = 0, arg2 = canary page (shape A again, but watching 0x480 bytes)
+  (only commands that wrote are listed)
+
+=== 1408a DONE ===

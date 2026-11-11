@@ -1,0 +1,41 @@
+=== PROBE 1439a: V4 MSFILTER BAD-ENTRY STATE ===
+
+socket=44  
+join 224.0.0.1 -> 0
+
+[A] baseline: a good 2-source list, then what a rejected request does
+  set 2 good -> 0
+    after good set             get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+
+[B] set 1 bad entry: family 28 (v6)           -> -1    (47 Address family not supported by protocol family)
+    state after rejection      get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+[B] set 1 bad entry: family 0                 -> -1    (47 Address family not supported by protocol family)
+    state after rejection      get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+[B] set 1 bad entry: family 255               -> -1    (47 Address family not supported by protocol family)
+    state after rejection      get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+[B] set 1 bad entry: len 0                    -> -1    (22 Invalid argument)
+    state after rejection      get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+[B] set 1 bad entry: len 128                  -> -1    (22 Invalid argument)
+    state after rejection      get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+[B] set 1 bad entry: len 17                   -> -1    (22 Invalid argument)
+    state after rejection      get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+[B] set 1 bad entry: family 2 addr index 24   -> 0     (22 Invalid argument)
+    state after rejection      get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+
+[C] half-valid 128-entry list: does validation stop before the swap?
+  set 64 good + 64 bad -> -1 (47 Address family not supported by protocol family)
+    after half-valid set       get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+
+  set 64 bad + 64 good -> -1 (47 Address family not supported by protocol family)
+    after half-valid set 2     get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+
+[D] interleave: good set, failed set, then read the list contents
+  set 2 good -> 0
+    good                       get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+  set 1 bad  -> -1 (47 Address family not supported by protocol family)
+    after failed set           get1 rv=-1    numsrc=0   d0=----     | get128 rv=-1    numsrc=0 (22 Invalid argument)
+
+[E] survivor check
+  get 74 -> -1
+
+=== PROBE 1439a COMPLETE ===

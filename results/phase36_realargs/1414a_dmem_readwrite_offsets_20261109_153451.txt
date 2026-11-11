@@ -1,0 +1,33 @@
+=== PROBE 1414a: DMEM READ/WRITE OFFSETS ===
+[0] pid=378
+[0] open(/dev/dmem0, O_RDWR)=26
+
+[A] pread(fd, buf, 0x40, offset) - does d_read resolve the same offset space
+  off=0x0            rv=-1 errno=19 Operation not supported by device  DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+  off=0x1000         rv=-1 errno=19 Operation not supported by device  DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+  off=0xF000         rv=-1 errno=19 Operation not supported by device  DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+  off=0x110000000    rv=-1 errno=19 Operation not supported by device  DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+  off=0x120000000    rv=-1 errno=19 Operation not supported by device  DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+  off=0x1000000000   rv=-1 errno=19 Operation not supported by device  DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+  off=0x200000000    rv=-1 errno=19 Operation not supported by device  DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+
+[B] lseek + read, in case d_read uses the descriptor offset and d_pread is separate
+  lseek=0x0            -> 0  read rv=-1 errno=19 Operation not supported by device  DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+  lseek=0x1000         -> 4096  read rv=-1 errno=19 Operation not supported by device  DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+  lseek=0x120000000    -> 4831838208  read rv=-1 errno=19 Operation not supported by device  DEADBEEF DEADBEEF DEADBEEF DEADBEEF
+
+[C] pwrite of a marker at offset 0x1000 (in the allowed window), verified by mmap
+  pwrite rv=-1 errno=19 Operation not supported by device
+  mmap view [0]=00000000 (expected 52535455)
+
+[D] pwrite at offsets the mmap ACL refuses - the ACL-bypass test
+  pwrite off=0x120000000     rv=-1 errno=19 Operation not supported by device
+    mmap of the same offset refused: 13 Permission denied
+  pwrite off=0x200000000     rv=-1 errno=19 Operation not supported by device
+    mmap of the same offset refused: 13 Permission denied
+  pwrite off=0x1000000000    rv=-1 errno=19 Operation not supported by device
+    mmap view [0]=00000000
+  pwrite off=0x10000000000   rv=-1 errno=19 Operation not supported by device
+    mmap of the same offset refused: 13 Permission denied
+
+=== 1414a DONE ===

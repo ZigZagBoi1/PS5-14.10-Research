@@ -1,0 +1,8 @@
+=== PROBE 1489c: AO SHARED STATE PERSISTENCE ===
+[0] pid=111
+674 count=315
+  ./AOSharedState 0x310534000 len 0x8000 prot=1 flags=0xC
+    header: 00000000 C28C0000 0000003B 00000000
+    +0x100: 08000000 08000000 08000000 00000000
+    VERDICT: marker absent (+0x100 = 08000000), region is per-process
+=== PROBE 1489c COMPLETE ===

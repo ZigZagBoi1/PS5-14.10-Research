@@ -1,0 +1,38 @@
+=== PROBE 1440a: MADVISE ON A DEVICE MAPPING ===
+
+open(/dev/dmem0) -> 47
+mmap(off 0x10000000, len 0x40000, prot 3) -> 0x311d38000
+[A] wrote and verified 64 page markers, mismatches=0
+
+[B] one advice at a time on the first 4 pages
+  madvise NORMAL    (0) rv=0     (47 Address family not supported by protocol family) changed=0 zeroed=0  p0 CAFE0000 -> CAFE0000
+  madvise RANDOM    (1) rv=0     (47 Address family not supported by protocol family) changed=0 zeroed=0  p0 CAFE0000 -> CAFE0000
+  madvise SEQUENTIAL(2) rv=0     (47 Address family not supported by protocol family) changed=0 zeroed=0  p0 CAFE0000 -> CAFE0000
+  madvise WILLNEED  (3) rv=0     (47 Address family not supported by protocol family) changed=0 zeroed=0  p0 CAFE0000 -> CAFE0000
+  madvise DONTNEED  (4) rv=0     (47 Address family not supported by protocol family) changed=0 zeroed=0  p0 CAFE0000 -> CAFE0000
+  madvise FREE      (5) rv=0     (47 Address family not supported by protocol family) changed=0 zeroed=0  p0 CAFE0000 -> CAFE0000
+  madvise NOCORE    (6) rv=0     (47 Address family not supported by protocol family) changed=0 zeroed=0  p0 CAFE0000 -> CAFE0000
+  madvise AUTOSYNC  (7) rv=0     (47 Address family not supported by protocol family) changed=0 zeroed=0  p0 CAFE0000 -> CAFE0000
+  madvise NOSYNC    (8) rv=0     (47 Address family not supported by protocol family) changed=0 zeroed=0  p0 CAFE0000 -> CAFE0000
+
+[C] does the device content come back, or a fresh zero page?
+  wrote 5EED5EED, read 5EED5EED
+  madvise(DONTNEED) on that page -> 0 (47 Address family not supported by protocol family)
+  read back 5EED5EED
+  second mapping 0x311d78000 reads 5EED5EED
+
+[D] whole-mapping DONTNEED, then a full re-read
+  madvise(DONTNEED, whole 0x40000) -> 0 (47 Address family not supported by protocol family)
+  intact=64 zeroed=0 other=0
+
+[E] smaller-than-page advice, the shape that trips page-list code
+  len=0x0001 DONTNEED -> 0     (47 Address family not supported by protocol family) dword=1234ABCD
+  len=0x0010 DONTNEED -> 0     (47 Address family not supported by protocol family) dword=1234ABCD
+  len=0x0fff DONTNEED -> 0     (47 Address family not supported by protocol family) dword=1234ABCD
+  len=0x1001 DONTNEED -> 0     (47 Address family not supported by protocol family) dword=1234ABCD
+  len=0x2000 DONTNEED -> 0     (47 Address family not supported by protocol family) dword=1234ABCD
+
+[F] survivor check
+  read page 0 marker 1234ABCD
+
+=== PROBE 1440a COMPLETE ===

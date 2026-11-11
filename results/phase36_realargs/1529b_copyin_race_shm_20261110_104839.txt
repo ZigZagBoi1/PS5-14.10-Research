@@ -1,0 +1,11 @@
+=== PROBE 1529b: copyin race vs 548 op 3 (shm destination) ===
+
+fn_addr=0x00000008203C8B57 pid=129
+
+[A] gadget verification
+eboot=0x00000000733D8000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] shm destination + victim
+  shm_open(SHM_ANON) rv=-1
+ABORT: no shm fd

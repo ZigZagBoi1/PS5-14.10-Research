@@ -1,0 +1,208 @@
+=== PROBE 1434a: IPV4 MCAST SOURCE-FILTER SURFACE ===
+
+socket(AF_INET,DGRAM,UDP)=38
+
+[A] join 224.0.0.1 (struct ip_mreq: multiaddr, then an interface ADDRESS)
+  join if_addr=0x00000000 -> rv=0    errno=49 Can't assign requested address
+  join if_addr=0x00000001 -> rv=-1   errno=49 Can't assign requested address
+  join if_addr=0x0100007F -> rv=0    errno=49 Can't assign requested address
+  join if_addr=0x0000000A -> rv=-1   errno=49 Can't assign requested address
+  join (default iface) -> rv=-1   errno=48 Address already in use
+
+[B] discovery sweep, optname 0..90, zeroed 264-byte buffer
+  opt  0  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt  1  set=-1     (40 Message too long   )  get=0      (40 Message too long)
+  opt  2  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt  3  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt  4  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt  5  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt  6  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt  7  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt  8  set=-1     (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt  9  set=-1     (49 Can't assign requested address)  get=0      (49 Can't assign requested address)
+  opt 10  set=0      (49 Can't assign requested address)  get=0      (49 Can't assign requested address)
+  opt 11  set=0      (49 Can't assign requested address)  get=0      (49 Can't assign requested address)
+  opt 12  set=-1     (22 Invalid argument   )  get=-1     (42 Protocol not available)
+  opt 13  set=-1     (22 Invalid argument   )  get=-1     (42 Protocol not available)
+  opt 14  set=-1     (45 Operation not supported)  get=0      (45 Operation not supported)
+  opt 15  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 16  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 17  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 18  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 19  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt 20  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt 21  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 22  set=0      (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 23  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt 24  set=-1     (1 Operation not permitted)  get=0      (1 Operation not permitted)
+  opt 25  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 26  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 27  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 28  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 29  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 30  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt 31  set=-1     (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt 32  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 33  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 34  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 35  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 36  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 37  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 38  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 39  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 40  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 41  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 42  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 43  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 44  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 45  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 46  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 47  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 48  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 49  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 50  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 51  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 52  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 53  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 54  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 55  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 56  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 57  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 58  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 59  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 60  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 61  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 62  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 63  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 64  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 65  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt 66  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt 67  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt 68  set=0      (42 Protocol not available)  get=0      (42 Protocol not available)
+  opt 69  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 70  set=-1     (22 Invalid argument   )  get=-1     (42 Protocol not available)
+  opt 71  set=-1     (22 Invalid argument   )  get=-1     (42 Protocol not available)
+  opt 72  set=-1     (22 Invalid argument   )  get=-1     (42 Protocol not available)
+  opt 73  set=-1     (22 Invalid argument   )  get=-1     (42 Protocol not available)
+  opt 74  set=-1     (55 No buffer space available)  get=-1     (49 Can't assign requested address)
+  opt 75  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 76  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 77  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 78  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 79  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 80  set=0      (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 81  set=0      (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 82  set=-1     (22 Invalid argument   )  get=-1     (42 Protocol not available)
+  opt 83  set=-1     (22 Invalid argument   )  get=-1     (42 Protocol not available)
+  opt 84  set=-1     (22 Invalid argument   )  get=-1     (42 Protocol not available)
+  opt 85  set=-1     (22 Invalid argument   )  get=-1     (42 Protocol not available)
+  opt 86  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 87  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 88  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 89  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  opt 90  set=-1     (42 Protocol not available)  get=-1     (42 Protocol not available)
+  -> 91 option(s) dispatched beyond ENOPROTOOPT
+
+[C] refine every live option with the struct its contract names
+  opt  0 -> no shape table entry, skipped
+  opt  1 -> no shape table entry, skipped
+  opt  2 -> no shape table entry, skipped
+  opt  3 -> no shape table entry, skipped
+  opt  4 -> no shape table entry, skipped
+  opt  5 -> no shape table entry, skipped
+  opt  6 -> no shape table entry, skipped
+  opt  7 -> no shape table entry, skipped
+  opt  8 len=8    set=-1     (42 Protocol not available) get=0      (42 Protocol not available)
+  opt  9 len=8    set=-1     (49 Can't assign requested address) get=0      (49 Can't assign requested address)
+  opt 10 len=8    set=-1     (22 Invalid argument     ) get=0      (22 Invalid argument)
+  opt 11 len=8    set=0      (22 Invalid argument     ) get=0      (22 Invalid argument)
+  opt 12 len=8    set=-1     (49 Can't assign requested address) get=-1     (42 Protocol not available)
+  opt 13 len=8    set=0      (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 14 -> no shape table entry, skipped
+  opt 15 -> no shape table entry, skipped
+  opt 16 -> no shape table entry, skipped
+  opt 17 -> no shape table entry, skipped
+  opt 18 -> no shape table entry, skipped
+  opt 19 -> no shape table entry, skipped
+  opt 20 -> no shape table entry, skipped
+  opt 21 -> no shape table entry, skipped
+  opt 22 -> no shape table entry, skipped
+  opt 23 -> no shape table entry, skipped
+  opt 24 -> no shape table entry, skipped
+  opt 25 -> no shape table entry, skipped
+  opt 26 -> no shape table entry, skipped
+  opt 27 -> no shape table entry, skipped
+  opt 28 -> no shape table entry, skipped
+  opt 29 -> no shape table entry, skipped
+  opt 30 -> no shape table entry, skipped
+  opt 31 -> no shape table entry, skipped
+  opt 32 -> no shape table entry, skipped
+  opt 33 -> no shape table entry, skipped
+  opt 34 -> no shape table entry, skipped
+  opt 35 -> no shape table entry, skipped
+  opt 36 -> no shape table entry, skipped
+  opt 37 -> no shape table entry, skipped
+  opt 38 -> no shape table entry, skipped
+  opt 39 len=12   set=-1     (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 40 len=12   set=-1     (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 41 len=12   set=-1     (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 42 len=136  set=-1     (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 43 len=264  set=-1     (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 44 len=264  set=-1     (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 45 len=136  set=-1     (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 46 len=264  set=-1     (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 47 len=264  set=-1     (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 48 len=152  set=-1     (42 Protocol not available) get=-1     (42 Protocol not available)
+       msfr_ifindex=1 fmode=1 nsrc=1
+  opt 49 -> no shape table entry, skipped
+  opt 50 -> no shape table entry, skipped
+  opt 51 -> no shape table entry, skipped
+  opt 52 -> no shape table entry, skipped
+  opt 53 -> no shape table entry, skipped
+  opt 54 -> no shape table entry, skipped
+  opt 55 -> no shape table entry, skipped
+  opt 56 -> no shape table entry, skipped
+  opt 57 -> no shape table entry, skipped
+  opt 58 -> no shape table entry, skipped
+  opt 59 -> no shape table entry, skipped
+  opt 60 -> no shape table entry, skipped
+  opt 61 -> no shape table entry, skipped
+  opt 62 -> no shape table entry, skipped
+  opt 63 -> no shape table entry, skipped
+  opt 64 -> no shape table entry, skipped
+  opt 65 -> no shape table entry, skipped
+  opt 66 -> no shape table entry, skipped
+  opt 67 -> no shape table entry, skipped
+  opt 68 -> no shape table entry, skipped
+  opt 69 -> no shape table entry, skipped
+  opt 70 -> no shape table entry, skipped
+  opt 71 -> no shape table entry, skipped
+  opt 72 len=12   set=0      (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 73 len=12   set=0      (42 Protocol not available) get=-1     (42 Protocol not available)
+  opt 74 len=152  set=-1     (49 Can't assign requested address) get=-1     (49 Can't assign requested address)
+       msfr_ifindex=1 fmode=1 nsrc=1
+  opt 75 -> no shape table entry, skipped
+  opt 76 -> no shape table entry, skipped
+  opt 77 -> no shape table entry, skipped
+  opt 78 -> no shape table entry, skipped
+  opt 79 -> no shape table entry, skipped
+  opt 80 -> no shape table entry, skipped
+  opt 81 -> no shape table entry, skipped
+  opt 82 -> no shape table entry, skipped
+  opt 83 -> no shape table entry, skipped
+  opt 84 -> no shape table entry, skipped
+  opt 85 -> no shape table entry, skipped
+  opt 86 -> no shape table entry, skipped
+  opt 87 -> no shape table entry, skipped
+  opt 88 -> no shape table entry, skipped
+  opt 89 -> no shape table entry, skipped
+  opt 90 -> no shape table entry, skipped
+
+[D] v4 filter readback with a 128-source claim (the detector)
+  get(IP_MSFILTER, claim=128) -> rv=-1 errno=49 Can't assign requested address
+  changed=0 dwords  (of which non-zero=0)
+
+[E] survivor check
+  drop 224.0.0.1 -> rv=0 errno=49 Can't assign requested address
+
+=== PROBE 1434a COMPLETE ===

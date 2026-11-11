@@ -1,0 +1,40 @@
+=== PROBE 1435a: IP_MSFILTER IFINDEX DISCOVERY ===
+
+socket=39  
+join 224.0.0.1 (iface=ANY) -> rv=0 errno=49 Can't assign requested address
+
+[A] IP_MSFILTER (74) index sweep, 1 source, 152 bytes
+  ix=0 set=-1     (49 Can't assign requested address) get=-1     (22 Invalid argument         ) nsrc=1
+  ix=1 set=-1     (49 Can't assign requested address) get=-1     (49 Can't assign requested address) nsrc=1
+  ix=2 set=-1     (49 Can't assign requested address) get=-1     (49 Can't assign requested address) nsrc=1
+  ix=3 set=0      (49 Can't assign requested address) get=0      (49 Can't assign requested address) nsrc=1
+  ix=4 set=-1     (49 Can't assign requested address) get=-1     (49 Can't assign requested address) nsrc=1
+  ix=5 set=-1     (49 Can't assign requested address) get=-1     (22 Invalid argument         ) nsrc=1
+  ix=6 set=-1     (49 Can't assign requested address) get=-1     (22 Invalid argument         ) nsrc=1
+  ix=7 set=-1     (49 Can't assign requested address) get=-1     (22 Invalid argument         ) nsrc=1
+  ix=8 set=-1     (49 Can't assign requested address) get=-1     (22 Invalid argument         ) nsrc=1
+  -> working index: 3
+
+[B] source-filter round trip on ix=3
+  set   0 -> 0      (22 Invalid argument     )  get-> 0      (22 Invalid argument     ) numsrc=1    changed=0 d0=A5A5A5A5
+  set   1 -> 0      (22 Invalid argument     )  get-> 0      (22 Invalid argument     ) numsrc=1    changed=32 d0=00000210
+  set   2 -> 0      (22 Invalid argument     )  get-> 0      (22 Invalid argument     ) numsrc=2    changed=64 d0=00000210
+  set   8 -> 0      (22 Invalid argument     )  get-> 0      (22 Invalid argument     ) numsrc=8    changed=256 d0=00000210
+  set 128 -> 0      (22 Invalid argument     )  get-> 0      (22 Invalid argument     ) numsrc=128  changed=4096 d0=00000210
+
+[C] claim 128 on a 1-source filter (the length-trust test)
+  arm 1 source -> 0
+  get claim=128 -> rv=0 errno=22 Invalid argument numsrc=1
+  changed=4096 dwords (non-zero past pattern = 2)
+
+[D] the per-source options, 12-byte ip_mreq_source
+  opt 39 set=-1     errno=42 Protocol not available
+  opt 40 set=-1     errno=42 Protocol not available
+  opt 41 set=-1     errno=42 Protocol not available
+  opt 72 set=-1     errno=22 Invalid argument
+  opt 73 set=-1     errno=22 Invalid argument
+
+[E] survivor check
+  get 74 ix=3 -> rv=0
+
+=== PROBE 1435a COMPLETE ===

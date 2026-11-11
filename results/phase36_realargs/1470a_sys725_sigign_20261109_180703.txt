@@ -1,0 +1,15 @@
+=== PROBE 1470a: mmap2(725) WITH SIGSYS IGNORED ===
+
+[0] pid=509
+[A] sigaction(12, SIG_IGN)
+[A] -> 0 readback handler=1 (expect 0 and 1)
+
+[B] 477 mmap(0, 0x4000, 3, 0x1002, -1, 0)
+[B] -> 13167902720
+
+[C] 725 with the same shape
+[C] -> -1 errno=78 Function not implemented (a nosys slot, or a refused call)
+
+[Z] alive pid=509 (was 509)
+
+=== PROBE 1470a COMPLETE ===

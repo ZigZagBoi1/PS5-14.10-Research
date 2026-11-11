@@ -1,0 +1,39 @@
+=== PROBE 1396b: DEVICE MAPPING WRITABILITY ===
+[0] pid=350
+
+[A] map the candidate pages
+   /dev/dmem0 fd=22 off=0x0 -> va=0x11314000 : C0012800 80000000 80000000 C0001200
+   /dev/dmem0 fd=23 off=0x1000 -> va=0x11319000 : 00000000 00000000 00000000 00000000
+   /dev/dmem1 fd=25 off=0x0 -> va=0x113CC000 : C0012800 80000000 80000000 C0001200
+   /dev/dmem1 fd=26 off=0x1000 -> va=0x113D1000 : 00000000 00000000 00000000 00000000
+   /dev/gc fd=27 off=0x0 -> va=0x113D4000 : FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+   /dev/gc fd=28 off=0x1000 -> va=0x113D9000 : FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+
+[B] store, then read back.  Only 0x1000-offset pages are written.
+   /dev/dmem0 off=0x0 NOT written (registers), reads C0012800 80000000
+   /dev/dmem0 off=0x1000 before=00000000 after=DEADBEEF/CAFEBABE rewrote->12345678 (wr_ok=true)
+      second map va=0x1171D000 reads 12345678 CAFEBABE
+   /dev/dmem1 off=0x0 NOT written (registers), reads C0012800 80000000
+   /dev/dmem1 off=0x1000 before=12345678 after=DEADBEEF/CAFEBABE rewrote->12345678 (wr_ok=true)
+      second map va=0x11721000 reads 12345678 CAFEBABE
+   /dev/gc off=0x0 NOT written (registers), reads FFFFFFFF FFFFFFFF
+   /dev/gc off=0x1000 before=FFFFFFFF after=FFFFFFFF/FFFFFFFF rewrote->FFFFFFFF (wr_ok=true)
+      second map va=0x11725000 reads FFFFFFFF FFFFFFFF
+
+[C] protection as the VM system sees it (547)
+   /dev/dmem0 off=0x0 547 -> 0 25 Inappropriate ioctl for device : 11314000 00000003 11318000 00000003
+   /dev/dmem0 off=0x1000 547 -> 0 25 Inappropriate ioctl for device : 11318000 00000003 1131C000 00000003
+   /dev/dmem1 off=0x0 547 -> 0 25 Inappropriate ioctl for device : 113CC000 00000003 113D0000 00000003
+   /dev/dmem1 off=0x1000 547 -> 0 25 Inappropriate ioctl for device : 113D0000 00000003 113D4000 00000003
+   /dev/gc off=0x0 547 -> 0 25 Inappropriate ioctl for device : 113D4000 00000003 113D8000 00000003
+   /dev/gc off=0x1000 547 -> 0 25 Inappropriate ioctl for device : 113D8000 00000003 113DC000 00000003
+
+[D] close
+   close(22) -> 0
+   close(23) -> 0
+   close(25) -> 0
+   close(26) -> 0
+   close(27) -> 0
+   close(28) -> 0
+
+=== PROBE 1396b COMPLETE ===

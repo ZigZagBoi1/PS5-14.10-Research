@@ -1,0 +1,47 @@
+=== PROBE 1482a: JITSHM CONTRACT ===
+[0] pid=92
+
+--- [A] control: 548 op 2 on the device window ---
+[A] 548 op2 prot 3 -> 0 2 No such file or directory (expect 0)
+
+--- [B] 533(arg1=0, size 0x4000, flags) ---
+  533(0, 0x4000, 0x0) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x1) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x2) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x3) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x4) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x5) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x6) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x7) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x10) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x20) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x11) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x14) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x24) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x34) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x37) -> -1 1 Operation not permitted
+
+--- [C] the other argument placement, and other sizes ---
+  533(0x4000, 0x0, 0) -> -1 1 Operation not permitted
+  533(0x4000, 0x4, 0) -> -1 1 Operation not permitted
+  533(0x4000, 0x24, 0) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x4) -> -1 1 Operation not permitted
+  533(0, 0x4000, 0x0) -> -1 1 Operation not permitted
+  533(0, 0x10000, 0x4) -> -1 1 Operation not permitted
+  533(0, 0x10000, 0x0) -> -1 1 Operation not permitted
+  533(0, 0x40000, 0x4) -> -1 1 Operation not permitted
+  533(0, 0x40000, 0x0) -> -1 1 Operation not permitted
+  533(0, 0x400000, 0x4) -> -1 1 Operation not permitted
+  533(0, 0x400000, 0x0) -> -1 1 Operation not permitted
+
+--- [D] 534 on whatever 533 returned ---
+  no handle was produced by any legal flag value
+
+--- [E] 534 on a live socket and on 0/1/2 ---
+  534(0, 0) -> -1 1 Operation not permitted
+  534(1, 0) -> -1 1 Operation not permitted
+  534(2, 0) -> -1 1 Operation not permitted
+  534(socket 22, 0) -> -1 1 Operation not permitted
+
+final canary: pid=92 (started 92)
+=== PROBE 1482a COMPLETE ===

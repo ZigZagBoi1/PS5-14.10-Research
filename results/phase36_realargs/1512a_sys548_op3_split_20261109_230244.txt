@@ -1,0 +1,34 @@
+=== PROBE 1512a: 548 op 3 SPLIT OR WHOLESALE ===
+[0] pid=92
+
+[A] map 16 MiB anon prot 3, place markers
+   base = 0x3110AC000
+   markers placed: 7 of 7
+   below 547(0x3110AC000): start=0x3110AC000 end=0x3120AC000 len=0x1000000 prot=0x3 flags=0x610020
+   at    547(0x3110B0000): start=0x3110AC000 end=0x3120AC000 len=0x1000000 prot=0x3 flags=0x610020
+   above 547(0x3111AC000): start=0x3110AC000 end=0x3120AC000 len=0x1000000 prot=0x3 flags=0x610020
+
+[B] 548 op3 MAP_FIXED carve of page 1
+   rv=13170835456 processed=1 
+
+[C] entry structure and marker survival after the carve
+   below 547(0x3110AC000): start=0x3110AC000 end=0x3110B0000 len=0x4000 prot=0x3 flags=0x610020
+   at    547(0x3110B0000): start=0x3110B0000 end=0x3110B4000 len=0x4000 prot=0x3 flags=0x610020
+   above 547(0x3111AC000): start=0x3110B4000 end=0x3120AC000 len=0xFF8000 prot=0x3 flags=0x610020
+   survivors: +0x0 +0x3FFC +0x8000 +0x40000 +0x800000 +0xFFFFFC
+   changed  : +0x4000 ZERO
+   shape: SPLIT
+
+[D] second carve at +0x800000
+   rv=13179207680 processed=1 
+   below2 547(0x3114AC000): start=0x3110B4000 end=0x3118AC000 len=0x7F8000 prot=0x3 flags=0x610020
+   above2 547(0x311CAC000): start=0x3118B0000 end=0x3120AC000 len=0x7FC000 prot=0x3 flags=0x610020
+
+[E] munmap the whole 16 MiB and confirm the tail is gone
+   munmap rv=0
+   after munmap 547(0x3110AC000): no entry
+   after munmap 547(0x3111AC000): no entry
+
+[Z] alive pid=92 (was 92)
+[Z] VERDICT: SPLIT -- one carve split the containing entry
+=== PROBE 1512a COMPLETE ===

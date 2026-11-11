@@ -1,0 +1,87 @@
+=== PROBE 1490a: RX -> RW VIA 548 ===
+[0] pid=111
+
+--- [A] 674: entries whose protection has bit 2 (execute) ---
+  674 count=313
+    0x42A84000 len 0x494000 prot=5 .executable
+    0xBA3C4000 len 0x60000 prot=5 .libSceFios2.prx
+    0x18B760000 len 0x114000 prot=5 .libc.prx
+    0x7EF90C000 len 0x4000 prot=5 
+    0x800000000 len 0x4000 prot=4 
+    0x804B78000 len 0x14000 prot=4 .libSceAvSetting.sprx
+    0x806D08000 len 0x8000 prot=4 .libSceNetCtl.sprx
+    0x80C8E4000 len 0x4000 prot=4 .libSceSysUtil.sprx
+    0x8102F0000 len 0x1C000 prot=4 .libScePad.sprx
+    0x8115FC000 len 0xF4000 prot=4 .libSceSsl.sprx
+    0x812ABC000 len 0x8000 prot=4 .libSceIpmi.sprx
+    0x812F7C000 len 0x34000 prot=4 .libSceNet.sprx
+    0x813714000 len 0x10000 prot=4 .libSceUserService.sprx
+    0x815328000 len 0x24000 prot=4 .libSceCamera.sprx
+    0x817F88000 len 0x40000 prot=4 .libSceAvPlayer.sprx
+    0x81A360000 len 0x34000 prot=4 .libSceNpCommon.sprx
+    0x81A890000 len 0xC000 prot=4 .libSceGnmDriverForNeoMode.sprx
+    0x81B8A4000 len 0xC000 prot=4 .libSceRazorCpu.sprx
+    0x81BD94000 len 0x18000 prot=4 .libSceSaveDataDialog.sprx
+    0x8223C0000 len 0x4000 prot=4 .libSceCommonDialog.sprx
+    0x82290C000 len 0x4000 prot=4 .libSceAjm.sprx
+    0x82327C000 len 0x20000 prot=4 .libSceVideoOut.sprx
+    0x823F9C000 len 0x3C000 prot=4 .libSceAudioOut.sprx
+    0x827E54000 len 0x4000 prot=4 .libSceRtc.sprx
+    0x82895C000 len 0x44000 prot=4 .libSceNpManager.sprx
+    0x8291C4000 len 0x20000 prot=4 .libSceNpWebApi2.sprx
+    0x82CD18000 len 0x14000 prot=4 .libSceNpWebApi.sprx
+    0x82E044000 len 0x8000 prot=4 .libSceAudioIn.sprx
+    0x82E614000 len 0x4000 prot=4 .libSceMsgDialog.sprx
+    0x82E99C000 len 0xC000 prot=4 .libSceSysmodule.sprx
+  executable entries: 41
+
+--- [D] 548 control on an anon page ---
+  ctl 0x3106D8000 prot 3 -> op2(1) rv=0 processed=1 -> 1
+[D] control usable: true
+
+--- [B] 548 op 2: each executable entry -> prot 3, then restore ---
+  .executable                        prot 5   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 5   
+  .libSceFios2.prx                   prot 5   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 5   
+  .libc.prx                          prot 5   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 5   
+                                     prot 5   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 5   
+                                     prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceAvSetting.sprx              prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceNetCtl.sprx                 prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceSysUtil.sprx                prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libScePad.sprx                    prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceSsl.sprx                    prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceIpmi.sprx                   prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceNet.sprx                    prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceUserService.sprx            prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceCamera.sprx                 prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceAvPlayer.sprx               prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceNpCommon.sprx               prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceGnmDriverForNeoMode.sprx    prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceRazorCpu.sprx               prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceSaveDataDialog.sprx         prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceCommonDialog.sprx           prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceAjm.sprx                    prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceVideoOut.sprx               prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceAudioOut.sprx               prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceRtc.sprx                    prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceNpManager.sprx              prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceNpWebApi2.sprx              prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceNpWebApi.sprx               prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceAudioIn.sprx                prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceMsgDialog.sprx              prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceSysmodule.sprx              prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceHttp2.sprx                  prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceNpGameIntent.sprx           prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceMbus.sprx                   prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceSaveData.sprx               prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libkernel.sprx                    prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceImeDialog.sprx              prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceIme.sprx                    prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceLibcInternal.sprx           prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceHttp.sprx                   prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceRegMgr.sprx                 prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+  .libSceSystemService.sprx          prot 4   -> op2(3) rv=-1  processed=0  13 Permission denied     -> 4   
+[B] entries whose protection could be lowered to RW: 0 of 41
+
+final canary live: true (pid 111)
+=== PROBE 1490a COMPLETE ===

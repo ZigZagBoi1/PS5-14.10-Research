@@ -1,0 +1,33 @@
+=== PROBE 1525a: MAPDM -- LENGTH OR MAP? ===
+
+pid=-1
+
+[A] resolve libkernel via 593
+  KTEXT=0x81E71C000
+  alloc_fn=0x81E733EF0  map_fn=0x81E731020
+  [A1] AllocateDirectMemory(0, 0x150000000, 0x4000, 0x4000, 0, &phys)
+       rv=0
+       phys=0x110010000
+  [A2] identity: map_fn(out, 0, 3, 0, 0, 0) must return 0x80020016 if the chain is healthy
+       rv=0x80020016
+
+[B] len = 0, everything else real (prot 0x33, flags 0x400000, own phys, align 0x4000)
+    calling
+    rv=0x80020016  out=0x0
+
+[C] len = 0xFFFFFFFFFFFFF000 (must be refused), prot 0, flags 0, phys 0, align 0
+    calling
+    rv=0x0
+
+pid_after_C=-1
+VERDICT: if [B] and [C] both survive, the chain carries a nonzero length and only a real
+         mapping kills -- the map itself damages the process. If [C] dies, every nonzero
+         length breaks the chain before the handler ever runs.
+
+[D] len = 0x4000, prot 0, flags 0, phys 0, align 0x4000  (known to kill)
+    calling
+    rv=0x0
+
+pid_final=-1
+
+=== PROBE 1525a COMPLETE ===

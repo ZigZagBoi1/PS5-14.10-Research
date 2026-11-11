@@ -1,0 +1,71 @@
+=== PROBE 1397a: BLOCKPOOL DESCRIPTOR AND THE TYPE 0xB GATE ===
+[0] pid=350
+[0] SIG_IGN installed
+
+[A] fstat on the descriptors 653 minted
+   653(0x0) -> 22
+   653(0x100000) -> 23
+   653(0x400000) -> 902
+   fd=22 fstat -> 0  mode=00000000 dev=00000000 rdev=0000B000 size=00000000/00000000
+   fd=23 fstat -> 0  mode=00000000 dev=00000000 rdev=0000B000 size=00000000/00000000
+   fd=902 fstat -> 0  mode=00000000 dev=00000000 rdev=0000B000 size=00000000/00000000
+
+[B] mmap shapes on the first descriptor
+   mmap(len=0x10000, prot=0x3, fl=0x1, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x3, fl=0x1, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x3, fl=0x1, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x3, fl=0x1, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x3, fl=0x2, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x3, fl=0x2, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x3, fl=0x2, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x3, fl=0x2, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x1, fl=0x1, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x1, fl=0x1, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x1, fl=0x1, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x1, fl=0x1, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x1, fl=0x2, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x1, fl=0x2, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x1, fl=0x2, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x1, fl=0x2, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x2, fl=0x1, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x2, fl=0x1, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x2, fl=0x1, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x2, fl=0x1, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x2, fl=0x2, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x2, fl=0x2, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x2, fl=0x2, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x2, fl=0x2, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x33, fl=0x1, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x33, fl=0x1, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x33, fl=0x1, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x33, fl=0x1, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x33, fl=0x2, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x10000, prot=0x33, fl=0x2, off=0x10000) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x33, fl=0x2, off=0x0) -> -1 22 Invalid argument
+   mmap(len=0x40000, prot=0x33, fl=0x2, off=0x10000) -> -1 22 Invalid argument
+   [B] mapped shapes: 0
+[B] read/timeout probes on the descriptor
+   read(fd=22, 0x40) -> -1 9 Bad file descriptor  buf+0=45464800
+   ioctl(fd=22, 0x4004667F) -> -1 25 Inappropriate ioctl for device buf+0=45464800
+   ioctl(fd=22, 0x8004667E) -> -1 25 Inappropriate ioctl for device buf+0=45464800
+   ioctl(fd=22, 0x4004667A) -> -1 25 Inappropriate ioctl for device buf+0=45464800
+
+[C] type-0xb survey: blockpool_move(addr, 0, 0x10000, 0) on every mapping that has an object
+   482 shm_open -> 24 26 Text file busy
+   candidates: 5
+   -- anon gpu heap base=0x31145C000 aligned=0x311460000
+      673(0x311460000,0,0x10000,0) -> -1 22 Invalid argument
+   -- /dev/dmem0 base=0x31165C000 aligned=0x311660000
+      673(0x311660000,0,0x10000,0) -> -1 22 Invalid argument
+   -- /dev/zero base=0x31169C000 aligned=0x3116A0000
+      673(0x3116A0000,0,0x10000,0) -> -1 22 Invalid argument
+   -- posix shm base=0x3116DC000 aligned=0x3116E0000
+      673(0x3116E0000,0,0x10000,0) -> -1 22 Invalid argument
+   -- heap alloc base=0x31118C020 aligned=0x311190000
+      673(0x311190000,0,0x10000,0) -> -1 22 Invalid argument
+
+[D] 657 blockpool_batch on a record array aimed at the anonymous heap
+   657(rec, count=1, 0, 0) -> -1 22 Invalid argument
+   657(rec, count=0, 0, 0) -> 0 22 Invalid argument
+
+=== PROBE 1397a COMPLETE ===

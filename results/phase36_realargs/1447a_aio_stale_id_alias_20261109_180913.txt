@@ -1,0 +1,45 @@
+=== PROBE 1447a: AIO STALE-ID ALIAS ===
+
+canary getpid=509
+
+[0] socketpair rv=0 read=22 write=23
+
+[A] class sweep: submit, poll, delete for classes 1, 2 and 3
+  class 1: 669 rv=0     id=0x00004205 result=0x00000010
+           664 rv=0     state=0x00000003
+           662 rv=0     state=0x00000000
+           662 again rv=0     state=0x80020003   <- control
+  class 2: 669 rv=0     id=0x00006205 result=0x00000010
+           664 rv=0     state=0x00000003
+           662 rv=0     state=0x00000000
+           662 again rv=0     state=0x80020003   <- control
+  class 3: 669 rv=0     id=0x00008205 result=0x00000010
+           664 rv=0     state=0x00000003
+           662 rv=0     state=0x00000000
+           662 again rv=0     state=0x80020003   <- control
+
+[B] stale-id alias, four rounds (old id reused against a live slot)
+  round 1: old=0x0000A205(slot 517 gen 5) del=0 poll=0x00000000 | new=0x0000C205(slot 517 gen 6) | stale-662 rv=0 state=0x80020003  unknown id (correct)
+           cleanup 662 rv=0     state=0x80020003
+  round 2: old=0x00000206(slot 518 gen 0) del=0 poll=0x00000000 | new=0x00002206(slot 518 gen 1) | stale-662 rv=0 state=0x80020003  unknown id (correct)
+           cleanup 662 rv=0     state=0x80020003
+  round 3: old=0x00000207(slot 519 gen 0) del=0 poll=0x00000000 | new=0x00002207(slot 519 gen 1) | stale-662 rv=0 state=0x80020003  unknown id (correct)
+           cleanup 662 rv=0     state=0x80020003
+  round 4: old=0x00000208(slot 520 gen 0) del=0 poll=0x00000000 | new=0x00002208(slot 520 gen 1) | stale-662 rv=0 state=0x80020003  unknown id (correct)
+           cleanup 662 rv=0     state=0x80020003
+
+[C] generation wrap on one slot
+  reuse 1: id=0x00000209 slot=521 gen=0 del state=0x80020010
+  reuse 2: id=0x0000020A slot=522 gen=0 del state=0x80020010
+  reuse 3: id=0x0000020B slot=523 gen=0 del state=0x80020010
+  reuse 4: id=0x0000020C slot=524 gen=0 del state=0x80020010
+  reuse 5: id=0x0000020D slot=525 gen=0 del state=0x80020010
+  reuse 6: id=0x0000020E slot=526 gen=0 del state=0x80020010
+  reuse 7: id=0x0000020F slot=527 gen=0 del state=0x80020010
+  reuse 8: id=0x00000210 slot=528 gen=0 del state=0x80020010
+  reuse 9: id=0x00000211 slot=529 gen=0 del state=0x80020010
+  first id 0x00000209 vs ninth id 0x00000211 -- same 3-bit generation: true
+
+[D] survivor pid=509 (was 509)
+
+=== PROBE 1447a COMPLETE ===

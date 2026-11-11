@@ -1,0 +1,72 @@
+=== PROBE 1534b: SYS 548 OP 0, DESCRIPTOR-BACKED MMAP ===
+
+[0] pid=207
+
+[A] enumerate the VM map
+    674 rv=0 records=316
+    TARGET=0x500000000
+    TARGET before                    547 rv=-1  prot=nil  range=0..0
+
+[B] /dev/zero - the descriptor that cannot fault
+    open(/dev/zero) = 22
+  -> zero pos=0 (fd=22 pos=0x0 prot=3 len=0x4000 arg2=0x0)
+     rv=-1    16 Device busy     processed=0
+    after op 0 (zero pos 0)          547 rv=-1  prot=nil  range=0..0
+    TARGET after zero pos 0          547 rv=-1  prot=nil  range=0..0
+
+  -> bogus fd 0xFFFFFFFF (fd=4294967295 pos=0x0 prot=3 len=0x4000 arg2=0x0)
+     rv=-1    16 Device busy     processed=0
+    TARGET after bogus fd            547 rv=-1  prot=nil  range=0..0
+
+  -> zero pos=0x1000 (misaligned position) (fd=22 pos=0x1000 prot=3 len=0x4000 arg2=0x0)
+     rv=-1    22 Invalid argument processed=0
+    TARGET after zero pos 0x1000     547 rv=-1  prot=nil  range=0..0
+
+  -> zero arg2=0x400 (fd=22 pos=0x0 prot=3 len=0x4000 arg2=0x400)
+     rv=-1    22 Invalid argument processed=0
+    TARGET after zero arg2 0x400     547 rv=-1  prot=nil  range=0..0
+
+
+[C] /app0/eboot.bin - the position must select different file content
+    open(/app0/eboot.bin, O_RDONLY) = 22
+  -> eboot pos=0 prot=R (fd=22 pos=0x0 prot=1 len=0x4000 arg2=0x0)
+     rv=-1    16 Device busy     processed=0
+    after op 0 (eboot pos 0)         547 rv=-1  prot=nil  range=0..0
+    TARGET after eboot pos 0         547 rv=-1  prot=nil  range=0..0
+
+  -> eboot pos=0x4000 prot=R (fd=22 pos=0x4000 prot=1 len=0x4000 arg2=0x0)
+     rv=-1    16 Device busy     processed=0
+    after op 0 (eboot pos 0x4000)    547 rv=-1  prot=nil  range=0..0
+    TARGET after eboot pos 0x4000    547 rv=-1  prot=nil  range=0..0
+
+
+[D] /dev/dmem0 through op 0 (547 only, never dereferenced)
+    open(/dev/dmem0) = 22
+  -> dmem0 pos=0 (fd=22 pos=0x0 prot=3 len=0x4000 arg2=0x0)
+     rv=-1    16 Device busy     processed=0
+    TARGET after dmem0 pos 0         547 rv=-1  prot=nil  range=0..0
+
+  -> dmem0 pos=0x120000000 (477 refuses) (fd=22 pos=0x120000000 prot=3 len=0x4000 arg2=0x0)
+     rv=-1    13 Permission denied processed=0
+    TARGET after dmem0 high pos      547 rv=-1  prot=nil  range=0..0
+
+
+[E] /dev/gc through op 0
+    open(/dev/gc) = 22
+  -> gc pos=0 (fd=22 pos=0x0 prot=3 len=0x4000 arg2=0x0)
+     rv=-1    16 Device busy     processed=0
+    TARGET after gc pos 0            547 rv=-1  prot=nil  range=0..0
+
+
+[F] mappability control: op 3 at the same address
+    op 3 rv=21474836480 
+
+[G] 477 on the same descriptor, as the reference
+    477(dmem0, pos 0, 0x4000) = 0x311304000
+    73(0x311304000) -> 0   [477 ref]
+    477(dmem0, pos 0x120000000) = -1   (1478a: EACCES)
+
+[H] leave the address space as we found it
+    final                            547 rv=0   prot=0x3  range=500000000..500004000
+final canary: pid=207 (started 207)
+=== PROBE 1534b COMPLETE ===

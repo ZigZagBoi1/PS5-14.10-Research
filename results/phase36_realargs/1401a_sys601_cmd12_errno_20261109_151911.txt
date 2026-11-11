@@ -1,0 +1,20 @@
+=== PROBE 1401a: 601 CMD 0x12 ERRNO ===
+[0] pid=364
+  struct=0x3107B0000 pg=0x3104D0000
+
+[A] shapes
+  12(0, NULL)              rv=-1  errno=14 Bad address
+  12(0, struct)            rv=-1  errno=14 Bad address
+  12(struct, NULL)         rv=-1  errno=22 Invalid argument
+  12(struct, struct)       rv=-1  errno=22 Invalid argument
+
+[B] copyin boundary: struct near the end of the mapped region
+  12(0, end-0x10)          rv=-1  errno=14 Bad address
+  12(0, end-0x20)          rv=-1  errno=14 Bad address
+  12(0, end-0x08)          rv=-1  errno=14 Bad address
+
+[C] control: 601(0x00) still answers, then a second 0x12
+  00 rv=0x0_00000000 errno=14 Bad address out[0]=0x00000100
+  12(0, struct) after      rv=-1  errno=14 Bad address
+
+=== 1401a DONE ===

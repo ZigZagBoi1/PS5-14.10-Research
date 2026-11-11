@@ -1,0 +1,34 @@
+=== PROBE 1427a: IPV6_MSFILTER READBACK ORACLE ===
+
+[A] reproduce 50f on this pid
+  socket A = 22
+  join group A tag 1 -> 0
+  set INCLUDE 0src  -> 0
+  set EXCLUDE 0src  -> 0
+  set INCLUDE 1src  -> 0
+[B] getsockopt(the oracle)
+  getsockopt -> rv=0 numsrc=1 len=152 sources=[2001:00C0]
+[C] set 8 sources then read them back
+  set INCLUDE 8src  -> 0
+  getsockopt -> rv=0 numsrc=8 len=152 sources=[2001:00C0 2001:00C1 2001:00C2 2001:00C3]
+[D] source-count ceiling between 128 and 256
+  nsrc=128  set -> 0      errno=-
+  nsrc=129  set -> -1     errno=55 No buffer space available
+  readback after 128-source set: rv=0 numsrc=128 len=152
+    last source bytes 2001:00FF (expect 2001:13F13F)
+[E] two groups, two filters: a real oracle must not alias
+  socket B = 23
+  join group B tag 2 -> 0
+  A: INCLUDE 2src -> 0
+  B: INCLUDE 5src -> 0
+  A readback rv=0 numsrc=2 [2001:00C0 2001:00C1]
+  B readback rv=0 numsrc=5 [2001:00C0 2001:00C1 2001:00C2 2001:00C3]
+  >>> ORACLE WORKS: per-group filter state is readable from userland
+
+[F] reading
+  rv=0 with numsrc=8 and matching source bytes in [C] means getsockopt(74)
+  returns the live filter list. That is the detector for a stale in6_multi
+  write: race a 16 KiB (128-source) setsockopt against LEAVE, then read every
+  group and look for sources that were never set on it.
+
+=== PROBE 1427a COMPLETE ===

@@ -1,0 +1,28 @@
+=== PROBE 1563a: sys 674 record-count bound ===
+
+[0] pid=312
+[0] region=0x311224000 len=0x10000
+
+[A] 674(buf, 72, 400, cnt) over a 0x10000 region, first page only offered
+[A] rv=0 count=316 (limit=400 stride=72)
+[A] differing dwords=5688 furthest offset=0x58DC
+[A] *** WRITE EXCEEDS THE FIRST PAGE: the record count is limited by
+[A] *** arg3 alone, not by any buffer length the caller supplies ***
+
+[B lim=8] rv=0 count=316 (limit=8 stride=72)
+[B lim=8] differing dwords=144 furthest=0x23C
+[B lim=1] rv=0 count=316 (limit=1 stride=72)
+[B lim=1] differing dwords=18 furthest=0x44
+[B lim=0] rv=0 count=316 (limit=0 stride=72)
+[B lim=0] differing dwords=0 furthest=0xFFFFFFFFFFFFFFFF
+
+[C] 674(buf, 72, 4000, cnt) -- the map has ~317 entries
+[C] rv=0 count=316 (limit=4000 stride=72)
+[C] differing dwords=5688 furthest=0x58DC
+[C] if furthest stays below 0x10000 the kernel stopped at the map size
+
+[D] countp sentinel 0xEEEEEEEE over 0x1000
+[D] rv=0 count=316 (limit=16 stride=72)
+[D] countp differing dwords=1024 furthest=0xFFC (want 1/0x0)
+
+=== PROBE 1563a COMPLETE ===

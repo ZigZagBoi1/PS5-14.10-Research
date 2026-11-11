@@ -1,0 +1,7 @@
+=== PROBE 1401a: IPv6 PKTOPTS CHILD RACE ===
+
+[0] eboot = 0x74D0000
+[1] fn_addr stub = 0x8339E0B57
+[2] baseline socket = 22
+[2] setsockopt(PKTINFO) = -1
+[!] IPV6_PKTINFO setsockopt failed — cannot proceed

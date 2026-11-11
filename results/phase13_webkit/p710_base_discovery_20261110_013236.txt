@@ -39,7 +39,11 @@ to test whether addresses below VP are readable or XO. Starting from VP
     - VP - 0x781B28 (7.5 MB):  CRASH (redundant, from coarse)
 
   Convergence: 0x76DB28 readable, 0x771B28 crashes → boundary at VP - 0x76DB28.
-  The 16 KB gap (0x771B28 - 0x76DB28 = 0x4000) is one PS5 page.
+  The 16 KB gap (0x771B28 - 0x76DB28 = 0x4000) is the scan stride.
+  [ERRATUM 2026-11-10: an earlier revision of this line read "is one PS5 page".
+  Userland is amd64 4 KiB pages; 0x4000 = 4 pages = the scan stride, i.e.
+  resolution granularity, not page identity. 16 KiB pages are a kernel
+  concept on PS5, not a userland one. Correction: cobrajet302gt, PR #244.]
 
 == BOUNDARY GEOMETRY ==
 

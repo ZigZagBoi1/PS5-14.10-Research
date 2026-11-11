@@ -12,22 +12,26 @@ from pathlib import Path
 from lupa.lua51 import LuaRuntime
 
 
-def main():
-    root = Path(__file__).resolve().parent.parent
+def main(root=None):
+    root = Path(root) if root is not None else Path(__file__).resolve().parent.parent
     compiler = LuaRuntime().eval("loadstring")
     probes = sorted((root / "probes").rglob("*.lua"))
     failures = []
     for probe in probes:
-        source = probe.read_text(encoding="utf-8-sig")
+        relative = probe.relative_to(root)
         try:
-            result = compiler(source, str(probe.relative_to(root)))
+            source = probe.read_text(encoding="utf-8-sig")
         except UnicodeDecodeError:
-            failures.append((probe.relative_to(root),
-                             "Lua error text was not valid UTF-8"))
+            failures.append((relative, "probe source was not valid UTF-8"))
+            continue
+        try:
+            result = compiler(source, str(relative))
+        except UnicodeDecodeError:
+            failures.append((relative, "Lua error text was not valid UTF-8"))
             continue
         if isinstance(result, tuple) and result[0] is None:
             error = result[1]
-            failures.append((probe.relative_to(root), error))
+            failures.append((relative, error))
 
     print(f"Compiled {len(probes)} Lua 5.1 probe sources; failures={len(failures)}")
     for probe, error in failures:

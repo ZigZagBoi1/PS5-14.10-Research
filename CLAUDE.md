@@ -25,7 +25,7 @@ then `python tools/state.py set last_probe=... next_action=...`
 
 **Confirmed capabilities:** KASLR defeat (fault oracle), heap R/W (GPU mmap), userland ASLR bypass (dynlib_get_info 593), child thread ROP syscalls (5-arg via thr_new 455), CClosure redirect (selected targets), native.fcall_with_rax, network packet injection, WebKit Canvas2D UAF (CVE-2026-43720), FontFace UAF chain (VP leaked at p691).
 
-**Hard blockers:** W^X enforced (bit 0x4 refused), no kernel R/W primitive, WebProcess text base RVA pending, heap NX (no JIT on PS5), DFG/FTL OFF.
+**Hard blockers:** W^X enforced (bit 0x4 refused), no kernel R/W primitive, WebProcess text base RVA pending [I], heap NX (no JIT on PS5), LLInt-only (all JIT tiers OFF including Baseline/DFG/FTL).
 
 **Active vector:** WebKit FontFace UAF — VP leaked, RVA determination needed. Canvas2D getContext reentry UAF confirmed as control primitive.
 

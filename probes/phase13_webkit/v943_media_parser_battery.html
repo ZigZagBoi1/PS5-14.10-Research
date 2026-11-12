@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V943</title></head>
+<body><pre id="out">V943 - media demuxer/parser battery: hand-built minimal WAV/MP3/FLAC/OGG/MP4/WebM + malformed mutants, readout = MediaError class + metadata</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V943-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v943 - images and fonts got batteries; the MEDIA parsers never received
+ * a malformed byte. Files are hand-built minimal containers (no codec
+ * payload) - the demuxer exercises before any codec matters. WAV controls
+ * use real PCM so they should actually play.
+ * ERRCLASSES: MediaError.code 1=ABORTED 2=NETWORK 3=DECODE 4=SRC_NOT_SUPPORTED.
+ * Beacon order diagnoses: PRE-x then no POST-x = WebProcess died in the
+ * media pipeline for case x.
+ */
+
+var FILES=[
+ ['m00_valid.wav','audio'],['m01_wav_riff_lie.wav','audio'],['m02_wav_chans_255.wav','audio'],
+ ['m03_wav_rate_max.wav','audio'],['m04_wav_data_lie.wav','audio'],['m05_wav_trunc.wav','audio'],
+ ['m06_wav_bits_0.wav','audio'],
+ ['m10_valid.mp3','audio'],['m11_mp3_trunc.mp3','audio'],['m12_mp3_id3_lie.mp3','audio'],
+ ['m20_valid.flac','audio'],['m21_flac_len_lie.flac','audio'],
+ ['m30_valid.ogg','audio'],['m31_ogg_bad_crc.ogg','audio'],['m32_ogg_trunc.ogg','audio'],
+ ['m40_ftyp_only.mp4','video'],['m41_ftyp_mdat.mp4','video'],['m42_min_mp4.mp4','video'],
+ ['m43_mp4_moov_lie.mp4','video'],['m44_mp4_dur_max.mp4','video'],
+ ['m50_valid.webm','video'],['m51_webm_trunc.webm','video'],['m52_webm_hdr_lie.webm','video']];
+
+var ERR={1:'ABORTED',2:'NETWORK',3:'DECODE',4:'SRC_UNSUPPORTED'};
+
+function probe(tag,kind,file){
+  return new Promise(function(res){
+    var el=document.createElement(kind);
+    el.preload='auto';
+    var done=false;
+    var finish=function(line){ if(done)return; done=true; bk(tag,line); res(); };
+    el.onloadedmetadata=function(){
+      finish('METADATA dur='+(isFinite(el.duration)?el.duration.toFixed(2):String(el.duration))+
+        (kind==='video'?(' res='+el.videoWidth+'x'+el.videoHeight):''));
+    };
+    el.onerror=function(){
+      var c=el.error?el.error.code:-1;
+      finish('ERROR '+(ERR[c]||('code='+c))+(el.error&&el.error.message?(' msg='+el.error.message.slice(0,60)):''));
+    };
+    setTimeout(function(){ finish('TIMEOUT'); },4000);
+    el.src='/fuzzcases/media/'+file+'?t='+Date.now();
+  });
+}
+
+bk('ENV','canPlayWav='+(document.createElement('audio').canPlayType('audio/wav')||'-')+
+  ' mp3='+(document.createElement('audio').canPlayType('audio/mpeg')||'-')+
+  ' flac='+(document.createElement('audio').canPlayType('audio/flac')||'-')+
+  ' ogg='+(document.createElement('audio').canPlayType('audio/ogg')||'-')+
+  ' mp4='+(document.createElement('video').canPlayType('video/mp4')||'-')+
+  ' webm='+(document.createElement('video').canPlayType('video/webm')||'-'));
+
+(async function(){
+  for(var i=0;i<FILES.length;i++){ await probe('PRE-'+FILES[i][0],FILES[i][1],FILES[i][0]); }
+  bk('DONE','battery complete');
+})();
+</script></body></html>

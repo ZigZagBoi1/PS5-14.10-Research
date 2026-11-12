@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V944</title></head>
+<body><pre id="out">V944 - WebProcess network privilege recon: console-local port sweep via fetch, scheme handling (file/np/sce/data/about), cross-origin POST reachability</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V944-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v944 - nobody has asked whether the WebProcess can even REACH console-
+ * local services. A single unauthenticated HTTP daemon listening on
+ * console-localhost would be a non-WebKit attack surface - the thing the
+ * scoreboard says the 14.22 port needs. Three sections:
+ *   P - 127.0.0.1 port sweep (24 ports incl. the known PS5 service ports);
+ *       classification is REFUSED-fast vs TIMEOUT-slow vs RESPONDED via
+ *       elapsed ms (fetch TypeError gives no detail, so latency is the
+ *       oracle). CORS blocks READING - a fetch that resolves with an
+ *       opaque response still proves the port ANSWERED.
+ *   S - scheme handling: file://, np://, sce://, about:, data: via fetch.
+ *   X - the real HTMLX endpoint: POST to our own origin echoless paths
+ *       proves POST reachability (beacon server-side logging shows it).
+ * All bounded with AbortController(1500ms); one beacon per case; crash
+ * shows as beacon-order truncation.
+ */
+
+var PORTS=[80,443,465,567,854,1935,2188,3000,3080,3443,5000,5228,5443,6300,
+  7000,8080,8443,9001,9026,9293,9295,9443,9911,9930];
+
+async function timedFetch(url,opts){
+  var t0=Date.now();
+  try{
+    var ctl=new AbortController();
+    var id=setTimeout(function(){ ctl.abort(); },1500);
+    var o=opts||{};
+    o.signal=ctl.signal;
+    var r=await fetch(url,o);
+    clearTimeout(id);
+    return {ms:Date.now()-t0,status:r.status,type:r.type,ok:true};
+  }catch(e){
+    return {ms:Date.now()-t0,err:String(e).slice(0,50),ok:false};
+  }
+}
+
+(async function(){
+  bk('ENV','fetch='+typeof fetch+' AbortController='+typeof AbortController);
+
+  /* P: console-local port sweep */
+  for(var i=0;i<PORTS.length;i++){
+    var p=PORTS[i];
+    var r=await timedFetch('http://127.0.0.1:'+p+'/');
+    bk('P'+p, (r.ok? ('RESPONDED type='+r.type+' status='+r.status) : (r.ms<100?'REFUSED-fast':'SLOW-TIMEOUT')) + ' ms='+r.ms);
+  }
+
+  /* S: scheme handling */
+  var SCH=['file:///app0/eboot.bin','file:///docroot/index.html','np://test/x',
+    'sce://test/x','about:blank','data:text/plain,hello','blob:http://x/y'];
+  for(var i=0;i<SCH.length;i++){
+    var r=await timedFetch(SCH[i]);
+    bk('S'+i,(r.ok?('RESPONDED type='+r.type+' status='+r.status):r.err)+' ms='+r.ms+' '+SCH[i].slice(0,24));
+  }
+
+  /* X: POST reachability (server logs the hit even though JS reads nothing) */
+  try{
+    var r=await fetch('/beacon/V944-XPOST',{method:'POST',body:'v944-post-reachability'});
+    bk('X','POST beacon status='+r.status);
+  }catch(e){ bk('X-throw',String(e).slice(0,80)); }
+
+  bk('DONE','recon complete');
+})();
+</script></body></html>

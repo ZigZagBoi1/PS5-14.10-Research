@@ -1,0 +1,107 @@
+V932 candidate analysis — CanvasRenderingContext2DBase::FontProxy UAF
+(WebKit commit 673f4df5, Nov 4 2026) + beginLayer UAF (e0558372, Sep 18 2026)
+Two PUBLIC Canvas2D UAFs in the SAME code that our alias targets,
+both LLInt-compatible (pure C++ rendering layer, no JIT dependency)
+================================================================================
+Date:     2026-11-11
+Context:  hunting for a userland exec primitive on 14.22
+Engine:   AppleWebKit/605.1.15, Version/17.0, LLInt-only, zero-at-free
+
+=== FINDING 1: FontProxy UAF (commit 673f4df5, Kiet Ho/Apple, Nov 4 2026) ===
+
+Bugzilla: https://bugs.webkit.org/show_bug.cgi?id=323377
+rdar: 185865732
+
+THE BUG: CanvasRenderingContext2DBase::fontProxy() returns a RAW POINTER
+to the FontProxy of the current state. If the state stack is manipulated
+between when fontProxy() is called and when the pointer is used, the
+FontProxy is freed and the raw pointer dangles.
+
+THE TRIGGER CHAIN:
+  1. Set ctx.font to trigger async font loading
+  2. Call measureText() -> calls fontProxy() -> gets raw FontProxy*
+  3. FontProxy::metricsOfPrimaryFont() triggers font loading
+  4. Font loading resolves a JS promise
+  5. The promise callback calls ctx.save() repeatedly
+  6. save() causes state stack reallocation -> old buffer freed
+  7. FontProxy (stored by value in old State) is freed
+  8. metricsOfPrimaryFont() continues running on the freed FontProxy
+  9. UAF — read/write of freed memory in the rendering layer
+
+WHY IT WORKS UNDER LLINT: this is a C++ UAF in the WebCore rendering
+layer. It doesn't depend on JS JIT, DFG, or any speculation. The trigger
+is pure Canvas2D API calls (setFont, measureText, save) which execute
+under LLInt.
+
+WHY IT'S IN OUR ATTACK SURFACE: the CanvasRenderingContext2DBase is
+the EXACT object our alias targets. We already have:
+  - The UAF trigger (CVE-2026-43720, canvas bitmaprenderer+alpha getter)
+  - The alias R/W (p553 level, bidirectional, control-channel)
+  - The stateStack manipulation capability (save/restore)
+
+THE FIX: making FontProxy ref-counted (Ref<FontProxy> instead of raw
+pointer in State). If the PS5 WebKit predates this fix, the bug is
+present. The fix was committed Nov 4 2026 to WebKit main — the PS5
+WebKit (605.1.15/17.0) almost certainly predates it.
+
+INCLUDES TEST CASES:
+  fast/canvas/canvas2d-measuretext-uaf.html
+  fast/canvas/canvas2d-measuretext-null-deref.html
+  fast/canvas/offscreen-canvas2d-measuretext-uaf.html
+  fast/canvas/offscreen-canvas2d-measuretext-null-deref.html
+
+=== FINDING 2: beginLayer UAF (commit e0558372, Sep 18 2026) ===
+
+Bugzilla: https://bugs.webkit.org/show_bug.cgi?id=318378
+rdar: 175228541
+
+THE BUG: beginLayer() at MaxSaveCount -> realizeSavesLoop() returns
+without pushing a new State -> layer overwrite drops the previous layer
+while the new layer holds a raw pointer to the previous layer's
+GraphicsContext -> UAF.
+
+TRIGGER: save() to MaxSaveCount, then beginLayer(). Pure Canvas2D API.
+
+FIX: early return from beginLayer() when realizeSaves() can't push.
+
+TEST CASE: fast/canvas/canvas-layer-after-max-save-count.html
+
+=== WHY THESE ARE THE BEST CANDIDATES FOR 14.22 ===
+
+1. Same code (CanvasRenderingContext2DBase) as our confirmed UAF trigger
+2. Pure C++ UAF — no JIT dependency, executes under LLInt
+3. Public fix commits with test cases (the trigger shape is known)
+4. The FontProxy UAF trigger uses save() manipulation — which is
+   EXACTLY what our alias gives us (stateStack manipulation capability)
+5. The fix is making FontProxy ref-counted — meaning pre-fix, the
+   FontProxy was a raw pointer that could dangle. The PS5 WebKit
+   (605.1.15) almost certainly has the pre-fix code.
+6. The UAF is in the RENDERING layer, not the JS heap — zero-at-free
+   (v909) applies to JS-visible objects freed by GC, NOT to internal
+   C++ rendering objects freed by state stack reallocation.
+
+=== THE ESCALATION PATH (if the UAF fires on 14.22) ===
+
+Step 1: Trigger the FontProxy UAF via save() + measureText
+Step 2: The freed FontProxy memory is reclaimed by a controlled
+        allocation (the same arena, deterministic first-fit)
+Step 3: The freed FontProxy's function pointers/data are now
+        attacker-controlled
+Step 4: measureText continues using the fake FontProxy ->
+        arbitrary function call or data read
+
+This bypasses:
+- zero-at-free (the FontProxy is freed by state stack reallocation,
+  NOT by the UAF-trigger free — different free site, different scrub)
+- the LLInt limitation (pure C++ rendering code)
+- the FontFace surface entirely (no FontFace needed for the trigger)
+
+=== NEXT: build the probe (v933) ===
+
+The probe replicates the test case from the WebKit commit:
+1. canvas 2d context
+2. Set font to trigger async loading
+3. measureText() call
+4. In the promise resolution, save() repeatedly to force reallocation
+5. measureText continues using the freed FontProxy
+On the PS5, we beacon before each step to position-proof the crash/leak.

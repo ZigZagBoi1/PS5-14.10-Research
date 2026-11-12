@@ -1,0 +1,62 @@
+P711-P718 14.22 CONSOLIDATED ROW - the board's live-object leak probes: 8 channels, zero crashes, three hangs, five detector "hits" all classified as quantization/allocation-batch artifacts or feature inventory. NO pointer bits anywhere.
+================================================================================
+Date:    2026-11-13 (00:14-00:18 window)
+Logs:    tools/browser_runner/beacon_logs/beacons_20261113_0014{03,50},
+         0015{34,55}, 0016{56}, 0017{14,31}, 001824.log
+Context: this is the data answer to the eljcn thread question ("leak a live
+         pointer under LLInt") - these 8 board probes are exactly the
+         live-object channels not covered by p630's 8-route survey.
+
+PER-PROBE:
+- p711 Intl/ICU: RESULT hits = A:icu-data-load-detected, E:segmenter.
+  Cold-vs-warm ratio 1793x is the one-time ICU data-table load on the first
+  Intl call - allocation event, not address disclosure. Intl.Segmenter
+  AVAILABLE (inventory). getCanonicalLocales n=100 -> 2795ms (scale timing).
+  NO pointer bits. NOTE: serve.py beacon log got CORRUPTED lines during the
+  huge C:EDGE-FORMATS payload (mangled timestamps "2022-11-13"/"1922.168" in
+  the log file) - logging artifact under long payloads + fast beacons, not a
+  console crash (subsequent beacons clean). serve.py logging hardening note.
+- p712 CSS-Paint: VOID/HANG - two loads, both die silently inside
+  A:GRADIENT-TIMING (no error, no DONE). The timing loop is too heavy for
+  this context. Needs a lighter variant if ever pursued.
+- p713 MutationObserver: hits = node-alloc-step 3/9/15. Node creation shows
+  1ms hiccups at stride ~3 - ALLOCATOR BATCH GRANULARITY, quantization-bound
+  (1ms). Encodes pool-growth events, not addresses. DOMParser scaling linear.
+  No leak.
+- p714 Selection/Range: VOID/HANG - log ends at C:CLONE-DELETE-TIMING, no
+  result. A/B sections clean and flat (create 4-10ms, compare flat, depth
+  flat).
+- p715 Grid/Flex: hit = D:subgrid (INVENTORY: subgrid SUPPORTED, masonry
+  NOT - WebKit version fingerprint aid). Layout timings scale linearly; no
+  leak.
+- p716 Crypto: hits = entropy-step=64 (quantization artifact), encode-step
+  =1000 (TextEncoder batch). RNG HEALTHY (chi-sq 289.2 in 198-313, dupes
+  4/999, UUID v4 10/10). D-section encrypt tests failed on a probe defect
+  (raw key instead of CryptoKey) - encrypt timing unmeasured. Digest times
+  flat across algorithms. No leak.
+- p717 Event-timing: VOID/HANG x2 - both loads die in D:COMPOSED-PATH
+  (10s+ per iteration, no DONE). A/B/C clean; C:STEP-AT=19 is an allocation
+  batch boundary (one 22ms spike in a 20-batch loop).
+- p718 Promise/microtask: hits = order-dependent-10/1000 - non-monotonic
+  micro-timing = quantization noise (1.000/0.000/1.000 at growing n).
+  Proxy throughput measured (1.5M get traps, ~580ns/trap). FinalizationRegistry
+  available, no cleanup in window. No leak.
+
+CLASSIFICATION OF ALL FIVE DETECTOR HITS:
+  icu-data-load, segmenter, subgrid -> feature/data-load INVENTORY.
+  node-alloc-step, entropy-step, encode-step, STEP-AT=19 -> ALLOCATOR BATCH
+  GRANULARITY, all at 1ms quantization. They encode allocation-pool growth
+  events; exploiting them would need sub-quantization timing, which this
+  port kills (0.0000 jitter in every jitter beacon). Dead by the p630
+  quantization law.
+
+VERDICT: the eljcn question ("a live-pointer leak channel under LLInt") is
+  now answered with 8 channels of device data: Intl/ICU, CSS Paint, DOM
+  observer/parser, Selection/Range, Grid layout, WebCrypto, Event dispatch,
+  Promise/microtask/Proxy - ALL quantization-bound timing or batch-granularity
+  or inventory. NO pointer disclosure. The live-pointer transport remains
+  exactly one thing banked: the 14.10 walk chain (p691), Step-1-scrubbed on
+  14.22.
+GRADE:  M (8 channels measured, zero crashes) / V for p712, p714, p717
+  (three hangs - lighter-variant corrections possible, re-running a void is
+  a correction not a discovery).

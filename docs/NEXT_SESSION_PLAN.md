@@ -26,6 +26,15 @@
    +0x82/+0x94 pré-registrado (branch b = retratação pré-aceita).
    Nota: +0x94 no frame device = high dword de m_unalignedNextFireTime
    (dentro do timer) — manifestação esperada é timer-flavored, distinguível.
+7. **Arbitragem canônica #276 18:04Z (cmt 6831909416)**: clone local verificado
+   limpo @ tag WebKit-7616.1.27 = commit c716fcf51af2 (WebKit/WebKit canônico).
+   Upstream respondeu os dois disputes: (a) CSSFontFace.h:64 É `virtual ~`
+   canônico — final + virtual coexistem; fork-delta = 1 (vptr). (b) WeakHashSet.h
+   canônico termina em :201 — m_maxOperationCountWithoutCleanup NÃO existe neste
+   tag (refactor de era posterior no pin deles); +0x64 = padding no 616.1.27.
+   Leitura 0x200@+0x64 deles vira open datum device-side (atribuição morta,
+   bytes não). Estado: concordância cross-bench com árbitro canônico.
+   Reproduzível: gh api repos/WebKit/WebKit/contents/<path>?ref=c716fcf51af2...
 
 ---
 

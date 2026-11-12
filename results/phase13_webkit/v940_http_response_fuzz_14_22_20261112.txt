@@ -1,0 +1,29 @@
+V940 14.22 ROW - HTTP response-parser fuzz: 16 raw malformed responses, zero crashes, parser hardened at first-order shapes
+================================================================================
+Date:    2026-11-12
+Log:     tools/browser_runner/beacon_logs/beacons_20261112_225138.log
+Result:  battery complete, zero crashes. serve.py /rawresp/ handler writes
+         raw bytes into the TLS stream; connection closes per case.
+Class outcomes:
+  REJECTED (fetch-throw "Load failed", process alive):
+    r01 bad version, r07 chunked negative size, r08 chunked size overflow,
+    r12 NUL in header value, r14 non-numeric status
+  TOLERATED (200 + body parsed):
+    r02 500-header flood, r09 missing header block, r10 64KB reason phrase,
+    r13 obs-fold continuation, r15 64KB header value
+  LIE HANDLED BY RULE (no over-read):
+    r04/r05 CL bigger than body: status 200 then body-load fails cleanly -
+      early EOF handled, no hang, no corruption
+    r06 duplicate CL: LAST header honored (bodylen=5) - RFC wants rejection;
+      WebKit takes the last value. Tolerant, deterministic, not unsafe as
+      measured.
+    r11 CL smaller than body: exactly-CL bytes read, rest discarded -
+      correct-by-rules (connection closed per case, so no cross-response
+      contamination channel)
+    r03 CL+TE smuggling pair: chunked terminator honored, bodylen=0, the
+      smuggled text discarded - no client-side re-interpretaion
+GRADE:  D - the response parser survives every first-order shape; the
+        duplicate-CL last-value rule is the only deviation from RFC and it
+        is deterministic. Escalation would need stateful/pipelined shapes
+        (keep-alive with lies) which the per-case-close handler cannot
+        produce yet; noted as the next design constraint, not pursued.

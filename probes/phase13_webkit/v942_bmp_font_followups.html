@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V942</title></head>
+<body><pre id="out">V942 - follow-ups: BMP pixel-source probes (marker offset / EOF-OOB / dims-lie-up) + font glyph-path exercise (f09 OOB table deref, f07 cmap walk) + SVG/ICO MIME retest</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V942-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v941 found the dangerous-tolerance class; v942 reads the pixels:
+ *   B1 bmp_marker_offset  - bfOffBits aimed at an in-file marker region:
+ *       markers in pixels = decoder dereferences the offset BLINDLY.
+ *   B2 bmp_oob_eof        - bfOffBits 64KB past EOF: all-red = clamp,
+ *       all-black = zero-fill, ANYTHING ELSE = heap residue read.
+ *   B3 bmp_dims_lie_up    - 64x8 declared, 8x8 pixels: over-decode past
+ *       the buffer; same readback classification.
+ *   F f09 fillText        - the face whose last table points past EOF;
+ *       metrics never dereferenced it - rendering MUST. Death here = the
+ *       parser dereferences OOB table pointers on the glyph path.
+ *   F f07 cmap sweep      - the 2GB-declared cmap face; 100 codepoints to
+ *       force subtable walks.
+ *   S svg/ico             - v941 inconclusives with proper MIME (serve.py
+ *       now carries image/svg+xml, image/x-icon, etc.).
+ * Readback classification per BMP: divergent pixel count + first 12 RGB
+ * triplets hexed. Marker shape in B1: (idx%256, 0x5A, 0xA5).
+ */
+
+function decode(url,label){
+  return new Promise(function(res){
+    var img=new Image();
+    img.onload=function(){ res(img); };
+    img.onerror=function(){ bk(label,'ERROR'); res(null); };
+    img.src=url+'?t='+Date.now();
+  });
+}
+
+function readback(img,label,expectRed){
+  try{
+    var c=document.createElement('canvas');
+    c.width=img.naturalWidth; c.height=img.naturalHeight;
+    var x=c.getContext('2d');
+    x.drawImage(img,0,0);
+    var d=x.getImageData(0,0,c.width,c.height).data;
+    var divergent=[], nonred=0;
+    for(var i=0;i<d.length;i+=4){
+      if(d[i]!==255||d[i+1]!==0||d[i+2]!==0){
+        nonred++;
+        if(divergent.length<12){ divergent.push(i/4+':'+d[i].toString(16)+','+d[i+1].toString(16)+','+d[i+2].toString(16)+','+d[i+3].toString(16)); }
+      }
+    }
+    bk(label,'dims='+c.width+'x'+c.height+' nonred='+nonred+' total='+(d.length/4)+' first='+JSON.stringify(divergent));
+  }catch(e){ bk(label+'-throw',String(e)); }
+}
+
+(async function(){
+  /* B1: marker offset inside file */
+  var b1=await decode('/fuzzcases/images/b1_bmp_marker_offset.bmp','B1');
+  if(b1){ readback(b1,'B1-PIX'); }
+  /* B2: offset past EOF */
+  var b2=await decode('/fuzzcases/images/b2_bmp_oob_eof.bmp','B2');
+  if(b2){ readback(b2,'B2-PIX'); }
+  /* B3: dims lie up */
+  var b3=await decode('/fuzzcases/images/b3_bmp_dims_lie_up.bmp','B3');
+  if(b3){ readback(b3,'B3-PIX'); }
+
+  /* F: font glyph-path exercise */
+  try{
+    var f9=new FontFace('V9F9',"url('/fuzzcases/fonts/f09_table_oob.ttf')");
+    f9.loaded; document.fonts.add(f9);
+    await document.fonts.load('12px V9F9','a');
+    bk('F9-LOADED','status='+f9.status);
+    var c9=document.createElement('canvas').getContext('2d');
+    c9.font='12px V9F9';
+    c9.fillStyle='#000';
+    c9.fillText('ab',0,12);          /* forces glyf/loca deref - OOB table */
+    bk('F9-DRAW','fillText returned alive, width='+c9.measureText('ab').width);
+  }catch(e){ bk('F9-ERR',String(e).slice(0,150)); }
+
+  try{
+    var f7=new FontFace('V9F7',"url('/fuzzcases/fonts/f07_cmap_len_lie.ttf')");
+    f7.loaded; document.fonts.add(f7);
+    await document.fonts.load('12px V9F7','a');
+    var c7=document.createElement('canvas').getContext('2d');
+    c7.font='12px V9F7';
+    var widths=[],cps=[0x41,0x62,0x4E2D,0x1F600,0x627,0x3053,0x4E00,0x2202,0x2022,0x2764];
+    for(var i=0;i<10;i++){ widths.push(cps[i].toString(16)+':'+c7.measureText(String.fromCodePoint(cps[i])).width); }
+    bk('F7-SWEEP','10-codepoint cmap walk done '+JSON.stringify(widths));
+  }catch(e){ bk('F7-ERR',String(e).slice(0,150)); }
+
+  /* S: MIME retests */
+  await decode('/fuzzcases/images/i00_valid.svg','S-SVG');
+  await decode('/fuzzcases/images/b4_ico_valid.ico','S-ICO');
+
+  bk('DONE','v942 complete');
+})();
+</script></body></html>

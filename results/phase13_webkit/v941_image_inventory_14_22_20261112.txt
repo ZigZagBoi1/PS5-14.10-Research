@@ -1,0 +1,27 @@
+V941 14.22 ROW - image decoder inventory: PNG/GIF/BMP/JPEG/WebP present (content-sniffed), TIFF/AVIF/JXL absent, SVG/ICO inconclusive (MIME/file artifacts); malformed-tolerant set identified
+================================================================================
+Date:    2026-11-12
+Log:     tools/browser_runner/beacon_logs/beacons_20261112_225029.log
+Result:  inventory complete, zero crashes
+Decoders PRESENT (valid files LOAD with correct 8x8 dims):
+  PNG, GIF, BMP, JPEG, WebP - all loaded via application/octet-stream MIME,
+  i.e. content sniffing drives format selection in <img>.
+Decoders ABSENT: TIFF (real content, clean ERROR), AVIF/JXL (magic-sniff
+  garbage rejected - meaningful because sniffing is content-driven).
+INCONCLUSIVE: SVG (served as octet-stream; SVG-as-image may be
+  MIME-strict - retest with image/svg+xml pending, serve.py MIME lacked
+  the type), ICO (our generated file was invalid, 6 bytes - rebuild by hand).
+MALFORMED-BUT-LOADED class (decoder tolerated structural lies):
+  i21 png-missing-IEND: LOAD 8x8 (tolerated)
+  i30 gif-truncated:    LOAD 8x8 (truncated LZW tolerated)
+  i50 bmp-offset-OOB:   LOAD 8x8 - bfOffBits = EOF+0x10000 (64KB past end)
+                        and the decoder still produced a full 8x8 frame.
+                        It had to source 192 pixel bytes from somewhere:
+                        clamp, wrong in-file region, or BEYOND THE FILE
+                        BUFFER. Pixel content unverified in this probe -
+                        THIS IS THE FOLLOW-UP (v942: pixel readback).
+  i70 webp-riff-lie:    LOAD 8x8 (RIFF size lie tolerated)
+  i71 webp-trunc:       LOAD 8x8 (truncated tolerated)
+Rejected cleanly: png dims-lie / bad-CRC / half-trunc, gif dims-lie,
+  jpg trunc / dims-lie.
+GRADE:  M - inventory row + the BMP-offset-OOB lead.

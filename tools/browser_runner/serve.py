@@ -52,7 +52,10 @@ STATIC = {
     '/p561.js': PROJECT / 'probes' / 'phase13_webkit' / 'p561-transfer-sort-uaf.js',
 }
 
-MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png'}
+MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png',
+        '.svg': 'image/svg+xml', '.gif': 'image/gif', '.bmp': 'image/bmp', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg',
+        '.webp': 'image/webp', '.ico': 'image/x-icon', '.tif': 'image/tiff', '.tiff': 'image/tiff',
+        '.ttf': 'font/ttf', '.otf': 'font/otf', '.woff': 'font/woff', '.woff2': 'font/woff2'}
 
 LOG_DIR = ROOT / 'beacon_logs'
 

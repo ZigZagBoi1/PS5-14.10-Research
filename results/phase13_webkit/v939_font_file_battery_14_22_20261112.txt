@@ -1,0 +1,31 @@
+V939 14.22 ROW - font FILE parser battery: 16 payloads, zero crashes; tolerant-parse class found (sfnt length/offset lies accepted), WOFF support unproven
+================================================================================
+Date:    2026-11-12
+Log:     tools/browser_runner/beacon_logs/beacons_20261112_225113.log
+Result:  battery complete, zero crashes. All metrics identical to the valid
+         control (a=7, WWW=33) for every LOADED face.
+LOADED (parser accepted):
+  f01 bad sfnt magic (0x00020000)  - version check lax
+  f02 numTables=0xFFFF             - directory-count lie tolerated; the
+                                     parser still served a working font
+  f03 half-truncated               - metrics from the surviving half
+  f07 cmap length-lie (0x7FFFFFF0) - 2GB declared cmap length ACCEPTED;
+                                     over-read surface if the parser ever
+                                     walks past real subtables (follow-up:
+                                     codepoint sweep, v942)
+  f08 trailing garbage             - normal tolerance
+  f09 table offset past EOF        - a table entry pointing beyond the file
+                                     ACCEPTED; lazy loading means metrics
+                                     never dereferenced it (follow-up:
+                                     fillText forces the glyph tables, v942)
+  f10 zeroed checksums             - checksums not enforced
+  f15 TTF body named .woff2        - content sniffing ignores extension
+ERROR (clean reject):
+  f04 trunc@12B, f05 OTTO-on-TTF, f06 head length-lie (NOTE: head lie
+  rejected but cmap lie accepted - validation depth is table-specific),
+  f11 zero tables, f12 valid-WOFF(!), f13 WOFF badnum, f14 WOFF oob-offset
+WOFF: even the VALID wrapper errored - either the port lacks WOFF decode or
+  our no-compression wrapper is malformed. Cannot distinguish without a
+  known-good WOFF file; flagged, not graded.
+GRADE:  M - inventory + two live leads (f07 cmap walk, f09 table deref),
+  both requiring glyph-path exercise; battery for that is v942.

@@ -12,12 +12,12 @@ were measured; they are measurements, not truths.
 - allproc: 0xFFFFFFFFD85B9EA0
 - security_flags: 0xFFFFFFFFD6A84064
 - rootvnode: 0xFFFFFFFFD8E3B510
-- last_probe: 1405a_race_orchestrator (crashed child test, fn_addr bug fixed)
+- last_probe: p694 (heap UAF clean)
 - active_question: kernel R/W — Lua-side EXHAUSTED, WebKit is sole path
 - race_assessment: ALL DEAD: PKTINFO=embedded struct, SNDBUF=mbuf logical overflow, close+setsockopt=fget blocks, 16 CVEs blocked. See docs/KERNEL_RACE_OFFLINE_ASSESSMENT_2026-11-10.md
 - cve_assessment: 16 FreeBSD kernel CVEs (2019-2026) checked; ALL blocked on 14.10 (feature removal, missing prereqs, zone isolation, existing locks). See docs/CVE_KERNEL_RW_ASSESSMENT_2026-11-10.md
 - cve_2020_7457: SA-20:20 patch adds INP_WLOCK only around ip6_pcbopts (2292 path). PKTINFO already locked in ip6_ctloutput. Sony blocked 2292 entirely. 91d/92c tested PKTINFO race to 11K+ calls = clean.
-- next_action: Console probes ready: p686>p689/p690>p692>p694>p693. Game process needs relaunch on 10.0.0.96. All CVE preflights complete (p719 DEAD, p721 DEAD).
+- next_action: All queued WebKit probes tested (p686/p689/p690/p693/p694 = ALL VOID). p692 needs correct UAF free mechanism. Remaining: p800 TransformStream, queued Lua probes 1407a-1409a.
 - queued_probes: 1407a (ktimer TAI leak), 1408a (sysvsem OOB), 1409a (kevent leak), p800 (TransformStream typeconf)
 - notes: all kernel addresses valid this boot only; if rebooted re-measure with fault oracle first
 - ipv6_options: 2292PKTOPTIONS(6)=BLOCKED, PKTINFO(46)=OK, TCLASS(61)=OK, RTHDR(51)=partial, DSTOPTS/HOPOPTS=BLOCKED

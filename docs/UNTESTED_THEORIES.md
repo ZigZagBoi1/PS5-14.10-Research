@@ -404,3 +404,50 @@ The **only live vector** is WebKit Canvas UAF (CVE-2026-43720), confirmed on 14.
 requiring browser access and an alternative info leak (IPV6_2292PKTOPTIONS is blocked).
 The Lua loader's primitives (threading, heap R/W, syscall invocation) remain valuable
 as post-exploit infrastructure, but the kernel entry must come through WebKit.
+
+## Theory N: pfsmnt confused-deputy read-only export (eljcn, 2026-11-12)
+
+**Priority: MEDIUM** | **Status: UNTESTED - one sliver unbanked; deputy roster measured inert**
+
+External proposal (eljcn/@XddIsma): achieve a READ-ONLY export primitive over an
+ALREADY-MOUNTED retail title by riding a PRIVILEGED SERVICE with legitimate
+pfsmnt access, letting the system perform the PFS decryption. Smart constraint:
+do not fight mount crypto - reuse an existing mount.
+
+**What is measured and closed (deputy roster from the game/loader context):**
+- SCM_RIGHTS fd passing is stripped by the kernel (56q) - no fd can cross to or
+  from a service.
+- Mount syscalls 627-630: handler exists, credential-gated, every shape -1
+  (52a/122b2); 631 lethal. No mount namespace manipulation from game context.
+- /system_tmp service sockets: protocol measured end-to-end, one request per
+  connection, all commands answer 0x80D40009 or inert; client unreadable (XOM)
+  (361b-377a) - no deputy accepts orders there.
+- /dev ioctls: 32M commands across 31 nodes, zero following of pointers, zero
+  state changes (273a-287a).
+- sys 622 device mux: 113 commands past auth write only 0xFFFFFFFF not-found
+  answers (241a-247a).
+- sys 601 debugger service: no session; 0x03/0x04 kill the caller (322a-324a).
+- AIO 669 batch: works only on our own files (65d-75e).
+
+**Even the SELF-mount case is partially gated:** stat(188) works on /app0 and
+/app0/* (392f) and eboot .text is RX-readable, but .sprx regions are XO for us
+- reading our own title's sprx kills the process (377a). A self-title export
+would be partial (no sprx), with no relevance to the kernel chain.
+
+**The unbanked sliver (ONE cheap probe):** /mnt and /mnt/sandbox/* were never
+in the 392f stat list. If the mount tree is visible outside the jail (against
+PS5 sandbox design, but unmeasured), foreign pfs mounts become path-reachable
+and the kernel decrypts for whoever can read. Probe sketch (kernel phase,
+loader running):
+  1. stat(188) on /mnt, /mnt/sandbox, /mnt/sandbox/*, /mnt/app0_<foreign tid>
+  2. getdirentries(272) on /mnt and any surviving node
+  3. open() on a foreign title's eboot.bin path if the tree leaks
+  4. cross-check sys 674 region names for mount-path strings of other titles
+Expected: -1/refused per sandbox design; the row closes the theory or opens it.
+
+**Verdict:** directionally sound (it is the PS4-scene title-dump playbook), but
+it requires a privileged deputy that accepts commands - and every deputy
+reachable from our exec context is measured inert. Without a system-context
+code-exec primitive (which is exactly what the scoreboard says is missing on
+14.22), there is no deputy to confuse. Bank the /mnt probe; the rest waits for
+an entry that does not exist yet.

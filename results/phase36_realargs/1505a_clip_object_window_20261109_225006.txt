@@ -1,0 +1,52 @@
+=== PROBE 1505a: CLIP AND THE SHARED OBJECT WINDOW ===
+[0] pid=80
+
+--- [A] shm object mapped twice ---
+  shm_open -> 22 
+  ftruncate -> 0
+  A=0x311184000 B=0x311194000 
+  A+0x0=11110000  B+0x0=11110000
+  A+0x4000=22220001  B+0x4000=22220001
+  A+0x8000=33330002  B+0x8000=33330002
+  A+0xC000=44440003  B+0xC000=44440003
+  aliases agree: true
+  547 A=0 prot=3   B=0 prot=3
+
+--- [B] 548 op 2 prot 1 on [A+0x4000, A+0x8000) - forces clip_start + clip_end ---
+  rv=0 processed=1 
+  547 A now 0 prot=3
+
+--- [C] markers after the clip ---
+  about to read A+0x0
+    A+0x0 = 11110000 (expect 11110000) ok
+  about to read A+0x4000
+    A+0x4000 = 22220001 (expect 22220001) ok
+  about to read A+0x8000
+    A+0x8000 = 33330002 (expect 33330002) ok
+  about to read A+0xC000
+    A+0xC000 = 44440003 (expect 44440003) ok
+  about to read B+0x0
+    B+0x0 = 11110000 (expect 11110000) ok
+  about to read B+0x4000
+    B+0x4000 = 22220001 (expect 22220001) ok
+  about to read B+0x8000
+    B+0x8000 = 33330002 (expect 33330002) ok
+  about to read B+0xC000
+    B+0xC000 = 44440003 (expect 44440003) ok
+  547 A=0 prot=3  B=0 prot=3
+
+--- [D] same on /dev/dmem0, four distinct physical offsets ---
+  /dev/dmem0 fd=23 
+  D=0x311078000 
+  markers written 0x4000/0x8000/0xC000: true
+  clip rv=0 processed=1 
+  about to read D+0x4000
+    D+0x4000 = B2B20001 (expect B2B20001) ok
+  about to read D+0x8000
+    D+0x8000 = C3C30002 (expect C3C30002) ok
+  about to read D+0xC000
+    D+0xC000 = D4D40003 (expect D4D40003) ok
+  547 D=0 prot=3
+
+final canary live: true (pid 80)
+=== PROBE 1505a COMPLETE ===

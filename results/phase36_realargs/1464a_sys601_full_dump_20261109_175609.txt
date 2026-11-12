@@ -1,0 +1,28 @@
+=== PROBE 1464a: SYS 601 FULL BUFFER DUMP ===
+
+[0] pid=495
+[00] A: rv=0
+[00-A] 1 non-zero dwords: +000=0000000000000100
+[0D] A: rv=0
+[0D-A] buffer untouched
+[13] A: rv=0
+[13-A] buffer untouched
+[14] A: rv=0
+[14-A] buffer untouched
+[19] A: rv=0
+[19-A] buffer untouched
+
+[00] B: rv=-1 errno=14 Bad address
+[00-B] buffer untouched
+[0D] B: rv=0
+[0D-B] buffer untouched
+[13] B: rv=0
+[13-B] buffer untouched
+[14] B: rv=0
+[14-B] buffer untouched
+[19] B: rv=0
+[19-B] buffer untouched
+
+[Z] alive pid=495 (was 495)
+
+=== PROBE 1464a COMPLETE ===

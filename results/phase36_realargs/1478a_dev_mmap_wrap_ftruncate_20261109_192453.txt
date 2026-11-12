@@ -1,0 +1,68 @@
+=== PROBE 1478a: DEVICE MMAP WRAP + FTRUNCATE ===
+[0] pid=80
+[0] fds dmem0=22 dmem1=23 gc=24 zero=25
+
+--- [A] baseline: offset 0x1000 must map ---
+[A] dmem0 off=0x1000 len=0x1000 -> rv=13164171264 
+[A] 547: prot=3 end=0x10A58000
+[A] first dword readable=true value=0x00000000
+
+--- [B] offset + length wrap, dmem0 ---
+[B] off=2^64-0x1000 len=0x2000               -> rv=-1 13 Permission denied
+[B] off=2^64-0x1000 len=0x1000               -> rv=-1 13 Permission denied
+[B] off=2^64-0x2000 len=0x2000               -> rv=-1 13 Permission denied
+[B] both huge                                -> rv=-1 22 Invalid argument
+[B] off=2^63 len=2^33                        -> rv=-1 13 Permission denied
+[B] off=0 len=2^33                           -> rv=-1 22 Invalid argument
+[B] off=0x1000000000 (lone rung) len=0x1000  -> rv=-1 13 Permission denied
+[B] off=2^64-0x1000 len=0x1001               -> rv=-1 13 Permission denied
+
+--- [C] ftruncate the descriptor, then retry the refused offsets ---
+[C] before ftruncate off=0x1000000000 -> rv=-1 13 Permission denied
+[C] before ftruncate off=0x400000000 -> rv=-1 13 Permission denied
+[C] before ftruncate off=0x200000000 -> rv=-1 13 Permission denied
+[C] before ftruncate off=0x140000000 -> rv=-1 13 Permission denied
+[C] before ftruncate off=0x120000000 -> rv=-1 13 Permission denied
+[C] ftruncate(dmem0, 0x1000000000) -> rv=0 
+[C]   after truncate off=0x1000000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x400000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x200000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x140000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x120000000 -> rv=-1 13 Permission denied
+[C] ftruncate(dmem0, 0x400000000) -> rv=0 
+[C]   after truncate off=0x1000000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x400000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x200000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x140000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x120000000 -> rv=-1 13 Permission denied
+[C] ftruncate(dmem0, 0x10000000000) -> rv=0 
+[C]   after truncate off=0x1000000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x400000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x200000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x140000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x120000000 -> rv=-1 13 Permission denied
+[C] ftruncate(dmem0, 0x1000) -> rv=0 
+[C]   after truncate off=0x1000000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x400000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x200000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x140000000 -> rv=-1 13 Permission denied
+[C]   after truncate off=0x120000000 -> rv=-1 13 Permission denied
+
+--- [D] the same wrap on dmem1 / gc / zero ---
+[D] dmem1 off=2^64-0x1000 len=0x2000       -> rv=-1 13 Permission denied
+[D] dmem1 off=2^64-0x2000 len=0x2000       -> rv=-1 13 Permission denied
+[D] dmem1 both huge                        -> rv=-1 22 Invalid argument
+[D] gc    off=2^64-0x1000 len=0x2000       -> rv=-1 22 Invalid argument
+[D] gc    off=2^64-0x2000 len=0x2000       -> rv=-1 22 Invalid argument
+[D] gc    both huge                        -> rv=-1 22 Invalid argument
+[D] zero  off=2^64-0x1000 len=0x2000       -> rv=13164179456 
+[D] zero  off=2^64-0x2000 len=0x2000       -> rv=13164175360 
+[D] zero  both huge                        -> rv=-1 22 Invalid argument
+
+--- [E] sanity: the low offsets still behave as measured ---
+[E] dmem0 off=0 len=0x1000 -> rv=13164167168
+[E] first dword ok=true value=0xC0012800 (C0012800 expected)
+[E] write ok=true readback=0x1478A147 (page-0 write expected to stick)
+
+final canary: pid=80
+=== PROBE 1478a COMPLETE ===

@@ -1,0 +1,53 @@
+=== PROBE 1443a: GRAPHICS NODE OFFSET SPACE ===
+
+--- /dev/gc open -> 50  prot=1
+  000000000000 -> 0x311dcc000 nz=8  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+  0x0000001000 -> 0x311dcd000 nz=8  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+  0x0000010000 -> FAILED (22 Invalid argument)
+  0x0000100000 -> FAILED (22 Invalid argument)
+  0x0001000000 -> FAILED (22 Invalid argument)
+  0x0010000000 -> FAILED (22 Invalid argument)
+  0x0020000000 -> FAILED (22 Invalid argument)
+  0x0040000000 -> FAILED (22 Invalid argument)
+  0x0080000000 -> FAILED (22 Invalid argument)
+  0x00c0000000 -> FAILED (22 Invalid argument)
+  0x00c0013000 -> FAILED (22 Invalid argument)
+  0x00c0100000 -> FAILED (22 Invalid argument)
+  0x00c1000000 -> FAILED (22 Invalid argument)
+  0x0100000000 -> FAILED (22 Invalid argument)
+  0x1001000000 -> FAILED (22 Invalid argument)
+--- /dev/gc open -> 51  prot=3
+  000000000000 -> 0x311dcc000 nz=8  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+  0x0000001000 -> 0x311dcd000 nz=8  FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+  0x0000010000 -> FAILED (22 Invalid argument)
+  0x0000100000 -> FAILED (22 Invalid argument)
+  0x0001000000 -> FAILED (22 Invalid argument)
+  0x0010000000 -> FAILED (22 Invalid argument)
+  0x0020000000 -> FAILED (22 Invalid argument)
+  0x0040000000 -> FAILED (22 Invalid argument)
+  0x0080000000 -> FAILED (22 Invalid argument)
+  0x00c0000000 -> FAILED (22 Invalid argument)
+  0x00c0013000 -> FAILED (22 Invalid argument)
+  0x00c0100000 -> FAILED (22 Invalid argument)
+  0x00c1000000 -> FAILED (22 Invalid argument)
+  0x0100000000 -> FAILED (22 Invalid argument)
+  0x1001000000 -> FAILED (22 Invalid argument)
+--- /dev/dce open -> 52  prot=1
+  000000000000 -> FAILED (22 Invalid argument)
+  0x0000001000 -> FAILED (22 Invalid argument)
+  0x0000010000 -> FAILED (22 Invalid argument)
+  0x0000100000 -> FAILED (22 Invalid argument)
+  0x0001000000 -> FAILED (22 Invalid argument)
+  0x0010000000 -> FAILED (22 Invalid argument)
+  0x0020000000 -> FAILED (22 Invalid argument)
+  0x0040000000 -> FAILED (22 Invalid argument)
+  0x0080000000 -> FAILED (22 Invalid argument)
+  0x00c0000000 -> FAILED (22 Invalid argument)
+  0x00c0013000 -> FAILED (22 Invalid argument)
+  0x00c0100000 -> FAILED (22 Invalid argument)
+  0x00c1000000 -> FAILED (22 Invalid argument)
+  0x0100000000 -> FAILED (22 Invalid argument)
+  0x1001000000 -> FAILED (22 Invalid argument)
+--- /dev/ajm open -> -1  prot=1
+
+=== PROBE 1443a COMPLETE ===

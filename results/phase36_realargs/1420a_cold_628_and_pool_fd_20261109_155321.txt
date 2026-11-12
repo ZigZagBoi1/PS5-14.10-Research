@@ -1,0 +1,43 @@
+=== PROBE 1420a: COLD 628 + 653 DESCRIPTOR ===
+[0] pid=383
+[A] 653 pool descriptor on a cold table
+  653(0x100000) -> 22 errno=2 No such file or directory
+  fstat(22) -> rv=0 d0=00000000 d1=00000000 d2=0000B000 d3=00000000
+  ioctl FIODTYPE -> rv=-1 out=41414141
+  pread 16 -> rv=-1 errno=9 Bad file descriptor buf0=41414141
+  pwrite 16 -> rv=-1 errno=29 Illegal seek
+  lseek(0,END) -> rv=-1 errno=29 Illegal seek
+  477(fd=22, prot 3, SHARED) -> nil errno=22 Invalid argument
+  477(fd=22, prot 1, SHARED) -> nil
+[B] cold 628, flags 0 prot 0
+  628(phys=0x0,0x4000,idx=0x0,0,0) -> -1 errno=16 Device busy
+  628(phys=0x4000,0x4000,idx=0x0,0,0) -> -1 errno=16 Device busy
+  628(phys=0x1000000,0x4000,idx=0x0,0,0) -> -1 errno=16 Device busy
+  628(phys=0x100000000,0x4000,idx=0x0,0,0) -> -1 errno=16 Device busy
+  628(phys=0x0,0x4000,idx=0x1,0,0) -> -1 errno=16 Device busy
+  628(phys=0x4000,0x4000,idx=0x1,0,0) -> -1 errno=16 Device busy
+  628(phys=0x1000000,0x4000,idx=0x1,0,0) -> -1 errno=16 Device busy
+  628(phys=0x100000000,0x4000,idx=0x1,0,0) -> -1 errno=16 Device busy
+  628(phys=0x0,0x4000,idx=0x2,0,0) -> -1 errno=16 Device busy
+  628(phys=0x4000,0x4000,idx=0x2,0,0) -> -1 errno=16 Device busy
+  628(phys=0x1000000,0x4000,idx=0x2,0,0) -> -1 errno=16 Device busy
+  628(phys=0x100000000,0x4000,idx=0x2,0,0) -> -1 errno=16 Device busy
+  628(phys=0x0,0x4000,idx=0x3,0,0) -> -1 errno=16 Device busy
+  628(phys=0x4000,0x4000,idx=0x3,0,0) -> -1 errno=16 Device busy
+  628(phys=0x1000000,0x4000,idx=0x3,0,0) -> -1 errno=16 Device busy
+  628(phys=0x100000000,0x4000,idx=0x3,0,0) -> -1 errno=16 Device busy
+  628(phys=0x0,0x4000,idx=0x4,0,0) -> -1 errno=16 Device busy
+  628(phys=0x4000,0x4000,idx=0x4,0,0) -> -1 errno=16 Device busy
+  628(phys=0x1000000,0x4000,idx=0x4,0,0) -> -1 errno=16 Device busy
+  628(phys=0x100000000,0x4000,idx=0x4,0,0) -> -1 errno=16 Device busy
+[C] 586 dmem_container
+  586(-1) -> 1 errno=16 Device busy
+  586(0)  -> -1 errno=1 Operation not permitted
+  586(1)  -> -1 errno=1 Operation not permitted
+[D] 628 again
+  628 after 586, idx=0x0 -> -1 errno=16 Device busy
+  628 after 586, idx=0x1 -> -1 errno=16 Device busy
+  628 after 586, idx=0x2 -> -1 errno=16 Device busy
+  628 after 586, idx=0x3 -> -1 errno=16 Device busy
+  628 after 586, idx=0x4 -> -1 errno=16 Device busy
+=== PROBE 1420a COMPLETE ===

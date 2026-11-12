@@ -1,0 +1,56 @@
+=== PROBE 1450a: MUNMAP SEMANTICS ===
+
+canary getpid=432
+
+[A] map 0x4000, munmap(base, 0x1000)
+   base=0x31072C000
+   munmap rv=0
+   A page 0 @0x31072C000 : unmapped
+   A page 1 @0x31072D000 : unmapped
+   A page 2 @0x31072E000 : unmapped
+   A page 3 @0x31072F000 : unmapped
+   A page 0 @0x31072C000 : unmapped  head=unmapped(547) tail=unmapped(547)
+   A page 1 @0x31072D000 : unmapped  head=unmapped(547) tail=unmapped(547)
+   A page 2 @0x31072E000 : unmapped  head=unmapped(547) tail=unmapped(547)
+   A page 3 @0x31072F000 : unmapped  head=unmapped(547) tail=unmapped(547)
+
+[B] map 0x4000, munmap(base+0x3000, 0x1000)
+   base=0x31072C000
+   munmap rv=0
+   B page 0 @0x31072C000 : unmapped
+   B page 1 @0x31072D000 : unmapped
+   B page 2 @0x31072E000 : unmapped
+   B page 3 @0x31072F000 : unmapped
+   B page 0 @0x31072C000 : unmapped  head=unmapped(547) tail=unmapped(547)
+   B page 1 @0x31072D000 : unmapped  head=unmapped(547) tail=unmapped(547)
+   B page 2 @0x31072E000 : unmapped  head=unmapped(547) tail=unmapped(547)
+   B page 3 @0x31072F000 : unmapped  head=unmapped(547) tail=unmapped(547)
+
+[C] map 0x4000, munmap(base+0x1000, 0x1000)
+   base=0x31072C000
+   munmap rv=0
+   C page 0 @0x31072C000 : unmapped
+   C page 1 @0x31072D000 : unmapped
+   C page 2 @0x31072E000 : unmapped
+   C page 3 @0x31072F000 : unmapped
+   C page 0 @0x31072C000 : unmapped  head=unmapped(547) tail=unmapped(547)
+   C page 1 @0x31072D000 : unmapped  head=unmapped(547) tail=unmapped(547)
+   C page 2 @0x31072E000 : unmapped  head=unmapped(547) tail=unmapped(547)
+   C page 3 @0x31072F000 : unmapped  head=unmapped(547) tail=unmapped(547)
+
+[D] two separate 0x4000 regions, munmap a sub-range of the first
+   D1=0x31072C000 D2=0x310730000
+   D2 before: mapped 0x10730000..0x10734000
+   munmap(D1+0x2000) rv=0
+   D1 page 0 @0x31072C000 : unmapped
+   D1 page 1 @0x31072D000 : unmapped
+   D1 page 2 @0x31072E000 : unmapped
+   D1 page 3 @0x31072F000 : unmapped
+   D2 page 0 @0x310730000 : mapped 0x10730000..0x10734000
+   D2 page 1 @0x310731000 : mapped 0x10730000..0x10734000
+   D2 page 2 @0x310732000 : mapped 0x10730000..0x10734000
+   D2 page 3 @0x310733000 : mapped 0x10730000..0x10734000
+
+[E] survivor pid=432 (was 432)
+
+=== PROBE 1450a COMPLETE ===

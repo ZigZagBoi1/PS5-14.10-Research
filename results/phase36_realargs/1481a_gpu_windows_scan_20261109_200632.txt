@@ -1,0 +1,76 @@
+=== PROBE 1481a: GPU WINDOWS AFTER 548 OP 2 ===
+[0] pid=87
+
+--- [A] enumerate and protect by name ---
+[A] 674 rv=0 records=339
+[A] 19 named windows found
+   (NoName)eboot.bin      0xF0000000-0xF0004000 prot 3 -> 3
+   (NoName)eboot.bin      0x7EEF38000-0x7EEF3C000 prot 0 -> 3
+   (NoName)eboot.bin      0xC80000000-0xC80004000 prot 3 -> 3
+   (NoName)eboot.bin      0xC80004000-0xC80048000 prot 51 -> 3
+   SceGnmTrapCode         0xF00000000-0xF00004000 prot 3 -> 3
+   SceGnmTrapData         0xF00004000-0xF00008000 prot 3 -> 3
+   SceAgcDdid             0xF00008000-0xF0000C000 prot 3 -> 3
+   SceAgcDdid             0xF0000C000-0xF00104000 prot 51 -> 3
+   SceGnmEopFifo          0xF00104000-0xF00108000 prot 3 -> 3
+   SceGnmEopFifo          0xF00108000-0xF00140000 prot 51 -> 3
+   SceGnmShadowRegInfo    0xF00140000-0xF00144000 prot 3 -> 3
+   SceGnmCwsr             0xF00144000-0xF00148000 prot 3 -> 3
+   SceGnmCwsr             0xF00148000-0xF01144000 prot 51 -> 3
+   SceGnmMisc             0xF01144000-0xF01148000 prot 3 -> 3
+   SceGnmACQRB            0xF01148000-0xF0114C000 prot 3 -> 3
+   SceGnmACQRB            0xF0114C000-0xF01328000 prot 51 -> 3
+   SceGnmDriver           0xFE0000000-0xFE0004000 prot 3 -> 3
+   SceGnmDriver           0xFE0004000-0xFE0010000 prot 16 -> 3
+   SceGnmDingDong         0xFE0200000-0xFE0204000 prot 3 -> 3
+
+--- [B] first bytes and any kernel-shaped qword ---
+  (NoName)eboot.bin @0xF0000000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  (NoName)eboot.bin @0x7EEF38000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  (NoName)eboot.bin @0xC80000000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  (NoName)eboot.bin @0xC80004000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceGnmTrapCode @0xF00000000:
+    01 00 80 BF 01 00 80 BF 02 00 72 B9 72 9F 72 8F 71 FF F1 93 00 00 1F 00 71 72 71 88 00 82 00 7E 
+  SceGnmTrapData @0xF00004000:
+    00 40 14 00 0F 00 00 00 00 40 14 00 0F 00 00 00 00 80 00 80 0C 00 00 00 00 00 00 00 00 00 00 00 
+  SceAgcDdid @0xF00008000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceAgcDdid @0xF0000C000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceGnmEopFifo @0xF00104000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceGnmEopFifo @0xF00108000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceGnmShadowRegInfo @0xF00140000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceGnmCwsr @0xF00144000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceGnmCwsr @0xF00148000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceGnmMisc @0xF01144000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceGnmACQRB @0xF01148000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceGnmACQRB @0xF0114C000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceGnmDriver @0xFE0000000:
+    00 28 01 C0 00 00 00 80 00 00 00 80 00 12 00 C0 00 00 00 00 00 58 05 C0 C0 7F C4 2E FF FF FF FF 
+    +0x0018 = FFFFFFFF2EC47FC0  <-- kernel shaped
+    +0x0318 = FFFFFFFF00000216  <-- kernel shaped
+    +0x0330 = FFFFFFFF00000219  <-- kernel shaped
+    +0x03F0 = FFFFFFFF0000030E  <-- kernel shaped
+  SceGnmDriver @0xFE0004000:
+    00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  SceGnmDingDong @0xFE0200000:
+    FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 
+[B] 4 kernel-shaped qwords across 19 windows
+
+--- [C] a write test on a page that is fill, not data ---
+[C] no fill page found; the write path was not exercised
+
+final canary: pid=87 (started 87)
+=== PROBE 1481a COMPLETE ===

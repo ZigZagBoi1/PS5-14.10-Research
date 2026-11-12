@@ -1,0 +1,24 @@
+=== PROBE 1554a: 548 op1 vs a first-touch fault ===
+
+[0] pid=298
+[0] eboot=0x00000000_40C08000 store=0x00000000_40C9AC67 = 48 89 (want 48 89)
+[A] control Q=0x3107C0000 prot=3
+[A] 548 op1(Q) rv=0 processed=1, 547 after=nil (want -1)
+[A] CONTROL OK: op 1 on a QUIESCENT page survives. A death in [B] is either
+[A] the child's store fault or the racing delete; the dump's RIP/RDI decides.
+
+[B] P=0x310724000 H=0x310728000 stack=0x3107C0000
+[B] ctx=0x3104C0020 tid=0x3104C0C00
+[B] walk fill ok=true (period 48 bytes, 174762 periods)
+[B] no arm check: P is virgin (first store faults), and H is only reachable through a store into P that succeeded. H reads 0xDEADBEEF now.
+[B] >>> CLEAN RESULT = the capture ends after the next two lines and
+[B] >>> the fault dump decodes to RIP=0x00000000_40C9AC67 rdi=0x310724000 (the store on P).
+[B] >>> RIP=0, or RSP at the top of the fill, means the walk ran off its
+[B] >>> 174762 periods -- a probe artifact, NOT a removed PTE.
+[B] >>> No dump at all means the run died inside 548 with a live writer,
+[B] >>> which [A] (quiescent page) never tested for.
+[B] thr_create rv=0 tid=0x18F26
+[B] op1 rv=0 processed=1
+[B] 547(P) after=3 (want nil = unmapped)
+[B] heartbeat after the unmap: h1=0xDEADBEEF h2=0xDEADBEEF
+=== VOID: the unmap did not take effect; the heartbeat says nothing ===

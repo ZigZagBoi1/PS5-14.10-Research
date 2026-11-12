@@ -1,0 +1,13 @@
+=== PROBE 1509a: GRAFT ANON PAGES OVER KERNEL REGIONS ===
+
+[0] pid=80
+[674] rv=0x0 records=338
+  SceKernelInternalMemory not in 674 output -- check the name
+
+--- [A] graft one page per target ---
+  [SceGnmTrapData] absent, skipped
+  [/AOSharedState] absent, skipped
+  [gpupool] absent, skipped
+  [SceNpGlobalHeap] absent, skipped
+  [SceKernelInternalMemory] absent, skipped
+nothing grafted -- VERDICT VOID

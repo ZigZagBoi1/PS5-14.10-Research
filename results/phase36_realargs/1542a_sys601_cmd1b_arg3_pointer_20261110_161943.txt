@@ -1,0 +1,9 @@
+=== PROBE 1542a: 601 cmd 0x1B, arg3 AS A MAPPED POINTER ===
+
+[0] pid=221
+[0] SIG_IGN installed on 10/10 signals
+[0] struct=13172008864  arg3 page=13170087680  fill=0x43434343
+
+[A] non-matching name, arg3 = a mapped 0x1000 page
+    the 13.60 contract says EINVAL(22); a kill says arg3 is not what makes 0x1B die
+  bogus, arg3=page               601(0x1B, buf, 0x310ff9700) ...

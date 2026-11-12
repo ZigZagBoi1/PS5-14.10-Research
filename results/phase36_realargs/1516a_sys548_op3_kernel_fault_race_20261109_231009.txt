@@ -1,0 +1,17 @@
+=== PROBE 1516a: 548 op 3 VS A KERNEL-DRIVEN FAULT ===
+[0] pid=99
+
+[A] socketpair and pages
+   socketpair = 0 
+   fds = 22 / 23
+   V = 0x3108A0000   SH = 0x3108A4000
+   write from a mapped page = 4
+   write from an unmapped user address = -1 14 Bad address
+   an unmapped source returns EFAULT -- a death during the race is therefore a kernel fault
+
+[B] CONTROL: 200 serial rounds, no second thread
+   rounds=200 replacement_failures=0
+
+[C] START the kernel-side writer, then 400 racing rounds
+   client fd = 21
+   spawn = OK

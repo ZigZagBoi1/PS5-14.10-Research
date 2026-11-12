@@ -1,0 +1,27 @@
+=== PROBE 1511a: DEVICE ENTRY DESTRUCTION LOOP ===
+
+[0] pid=92
+[0] open(/dev/dmem0, O_RDWR|O_NONBLOCK) fd=22
+
+--- [A] baseline ---
+  mmap(dmem0 off 0x4000) A=0x310ACC000
+  A+0 = 0x11112222 (want 11112222)
+  second open fd=23
+
+--- [B] 200 rounds of mmap -> MAP_FIXED over it ---
+  round 50: pid=92 bad=0
+  round 100: pid=92 bad=0
+  round 150: pid=92 bad=0
+  round 200: pid=92 bad=0
+  loop done, bad=0, pid=92
+
+--- [C] descriptor still usable? ---
+  mmap after the loop B=0x3110A0000
+  B+0 = 0xAABBCCDD (want AABBCCDD) OK
+  mmap(dmem0 off 0) Z=0x3110A4000
+  Z+0 = 0xC0012800 (register table expects C0012800)
+  mmap(fd1 off 0x4000) C=0x3110A8000
+  C+0 = 0x13572468 (want 13572468)
+
+final canary pid=92
+=== PROBE 1511a COMPLETE ===

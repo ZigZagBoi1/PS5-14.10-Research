@@ -1,0 +1,27 @@
+=== PROBE 1501a: CROSS FAMILY HANDLE SLOTS ===
+[0] pid=125
+  socketpair rv=0 fd=22
+
+--- [A] mint a namedobj ---
+  557 -> 16901    slot=0x205 gen=2
+
+--- [B] free it, then mint an AIO id ---
+  558(0x4205) -> 0
+  669 -> rv=0 id=0x6205 status=0x0   slot=0x205 gen=3
+  AIO slot 0x205 vs freed namedobj slot 0x205  ->  SHARED
+
+--- [C] 558 namedobj_delete on the AIO id (wrong family) ---
+  558(0x6205) -> -1
+
+--- [D] is the AIO id still a healthy request? ---
+  664 -> rv=0 state=0x2
+
+--- [E] mirror: 662 delete the AIO id, mint a namedobj into the slot, then 664 on it ---
+  662(0x6205) -> rv=0 state=0x80020010
+  557 -> 518    slot=0x206 gen=0
+  664(0x206) on a namedobj handle -> rv=0 state=0x80020003
+  558(0x206) cleanup -> 0
+
+--- [F] report ---
+  final canary live: true (pid 125)
+=== PROBE 1501a COMPLETE ===

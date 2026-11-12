@@ -1,0 +1,31 @@
+=== PROBE 1445a: AIO ID GENERATION ===
+
+canary getpid=423
+[0] socketpair rv=0 read=22 write=23
+    seeded 16 bytes into fd 23
+
+[A] 12 sequential submit -> poll -> delete cycles on one socketpair
+    cyc  rv669 id        slot   gen16  gen13  rv664 state664  rv662 state662 id_after
+     1   0     0x00004205   517      0      2  0     0x00000003  0     0x00000000 0x00004205
+    submit refused (rv=0 result=0x00000010) -- stopping [A]
+
+[B] 8 submits held open at once — slot allocation order
+    req 0 rv=0     id=0x00006205 slot=517 gen16=0 gen13=3
+    req 1 rv=0     id=0x00000206 slot=518 gen16=0 gen13=0
+    req 2 rv=0     id=0x00000207 slot=519 gen16=0 gen13=0
+    req 3 rv=0     id=0x00000208 slot=520 gen16=0 gen13=0
+    req 4 rv=0     id=0x00000209 slot=521 gen16=0 gen13=0
+    req 5 rv=0     id=0x0000020A slot=522 gen16=0 gen13=0
+    req 6 rv=0     id=0x0000020B slot=523 gen16=0 gen13=0
+    req 7 rv=0     id=0x0000020C slot=524 gen16=0 gen13=0
+    polling all 8
+    664 x8 rv=0 states=00000003 00000003 00000003 00000003 00000003 00000003 00000003 00000003
+    deleting all 8 in one call, then again in one call (double-delete control)
+    662 #1 rv=0     states=00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+    662 #2 rv=0     states=80020003 80020003 80020003 80020003 80020003 80020003 80020003 80020003
+
+[C] survivor check
+    669 rv=0     id=0x0000220C slot=524 gen16=0
+    664 rv=0     state=0x00000003 result=0x00000010  pid=423
+
+=== PROBE 1445a COMPLETE ===

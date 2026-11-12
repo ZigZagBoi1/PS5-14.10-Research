@@ -1,0 +1,34 @@
+=== PROBE 1552a: 548 op2 on a MAP_PRIVATE vnode page ===
+
+[A] create /av_contents/content_tmp/r1552.bin
+[A] open rv=22 
+[A] ftruncate(0x8000) rv=0
+[A] write(0x20) rv=32
+[B] open(fd2) rv=22 
+[B] open(fd3) rv=23 
+[B] mmap(hint=0, 0x8000, prot=1, flags=0x2, fd=22, 0) ...
+[B] V1 = 0x31084C000 
+[B] mmap(hint=0, 0x8000, prot=1, flags=0x2, fd=23, 0) ...
+[B] V2 = 0x310854000 
+[B] V1=0x31084C000 V2=0x310854000
+[C] V1[0..3] = 43 4F 57 30
+[C] V2[0..3] = 43 4F 57 30
+[C] both mappings read the file marker: true
+[C2] write 0xA7 at file offset 0x10 through fd2 ...
+[C2] write rv=1
+[C2] V2[0x10] = 167 (want 0xA7)
+[C2] shared page-cache page confirmed
+[D] V1 before: prot=1 start=0x1084C000 end=0x10854000
+[E] 548 op2 start=0x31084C000 len=0x4000 prot=3 ...
+[E] rv=0 processed=1 
+[E] V1 after : prot=3  <<< WRITE GRANTED
+[F] store 0x5C at V1+0x10 (0x31084C010) ...
+[F] V1[0x10] after = 0x5C (store landed)
+[F] V2[0x10] after = 0xA7
+[F] private copy: COW held (V2 still reads the page-cache byte)
+[B] open(fd4) rv=24 
+[B] mmap(hint=0, 0x8000, prot=1, flags=0x2, fd=24, 0) ...
+[B] V3 = 0x3108F4000 
+[G] V3[0x10] = 167 (0x5C would mean the cache is corrupt)
+[H] teardown done
+=== PROBE 1552a COMPLETE ===

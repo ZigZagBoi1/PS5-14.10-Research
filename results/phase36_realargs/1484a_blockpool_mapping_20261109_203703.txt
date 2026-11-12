@@ -1,0 +1,45 @@
+=== PROBE 1484a: BLOCKPOOL MAPPING ===
+[0] pid=92
+[0] 674 rv=0 records=314
+
+--- [A] 653(0x400000) ---
+[A] 653 -> 771
+
+--- [B] map diff ---
+[B] 674 rv=0 records=319
+    NEW  0x310CD8000-0x310CE8000 prot=3 fl=0 SceLibcHeap
+    NEW  0x310CE8000-0x310CF8000 prot=3 fl=0 SceLibcHeap
+    NEW  0x310B80000-0x310B90000 prot=3 fl=0 SceLibcHeap
+    NEW  0x310C40000-0x310C50000 prot=3 fl=0 SceLibcHeap
+    NEW  0x310B40000-0x310B50000 prot=3 fl=0 SceLibcHeap
+[B] new=5 prot-changed=0
+
+--- [C] target 0x310CD8000-0x310CE8000 ---
+    first 16 bytes: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+    673(0x310CD8000, 0x310CE8000, 0x310ED8000)
+      -> -1 22 Invalid argument
+    673(0x310CD8000, 0x310CE8000, 0x310DD8000)
+      -> -1 22 Invalid argument
+    673(0x310CD8000, 0x310CE8000, 0x310CD8000)  self-move
+      -> -1 22 Invalid argument
+
+--- [D] 654 on the same entry ---
+    654(0x310CD8000, 0x10000, 0, 0x0, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 1, 0x0, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 8, 0x0, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 9, 0x0, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 0, 0x1, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 1, 0x1, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 8, 0x1, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 9, 0x1, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 0, 0x10, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 1, 0x10, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 8, 0x10, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 9, 0x10, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 0, 0x11, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 1, 0x11, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 8, 0x11, 0) -> -1 22 Invalid argument
+    654(0x310CD8000, 0x10000, 9, 0x11, 0) -> -1 22 Invalid argument
+
+final canary: pid=92 (started 92)
+=== PROBE 1484a COMPLETE ===

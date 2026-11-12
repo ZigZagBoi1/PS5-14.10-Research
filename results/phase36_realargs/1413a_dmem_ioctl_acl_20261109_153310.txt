@@ -1,0 +1,46 @@
+=== PROBE 1413a: DMEM IOCTLS + /dev NAMES ===
+[0] pid=378
+
+[A] every /dev entry as the kernel lists it
+  open(/dev)=26
+  page 1: 
+  page 2: rv=0 22 Invalid argument
+
+[B] candidate node names the driver's own strings imply
+  /dev/dmem3         2 No such file or directory
+  /dev/dmem          2 No such file or directory
+  /dev/dmem/cnt0     2 No such file or directory
+  /dev/dmem/cnt1     2 No such file or directory
+  /dev/dmem/cnt2     2 No such file or directory
+  /dev/dmem/cnt3     2 No such file or directory
+  /dev/dmem_cnt0     2 No such file or directory
+  /dev/dmemcnt0      2 No such file or directory
+  /dev/dmem/cnt9     2 No such file or directory
+  /dev/dmemu         2 No such file or directory
+  /dev/sce_dmem      2 No such file or directory
+
+[C] the dmem ACL ioctls with a zeroed 0x40-byte argument
+  open(/dev/dmem0)=26
+  cmd=0x80108002 rv=-1 errno=1 Operation not permitted  buf=00000000 00000000 00000000 00000000
+  cmd=0x80108015 rv=-1 errno=1 Operation not permitted  buf=00000000 00000000 00000000 00000000
+  cmd=0xC010801A rv=-1 errno=1 Operation not permitted  buf=00000000 00000000 00000000 00000000
+  cmd=0x80088002 rv=-1 errno=1 Operation not permitted  buf=00000000 00000000 00000000 00000000
+  cmd=0xC0088015 rv=-1 errno=1 Operation not permitted  buf=00000000 00000000 00000000 00000000
+  cmd=0x80108001 rv=-1 errno=1 Operation not permitted  buf=00000000 00000000 00000000 00000000
+  cmd=0x80108003 rv=-1 errno=1 Operation not permitted  buf=00000000 00000000 00000000 00000000
+  cmd=0x80108010 rv=-1 errno=1 Operation not permitted  buf=00000000 00000000 00000000 00000000
+  cmd=0x80108016 rv=-1 errno=1 Operation not permitted  buf=00000000 00000000 00000000 00000000
+  cmd=0x8010801A rv=-1 errno=1 Operation not permitted  buf=00000000 00000000 00000000 00000000
+
+[D] same commands with a GPU address in the first qword (the 64 GiB window)
+  cmd=0x80108002 arg0=0x1000000000   rv=-1 errno=1 Operation not permitted buf=00000000 00000010 00000000 00000000
+  cmd=0x80108002 arg0=0x0            rv=-1 errno=1 Operation not permitted buf=00000000 00000000 00000000 00000000
+  cmd=0x80108002 arg0=0xFFFFFFFF     rv=-1 errno=1 Operation not permitted buf=FFFFFFFF 00000000 00000000 00000000
+  cmd=0x80108015 arg0=0x1000000000   rv=-1 errno=1 Operation not permitted buf=00000000 00000010 00000000 00000000
+  cmd=0x80108015 arg0=0x0            rv=-1 errno=1 Operation not permitted buf=00000000 00000000 00000000 00000000
+  cmd=0x80108015 arg0=0xFFFFFFFF     rv=-1 errno=1 Operation not permitted buf=FFFFFFFF 00000000 00000000 00000000
+  cmd=0xC010801A arg0=0x1000000000   rv=-1 errno=1 Operation not permitted buf=00000000 00000010 00000000 00000000
+  cmd=0xC010801A arg0=0x0            rv=-1 errno=1 Operation not permitted buf=00000000 00000000 00000000 00000000
+  cmd=0xC010801A arg0=0xFFFFFFFF     rv=-1 errno=1 Operation not permitted buf=FFFFFFFF 00000000 00000000 00000000
+
+=== 1413a DONE ===

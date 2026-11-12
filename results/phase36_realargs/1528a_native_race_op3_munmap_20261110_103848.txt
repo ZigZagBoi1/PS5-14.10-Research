@@ -1,0 +1,40 @@
+=== PROBE 1528a: native child munmap vs 548 op 3 ===
+
+fn_addr=0x000000082294CB57
+pid=108
+
+[A] eboot base + gadget scan
+eboot=0x0000000017FA8000
+  pop_rax=eboot+0x992 pop_rdi=eboot+0xC9DFE(+0) pop_rsi=eboot+0xD77D(+0) bare=eboot+0x42
+
+[B] victim window
+  mmap -> 0x00000003114E4000
+  547 prot=3
+  canary=0x11223344
+
+[C] build child munmap chain
+  stack=0x000000031120C020 rsp=0x0000000311210018 iters=8000 chain_bytes=192032
+  chain qwords=24017 bytes=192136 fits=true
+  spawning...
+  thr_new ret=0
+  child tid=101603
+
+[D] race: 548 op 3 MAP_FIXED at V
+  round 0: rv=13175242752 sentinel=1 expect addr=0x00000003114E4000
+  round 50: rv=13175242752 prot=3 bad[place=0 prot=0] nz=0/4 racy_unmapped=1
+  round 100: rv=13175242752 prot=3 bad[place=0 prot=0] nz=0/9 racy_unmapped=1
+  round 150: rv=13175242752 prot=3 bad[place=0 prot=0] nz=0/14 racy_unmapped=1
+  round 200: rv=13175242752 prot=3 bad[place=0 prot=0] nz=0/19 racy_unmapped=1
+  round 250: rv=13175242752 prot=3 bad[place=0 prot=0] nz=0/24 racy_unmapped=1
+  round 300: rv=13175242752 prot=3 bad[place=0 prot=0] nz=0/29 racy_unmapped=1
+  round 350: rv=13175242752 prot=3 bad[place=0 prot=0] nz=0/34 racy_unmapped=1
+  round 400: rv=13175242752 prot=3 bad[place=0 prot=0] nz=0/39 racy_unmapped=1
+  done: bad_place=0 bad_prot=0 nonzero_before_write=0/39 racy_unmapped=1
+
+[E] verdict
+  547 final prot=3
+  final mark=0xAABBCCDD
+  munmap ok=true
+  alive=true pid=108
+
+=== PROBE 1528a COMPLETE ===

@@ -1,0 +1,40 @@
+=== PROBE 1535a: EXECUTABLE DEVICE WINDOW VIA 548 OP 2 ===
+
+[0] pid=214
+
+[A] marker page
+    marker at 0x310BB5440 holds DEADBEEF
+
+[B] locate SceGnmTrapData through 674
+    674 rv=0 records=314
+    found 'SceGnmTrapData' at 0xF00004000..0xF00008000
+    window protection before               547 rv=0   prot=0x33 range=F00004000..F00008000
+
+[C] save the original bytes, then plant `mov [rdi],rax; jmp $` at window+0x100
+    original 8 bytes at 0xF00004100: 00 00 00 00 00 00 00 00 
+    at 0xF00004100: 48 89 07 EB FE 00 00 00   (expect 48 89 07 EB FE)
+
+[D] 548 op 2 with an exec bit - 0x37 keeps the device attributes, then 0x7, then 0x5
+  -> window -> 0x37 (prot=0x37 len=0x4000)
+     rv=-1    13 Permission denied processed=0
+    window after 0x37                      547 rv=0   prot=0x33 range=F00004000..F00008000
+  -> window -> 0x7 (prot=0x7 len=0x4000)
+     rv=-1    13 Permission denied processed=0
+    window after 0x7                       547 rv=0   prot=0x33 range=F00004000..F00008000
+  -> window -> 0x5 (prot=0x5 len=0x4000)
+     rv=-1    13 Permission denied processed=0
+    window after 0x5                       547 rv=0   prot=0x33 range=F00004000..F00008000
+    no protection carrying bit 0x4 was accepted; the entry's max_prot excludes X
+    (the same EACCES that 1533a measured for anon 3 -> 7; the W^X wall holds here too)
+
+[E] skipped: no executable protection was granted, so a jump would prove nothing
+[F] skipped
+
+[G] restore the window: protection first, then the bytes
+  -> window -> 0x33 (original) (prot=0x33 len=0x4000)
+     rv=0                        processed=1
+    window protection restored             547 rv=0   prot=0x33 range=F00004000..F00008000
+    bytes at 0xF00004100 now: 00 00 00 00 00 00 00 00   (originally 00 00 00 00 00 00 00 00 )
+
+final canary: pid=214 (started 214)
+=== PROBE 1535a COMPLETE ===

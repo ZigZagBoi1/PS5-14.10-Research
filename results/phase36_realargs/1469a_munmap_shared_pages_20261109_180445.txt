@@ -1,0 +1,41 @@
+=== PROBE 1469a: MUNMAP ENTRY SCOPE vs SHARED PAGES ===
+
+[0] pid=502
+[A] shm_open + two MAP_SHARED aliases
+[A] fd=23
+[A] ftruncate -> 0
+[A] A=0x311390000 B=0x311394000
+   A @0x311390000: 11223344
+   B @0x311394000: 11223344
+   B+0x1000 @0x311395000: 11223345
+[A] aliases share pages: YES
+
+[B] munmap(A, 0x1000) -- 1450a says the whole entry goes
+[B] -> 0
+   A+0x0 mapped=false
+   A+0x1000 mapped=false
+   A+0x2000 mapped=false
+   A+0x3000 mapped=false
+   B @0x311394000: 11223344
+   B+0x3000 @0x311397000: 11223347
+
+[C] spray 64 x 0x4000 anonymous mappings, fill with 5A5A5A5A
+[C] mapped 64 regions
+   B @0x311394000: 11223344
+[C] B changed: false (was 11223344, now 11223344)
+   B+0x1000 @0x311395000: 11223345
+
+[D] MAP_FIXED over the middle of a fresh 0x4000 mapping
+[D] C=0x311594000
+[D] MAP_FIXED at C+0x1000 -> 0xFFFFFFFFFFFFFFFF
+   C+0x0 mapped=true
+   C+0x1000 mapped=true
+   C+0x2000 mapped=true
+   C+0x3000 mapped=true
+   C @0x311594000: AAAA0001
+   C+0x1000 @0x311595000: AAAA0002
+   C+0x3000 @0x311597000: AAAA0004
+
+[Z] alive pid=502 (was 502)
+
+=== PROBE 1469a COMPLETE ===

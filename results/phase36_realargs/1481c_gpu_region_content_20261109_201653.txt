@@ -1,0 +1,72 @@
+=== PROBE 1481c: GPU REGION CONTENT ===
+[0] pid=87 kernel image assumed 0xFFFFFFFFCC800000
+
+--- [A] enumerate ---
+[A] 674 rv=0 records=340
+[A] (NoName)eboot.bin      0xF0000000-0xF0004000 (0x4000)
+[A] (NoName)eboot.bin      0x7EEF38000-0x7EEF3C000 (0x4000)
+[A] (NoName)eboot.bin      0xC80000000-0xC80048000 (0x48000)
+[A] SceGnmTrapCode         0xF00000000-0xF00004000 (0x4000)
+[A] SceGnmTrapData         0xF00004000-0xF00008000 (0x4000)
+[A] SceAgcDdid             0xF00008000-0xF00104000 (0xFC000)
+[A] SceGnmEopFifo          0xF00104000-0xF00140000 (0x3C000)
+[A] SceGnmShadowRegInfo    0xF00140000-0xF00144000 (0x4000)
+[A] SceGnmCwsr             0xF00144000-0xF01144000 (0x1000000)
+[A] SceGnmMisc             0xF01144000-0xF01148000 (0x4000)
+[A] SceGnmACQRB            0xF01148000-0xF01328000 (0x1E0000)
+[A] SceGnmDriver           0xFE0000000-0xFE0010000 (0x10000)
+[A] SceGnmDingDong         0xFE0200000-0xFE0204000 (0x4000)
+
+--- [B] bulk read ---
+  [(NoName)eboot.bin] 0xF0000000-0xF0004000 scanning 0x4000
+  [(NoName)eboot.bin] 0xF0000000: first non-zero +0x0, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+    first non-zero bytes: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  [(NoName)eboot.bin] 0x7EEF38000-0x7EEF3C000 scanning 0x4000
+  [(NoName)eboot.bin] 0x7EEF38000: first non-zero none, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+  [(NoName)eboot.bin] 0xC80000000-0xC80048000 scanning 0x8000
+  [(NoName)eboot.bin] 0xC80000000: first non-zero none, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+  [SceGnmTrapCode] 0xF00000000-0xF00004000 scanning 0x4000
+    +0x261F str "FOrbShdr"
+  [SceGnmTrapCode] 0xF00000000: first non-zero +0x0, 0 image candidates, 0 other kernel-half, 1 strings, 0 read fails, 0 protect fails
+    first non-zero bytes: 01 00 80 BF 01 00 80 BF 02 00 72 B9 72 9F 72 8F 71 FF F1 93 00 00 1F 00 71 72 71 88 00 82 00 7E 00 04 F6 BE 12 F8 00 B9 13 F8 01 B9 00 88 80 8F 04 01 40 C0 00 00 8C BF 6A 04 EA BE 76 00 F6 89 
+  [SceGnmTrapData] 0xF00004000-0xF00008000 scanning 0x4000
+  [SceGnmTrapData] 0xF00004000: first non-zero +0x0, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+    first non-zero bytes: 00 40 14 00 0F 00 00 00 00 40 14 00 0F 00 00 00 00 80 00 80 0C 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 
+  [SceAgcDdid] 0xF00008000-0xF00104000 scanning 0xFC000
+  [SceAgcDdid] 0xF00008000: first non-zero none, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+  [SceGnmEopFifo] 0xF00104000-0xF00140000 scanning 0x3C000
+  [SceGnmEopFifo] 0xF00104000: first non-zero none, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+  [SceGnmShadowRegInfo] 0xF00140000-0xF00144000 scanning 0x4000
+  [SceGnmShadowRegInfo] 0xF00140000: first non-zero none, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+  [SceGnmCwsr] 0xF00144000-0xF01144000 scanning 0x1000000
+    ... +0x100000
+    ... +0x200000
+    ... +0x300000
+    ... +0x400000
+    ... +0x500000
+    ... +0x600000
+    ... +0x700000
+    ... +0x800000
+    ... +0x900000
+    ... +0xA00000
+    ... +0xB00000
+    ... +0xC00000
+    ... +0xD00000
+    ... +0xE00000
+    ... +0xF00000
+  [SceGnmCwsr] 0xF00144000: first non-zero none, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+  [SceGnmMisc] 0xF01144000-0xF01148000 scanning 0x4000
+  [SceGnmMisc] 0xF01144000: first non-zero none, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+  [SceGnmACQRB] 0xF01148000-0xF01328000 scanning 0x1E0000
+    ... +0x100000
+  [SceGnmACQRB] 0xF01148000: first non-zero none, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+  [SceGnmDriver] 0xFE0000000-0xFE0010000 scanning 0x10000
+  [SceGnmDriver] 0xFE0000000: first non-zero +0x0, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+    first non-zero bytes: 00 28 01 C0 00 00 00 80 00 00 00 80 00 12 00 C0 00 00 00 00 00 58 05 C0 C0 7F C4 2E FF FF FF FF 00 00 00 00 00 00 00 00 00 00 00 00 0A 00 00 00 00 76 02 C0 08 00 00 00 00 00 00 00 00 00 00 00 
+  [SceGnmDingDong] 0xFE0200000-0xFE0204000 scanning 0x4000
+  [SceGnmDingDong] 0xFE0200000: first non-zero +0x0, 0 image candidates, 0 other kernel-half, 0 strings, 0 read fails, 0 protect fails
+    first non-zero bytes: FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF FF 
+
+[B] totals: 0 image candidates, 1 strings
+final canary: pid=87 (started 87)
+=== PROBE 1481c COMPLETE ===

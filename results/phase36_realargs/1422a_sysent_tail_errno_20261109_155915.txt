@@ -1,0 +1,81 @@
+=== PROBE 1422a: SYSENT TAIL ERRNO (677-735) ===
+[A] sigaction(12, SIG_IGN) ok=true handler_readback=1
+[B] page=0x31145C000
+
+[C] controls
+   568  rv=-1                   errno=78 Function not implemented  nosys
+   596  rv=0x0_00000000         errno=78 Function not implemented  nosys
+   557  rv=0x0_00004205         errno=78 Function not implemented  nosys
+
+[D] 676..735
+   676  rv=-1                   errno=22 Invalid argument          REAL?
+   677  rv=-1                   errno=78 Function not implemented  nosys
+   678  rv=-1                   errno=78 Function not implemented  nosys
+   679  rv=-1                   errno=78 Function not implemented  nosys
+   680  rv=-1                   errno=78 Function not implemented  nosys
+   681  rv=-1                   errno=78 Function not implemented  nosys
+   682  rv=-1                   errno=78 Function not implemented  nosys
+   683  rv=-1                   errno=78 Function not implemented  nosys
+   684  rv=-1                   errno=78 Function not implemented  nosys
+   685  rv=-1                   errno=78 Function not implemented  nosys
+   686  rv=-1                   errno=78 Function not implemented  nosys
+   687  rv=-1                   errno=78 Function not implemented  nosys
+   688  rv=-1                   errno=78 Function not implemented  nosys
+   689  rv=-1                   errno=78 Function not implemented  nosys
+   690  rv=-1                   errno=78 Function not implemented  nosys
+   691  rv=-1                   errno=78 Function not implemented  nosys
+   692  rv=-1                   errno=78 Function not implemented  nosys
+   693  rv=-1                   errno=78 Function not implemented  nosys
+   694  rv=-1                   errno=78 Function not implemented  nosys
+   695  rv=-1                   errno=78 Function not implemented  nosys
+   696  rv=-1                   errno=78 Function not implemented  nosys
+   697  rv=-1                   errno=78 Function not implemented  nosys
+   698  rv=-1                   errno=78 Function not implemented  nosys
+   699  rv=-1                   errno=78 Function not implemented  nosys
+   700  rv=-1                   errno=78 Function not implemented  nosys
+   701  rv=-1                   errno=78 Function not implemented  nosys
+   702  rv=-1                   errno=78 Function not implemented  nosys
+   703  rv=-1                   errno=78 Function not implemented  nosys
+   704  rv=-1                   errno=78 Function not implemented  nosys
+   705  rv=-1                   errno=78 Function not implemented  nosys
+   706  rv=-1                   errno=78 Function not implemented  nosys
+   707  rv=-1                   errno=78 Function not implemented  nosys
+   708  rv=-1                   errno=78 Function not implemented  nosys
+   709  rv=-1                   errno=78 Function not implemented  nosys
+   710  rv=-1                   errno=78 Function not implemented  nosys
+   711  rv=-1                   errno=78 Function not implemented  nosys
+   712  rv=-1                   errno=78 Function not implemented  nosys
+   713  rv=-1                   errno=78 Function not implemented  nosys
+   714  rv=-1                   errno=78 Function not implemented  nosys
+   715  rv=-1                   errno=78 Function not implemented  nosys
+   716  rv=-1                   errno=78 Function not implemented  nosys
+   717  rv=-1                   errno=78 Function not implemented  nosys
+   718  rv=-1                   errno=78 Function not implemented  nosys
+   719  rv=-1                   errno=78 Function not implemented  nosys
+   720  rv=-1                   errno=78 Function not implemented  nosys
+   721  rv=-1                   errno=78 Function not implemented  nosys
+   722  rv=-1                   errno=78 Function not implemented  nosys
+   723  rv=-1                   errno=78 Function not implemented  nosys
+   724  rv=-1                   errno=78 Function not implemented  nosys
+   725  rv=-1                   errno=78 Function not implemented  nosys
+   726  rv=-1                   errno=78 Function not implemented  nosys
+   727  rv=-1                   errno=78 Function not implemented  nosys
+   728  rv=-1                   errno=78 Function not implemented  nosys
+   729  rv=-1                   errno=78 Function not implemented  nosys
+   730  rv=-1                   errno=78 Function not implemented  nosys
+   731  rv=-1                   errno=78 Function not implemented  nosys
+   732  rv=-1                   errno=78 Function not implemented  nosys
+   733  rv=-1                   errno=78 Function not implemented  nosys
+   734  rv=-1                   errno=78 Function not implemented  nosys
+   735  rv=-1                   errno=78 Function not implemented  nosys
+
+[E] out-of-range numbers
+  4096  rv=-1                   errno=78 Function not implemented  nosys
+  32768  rv=-1                   errno=78 Function not implemented  nosys
+  65536  rv=-1                   errno=78 Function not implemented  nosys
+  1073741824  rv=-1                   errno=78 Function not implemented  nosys
+  2147483648  rv=-1                   errno=78 Function not implemented  nosys
+  4294967294  rv=-1                   errno=78 Function not implemented  nosys
+  4294967295  rv=-1                   errno=78 Function not implemented  nosys
+
+=== PROBE 1422a COMPLETE ===

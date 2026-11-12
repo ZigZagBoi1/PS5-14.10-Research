@@ -1,0 +1,47 @@
+=== PROBE 1424a: SOCKET FAMILY/PROTO/TYPE MATRIX ===
+
+[A] family/protocol pairs
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+
+[B] SOCK_RDM(4) and SOCK_SEQPACKET(5) across the families that opened
+-1  41 Protocol wrong type for socket
+fd=34
+-1  41 Protocol wrong type for socket
+-1  41 Protocol wrong type for socket
+-1  41 Protocol wrong type for socket
+-1  41 Protocol wrong type for socket
+-1  41 Protocol wrong type for socket
+-1  41 Protocol wrong type for socket
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+fd=35
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+
+[C] SOCK_CLOEXEC / SOCK_NONBLOCK flags (0x10000000 / 0x20000000) if honoured
+fd=36
+fd=37
+fd=38
+
+=== PROBE 1424a COMPLETE ===

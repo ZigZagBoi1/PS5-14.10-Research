@@ -1,0 +1,8 @@
+=== PROBE 1541a: 601 cmd 0x1B, NAME-GATED CALLER-QWORD WRITE ===
+
+[0] pid=214
+[0] SIG_IGN installed on 10/10 signals
+
+[A] a name that matches none of the nine, called FIRST so that a death here isolates the
+    preamble (copyin + ctx create + malloc) rather than the nine-way store
+  bogus name                   601(0x1B, buf, 9) ...

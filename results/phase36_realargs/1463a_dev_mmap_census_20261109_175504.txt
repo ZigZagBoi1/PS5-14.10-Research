@@ -1,0 +1,104 @@
+=== PROBE 1463a: MMAP EVERY OPENABLE /dev NODE ===
+
+[0] pid=495
+[N] /dev/rng
+   open -> -1 13 Permission denied
+[N] /dev/hid
+   fd=22
+   mmap off=0x0 ...
+   off=0x0 -> -1 22 Invalid argument
+   mmap off=0x1000 ...
+   off=0x1000 -> -1 22 Invalid argument
+   mmap off=0x10000 ...
+   off=0x10000 -> -1 22 Invalid argument
+[N] /dev/bt
+   fd=22
+   mmap off=0x0 ...
+   off=0x0 -> -1 22 Invalid argument
+   mmap off=0x1000 ...
+   off=0x1000 -> -1 22 Invalid argument
+   mmap off=0x10000 ...
+   off=0x10000 -> -1 22 Invalid argument
+[N] /dev/usb
+   open -> -1 21 Is a directory
+[N] /dev/camera
+   fd=22
+   mmap off=0x0 ...
+   off=0x0 -> -1 22 Invalid argument
+   mmap off=0x1000 ...
+   off=0x1000 -> -1 22 Invalid argument
+   mmap off=0x10000 ...
+   off=0x10000 -> -1 22 Invalid argument
+[N] /dev/gic
+   fd=22
+   mmap off=0x0 ...
+   off=0x0 -> -1 22 Invalid argument
+   mmap off=0x1000 ...
+   off=0x1000 -> -1 22 Invalid argument
+   mmap off=0x10000 ...
+   off=0x10000 -> -1 22 Invalid argument
+[N] /dev/ajm
+   open -> -1 13 Permission denied
+[N] /dev/dce
+   fd=22
+   mmap off=0x0 ...
+   off=0x0 -> -1 22 Invalid argument
+   mmap off=0x1000 ...
+   off=0x1000 -> -1 22 Invalid argument
+   mmap off=0x10000 ...
+   off=0x10000 -> -1 22 Invalid argument
+[N] /dev/gc
+   fd=22
+   mmap off=0x0 ...
+   off=0x0 -> va=0x311338000
+   data: FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+   mmap off=0x1000 ...
+   off=0x1000 -> va=0x31133D000
+   data: FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+   mmap off=0x10000 ...
+   off=0x10000 -> -1 22 Invalid argument
+[N] /dev/dmem0
+   fd=22
+   mmap off=0x0 ...
+   off=0x0 -> va=0x311340000
+   data: C0012800 80000000 80000000 C0001200 00000000 C0055800 2EC47FC0 FFFFFFFF
+   mmap off=0x1000 ...
+   off=0x1000 -> va=0x311345000
+   data: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   mmap off=0x10000 ...
+   off=0x10000 -> va=0x311348000
+   data: 00000000 00000000 00000000 00000000 00000000 00000000 00000523 00000000
+[N] /dev/dmem1
+   fd=22
+   mmap off=0x0 ...
+   off=0x0 -> va=0x31134C000
+   data: C0012800 80000000 80000000 C0001200 00000000 C0055800 2EC47FC0 FFFFFFFF
+   mmap off=0x1000 ...
+   off=0x1000 -> va=0x311351000
+   data: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   mmap off=0x10000 ...
+   off=0x10000 -> va=0x311354000
+   data: 00000000 00000000 00000000 00000000 00000000 00000000 00000523 00000000
+[N] /dev/dmem2
+   fd=22
+   mmap off=0x0 ...
+   off=0x0 -> -1 13 Permission denied
+   mmap off=0x1000 ...
+   off=0x1000 -> -1 13 Permission denied
+   mmap off=0x10000 ...
+   off=0x10000 -> -1 13 Permission denied
+[N] /dev/zero
+   fd=22
+   mmap off=0x0 ...
+   off=0x0 -> va=0x311358000
+   data: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   mmap off=0x1000 ...
+   off=0x1000 -> va=0x31135D000
+   data: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+   mmap off=0x10000 ...
+   off=0x10000 -> va=0x311360000
+   data: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+
+[Z] alive pid=495 (was 495)
+
+=== PROBE 1463a COMPLETE ===

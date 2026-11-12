@@ -1,0 +1,18 @@
+=== PROBE 1496a: SYS 548 PROT 6 -> 7 ===
+[0] pid=118
+
+--- [A] mmap with prot 7 (max_prot 7) ---
+  mmap prot7 -> 0x310C04000 
+  547 prot = 3
+
+--- [B] 548 op 2 walk: 1, 3, then 6 ---
+  request 1 -> final 0x01 : rv=0    processed=1  547 now 1  
+  request 3 -> final 0x03 : rv=0    processed=1  547 now 3  
+  request 6 -> final 0x07 : rv=-1   processed=0  547 now 3  13 Permission denied
+  final protection 3, exec bit set: false
+
+--- [C] write a stub and start it ---
+  the vm_map did not end at 7, so there is nothing to execute; skipping [C]
+
+final canary live: true (pid 118)
+=== PROBE 1496a COMPLETE ===

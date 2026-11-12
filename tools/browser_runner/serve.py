@@ -38,7 +38,42 @@ PROJECT = ROOT.parent.parent
 
 STATIC = {
     '/': ROOT / 'redirect.html',
+    '/stop': ROOT / 'stop.html',
+    '/stop.html': ROOT / 'stop.html',
+    '/p809': PROJECT / 'probes' / 'phase13_webkit' / 'p809-elf-got-reader.html',
+    '/p809v24b.html': PROJECT / 'probes' / 'phase13_webkit' / 'p809v24b.html',
+    '/p809v24b': PROJECT / 'probes' / 'phase13_webkit' / 'p809v24b.html',
+    '/p809v25d.html': PROJECT / 'probes' / 'phase13_webkit' / 'p809v25d.html',
+    '/p809v25d': PROJECT / 'probes' / 'phase13_webkit' / 'p809v25d.html',
+    '/p809v25e.html': PROJECT / 'probes' / 'phase13_webkit' / 'p809v25e.html',
+    '/p809v25e': PROJECT / 'probes' / 'phase13_webkit' / 'p809v25e.html',
+    '/p809v25e37.html': PROJECT / 'probes' / 'phase13_webkit' / 'p809v25e37.html',
+    '/p809v25e37': PROJECT / 'probes' / 'phase13_webkit' / 'p809v25e37.html',
+    '/p811-addrof-read.html': PROJECT / 'probes' / 'phase13_webkit' / 'p811-addrof-read.html',
+    '/p811-addrof-read': PROJECT / 'probes' / 'phase13_webkit' / 'p811-addrof-read.html',
+    '/p811': PROJECT / 'probes' / 'phase13_webkit' / 'p811-addrof-read.html',
+    '/p812-heap-scan.html': PROJECT / 'probes' / 'phase13_webkit' / 'p812-heap-scan.html',
+    '/p812-heap-scan': PROJECT / 'probes' / 'phase13_webkit' / 'p812-heap-scan.html',
+    '/p812': PROJECT / 'probes' / 'phase13_webkit' / 'p812-heap-scan.html',
+    '/p813-arw-read.html': PROJECT / 'probes' / 'phase13_webkit' / 'p813-arw-read.html',
+    '/p813-arw-read': PROJECT / 'probes' / 'phase13_webkit' / 'p813-arw-read.html',
+    '/p813v2-feng-shui.html': PROJECT / 'probes' / 'phase13_webkit' / 'p813v2-feng-shui.html',
+    '/p813v2-feng-shui': PROJECT / 'probes' / 'phase13_webkit' / 'p813v2-feng-shui.html',
+    '/p813': PROJECT / 'probes' / 'phase13_webkit' / 'p813v2-feng-shui.html',
+    '/p814-ur-fengshui.html': PROJECT / 'probes' / 'phase13_webkit' / 'p814-ur-fengshui.html',
+    '/p814-ur-fengshui': PROJECT / 'probes' / 'phase13_webkit' / 'p814-ur-fengshui.html',
+    '/p814': PROJECT / 'probes' / 'phase13_webkit' / 'p814-ur-fengshui.html',
+    '/p815-wide-rs.html': PROJECT / 'probes' / 'phase13_webkit' / 'p815-wide-rs.html',
+    '/p815-wide-rs': PROJECT / 'probes' / 'phase13_webkit' / 'p815-wide-rs.html',
+    '/p815': PROJECT / 'probes' / 'phase13_webkit' / 'p815-wide-rs.html',
+    '/p816-diag.html': PROJECT / 'probes' / 'phase13_webkit' / 'p816-diag.html',
+    '/p816-diag': PROJECT / 'probes' / 'phase13_webkit' / 'p816-diag.html',
+    '/p816': PROJECT / 'probes' / 'phase13_webkit' / 'p816-diag.html',
+    '/p810-gadget-scan.html': PROJECT / 'probes' / 'phase13_webkit' / 'p810-gadget-scan.html',
+    '/p810-gadget-scan': PROJECT / 'probes' / 'phase13_webkit' / 'p810-gadget-scan.html',
+    '/p810': PROJECT / 'probes' / 'phase13_webkit' / 'p810-gadget-scan.html',
     '/p804': PROJECT / 'probes' / 'phase13_webkit' / 'p804-vtable-verify.html',
+    '/p808': PROJECT / 'probes' / 'phase13_webkit' / 'p808-gadget-scan.html',
     '/p807': PROJECT / 'probes' / 'phase13_webkit' / 'p807-base-discovery.html',
     '/p691': PROJECT / 'probes' / 'phase13_webkit' / 'p691-walk-forge-fixed.html',
     '/p690': PROJECT / 'probes' / 'phase13_webkit' / 'p690-walk-forge-oracle.html',
@@ -273,6 +308,7 @@ class CaptureHTTPServer(http.server.HTTPServer):
         self.first_error = None
         self.secondary_error = None
         self.response_error = None
+        self.allow_reuse_address = True
         super().__init__(address, handler)
 
     def handle_error(self, request, client_address):

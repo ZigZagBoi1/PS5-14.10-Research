@@ -86,15 +86,15 @@ The offline analysis confirmed existing classifications, found no overlooked ker
 
 ## Console Probe Priority (When Online)
 
-| Priority | Probe | CVE | What It Tests |
-|---|---|---|---|
-| 1 | **p721** | CVE-2026-64718 | Canvas UAF — DEFINITELY unpatched (post-cutoff) |
-| 2 | **p686** | CVE-2023-41976 | SVG animation UAF (different size class) |
-| 3 | p692 | CVE-2023-40447 | WebKit UAF |
-| 4 | p694 | CVE-2023-42950 | Heap UAF |
-| 5 | p693 | CVE-2023-42890 | Memory handling |
-| 6 | p689/p690 | CVE-2024-23213 | Memory handling ACE |
-| ~~7~~ | ~~p719~~ | ~~CVE-2025-43265~~ | ~~DEAD: YARR JIT bug, CONFIG-SILENT. Generic vectors low-priority survey only~~ |
+| Priority | Probe | CVE | CVSS | What It Tests |
+|---|---|---|---|---|
+| 1 | **p686** | CVE-2023-41976 | 8.8 ACE | SVG animation UAF (different size class, Safari 17.1 fix) |
+| 2 | **p692** | CVE-2023-40447 | 8.8 ACE | DOM UAF + layout (Safari 17.1 fix, same researcher as 41976) |
+| 3 | **p694** | CVE-2023-42950 | 8.8 ACE | Heap UAF via GC/Proxy (Safari 17.2 fix) |
+| 4 | p693 | CVE-2023-42890 | 8.8 ACE | Memory handling (Safari 17.2 fix, CWE-94 JIT-uncertainty) |
+| 5 | p689/p690 | CVE-2024-23213 | 8.8 ACE | TextDecoder buffer (Safari 17.3 fix) |
+| ~~6~~ | ~~p721~~ | ~~CVE-2026-64718~~ | 5.5 crash | ~~DEAD: PathCG.cpp platform mismatch (CG-specific) + OffscreenCanvas absent~~ |
+| ~~7~~ | ~~p719~~ | ~~CVE-2025-43265~~ | — | ~~DEAD: YARR JIT bug, CONFIG-SILENT~~ |
 
 ---
 

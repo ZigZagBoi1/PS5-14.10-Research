@@ -35,6 +35,15 @@
    Leitura 0x200@+0x64 deles vira open datum device-side (atribuição morta,
    bytes não). Estado: concordância cross-bench com árbitro canônico.
    Reproduzível: gh api repos/WebKit/WebKit/contents/<path>?ref=c716fcf51af2...
+8. **CORREÇÃO DE ERA (18:28Z, cmt 6833056329→6833056329; nossa réplica 6833056326)**:
+   blob-fingerprint independente confirma — WeakHashSet.h do drop Sony =
+   7616.2.3 (4d1c56aa, COM maxOp=512); nosso pin 7616.1.27 (d5f980fc) é
+   seed-branch outlier (maxOp entrou 72h depois, 177d6881). CSSFontFace.h
+   idêntico nos dois tags (aa8a090c) → conclusão vptr SOBREVIVE com era
+   correta. RETRATADO: "+0x64 = padding" (era errada). +0x64 = candidato
+   maxOp (init 0x200), dword read pré-registrado na bancada. NENHUM offset
+   ancorado muda (m_clients=16B nos dois mundos). Lei adotada: arbiter de
+   era por byte-identity dos arquivos disputados, não proximidade de tag.
 
 ---
 

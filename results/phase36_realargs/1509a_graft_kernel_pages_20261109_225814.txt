@@ -1,0 +1,53 @@
+=== PROBE 1509a: GRAFT ANON PAGES OVER KERNEL REGIONS ===
+
+[0] pid=92
+[674] rv=0x0 records=316
+  scan[0] s=0xE648000 e=0xEADC000 prot=0x5 nm=[executable]
+  scan[1] s=0xEC48000 e=0xEC60000 prot=0x1 nm=[executable]
+  scan[2] s=0xEE48000 e=0xEF8C000 prot=0x3 nm=[executable]
+  scan[3] s=0xEF8C000 e=0xEFC8000 prot=0x3 nm=[executable]
+  [gpupool] start=0x200650000 end=0x200664000 prot=0x3 len=0x14000
+  [gpupool] start=0x200668000 end=0x20066C000 prot=0x3 len=0x4000
+  [gpupool] start=0x20091C000 end=0x200920000 prot=0x1 len=0x4000
+  [gpupool] start=0x200920000 end=0x210920000 prot=0x33 len=0x10000000
+  [gpupool] start=0x210920000 end=0x210E20000 prot=0x33 len=0x500000
+  [gpupool] start=0x210E20000 end=0x211690000 prot=0x33 len=0x870000
+  [/AOSharedState] start=0x310920000 end=0x310928000 prot=0x1 len=0x8000
+  [SceKernelInternalMemory] start=0x880F0C000 end=0x881F0C000 prot=0x3 len=0x1000000
+  [SceNpGlobalHeap] start=0x881F10000 end=0x881F90000 prot=0x3 len=0x80000
+  [SceGnmTrapData] start=0xF00004000 end=0xF00008000 prot=0x33 len=0x4000
+
+--- [A] graft one page per target ---
+-- graft SceGnmTrapData at 0xF00004000 (+0x0) --
+   op3 MAP_FIXED rv=0xF00004000 processed=1
+   sentinel holds (0xCCCCCCCC, 0xCCCCCCCC) -- the page is ours now
+-- graft /AOSharedState at 0x310920000 (+0x0) --
+   op3 MAP_FIXED rv=0x310920000 processed=1
+   sentinel holds (0xCCCCCCCC, 0xCCCCCCCC) -- the page is ours now
+-- graft gpupool at 0x211220000 (+0x400000) --
+   op3 MAP_FIXED rv=0x211220000 processed=1
+   sentinel holds (0xCCCCCCCC, 0xCCCCCCCC) -- the page is ours now
+-- graft SceNpGlobalHeap at 0x881F50000 (+0x40000) --
+   op3 MAP_FIXED rv=0x881F50000 processed=1
+   sentinel holds (0xCCCCCCCC, 0xCCCCCCCC) -- the page is ours now
+-- graft SceKernelInternalMemory at 0x88170C000 (+0x800000) --
+   op3 MAP_FIXED rv=0x88170C000 processed=1
+   sentinel holds (0xCCCCCCCC, 0xCCCCCCCC) -- the page is ours now
+
+--- [B] drive syscalls and wait; anything written into a grafted page is a leak ---
+  round 1 pid=92
+  round 2 pid=92
+  round 3 pid=92
+
+--- [C] rescan the grafted pages ---
+  [SceGnmTrapData] changed dwords: 0
+  [/AOSharedState] changed dwords: 0
+  [gpupool] changed dwords: 0
+  [SceNpGlobalHeap] changed dwords: 0
+  [SceKernelInternalMemory] changed dwords: 0
+
+TOTAL changed dwords across 5 grafted pages: 0
+VERDICT: no writer -- the regions are inert or their owner was released
+
+final canary pid=92
+=== PROBE 1509a COMPLETE ===

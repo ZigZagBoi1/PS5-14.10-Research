@@ -1,0 +1,27 @@
+=== PROBE 1396a: BLOCKPOOL OPEN (SYS 653) ===
+[0] pid=350
+[0] SIG_IGN installed, sig12 handler readback=00000001
+
+[A] blockpool_open(flags) -- the 13.60 mask admits only 0x0/0x100000/0x400000/0x500000
+   653(0x0) -> 22  12 Cannot allocate memory  <- looks like a descriptor
+   653(0x100000) -> 23  12 Cannot allocate memory  <- looks like a descriptor
+   653(0x400000) -> 527  12 Cannot allocate memory  <- looks like a descriptor
+   653(0x500000) -> -1  24 Too many open files
+   653(0x1) -> -1  22 Invalid argument
+   653(0x200000) -> -1  22 Invalid argument
+   653(0x1000) -> -1  22 Invalid argument
+   653(0x10000000) -> -1  22 Invalid argument
+
+[B] descriptors returned: 22,23,527
+   [B] fd=22 fstat -> true 22 Invalid argument  (buf +0:00000000 +4:00000000)
+   [B] fd=22 mmap(len=0x40000, PROT_RW, SHARED, off=0) -> -1 22 Invalid argument
+   [B] fd=23 fstat -> true 22 Invalid argument  (buf +0:00000000 +4:00000000)
+   [B] fd=23 mmap(len=0x40000, PROT_RW, SHARED, off=0) -> -1 22 Invalid argument
+   [B] fd=527 fstat -> true 22 Invalid argument  (buf +0:00000000 +4:00000000)
+   [B] fd=527 mmap(len=0x40000, PROT_RW, SHARED, off=0) -> -1 22 Invalid argument
+
+[D] blockpool_batch (657) with the same fd shape, for the record
+   657(fd=22,0,0,0,0,0) -> 0 22 Invalid argument
+   [D] descriptors closed
+
+=== PROBE 1396a COMPLETE ===

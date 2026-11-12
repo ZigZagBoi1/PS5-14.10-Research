@@ -1,0 +1,61 @@
+=== PROBE 1437a: 628 WITH A LIVE DMEM DESCRIPTOR ===
+
+[A] control: 628 before any open
+  phys 0
+    628(0) -> -1     (16 Device busy          )
+  phys 0x100000
+    628(0x100000) -> -1     (16 Device busy          )
+
+[B] open /dev/dmem0, no mapping
+  open(/dev/dmem0) -> 40
+  phys 0
+    628(0) -> -1     (16 Device busy          )
+  phys 0x100000
+    628(0x100000) -> -1     (16 Device busy          )
+  phys 0x100000000
+    628(0x100000000) -> -1     (16 Device busy          )
+
+[C] mmap offset 0 (the register window) through that fd
+  mmap(off 0) -> 13183287296
+    first dwords: C0012800 80000000 80000000 C0001200
+  phys 0
+    628(0) -> -1     (16 Device busy          )
+  phys 0x100000
+    628(0x100000) -> -1     (16 Device busy          )
+
+[D] mmap a data offset through the same fd
+  mmap(off 0x10000000) -> 13183303680
+  phys 0
+    628(0) -> -1     (16 Device busy          )
+  phys 0x10000000
+    628(0x10000000) -> -1     (16 Device busy          )
+
+[E] second fd on /dev/dmem1
+  open(/dev/dmem1) -> 41
+  phys 0
+    628(0) -> -1     (16 Device busy          )
+  phys 0x40000000
+    628(0x40000000) -> -1     (16 Device busy          )
+
+[F] physical sweep in the current state
+  628(0) -> -1     (16 Device busy          )
+  628(0x4000) -> -1     (16 Device busy          )
+  628(0x100000) -> -1     (16 Device busy          )
+  628(0x10000000) -> -1     (16 Device busy          )
+  628(0x80000000) -> -1     (16 Device busy          )
+  628(0xc0000000) -> -1     (16 Device busy          )
+  628(0x100000000) -> -1     (16 Device busy          )
+  628(0x200000000) -> -1     (16 Device busy          )
+
+[G] container index sweep at phys 0
+  idx=0   -> -1     (16 Device busy)
+  idx=1   -> -1     (16 Device busy)
+  idx=2   -> -1     (16 Device busy)
+  idx=3   -> -1     (16 Device busy)
+  idx=20  -> -1     (16 Device busy)
+
+[H] survivor check
+  re-open /dev/dmem0 -> 42
+  first mapping still reads C0012800
+
+=== PROBE 1437a COMPLETE ===

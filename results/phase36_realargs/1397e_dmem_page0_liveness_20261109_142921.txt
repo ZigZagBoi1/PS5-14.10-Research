@@ -1,0 +1,29 @@
+=== PROBE 1397e: PAGE-0 TABLE LIVENESS ===
+[0] pid=350
+[0] dmem0 fd=22
+
+[A] map page 0 twice (two independent mappings) and diff
+   R1=0x04029F4000 R2=0x04029F8000
+   same-page: 0 of 1024 dwords changed
+
+[B] rungs 0x2000 / 0x3000 / 0x4000 are independent pages
+   0x2000=11112222 0x3000=33334444 0x4000=55556666
+   cross-reads: M2+4k=33334444 M3+4k=55556666
+
+[C] did writing those rungs change page 0?
+   noop: 0 of 1024 dwords changed
+   (if the table is live for the window, the markers above should have moved something)
+
+[D] is the window's page 0 the SAME backing as /dev/gc's page 0?
+   gc page0 first 6 dwords: FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF
+
+[E] what does the offset do at 0x3FF000 / 0x400000 (page boundary markers)
+   off=0x003FF000 : 00000000 00000000 00000000 00000000
+   off=0x00400000 : 00000000 00000000 00000000 00000000
+   off=0x00401000 : 00000000 00000000 00000000 00000000
+
+[F] close
+   dmem0 -> 0
+   gc    -> 0
+
+=== PROBE 1397e COMPLETE ===

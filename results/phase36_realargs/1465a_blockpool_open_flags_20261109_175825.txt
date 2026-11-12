@@ -1,0 +1,27 @@
+=== PROBE 1465a: BLOCKPOOL OPEN/MAP SHAPES ===
+
+[0] pid=495
+[A] 653 blockpool_open, every allowed flag value plus two rejected ones
+[A] 653(0x0) -> 22 (0x16)
+[A] 653(0x100000) -> 23 (0x17)
+[A] 653(0x400000) -> 804 (0x324)
+[A] 653(0x500000) -> -1 errno=24 Too many open files
+[A] 653(0x1) -> -1 errno=22 Invalid argument
+[A] 653(0xFFFFFFFF) -> -1 errno=22 Invalid argument
+
+[B] 654 blockpool_map at a 64 KiB-aligned low address
+[B] scratch mapping = 0x311364000
+[B] 654(0x10000,0x10000,0) -> -1 errno=22 Invalid argument
+[B] 654(0x10000,0x10000,3) -> -1 errno=22 Invalid argument
+[B] 654(0x10000,0x10000,10) -> -1 errno=22 Invalid argument
+[B] 654(0x1000000,0x10000,3) -> -1 errno=22 Invalid argument
+[B] 654(0x40000000,0x100000,3) -> -1 errno=22 Invalid argument
+[B] 654(0x10000,0x20000,3) -> -1 errno=22 Invalid argument
+
+[C] handle = 22 (0x16): 655 unmap and 657 batch
+[C] 655(h) -> -1
+[C] 657(buf,1,0,0) -> -1
+
+[Z] alive pid=495 (was 495)
+
+=== PROBE 1465a COMPLETE ===

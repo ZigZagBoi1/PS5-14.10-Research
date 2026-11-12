@@ -1,0 +1,20 @@
+=== PROBE 1438a: DMEM MARKER PERSISTENCE ===
+
+open(/dev/dmem0) -> 43 (16 Device busy)
+mmap(off 0, len 0x20000) -> 0x311c98000
+[A] the 1397j write sites
+  page0 +0xBF0           off 0x000bf0 : 00000000 00000000
+  page0x16 +0xF00        off 0x016f00 : 00000000 00000000
+
+[B] context: the static header that was identical in 1397g
+  ONION header 0xF000    off 0x00f000 : BEEB03FF 00000003
+  ONION header 0xF010    off 0x00f010 : BF800000 F8001C0F
+  second mapping            : 0x311cb8000
+  page0x16 +0xF00 via map2  : 00000000
+  identical mapping         : yes
+
+[C] a page that was never written by any probe
+  page0x12 +0x100        off 0x012100 : 00000002 00000002
+  page0x15 +0x800        off 0x015800 : 00000002 00000002
+
+=== PROBE 1438a COMPLETE ===

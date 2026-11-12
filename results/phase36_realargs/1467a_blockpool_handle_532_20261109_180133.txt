@@ -1,0 +1,38 @@
+=== PROBE 1467a: BLOCKPOOL HANDLE VIA 532 ===
+
+[0] pid=495
+[A] 653 blockpool_open(0x400000)
+[A] 653 -> -1
+[A] no handle; using 0x324 as a guess would be dishonest, stopping the 532 pass
+
+[B] 532 cmd 0x18/0x19 with handle-in-input vs junk
+[B] 0x18 h=0x324 -> -1 errno=14 Bad address out0=00000000
+[B] 0x18 h=0x324 -> -1 errno=14 Bad address out0=00000000
+[B] 0x18 h=0x125 -> -1 errno=14 Bad address out0=00000000
+[B] 0x18 h=0xFFFFFFFF -> -1 errno=14 Bad address out0=00000000
+[B] 0x18 h=0x0 -> -1 errno=14 Bad address out0=00000000
+[B] 0x19 h=0x324 -> -1 errno=14 Bad address out0=00000000
+[B] 0x19 h=0x324 -> -1 errno=14 Bad address out0=00000000
+[B] 0x19 h=0x125 -> -1 errno=14 Bad address out0=00000000
+[B] 0x19 h=0xFFFFFFFF -> -1 errno=14 Bad address out0=00000000
+[B] 0x19 h=0x0 -> -1 errno=14 Bad address out0=00000000
+[B] 0x1A h=0x324 -> -1 errno=14 Bad address out0=00000000
+[B] 0x1A h=0x324 -> -1 errno=14 Bad address out0=00000000
+[B] 0x1A h=0x125 -> -1 errno=14 Bad address out0=00000000
+[B] 0x1A h=0xFFFFFFFF -> -1 errno=14 Bad address out0=00000000
+[B] 0x1A h=0x0 -> -1 errno=14 Bad address out0=00000000
+[B] 0x20 h=0x324 -> -1 errno=14 Bad address out0=00000000
+[B] 0x20 h=0x324 -> -1 errno=14 Bad address out0=00000000
+[B] 0x20 h=0x125 -> -1 errno=14 Bad address out0=00000000
+[B] 0x20 h=0xFFFFFFFF -> -1 errno=14 Bad address out0=00000000
+[B] 0x20 h=0x0 -> -1 errno=14 Bad address out0=00000000
+
+[C] 532 with the handle in arg1 / arg2
+[C] 0x18 a1=h -> -1 out0=00000000
+[C] 0x19 a1=h -> -1 out0=00000000
+[C] 0x1A a1=h -> -1 out0=00000000
+[C] 0x20 a1=h -> -1 out0=00000000
+
+[Z] alive pid=495 (was 495)
+
+=== PROBE 1467a COMPLETE ===

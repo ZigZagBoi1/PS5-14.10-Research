@@ -1,0 +1,38 @@
+=== PROBE 1510a: 548 op3 MAP_FIXED LOW-ADDRESS LADDER ===
+
+[0] pid=80
+--- [A] baseline: what is already mapped down low ---
+  547(0x0) prot=-1 start=0x0 end=0x0
+  547(0x1000) prot=-1 start=0x0 end=0x0
+  547(0x4000) prot=-1 start=0x0 end=0x0
+  547(0x10000) prot=-1 start=0x0 end=0x0
+  547(0x100000) prot=-1 start=0x0 end=0x0
+  547(0x1000000) prot=-1 start=0x0 end=0x0
+
+--- [B] op3 MAP_FIXED, 16 KiB each, flags 0x10, prot 3 ---
+  [B1] 0x4000 (547 before: prot=-1)
+       op3 rv=0x4000 processed=1 <<< LANDED AT THE REQUESTED ADDRESS
+       547 after: prot=3
+       store/read 0xC0DE0001 -> 0xC0DE0001 (writable)
+  [B2] 0x10000 (547 before: prot=-1)
+       op3 rv=0x10000 processed=1 <<< LANDED AT THE REQUESTED ADDRESS
+       547 after: prot=3
+       store/read 0xC0DE0002 -> 0xC0DE0002 (writable)
+  [B3] 0x100000 (547 before: prot=-1)
+       op3 rv=0x100000 processed=1 <<< LANDED AT THE REQUESTED ADDRESS
+       547 after: prot=3
+       store/read 0xC0DE0003 -> 0xC0DE0003 (writable)
+  [B4] 0x1000000 (547 before: prot=-1)
+       op3 rv=0x1000000 processed=1 <<< LANDED AT THE REQUESTED ADDRESS
+       547 after: prot=3
+       store/read 0xC0DE0004 -> 0xC0DE0004 (writable)
+  [B5] 0x0 (547 before: prot=-1)
+       op3 rv=0xFFFFFFFFFFFFFFFF processed=0 
+
+--- [C] plain mmap at 0x0 with MAP_FIXED (0x10) ---
+  mmap(0x0, 0x4000, 3, MAP_ANON|MAP_FIXED) rv=0xFFFFFFFFFFFFFFFF 
+  mmap(NULL, 0x4000, 3, MAP_ANON) rv=0x311088000
+
+VERDICT: lowest address op 3 would place a page is 0x4000; page zero refused.
+final canary pid=80
+=== PROBE 1510a COMPLETE ===

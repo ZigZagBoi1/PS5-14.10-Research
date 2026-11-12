@@ -1,0 +1,204 @@
+=== PROBE 1434a: IPV4 MCAST SOURCE-FILTER SURFACE ===
+
+socket(AF_INET,DGRAM,UDP)=36
+
+[A] join 224.0.0.1 on ifindex 1 (struct ip_mreq, 8 bytes)
+  join  -> rv=EXC  errno=22 Invalid argument
+
+[B] discovery sweep, optname 0..90, zeroed 264-byte buffer
+  opt  0  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt  1  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt  2  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt  3  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt  4  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt  5  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt  6  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt  7  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt  8  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt  9  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 10  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 11  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 12  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 13  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 14  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 15  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 16  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 17  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 18  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 19  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 20  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 21  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 22  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 23  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 24  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 25  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 26  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 27  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 28  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 29  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 30  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 31  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 32  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 33  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 34  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 35  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 36  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 37  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 38  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 39  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 40  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 41  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 42  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 43  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 44  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 45  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 46  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 47  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 48  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 49  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 50  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 51  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 52  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 53  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 54  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 55  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 56  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 57  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 58  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 59  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 60  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 61  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 62  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 63  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 64  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 65  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 66  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 67  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 68  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 69  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 70  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 71  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 72  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 73  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 74  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 75  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 76  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 77  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 78  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 79  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 80  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 81  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 82  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 83  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 84  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 85  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 86  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 87  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 88  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 89  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  opt 90  set=EXC    (22 Invalid argument   )  get=EXC    (22 Invalid argument)
+  -> 91 option(s) dispatched beyond ENOPROTOOPT
+
+[C] refine every live option with the struct its contract names
+  opt  0 -> no shape table entry, skipped
+  opt  1 -> no shape table entry, skipped
+  opt  2 -> no shape table entry, skipped
+  opt  3 -> no shape table entry, skipped
+  opt  4 -> no shape table entry, skipped
+  opt  5 -> no shape table entry, skipped
+  opt  6 -> no shape table entry, skipped
+  opt  7 -> no shape table entry, skipped
+  opt  8 len=8    set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt  9 len=8    set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 10 len=8    set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 11 len=8    set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 12 len=8    set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 13 len=8    set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 14 -> no shape table entry, skipped
+  opt 15 -> no shape table entry, skipped
+  opt 16 -> no shape table entry, skipped
+  opt 17 -> no shape table entry, skipped
+  opt 18 -> no shape table entry, skipped
+  opt 19 -> no shape table entry, skipped
+  opt 20 -> no shape table entry, skipped
+  opt 21 -> no shape table entry, skipped
+  opt 22 -> no shape table entry, skipped
+  opt 23 -> no shape table entry, skipped
+  opt 24 -> no shape table entry, skipped
+  opt 25 -> no shape table entry, skipped
+  opt 26 -> no shape table entry, skipped
+  opt 27 -> no shape table entry, skipped
+  opt 28 -> no shape table entry, skipped
+  opt 29 -> no shape table entry, skipped
+  opt 30 -> no shape table entry, skipped
+  opt 31 -> no shape table entry, skipped
+  opt 32 -> no shape table entry, skipped
+  opt 33 -> no shape table entry, skipped
+  opt 34 -> no shape table entry, skipped
+  opt 35 -> no shape table entry, skipped
+  opt 36 -> no shape table entry, skipped
+  opt 37 -> no shape table entry, skipped
+  opt 38 -> no shape table entry, skipped
+  opt 39 len=12   set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 40 len=12   set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 41 len=12   set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 42 len=136  set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 43 len=264  set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 44 len=264  set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 45 len=136  set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 46 len=264  set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 47 len=264  set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 48 len=152  set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+       msfr_ifindex=1 fmode=1 nsrc=1
+  opt 49 -> no shape table entry, skipped
+  opt 50 -> no shape table entry, skipped
+  opt 51 -> no shape table entry, skipped
+  opt 52 -> no shape table entry, skipped
+  opt 53 -> no shape table entry, skipped
+  opt 54 -> no shape table entry, skipped
+  opt 55 -> no shape table entry, skipped
+  opt 56 -> no shape table entry, skipped
+  opt 57 -> no shape table entry, skipped
+  opt 58 -> no shape table entry, skipped
+  opt 59 -> no shape table entry, skipped
+  opt 60 -> no shape table entry, skipped
+  opt 61 -> no shape table entry, skipped
+  opt 62 -> no shape table entry, skipped
+  opt 63 -> no shape table entry, skipped
+  opt 64 -> no shape table entry, skipped
+  opt 65 -> no shape table entry, skipped
+  opt 66 -> no shape table entry, skipped
+  opt 67 -> no shape table entry, skipped
+  opt 68 -> no shape table entry, skipped
+  opt 69 -> no shape table entry, skipped
+  opt 70 -> no shape table entry, skipped
+  opt 71 -> no shape table entry, skipped
+  opt 72 len=12   set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 73 len=12   set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+  opt 74 len=152  set=EXC    (22 Invalid argument     ) get=EXC    (22 Invalid argument)
+       msfr_ifindex=1 fmode=1 nsrc=1
+  opt 75 -> no shape table entry, skipped
+  opt 76 -> no shape table entry, skipped
+  opt 77 -> no shape table entry, skipped
+  opt 78 -> no shape table entry, skipped
+  opt 79 -> no shape table entry, skipped
+  opt 80 -> no shape table entry, skipped
+  opt 81 -> no shape table entry, skipped
+  opt 82 -> no shape table entry, skipped
+  opt 83 -> no shape table entry, skipped
+  opt 84 -> no shape table entry, skipped
+  opt 85 -> no shape table entry, skipped
+  opt 86 -> no shape table entry, skipped
+  opt 87 -> no shape table entry, skipped
+  opt 88 -> no shape table entry, skipped
+  opt 89 -> no shape table entry, skipped
+  opt 90 -> no shape table entry, skipped
+
+[D] v4 filter readback with a 128-source claim (the detector)
+  get(IP_MSFILTER, claim=128) -> rv=EXC errno=22 Invalid argument
+  changed=0 dwords  (of which non-zero=0)
+
+[E] survivor check
+  drop 224.0.0.1 -> rv=EXC errno=22 Invalid argument
+
+=== PROBE 1434a COMPLETE ===

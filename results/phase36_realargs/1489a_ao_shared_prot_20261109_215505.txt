@@ -1,0 +1,19 @@
+=== PROBE 1489a: /AO SHARED STATE UNDER 548 ===
+[0] pid=106
+
+--- [A] 674 records whose name starts with /AO or contains SharedState ---
+  674 rv=0 count=322
+    0x310D80000 len 0x8000 prot=1 flags=0xC ./AOSharedState
+  /AO family: 1 records
+
+--- [D] 548 control on an anon page ---
+  ctl 0x311188000 prot 3 -> op2(1) rv=0 processed=1 -> prot 1
+[D] control usable: true
+
+--- [B] op 2 prot 3 on each /AO record, then restore ---
+  ./AOSharedState                        0x310D80000 len 0x8000 prot 1 -> op2(3) rv=0   processed=1  -> prot 3
+      restore -> rv=0 processed=1 prot now 1
+
+final canary: pid=106 (started 106)
+final canary live: true
+=== PROBE 1489a COMPLETE ===

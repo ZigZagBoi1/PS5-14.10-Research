@@ -1,0 +1,62 @@
+=== PROBE 1479d: SYS 548 MAP/UNMAP OPS ===
+[0] pid=87
+[0] A=0x31140C000 B=0x311410000
+
+--- [A] every op with one valid entry {start=A, offset=0, len=0x1000, prot=3} ---
+     [A before] 547 rv=0 prot=3
+  -> op=0 valid entry on A                           
+     rv=-1   22 Invalid argument  processed=0
+  -> op=1 valid entry on A                           
+     rv=-1   22 Invalid argument  processed=0
+  -> op=2 valid entry on A                           
+     rv=-1   22 Invalid argument  processed=0
+  -> op=3 valid entry on A                           
+     rv=-1   22 Invalid argument  processed=0
+  -> op=4 valid entry on A                           
+     rv=-1   22 Invalid argument  processed=0
+
+--- [A2] op 1 on a page we own: does 548 unmap it? ---
+     [A before] 547 rv=0 prot=3
+  -> op=1 start=A len=0x1000                         
+     rv=-1   22 Invalid argument  processed=0
+
+--- [B] op 1 on the second page, then op 0 into the hole ---
+     [B before] 547 rv=0 prot=3
+  -> op=1 start=B len=0x1000                         
+     rv=-1   22 Invalid argument  processed=0
+
+--- [C] op 3 and op 4 on a live page ---
+  -> op=3 start=A len=0x1000                         
+     rv=-1   22 Invalid argument  processed=0
+     [A after] 547 rv=0 prot=3
+  -> op=4 start=A len=0x1000                         
+     rv=-1   22 Invalid argument  processed=0
+     [A after] 547 rv=0 prot=3
+
+--- [D] op 1 with the length or the alignment wrong ---
+  -> op=1 len=0x800 (unaligned)                      
+     rv=-1   22 Invalid argument  processed=0
+  -> op=1 len=0 (empty range)                        
+     rv=-1   22 Invalid argument  processed=0
+  -> op=1 start=A+0x10 (unaligned)                   
+     rv=-1   22 Invalid argument  processed=0
+  -> op=1 start=0                                    
+     rv=-1   22 Invalid argument  processed=0
+     [A final] 547 rv=0 prot=3
+
+--- [E] op 1 against a VA we never mapped ---
+  -> op=1 start=0x200000000 (never mapped)           
+     rv=-1   22 Invalid argument  processed=0
+
+--- [F] flags mask with a real op ---
+  -> op=2 flags=0x10000000                           
+     rv=-1   22 Invalid argument  processed=0
+  -> op=2 flags=0x0                                  
+     rv=-1   22 Invalid argument  processed=0
+  -> op=2 flags=0x40000000                           
+     rv=-1   22 Invalid argument  processed=4008636142
+  -> op=2 flags=0x80000000                           
+     rv=-1   22 Invalid argument  processed=4008636142
+
+final canary: pid=87
+=== PROBE 1479d COMPLETE ===

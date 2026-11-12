@@ -1,0 +1,27 @@
+=== PROBE 1564a: 548 op3 MAP_FIXED across a device/anon boundary ===
+
+[0] pid=319
+[A] 674 rv=0 count=316
+[A] SceGnmTrapData at 0xF00004000
+[B] 547(W=0xF00004000): prot=51 rec=[0xF00004000,0xF00008000)
+[B] candidate P=0xF00008000 (after the window) prot=51
+[B] the neighbouring page is mapped as well; a boundary test needs a
+[B] free side, so the carve below replaces two device entries instead.
+
+[C] op3 MAP_FIXED anon at P=0xF00008000
+[C] mmap returned 64424542208
+[C] 547(P) prot=3 rec=[0xF00008000,0xF0000C000)
+[C] P holds 0x11111111 after store (want 0x11111111)
+[C] W holds 0xF00144000 (device content)
+
+[D] op3 MAP_FIXED 0x8000 at START=0xF00000000 (spans anon|device)
+[D] mmap returned 64424509440
+[D] 547(START) prot=3 rec=[0xF00000000,0xF00008000)
+
+[E] START holds 0xCAFEBABE hi holds 0xCAFEBABE (want 0xCAFEBABE both)
+[E] both pages are fresh anonymous memory: the two-entry split is clean
+
+[F] 547 START prot=3 [0xF00000000]   hi prot=3 [0xF00000000]
+[F] one record covers both pages
+
+=== PROBE 1564a COMPLETE ===

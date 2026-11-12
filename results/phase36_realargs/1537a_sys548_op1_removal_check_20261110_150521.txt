@@ -1,0 +1,72 @@
+=== PROBE 1537a: 548 OP 1 / OP 4 - REMOVAL, SHAPE, OR GATE ===
+
+[0] pid=214
+
+--- [A] build the ranges ---
+[A] 477 rv=13165084672
+[A] U1=0x310B34000 (prot=0x3)
+[A] 674 enumerates 315 records
+   -> op 3 map at 0x500000000                       
+      rv=21474836480      processed=1
+[A] op 3 rv=21474836480 -> own=true prot=0x3
+
+--- [B] baseline ---
+   U1 before                  n=318  547 0x310B34000-0x310B38000 prot=0x3         | 674 has 0x310B34000-0x310B38000 prot=0x3 anon:00002ef2599e
+   U2 before                  n=322  547 0x500000000-0x500004000 prot=0x3         | 674 has 0x500000000-0x500004000 prot=0x3 anon:00002ef2599e
+
+--- [C] op 1 prot 3 len 0x4000 on the 477 range U1 ---
+   -> op 1 U1                                       
+      rv=0                processed=1
+   U1 after op 1              n=321  547 has no record                            | absent from 674
+   VERDICT U1: REMOVED (547 has no record and 674 has no record)
+
+--- [E] 1534c exact call: op 1 prot 3 len 0x4000 on the op-3 range U2 ---
+   -> op 1 U2                                       
+      rv=0                processed=1
+   U2 after op 1              n=320  547 has no record                            | absent from 674
+   VERDICT U2: REMOVED (547 has no record and 674 has no record)
+
+--- [F] a fresh 477 range, op 1 straight after, no op-3 involvement ---
+[F] U3=0x310D3C000 (prot=0x3)
+   -> op 1 U3                                       
+      rv=0                processed=1
+   U3 after op 1              n=320  547 has no record                            | absent from 674
+   VERDICT U3: REMOVED (547 has no record and 674 has no record)
+
+--- [D] does arg2 change op 1? (only if U1 is still exactly ours) ---
+   skipped: record covers 0x310B34000-0x310B44000, not 0x310B34000-0x310B38000
+
+--- [E2] op 4 prot 3 on whatever still exists ---
+   U2                     skipped: 547 fails
+   U1                     skipped: record covers 0x310B34000-0x310B44000, not 0x310B34000-0x310B38000
+
+--- [G] op 1 with a nonzero offset field, on its own fresh range ---
+[G] U4=0x310D3C000 (prot=0x3)
+   -> op 1 U4 offset=0x1000                         
+      rv=0                processed=1
+   U4 after                   n=320  547 has no record                            | absent from 674
+   VERDICT U4: REMOVED (547 has no record and 674 has no record)
+    note: no prior probe exercised an aligned entry with a nonzero
+    offset. 1479d EINVAL rows were unaligned entries, so they do not
+    cover this shape.
+
+--- [H] op 1 with prot 0: if the deferred applier runs, 547 must show 0 ---
+   U3 before [H]              n=320  547 has no record                            | absent from 674
+   U3 prot 0                skipped: 547 fails
+   U3 prot 1                skipped: 547 fails
+
+--- [I] op 1 with prot 5 and 7, which op 2 refuses with EACCES(13) ---
+    A 16 KiB anonymous page carrying an executable protection is inert: no
+    register in this process points at it and the loader has no JIT. The
+    answer is read from 547, nothing is executed.
+   prot 5 skipped: 547 fails
+   prot 7 skipped: 547 fails
+
+--- [J] teardown, only ranges 547 still reports as exactly ours ---
+   U1 0x310B34000 not ours (record covers 0x310B34000-0x310B44000, not 0x310B34000-0x310B38000), not unmapping it
+   U2 0x500000000 not ours (547 fails), not unmapping it
+   U3 0x310D3C000 not ours (547 fails), not unmapping it
+   U4 0x310D3C000 not ours (547 fails), not unmapping it
+
+final canary: pid=214 (started 214)
+=== PROBE 1537a COMPLETE ===

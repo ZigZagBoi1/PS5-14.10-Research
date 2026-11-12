@@ -1,0 +1,75 @@
+=== PROBE 1403a: 601 WRITE-DESTINATION MAP ===
+[0] pid=364
+  in=0x310628000 out=0x31062C000
+
+[A] known-answering commands, shape A (arg1=0, arg2=OUT)
+  0x00 A(0,OUT)         rv=-1         errno=14 Bad address   out_ch=0 in_ch=-1
+  0x00 C(0,0)           rv=-1         errno=14 Bad address   out_ch=-1 in_ch=-1
+  0x01 A(0,OUT)         rv=-1         errno=14 Bad address   out_ch=0 in_ch=-1
+  0x01 C(0,0)           rv=-1         errno=14 Bad address   out_ch=-1 in_ch=-1
+  0x02 A(0,OUT)         rv=-1         errno=78 Function not implemented out_ch=0 in_ch=-1
+  0x02 C(0,0)           rv=-1         errno=78 Function not implemented out_ch=-1 in_ch=-1
+  0x05 A(0,OUT)         rv=-1         errno=78 Function not implemented out_ch=0 in_ch=-1
+  0x05 C(0,0)           rv=-1         errno=78 Function not implemented out_ch=-1 in_ch=-1
+  0x06 A(0,OUT)         rv=-1         errno=78 Function not implemented out_ch=0 in_ch=-1
+  0x06 C(0,0)           rv=-1         errno=78 Function not implemented out_ch=-1 in_ch=-1
+  0x07 A(0,OUT)         rv=0x0_00000000 errno=78 Function not implemented out_ch=0 in_ch=-1
+  0x07 C(0,0)           rv=0x0_00000000 errno=78 Function not implemented out_ch=-1 in_ch=-1
+  0x09 A(0,OUT)         rv=0x0_00000000 errno=78 Function not implemented out_ch=0 in_ch=-1
+  0x09 C(0,0)           rv=0x0_00000000 errno=78 Function not implemented out_ch=-1 in_ch=-1
+  0x0A A(0,OUT)         rv=-1         errno=1 Operation not permitted out_ch=0 in_ch=-1
+  0x0A C(0,0)           rv=-1         errno=1 Operation not permitted out_ch=-1 in_ch=-1
+  0x0B A(0,OUT)         rv=0x0_00000000 errno=1 Operation not permitted out_ch=0 in_ch=-1
+  0x0B C(0,0)           rv=0x0_00000000 errno=1 Operation not permitted out_ch=-1 in_ch=-1
+  0x0D A(0,OUT)         rv=0x0_00000000 errno=1 Operation not permitted out_ch=0 in_ch=-1
+  0x0D C(0,0)           rv=0x0_00000000 errno=1 Operation not permitted out_ch=-1 in_ch=-1
+  0x0E A(0,OUT)         rv=-1         errno=14 Bad address   out_ch=0 in_ch=-1
+  0x0E C(0,0)           rv=-1         errno=14 Bad address   out_ch=-1 in_ch=-1
+  0x0F A(0,OUT)         rv=-1         errno=1 Operation not permitted out_ch=0 in_ch=-1
+  0x0F C(0,0)           rv=-1         errno=1 Operation not permitted out_ch=-1 in_ch=-1
+  0x10 A(0,OUT)         rv=-1         errno=22 Invalid argument out_ch=0 in_ch=-1
+  0x10 C(0,0)           rv=-1         errno=22 Invalid argument out_ch=-1 in_ch=-1
+  0x12 A(0,OUT)         rv=-1         errno=2 No such file or directory out_ch=0 in_ch=-1
+  0x12 C(0,0)           rv=-1         errno=14 Bad address   out_ch=-1 in_ch=-1
+  0x13 A(0,OUT)         rv=0x0_00000000 errno=14 Bad address   out_ch=0 in_ch=-1
+  0x13 C(0,0)           rv=0x0_00000000 errno=14 Bad address   out_ch=-1 in_ch=-1
+  0x14 A(0,OUT)         rv=0x0_00000000 errno=14 Bad address   out_ch=0 in_ch=-1
+  0x14 C(0,0)           rv=0x0_00000000 errno=14 Bad address   out_ch=-1 in_ch=-1
+  0x15 A(0,OUT)         rv=-1         errno=22 Invalid argument out_ch=0 in_ch=-1
+  0x15 C(0,0)           rv=-1         errno=1 Operation not permitted out_ch=-1 in_ch=-1
+  0x16 A(0,OUT)         rv=-1         errno=78 Function not implemented out_ch=0 in_ch=-1
+  0x16 C(0,0)           rv=-1         errno=78 Function not implemented out_ch=-1 in_ch=-1
+  0x17 A(0,OUT)         rv=-1         errno=78 Function not implemented out_ch=0 in_ch=-1
+  0x17 C(0,0)           rv=-1         errno=78 Function not implemented out_ch=-1 in_ch=-1
+  0x18 A(0,OUT)         rv=-1         errno=1 Operation not permitted out_ch=0 in_ch=-1
+  0x18 C(0,0)           rv=-1         errno=1 Operation not permitted out_ch=-1 in_ch=-1
+  0x19 A(0,OUT)         rv=0x0_00000000 errno=1 Operation not permitted out_ch=0 in_ch=-1
+  0x19 C(0,0)           rv=0x0_00000000 errno=1 Operation not permitted out_ch=-1 in_ch=-1
+  0x1A A(0,OUT)         rv=-1         errno=14 Bad address   out_ch=0 in_ch=-1
+  0x1A C(0,0)           rv=-1         errno=14 Bad address   out_ch=-1 in_ch=-1
+
+[B] same commands, arg1 = zero 0x20 struct, arg2 = OUT
+  0x00 B(IN,OUT)        rv=0x0_00000000 errno=14 Bad address   out_ch=-1 in_ch=8
+  0x01 B(IN,OUT)        rv=-1         errno=22 Invalid argument out_ch=-1 in_ch=8
+  0x02 B(IN,OUT)        rv=-1         errno=78 Function not implemented out_ch=-1 in_ch=8
+  0x05 B(IN,OUT)        rv=-1         errno=78 Function not implemented out_ch=-1 in_ch=8
+  0x06 B(IN,OUT)        rv=-1         errno=78 Function not implemented out_ch=-1 in_ch=8
+  0x07 B(IN,OUT)        rv=0x0_00000000 errno=78 Function not implemented out_ch=-1 in_ch=8
+  0x09 B(IN,OUT)        rv=0x0_00000000 errno=78 Function not implemented out_ch=-1 in_ch=8
+  0x0A B(IN,OUT)        rv=-1         errno=1 Operation not permitted out_ch=-1 in_ch=8
+  0x0B B(IN,OUT)        rv=0x0_00000000 errno=1 Operation not permitted out_ch=-1 in_ch=8
+  0x0D B(IN,OUT)        rv=0x0_00000000 errno=1 Operation not permitted out_ch=-1 in_ch=8
+  0x0E B(IN,OUT)        rv=0x0_00000000 errno=1 Operation not permitted out_ch=-1 in_ch=8
+  0x0F B(IN,OUT)        rv=-1         errno=1 Operation not permitted out_ch=-1 in_ch=8
+  0x10 B(IN,OUT)        rv=-1         errno=22 Invalid argument out_ch=-1 in_ch=8
+  0x12 B(IN,OUT)        rv=-1         errno=22 Invalid argument out_ch=-1 in_ch=8
+  0x13 B(IN,OUT)        rv=0x0_00000000 errno=22 Invalid argument out_ch=-1 in_ch=8
+  0x14 B(IN,OUT)        rv=0x0_00000000 errno=22 Invalid argument out_ch=-1 in_ch=8
+  0x15 B(IN,OUT)        rv=-1         errno=22 Invalid argument out_ch=-1 in_ch=8
+  0x16 B(IN,OUT)        rv=-1         errno=78 Function not implemented out_ch=-1 in_ch=8
+  0x17 B(IN,OUT)        rv=-1         errno=78 Function not implemented out_ch=-1 in_ch=8
+  0x18 B(IN,OUT)        rv=-1         errno=1 Operation not permitted out_ch=-1 in_ch=8
+  0x19 B(IN,OUT)        rv=0x0_00000000 errno=1 Operation not permitted out_ch=-1 in_ch=8
+  0x1A B(IN,OUT)        rv=0x0_00000000 errno=1 Operation not permitted out_ch=-1 in_ch=8
+
+[C] unmeasured high commands, shape A (arg1=0, arg2=OUT)

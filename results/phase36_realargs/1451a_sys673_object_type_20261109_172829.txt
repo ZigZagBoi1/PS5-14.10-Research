@@ -1,0 +1,39 @@
+=== PROBE 1451a: SYS 673 CONTRACT + OBJECT TYPE ===
+
+[0] pid=432
+[0] fds dmem0=25 gc=26 zero=27
+
+[A] anonymous 0x1002 mapping (8 pages of 64 KiB)
+   A: base=0x3109EC000 aligned=0x3109F0000
+      addr-addr  rv=-1 22 Invalid argument
+      addr-addr2 rv=-1 22 Invalid argument
+      addr-self  rv=-1 22 Invalid argument
+      addr-zero  rv=-1 22 Invalid argument
+      len        rv=-1 22 Invalid argument
+      all-zero-t rv=-1 22 Invalid argument
+
+[B] /dev/zero mapping
+   B: base=0x310A6C000 aligned=0x310A70000
+      addr-addr  rv=-1 22 Invalid argument
+      addr-addr2 rv=-1 22 Invalid argument
+      addr-self  rv=-1 22 Invalid argument
+      addr-zero  rv=-1 22 Invalid argument
+      len        rv=-1 22 Invalid argument
+      all-zero-t rv=-1 22 Invalid argument
+
+[C] /dev/gc mapping (dummy device window, all-FF)
+   C: no mapping
+
+[D] /dev/dmem0 mapping (GPU aperture, 4 GiB RW window)
+   D: base=0x310AEC000 aligned=0x310AF0000
+      addr-addr  rv=-1 22 Invalid argument
+      addr-addr2 rv=-1 22 Invalid argument
+      addr-self  rv=-1 22 Invalid argument
+      addr-zero  rv=-1 22 Invalid argument
+      len        rv=-1 22 Invalid argument
+      all-zero-t rv=-1 22 Invalid argument
+
+[E] accepted shapes total=0
+[F] survivor pid=432
+
+=== PROBE 1451a COMPLETE ===

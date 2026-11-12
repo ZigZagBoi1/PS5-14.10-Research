@@ -1,0 +1,68 @@
+=== PROBE 1533a: SYS 548 OP 2 ON ANON PAGES ===
+
+[0] pid=200
+[A] map anon pages with the proven 477 shape
+    P=0x310D88000 Q=0x310D8C000
+     547(P) rv=0 prot=0x3 flags=0x610020 range=0x310D88000..0x310D8C000
+    P before: 3
+     547(Q) rv=0 prot=0x3 flags=0x610020 range=0x310D8C000..0x310D90000
+    Q before: 3
+
+[C] op2 {P, 0, 0x4000, prot=1} - anon, 3 -> 1, the rung 1481g never ran
+  -> protect P prot=1  count=1
+     rv=0                        processed=1
+     547(P) rv=0 prot=0x1 flags=0x610020 range=0x310D88000..0x310D8C000
+
+[D] op2 {Q, 0, 0x4000, prot=1} - anon, 3 -> 1
+  -> protect Q prot=1  count=1
+     rv=0                        processed=1
+     547(Q) rv=0 prot=0x1 flags=0x610020 range=0x310D8C000..0x310D90000
+
+[E] op2 {Q, 0, 0x4000, prot=2} - expect 547=0x3, not 0x2
+  -> protect Q prot=2  count=1
+     rv=0                        processed=1
+     547(Q) rv=0 prot=0x3 flags=0x610020 range=0x310D8C000..0x310D90000
+
+[F] op2 {Q, 0, 0x4000, prot=7} - X on anon: max_prot or accepted?
+  -> protect Q prot=7  count=1
+     rv=-1    13 Permission denied processed=0
+     547(Q) rv=0 prot=0x3 flags=0x610020 range=0x310D8C000..0x310D90000
+
+[G] op2 {P+0x2000, 0, 0x4000, prot=3} - start misaligned, expect EINVAL
+  -> start misaligned  count=1
+     rv=-1    22 Invalid argument processed=0
+
+[H] op2 {P, 0, 0x2000, prot=3} - length misaligned, expect EINVAL
+  -> length misaligned  count=1
+     rv=-1    22 Invalid argument processed=0
+
+[I] op2 {P, 0, 0x4000, prot=0x18} - prot bit 0x8, expect EINVAL
+  -> prot bit 0x8  count=1
+     rv=-1    22 Invalid argument processed=0
+
+[J] count=2, op2 prot=3 on P then H=Q
+  -> two protects  count=2
+     rv=0                        processed=2
+     547(P) rv=0 prot=0x3 flags=0x610020 range=0x310D88000..0x310D8C000
+     547(Q) rv=0 prot=0x3 flags=0x610020 range=0x310D8C000..0x310D90000
+
+[K] op2 {P, 0, 0x4000, prot=0} - drop access to P
+  -> protect P prot=0  count=1
+     rv=0                        processed=1
+     547(P) rv=0 prot=0x0 flags=0x610020 range=0x310D88000..0x310D8C000
+
+[B] device control on SceGnmTrapData (already measured by 1481g) - runs last
+    674 rv=0 records=317
+     547(DEV) rv=0 prot=0x33 flags=0x610020 range=0xF00004000..0xF00008000
+  -> CONTROL protect DEV 0x33 -> 0x1  count=1
+     rv=0                        processed=1
+     547(DEV) rv=0 prot=0x1 flags=0x610020 range=0xF00004000..0xF00008000
+  -> restore DEV to 0x33  count=1
+     rv=0                        processed=1
+     547(DEV) rv=0 prot=0x33 flags=0x610020 range=0xF00004000..0xF00008000
+
+[L] release the anon pages
+    done
+
+final canary: pid=200 (started 200)
+=== PROBE 1533a COMPLETE ===

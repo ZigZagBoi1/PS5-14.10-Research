@@ -1,0 +1,17 @@
+=== PROBE 1530a: shm read vs ftruncate ===
+
+fn_addr=0x0000000833BDCB57 pid=155
+
+[A] gadget verification
+eboot=0x000000003F370000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] shm object
+  shm_open(SHM_ANON=1) -> 22
+  ftruncate(22, 0x10000) rv=0
+  shm mmap -> 0x0000000311420000
+  destination mmap -> 0x0000000311430000
+  shm filled with 0x41, destination zeroed
+
+[C] child chain
+  stack mmap -> 0x0000000311434000 need=1364568 alloc=1376256

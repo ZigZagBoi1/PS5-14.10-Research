@@ -1,0 +1,40 @@
+=== PROBE 1399a: BLOCKPOOL DESCRIPTOR AS A DEVICE ===
+[0] pid=350
+[0] SIG_IGN installed
+
+[A] open three pools
+   653(0x0) -> 22 22 Invalid argument
+   653(0x100000) -> 23 22 Invalid argument
+   653(0x400000) -> 364 22 Invalid argument
+
+[B] read / write / lseek on every descriptor
+   fd=22(0x0) read(0x40)  -> -1 9 Bad file descriptor
+   fd=22(0x0) write(0x40) -> -1 6 Device not configured
+   fd=22(0x0) lseek(0,SEEK_CUR) -> -1 78 Function not implemented
+   fd=22(0x0) mmap(0x10000,prot=0x2,SHARED) -> -1 22 Invalid argument
+   fd=22(0x0) mmap(0x10000,prot=0x3,SHARED) -> -1 22 Invalid argument
+   fd=23(0x100000) read(0x40)  -> -1 9 Bad file descriptor
+   fd=23(0x100000) write(0x40) -> -1 6 Device not configured
+   fd=23(0x100000) lseek(0,SEEK_CUR) -> -1 78 Function not implemented
+   fd=23(0x100000) mmap(0x10000,prot=0x2,SHARED) -> -1 22 Invalid argument
+   fd=23(0x100000) mmap(0x10000,prot=0x3,SHARED) -> -1 22 Invalid argument
+   fd=364(0x400000) read(0x40)  -> -1 9 Bad file descriptor
+   fd=364(0x400000) write(0x40) -> -1 6 Device not configured
+   fd=364(0x400000) lseek(0,SEEK_CUR) -> -1 78 Function not implemented
+   fd=364(0x400000) mmap(0x10000,prot=0x2,SHARED) -> -1 22 Invalid argument
+   fd=364(0x400000) mmap(0x10000,prot=0x3,SHARED) -> -1 22 Invalid argument
+
+[C] ioctl on the standard commands for every descriptor (baseline)
+   fd=22 ioctl(0x4004667F) -> -1 25 Inappropriate ioctl for device
+   fd=23 ioctl(0x4004667F) -> -1 25 Inappropriate ioctl for device
+   fd=364 ioctl(0x4004667F) -> -1 25 Inappropriate ioctl for device
+
+[D] ioctl sweep: Sony encodings, print anything that is not ENOTTY(25)
+   [D] calls=8064 anomalies=0
+
+[E] close
+   close(22) -> 0 25 Inappropriate ioctl for device
+   close(23) -> 0 25 Inappropriate ioctl for device
+   close(364) -> 0 25 Inappropriate ioctl for device
+
+=== PROBE 1399a COMPLETE ===

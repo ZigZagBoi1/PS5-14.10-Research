@@ -1,0 +1,14 @@
+=== PROBE 1515a: 548 op 3 VS A CONCURRENT FAULT ===
+[0] pid=92
+
+[A] one page to race on, one page of counters
+   V = 0x3110AC000   SH = 0x3110B0000
+   baseline marker at V+0x1000 = 0x12345678
+   V          547(0x3110AC000): start=0x3110AC000 end=0x3110B0000 len=0x4000 prot=0x3
+
+[B] CONTROL: 200 serial rounds with no other thread
+   rounds=200 replaced_failures=0 non-zero reads=0 first=0x00000000
+
+[C] START a reader thread on V+0x1000, then 400 racing rounds
+   client fd = 21
+   spawn = OK 

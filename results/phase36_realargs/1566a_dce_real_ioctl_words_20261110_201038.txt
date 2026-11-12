@@ -1,0 +1,11 @@
+=== PROBE 1566a: /dev/dce real ioctl commands (13.60 table) ===
+
+[0] pid=319
+[0] open('/dev/dce', O_RDWR) fd=22
+
+[A] positive control: the one command the corpus already knows
+[A] cmd=0x80088209 rv=0 buf[0]=0x0
+
+[B] zeroed 0x1000 page, one call per word
+[B] cmd=0x9CE88210 rv=-1 buf[0]=0x0
+[B] cmd=0x80208217 rv=-1 buf[0]=0x0

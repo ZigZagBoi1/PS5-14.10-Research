@@ -1,0 +1,34 @@
+EXTERNAL SIGNAL adjudication - eljcn (@XddIsma) tweet thread, 2026-11-12
+(cited by operator; three tweets, ~6h window)
+================================================================================
+CONTENT: "wrong primitive" framing - stop chasing UAFs on 14.22; the key is
+a reliable info leak that survives LLInt and the allocator; hint: leak a
+LIVE pointer (ArrayBufferContents::m_data) under LLInt; if not, a kernel-
+specific bug. Cites p553, p640, LLInt, controlling-free byte loss.
+
+ADJUDICATION:
+1. NOVELTY: none. The thread restates the banked state using OUR probe IDs
+   (p553/p640) and OUR nomenclature (m_data plaintext VA, LLInt-only) -
+   the author has read the fork/board. The "hint" is the cobrajet
+   inversion verbatim (CHANGELOG 2026-11-11): Gigacage inactive =>
+   m_data is a plaintext VA; blocker re-scoped to "band known, value
+   missing".
+2. FACTUAL ACCURACY: correct on every claim - p553 is a control primitive
+   not arb-R/W (p629/p641), p640 is one engine-constant byte, measured
+   channels lose attacker bytes to zero-at-free (v930/v931).
+3. MISSING: a mechanism. Every transport channel for the m_data value is
+   measured and closed with a row: walk chain (p691) works on 14.10 and is
+   Step-1-scrubbed on 14.22; Canvas state reads are state-API-mediated
+   (p629); CSSFontFace readback is scrubbed (v930/v931); error.stack/
+   timing/performance.memory closed (p630); serialization dead (p642);
+   parser surfaces bounded (v939-v945). "Leak a live pointer" is the
+   target we already hold; the open question is a transport, and the
+   thread does not name one.
+4. CONVERGENT CONCLUSION: "if not, kernel-specific bug" - identical to the
+   era-close verdict (kstuff/etaHEN port definitionally blocked without a
+   non-WebKit class).
+VALUE: external confirmation that independent readers reach the same
+  scoreboard; zero new technical content. If the author produces a named
+  transport mechanism for the m_data readback under LLInt (or a Step-1
+  scrub bypass for the 14.22 walk), it becomes a probe; until then it is
+  commentary.

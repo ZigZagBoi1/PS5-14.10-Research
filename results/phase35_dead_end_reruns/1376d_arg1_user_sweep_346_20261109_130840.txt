@@ -1,0 +1,162 @@
+=== PROBE 1376d: ARG1 = USER PAGE, 346-531 ===
+[0] pid=295 sigign=10/10
+[U] arg1 = mapped user page
+n347
+  n=347 rv=-1 errno=78 Function not implemented
+n348
+  n=348 rv=-1 errno=78 Function not implemented
+n349
+  n=349 rv=-1 errno=78 Function not implemented
+n350
+  n=350 rv=-1 errno=78 Function not implemented
+n351
+  n=351 rv=-1 errno=78 Function not implemented
+n352
+  n=352 rv=-1 errno=78 Function not implemented
+n353
+  n=353 rv=-1 errno=78 Function not implemented
+n354
+  n=354 rv=-1 errno=78 Function not implemented
+n355
+  n=355 rv=-1 errno=78 Function not implemented
+n356
+  n=356 rv=-1 errno=78 Function not implemented
+n357
+  n=357 rv=-1 errno=78 Function not implemented
+n358
+  n=358 rv=-1 errno=78 Function not implemented
+n360
+  n=360 rv=-1 errno=78 Function not implemented
+n361
+  n=361 rv=-1 errno=78 Function not implemented
+n362
+  n=362 rv=22
+n364
+  n=364 rv=-1 errno=78 Function not implemented
+n365
+  n=365 rv=-1 errno=78 Function not implemented
+n366
+  n=366 rv=-1 errno=78 Function not implemented
+n367
+  n=367 rv=-1 errno=78 Function not implemented
+n368
+  n=368 rv=-1 errno=78 Function not implemented
+n369
+  n=369 rv=-1 errno=78 Function not implemented
+n370
+  n=370 rv=-1 errno=78 Function not implemented
+n371
+  n=371 rv=-1 errno=78 Function not implemented
+n372
+  n=372 rv=-1 errno=78 Function not implemented
+n373
+  n=373 rv=-1 errno=78 Function not implemented
+n374
+  n=374 rv=-1 errno=78 Function not implemented
+n375
+  n=375 rv=-1 errno=78 Function not implemented
+n376
+  n=376 rv=-1 errno=78 Function not implemented
+n377
+  n=377 rv=-1 errno=78 Function not implemented
+n378
+  n=378 rv=-1 errno=78 Function not implemented
+n379
+  n=379 rv=-1 errno=45 Operation not supported
+n380
+  n=380 rv=-1 errno=78 Function not implemented
+n381
+  n=381 rv=-1 errno=78 Function not implemented
+n382
+  n=382 rv=-1 errno=78 Function not implemented
+n383
+  n=383 rv=-1 errno=78 Function not implemented
+n384
+  n=384 rv=-1 errno=78 Function not implemented
+n385
+  n=385 rv=-1 errno=78 Function not implemented
+n386
+  n=386 rv=-1 errno=78 Function not implemented
+n387
+  n=387 rv=-1 errno=78 Function not implemented
+n388
+  n=388 rv=-1 errno=78 Function not implemented
+n389
+  n=389 rv=-1 errno=78 Function not implemented
+n390
+  n=390 rv=-1 errno=78 Function not implemented
+n391
+  n=391 rv=-1 errno=78 Function not implemented
+n392
+  n=392 rv=-1 errno=22 Invalid argument
+n393
+  n=393 rv=-1 errno=9 Bad file descriptor
+n394
+  n=394 rv=-1 errno=78 Function not implemented
+n395
+  n=395 rv=-1 errno=78 Function not implemented
+n396
+  n=396 rv=-1 errno=78 Function not implemented
+n397
+  n=397 rv=-1 errno=1 Operation not permitted
+n398
+  n=398 rv=-1 errno=78 Function not implemented
+n399
+  n=399 rv=-1 errno=78 Function not implemented
+n400
+  n=400 rv=-1 errno=22 Invalid argument
+n401
+  n=401 rv=-1 errno=22 Invalid argument
+n403
+  n=403 rv=-1 errno=22 Invalid argument
+n404
+  n=404 rv=0  wrote=2 [ 00000017 00000000]
+n405
+  n=405 rv=0  wrote=2 [ 00000018 00000000]
+n406
+  n=406 rv=-1 errno=63 File name too long
+n407
+  n=407 rv=-1 errno=22 Invalid argument
+n408
+  n=408 rv=-1 errno=22 Invalid argument
+n409
+  n=409 rv=-1 errno=78 Function not implemented
+n410
+  n=410 rv=-1 errno=78 Function not implemented
+n411
+  n=411 rv=-1 errno=78 Function not implemented
+n412
+  n=412 rv=-1 errno=78 Function not implemented
+n413
+  n=413 rv=-1 errno=78 Function not implemented
+n414
+  n=414 rv=-1 errno=78 Function not implemented
+n415
+  n=415 rv=-1 errno=78 Function not implemented
+n416
+  n=416 rv=-1 errno=22 Invalid argument
+n418
+  n=418 rv=-1 errno=78 Function not implemented
+n419
+  n=419 rv=-1 errno=78 Function not implemented
+n420
+  n=420 rv=-1 errno=78 Function not implemented
+n421
+  n=421 rv=0  wrote=280 [ 00000000 00000000 00000000 00000000 00000000 00000000]
+n422
+  n=422 rv=-1 errno=22 Invalid argument
+n423
+  n=423 rv=-1 errno=22 Invalid argument
+n424
+  n=424 rv=-1 errno=78 Function not implemented
+n425
+  n=425 rv=-1 errno=78 Function not implemented
+n426
+  n=426 rv=-1 errno=78 Function not implemented
+n427
+  n=427 rv=-1 errno=78 Function not implemented
+n428
+  n=428 rv=-1 errno=78 Function not implemented
+n430
+  n=430 rv=-1 errno=22 Invalid argument
+n431

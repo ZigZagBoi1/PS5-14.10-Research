@@ -1,0 +1,532 @@
+=== PROBE 1376b: ARG1 = USER PAGE, 75-531 ===
+[0] pid=285 sigign=10/10
+[U] arg1 = mapped user page
+n75
+  n=75 rv=0
+n76
+  n=76 rv=-1 errno=78 Function not implemented
+n77
+  n=77 rv=-1 errno=78 Function not implemented
+n78
+  n=78 rv=0
+n79
+  n=79 rv=-1 errno=14 Bad address
+n80
+  n=80 rv=-1 errno=22 Invalid argument
+n81
+  n=81 rv=-1 errno=78 Function not implemented
+n82
+  n=82 rv=-1 errno=78 Function not implemented
+n83
+  n=83 rv=-1 errno=22 Invalid argument
+n84
+  n=84 rv=-1 errno=78 Function not implemented
+n85
+  n=85 rv=-1 errno=78 Function not implemented
+n86
+  n=86 rv=-1 errno=22 Invalid argument
+n87
+  n=87 rv=-1 errno=78 Function not implemented
+n88
+  n=88 rv=-1 errno=78 Function not implemented
+n89
+  n=89 rv=-1 errno=1 Operation not permitted
+n90
+  n=90 rv=-1 errno=1 Operation not permitted
+n91
+  n=91 rv=-1 errno=78 Function not implemented
+n92
+  n=92 rv=-1 errno=22 Invalid argument
+n94
+  n=94 rv=-1 errno=78 Function not implemented
+n96
+  n=96 rv=-1 errno=22 Invalid argument
+n97
+  n=97 rv=-1 errno=47 Address family not supported by protocol family
+n98
+  n=98 rv=-1 errno=22 Invalid argument
+n99
+  n=99 rv=-1 errno=22 Invalid argument
+n100
+  n=100 rv=-1 errno=22 Invalid argument
+n101
+  n=101 rv=-1 errno=9 Bad file descriptor
+n102
+  n=102 rv=-1 errno=9 Bad file descriptor
+n103
+  n=103 rv=-1 errno=78 Function not implemented
+n104
+  n=104 rv=-1 errno=22 Invalid argument
+n105
+  n=105 rv=-1 errno=9 Bad file descriptor
+n106
+  n=106 rv=-1 errno=9 Bad file descriptor
+n107
+  n=107 rv=-1 errno=78 Function not implemented
+n108
+  n=108 rv=-1 errno=78 Function not implemented
+n109
+  n=109 rv=-1 errno=78 Function not implemented
+n110
+  n=110 rv=-1 errno=78 Function not implemented
+n111
+  n=111 rv=-1 errno=78 Function not implemented
+n112
+  n=112 rv=-1 errno=78 Function not implemented
+n113
+  n=113 rv=-1 errno=47 Address family not supported by protocol family
+n114
+  n=114 rv=-1 errno=9 Bad file descriptor
+n115
+  n=115 rv=-1 errno=78 Function not implemented
+n116
+  n=116 rv=0  wrote=4 [ 6AF1C4B8 00000000 000B2727 00000000]
+n117
+  n=117 rv=-1 errno=22 Invalid argument
+n118
+  n=118 rv=-1 errno=9 Bad file descriptor
+n119
+  n=119 rv=-1 errno=78 Function not implemented
+n120
+  n=120 rv=-1 errno=9 Bad file descriptor
+n121
+  n=121 rv=-1 errno=9 Bad file descriptor
+n122
+  n=122 rv=-1 errno=1 Operation not permitted
+n123
+  n=123 rv=-1 errno=78 Function not implemented
+n124
+  n=124 rv=-1 errno=9 Bad file descriptor
+n125
+  n=125 rv=-1 errno=22 Invalid argument
+n126
+  n=126 rv=-1 errno=1 Operation not permitted
+n127
+  n=127 rv=-1 errno=1 Operation not permitted
+n128
+  n=128 rv=-1 errno=63 File name too long
+n129
+  n=129 rv=-1 errno=78 Function not implemented
+n130
+  n=130 rv=-1 errno=78 Function not implemented
+n131
+  n=131 rv=-1 errno=9 Bad file descriptor
+n132
+  n=132 rv=-1 errno=78 Function not implemented
+n133
+  n=133 rv=-1 errno=9 Bad file descriptor
+n134
+  n=134 rv=-1 errno=9 Bad file descriptor
+n135
+  n=135 rv=-1 errno=47 Address family not supported by protocol family
+n136
+  n=136 rv=-1 errno=63 File name too long
+n137
+  n=137 rv=-1 errno=63 File name too long
+n138
+  n=138 rv=-1 errno=63 File name too long
+n139
+  n=139 rv=-1 errno=78 Function not implemented
+n140
+  n=140 rv=-1 errno=1 Operation not permitted
+n141
+  n=141 rv=-1 errno=63 File name too long
+n142
+  n=142 rv=-1 errno=78 Function not implemented
+n143
+  n=143 rv=-1 errno=78 Function not implemented
+n144
+  n=144 rv=-1 errno=78 Function not implemented
+n145
+  n=145 rv=-1 errno=78 Function not implemented
+n146
+  n=146 rv=-1 errno=78 Function not implemented
+n147
+  n=147 rv=-1 errno=1 Operation not permitted
+n148
+  n=148 rv=-1 errno=78 Function not implemented
+n149
+  n=149 rv=-1 errno=78 Function not implemented
+n150
+  n=150 rv=-1 errno=78 Function not implemented
+n151
+  n=151 rv=-1 errno=78 Function not implemented
+n152
+  n=152 rv=-1 errno=78 Function not implemented
+n153
+  n=153 rv=-1 errno=78 Function not implemented
+n154
+  n=154 rv=-1 errno=78 Function not implemented
+n155
+  n=155 rv=-1 errno=78 Function not implemented
+n156
+  n=156 rv=-1 errno=78 Function not implemented
+n157
+  n=157 rv=-1 errno=78 Function not implemented
+n158
+  n=158 rv=-1 errno=78 Function not implemented
+n159
+  n=159 rv=-1 errno=78 Function not implemented
+n160
+  n=160 rv=-1 errno=78 Function not implemented
+n161
+  n=161 rv=-1 errno=78 Function not implemented
+n162
+  n=162 rv=-1 errno=78 Function not implemented
+n163
+  n=163 rv=-1 errno=78 Function not implemented
+n164
+  n=164 rv=-1 errno=78 Function not implemented
+n165
+  n=165 rv=-1 errno=22 Invalid argument
+n166
+  n=166 rv=-1 errno=78 Function not implemented
+n167
+  n=167 rv=-1 errno=78 Function not implemented
+n168
+  n=168 rv=-1 errno=78 Function not implemented
+n169
+  n=169 rv=-1 errno=78 Function not implemented
+n170
+  n=170 rv=-1 errno=78 Function not implemented
+n171
+  n=171 rv=-1 errno=78 Function not implemented
+n172
+  n=172 rv=-1 errno=78 Function not implemented
+n173
+  n=173 rv=-1 errno=78 Function not implemented
+n174
+  n=174 rv=-1 errno=78 Function not implemented
+n175
+  n=175 rv=-1 errno=78 Function not implemented
+n176
+  n=176 rv=-1 errno=78 Function not implemented
+n177
+  n=177 rv=-1 errno=78 Function not implemented
+n178
+  n=178 rv=-1 errno=78 Function not implemented
+n179
+  n=179 rv=-1 errno=78 Function not implemented
+n180
+  n=180 rv=-1 errno=78 Function not implemented
+n181
+  n=181 rv=-1 errno=78 Function not implemented
+n182
+  n=182 rv=-1 errno=1 Operation not permitted
+n183
+  n=183 rv=-1 errno=1 Operation not permitted
+n184
+  n=184 rv=-1 errno=78 Function not implemented
+n185
+  n=185 rv=-1 errno=78 Function not implemented
+n186
+  n=186 rv=-1 errno=78 Function not implemented
+n187
+  n=187 rv=-1 errno=78 Function not implemented
+n188
+  n=188 rv=-1 errno=63 File name too long
+n189
+  n=189 rv=-1 errno=9 Bad file descriptor
+n190
+  n=190 rv=-1 errno=1 Operation not permitted
+n191
+  n=191 rv=-1 errno=1 Operation not permitted
+n192
+  n=192 rv=-1 errno=1 Operation not permitted
+n193
+  n=193 rv=-1 errno=78 Function not implemented
+n194
+  n=194 rv=-1 errno=22 Invalid argument
+n195
+  n=195 rv=-1 errno=14 Bad address
+n196
+  n=196 rv=-1 errno=22 Invalid argument
+n197
+  n=197 rv=-1 errno=78 Function not implemented
+n198
+  n=198 rv=-1 errno=78 Function not implemented
+n199
+  n=199 rv=-1 errno=78 Function not implemented
+n200
+  n=200 rv=-1 errno=78 Function not implemented
+n201
+  n=201 rv=-1 errno=78 Function not implemented
+n202
+  n=202 rv=-1 errno=22 Invalid argument
+n203
+  n=203 rv=0
+n204
+  n=204 rv=-1 errno=22 Invalid argument
+n205
+  n=205 rv=-1 errno=78 Function not implemented
+n206
+  n=206 rv=-1 errno=9 Bad file descriptor
+n207
+  n=207 rv=-1 errno=78 Function not implemented
+n208
+  n=208 rv=-1 errno=78 Function not implemented
+n209
+  n=209 rv=0
+n210
+  n=210 rv=-1 errno=78 Function not implemented
+n211
+  n=211 rv=-1 errno=78 Function not implemented
+n212
+  n=212 rv=-1 errno=78 Function not implemented
+n213
+  n=213 rv=-1 errno=78 Function not implemented
+n214
+  n=214 rv=-1 errno=78 Function not implemented
+n215
+  n=215 rv=-1 errno=78 Function not implemented
+n216
+  n=216 rv=-1 errno=78 Function not implemented
+n217
+  n=217 rv=-1 errno=78 Function not implemented
+n218
+  n=218 rv=-1 errno=78 Function not implemented
+n219
+  n=219 rv=-1 errno=78 Function not implemented
+n220
+  n=220 rv=-1 errno=78 Function not implemented
+n221
+  n=221 rv=-1 errno=78 Function not implemented
+n222
+  n=222 rv=-1 errno=78 Function not implemented
+n223
+  n=223 rv=-1 errno=78 Function not implemented
+n224
+  n=224 rv=-1 errno=78 Function not implemented
+n225
+  n=225 rv=-1 errno=78 Function not implemented
+n226
+  n=226 rv=-1 errno=78 Function not implemented
+n227
+  n=227 rv=-1 errno=78 Function not implemented
+n228
+  n=228 rv=-1 errno=78 Function not implemented
+n229
+  n=229 rv=-1 errno=78 Function not implemented
+n230
+  n=230 rv=-1 errno=78 Function not implemented
+n231
+  n=231 rv=-1 errno=78 Function not implemented
+n232
+  n=232 rv=-1 errno=22 Invalid argument
+n233
+  n=233 rv=-1 errno=1 Operation not permitted
+n234
+  n=234 rv=0
+n235
+  n=235 rv=-1 errno=22 Invalid argument
+n236
+  n=236 rv=-1 errno=22 Invalid argument
+n237
+  n=237 rv=-1 errno=14 Bad address
+n238
+  n=238 rv=-1 errno=22 Invalid argument
+n239
+  n=239 rv=-1 errno=22 Invalid argument
+n240
+  n=240 rv=-1 errno=22 Invalid argument
+n241
+  n=241 rv=-1 errno=78 Function not implemented
+n242
+  n=242 rv=-1 errno=78 Function not implemented
+n243
+  n=243 rv=-1 errno=78 Function not implemented
+n244
+  n=244 rv=-1 errno=78 Function not implemented
+n245
+  n=245 rv=-1 errno=78 Function not implemented
+n246
+  n=246 rv=-1 errno=78 Function not implemented
+n247
+  n=247 rv=-1 errno=78 Function not implemented
+n248
+  n=248 rv=-1 errno=78 Function not implemented
+n249
+  n=249 rv=-1 errno=78 Function not implemented
+n250
+  n=250 rv=-1 errno=78 Function not implemented
+n251
+  n=251 rv=-1 errno=1 Operation not permitted
+n252
+  n=252 rv=-1 errno=78 Function not implemented
+n253
+  n=253 rv=0
+n254
+  n=254 rv=-1 errno=78 Function not implemented
+n255
+  n=255 rv=-1 errno=78 Function not implemented
+n256
+  n=256 rv=-1 errno=78 Function not implemented
+n257
+  n=257 rv=-1 errno=78 Function not implemented
+n258
+  n=258 rv=-1 errno=78 Function not implemented
+n259
+  n=259 rv=-1 errno=78 Function not implemented
+n260
+  n=260 rv=-1 errno=78 Function not implemented
+n261
+  n=261 rv=-1 errno=78 Function not implemented
+n262
+  n=262 rv=-1 errno=78 Function not implemented
+n263
+  n=263 rv=-1 errno=78 Function not implemented
+n264
+  n=264 rv=-1 errno=78 Function not implemented
+n265
+  n=265 rv=-1 errno=78 Function not implemented
+n266
+  n=266 rv=-1 errno=78 Function not implemented
+n267
+  n=267 rv=-1 errno=78 Function not implemented
+n268
+  n=268 rv=-1 errno=78 Function not implemented
+n269
+  n=269 rv=-1 errno=78 Function not implemented
+n270
+  n=270 rv=-1 errno=78 Function not implemented
+n271
+  n=271 rv=-1 errno=78 Function not implemented
+n272
+  n=272 rv=-1 errno=22 Invalid argument
+n273
+  n=273 rv=-1 errno=78 Function not implemented
+n274
+  n=274 rv=-1 errno=78 Function not implemented
+n275
+  n=275 rv=-1 errno=78 Function not implemented
+n276
+  n=276 rv=-1 errno=78 Function not implemented
+n277
+  n=277 rv=-1 errno=78 Function not implemented
+n278
+  n=278 rv=-1 errno=78 Function not implemented
+n279
+  n=279 rv=-1 errno=78 Function not implemented
+n280
+  n=280 rv=-1 errno=78 Function not implemented
+n281
+  n=281 rv=-1 errno=78 Function not implemented
+n282
+  n=282 rv=-1 errno=78 Function not implemented
+n283
+  n=283 rv=-1 errno=78 Function not implemented
+n284
+  n=284 rv=-1 errno=78 Function not implemented
+n285
+  n=285 rv=-1 errno=78 Function not implemented
+n286
+  n=286 rv=-1 errno=78 Function not implemented
+n287
+  n=287 rv=-1 errno=78 Function not implemented
+n288
+  n=288 rv=-1 errno=78 Function not implemented
+n289
+  n=289 rv=-1 errno=9 Bad file descriptor
+n290
+  n=290 rv=-1 errno=9 Bad file descriptor
+n291
+  n=291 rv=-1 errno=78 Function not implemented
+n292
+  n=292 rv=-1 errno=78 Function not implemented
+n293
+  n=293 rv=-1 errno=78 Function not implemented
+n294
+  n=294 rv=-1 errno=78 Function not implemented
+n295
+  n=295 rv=-1 errno=78 Function not implemented
+n296
+  n=296 rv=-1 errno=78 Function not implemented
+n297
+  n=297 rv=-1 errno=78 Function not implemented
+n298
+  n=298 rv=-1 errno=78 Function not implemented
+n299
+  n=299 rv=-1 errno=78 Function not implemented
+n300
+  n=300 rv=-1 errno=78 Function not implemented
+n301
+  n=301 rv=-1 errno=78 Function not implemented
+n302
+  n=302 rv=-1 errno=78 Function not implemented
+n303
+  n=303 rv=-1 errno=78 Function not implemented
+n304
+  n=304 rv=-1 errno=78 Function not implemented
+n305
+  n=305 rv=-1 errno=78 Function not implemented
+n306
+  n=306 rv=-1 errno=78 Function not implemented
+n307
+  n=307 rv=-1 errno=78 Function not implemented
+n308
+  n=308 rv=-1 errno=78 Function not implemented
+n309
+  n=309 rv=-1 errno=78 Function not implemented
+n310
+  n=310 rv=-1 errno=3 No such process
+n311
+  n=311 rv=-1 errno=78 Function not implemented
+n312
+  n=312 rv=-1 errno=78 Function not implemented
+n313
+  n=313 rv=-1 errno=78 Function not implemented
+n314
+  n=314 rv=-1 errno=78 Function not implemented
+n315
+  n=315 rv=-1 errno=1 Operation not permitted
+n316
+  n=316 rv=-1 errno=78 Function not implemented
+n317
+  n=317 rv=-1 errno=78 Function not implemented
+n318
+  n=318 rv=-1 errno=78 Function not implemented
+n319
+  n=319 rv=-1 errno=78 Function not implemented
+n320
+  n=320 rv=-1 errno=78 Function not implemented
+n321
+  n=321 rv=-1 errno=78 Function not implemented
+n322
+  n=322 rv=-1 errno=78 Function not implemented
+n323
+  n=323 rv=-1 errno=78 Function not implemented
+n324
+  n=324 rv=-1 errno=22 Invalid argument
+n325
+  n=325 rv=-1 errno=45 Operation not supported
+n326
+  n=326 rv=-1 errno=78 Function not implemented
+n327
+  n=327 rv=-1 errno=14 Bad address
+n328
+  n=328 rv=-1 errno=3 No such process
+n329
+  n=329 rv=-1 errno=14 Bad address
+n330
+  n=330 rv=-1 errno=3 No such process
+n331
+  n=331 rv=0
+n332
+  n=332 rv=-1 errno=22 Invalid argument
+n333
+  n=333 rv=-1 errno=22 Invalid argument
+n334
+  n=334 rv=-1 errno=3 No such process
+n335
+  n=335 rv=-1 errno=78 Function not implemented
+n336
+  n=336 rv=-1 errno=78 Function not implemented
+n337
+  n=337 rv=-1 errno=78 Function not implemented
+n338
+  n=338 rv=-1 errno=78 Function not implemented
+n339
+  n=339 rv=-1 errno=78 Function not implemented
+n340
+  n=340 rv=0
+n341

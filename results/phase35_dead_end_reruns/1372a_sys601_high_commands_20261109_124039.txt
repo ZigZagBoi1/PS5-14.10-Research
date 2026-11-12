@@ -1,0 +1,6 @@
+=== PROBE 1372a: SYS 601 0x1D-0x26 ===
+[0] pid=254 A=0x3112250A0 B=0x31109FBA0
+[cmd 0x10] calling ...
+  0x10 arg2=0  : rv=-1  wrote=0
+[cmd 0x1C] calling ...
+  0x1C arg2=0  : rv=-1  wrote=0

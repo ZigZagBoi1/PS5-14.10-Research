@@ -1,0 +1,92 @@
+=== PROBE 1364a: EBOOT GADGET INVENTORY (547 range) ===
+[0] pid=205
+[0] eboot text base from 593 = 0x2ACC000
+[1] region 0x2ACC000-0x2F60000  dwords: 0 0 5 6358060
+[1] self-test dwords at 0x2ACC000: 62696C2F 63657865 2D646C2F 2E666C65 312E6F73 00000000 00000000 00000000
+[2] scanned 0x40000 / 0x494000
+[2] scanned 0x80000 / 0x494000
+[2] scanned 0xC0000 / 0x494000
+[2] scanned 0x100000 / 0x494000
+[2] scanned 0x140000 / 0x494000
+[2] scanned 0x180000 / 0x494000
+[2] scanned 0x1C0000 / 0x494000
+[2] scanned 0x200000 / 0x494000
+[2] scanned 0x240000 / 0x494000
+[2] scanned 0x280000 / 0x494000
+[2] scanned 0x2C0000 / 0x494000
+[2] scanned 0x300000 / 0x494000
+[2] scanned 0x340000 / 0x494000
+[2] scanned 0x380000 / 0x494000
+[2] scanned 0x3C0000 / 0x494000
+[2] scanned 0x400000 / 0x494000
+[2] scanned 0x440000 / 0x494000
+[2] scanned 0x480000 / 0x494000
+[3] scanned 4800512 bytes of 0x494000
+
+[pop rsp; ret] count=15
+    eboot+0x9A2
+    eboot+0xBFD
+    eboot+0x1C89D
+    eboot+0x1CBEA
+    eboot+0xFB5E9
+    eboot+0x14C095
+    eboot+0x189FB4
+    eboot+0x18A00C
+[pop rax; ret] count=15
+    eboot+0x992
+    eboot+0xBEB
+    eboot+0xC5A
+    eboot+0x1C88D
+[pop rdi; ret] count=18
+    eboot+0xC9DFE
+    eboot+0x110E73
+    eboot+0x13149A
+    eboot+0x141FCC
+[pop rsi; ret] count=19
+    eboot+0xD77D
+    eboot+0xDAED
+    eboot+0x8084E
+    eboot+0xCB286
+[pop rdx; ret] count=3
+    eboot+0x3B02D7
+    eboot+0x420E6D
+    eboot+0x47ED35
+[pop rbx; ret] count=30
+    eboot+0x5B6E8
+    eboot+0xCF268
+    eboot+0xD7A78
+    eboot+0xE2B4B
+[mov rax,cr4; ret] count=0
+[mov cr4,rax; ret] count=0
+[mov [rdi],rax; ret] count=4
+    eboot+0x92C67
+    eboot+0xD0B60
+    eboot+0x102A40
+    eboot+0x1A035A
+[mov rax,[rdi]; ret] count=0
+[mov [rsi],rax; ret] count=1
+    eboot+0x1A0BA9
+[mov rax,[rsi]; ret] count=2
+    eboot+0x1A5CC4
+    eboot+0x1C5554
+[mov [rdi],rbx; ret] count=0
+[mov eax,ebx; ret] count=0
+[mov rax,rbx; ret] count=0
+[cpuid; ret] count=0
+[swapgs] count=0
+[iretq] count=19
+    eboot+0x11F41
+    eboot+0x339F1
+    eboot+0x553B1
+    eboot+0x5B241
+
+[cpuid sites]
+    eboot+0x7293D  0F A2 29 00 48 8D 3D 18 09 2A 00 E8 D3 A1 29 00
+    eboot+0x1AA75D  0F A2 FF FF 4C 89 EF 44 89 FE BA 06 00 00 00 49
+    eboot+0x1FBDCD  0F A2 E0 FF 4C 89 FF 48 89 DE E8 24 C8 E5 FF 48
+    eboot+0x3D5662  0F A2 73 B1 68 C7 61 04 C7 29 D9 B8 A0 4C 44 6F
+    eboot+0x3FD92C  0F A2 02 00 00 01 00 00 00 00 00 00 00 00 00 00
+    eboot+0x400B18  0F A2 DA 03 00 EE 0C 61 00 00 CF 0D 25 A7 DA 03
+    eboot+0x40781E  0F A2 01 9A 3A 00 C3 10 4E 00 00 91 11 0F EF 39
+
+=== PROBE 1364a COMPLETE ===

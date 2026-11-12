@@ -727,3 +727,492 @@ CVE-2026-43720 is **unpatched** on PS5 14.10. The `desynchronized` getter in `ge
 ## Attribution
 
 Research by [@Arn0Stride7](https://x.com/Arn0Stride7). Built with Claude Opus 4.6, GPT-6.1-Sol, DeepSeek v4.1-Flash, and other models. Full credits in the source repository.
+
+## Finding 108: The shipped WorkerThread keeps pre-fix proxy references, but the guard makes them unreachable (probes poc-worker.html, wk_storm.js, 2026-10-26)
+
+`Source/WebCore/workers/WorkerThread.h:139-142` in `WebKit_1400.zip` still declares
+`WorkerLoaderProxy&`, `WorkerDebuggerProxy&`, `WorkerReportingProxy&` and
+`WorkerBadgeProxy&`, the exact shape upstream replaced with raw pointers plus
+`clearProxies()` in `926054f254` (bug 264222, 2023-12-20). That fix's crash was
+`createCacheStorageConnection()` on the stale `WorkerLoaderProxy`:
+
+```cpp
+if (!workerThread->runLoop().terminated())
+    mainThreadConnection = workerThread->workerLoaderProxy().createCacheStorageConnection();
+```
+
+On this build the `runLoop().terminated()` test is what keeps it safe. Measured:
+
+| arm | setup | result |
+|---|---|---|
+| env | blob-URL worker | never runs (no beacon at all) |
+| env | `/raw/wk_storm.js` worker | runs: `caches=object`, `navigator.storage/permissions=undefined` |
+| `caches` | `caches.open()` in a worker, 900 ms window | promise never settles, no throw: the call hangs before the connection is built |
+| fetch | 2 / 10 / 50 ms `terminate()` during a fetch storm | 200 page cycles, ~16,000 workers, zero deaths |
+| nav | 10 workers storming, page navigates 120 ms later | 4 fleets, zero deaths |
+
+So the stale reference is real in source but `Worker::terminate()` stops the run
+loop before the proxy is freed, and the one call site that would bypass the check
+(`WorkerThreadableLoader`'s `WorkerLoaderProxy& m_loaderProxy`) has its main-thread
+tasks cancelled as part of the same stop. Recorded as unreachable rather than fixed.
+
+## Finding 109: `WebSocket` exists but every connection fails before it reaches the server (2026-10-26)
+
+The `caps` page reports `websocket=1` (the binding exists, `WebSocketEnabled` in
+`UnifiedWebPreferences.yaml:7837` defaults to true and has no PlayStation override), but
+on this build a WebSocket cannot be opened at all:
+
+| test (probe `poc-wsdiag.js`) | result |
+|---|---|
+| `XMLHttpRequest('GET /ws?probe=1')` same origin | `400` from our server - the route is reachable |
+| `new WebSocket('wss://' + location.host + '/ws')` | `onerror` in about 340 ms, **no request reaches the server** |
+| `new WebSocket('wss://manuals.playstation.net/ws')` | `onerror`, no request |
+| `new WebSocket('ws://' + location.host + '/ws')` (port 443) | `onerror`, no request |
+
+`tools/webkit_server.py` logs every request it accepts and has a `/ws` route with a
+working 101 handshake (the RFC 6455 accept vector verifies locally), so the absence of a
+`GET /ws` line means the connection is refused inside the browser before any TCP
+handshake - not by our TLS certificate and not by the port. A `wss` client on 8443 gets
+the same outcome, and the earlier `unknown ca` alert from the standalone server only
+confirms that non-443 ports never reach the certificate check.
+
+Consequence: the frame parser and the `permessage-deflate` inflater are present in the
+source but not reachable from the guide, so the 20-case mat in `tools/ws_cases.py` cannot
+be driven from this firmware's browser. Any WebSocket work here is dead until a different
+host (not the User's Guide) can run the page.
+
+## 13. The FontFaceSet weak-wrapper window opens on 14.10 and does not fault here
+
+Issue #155 describes a use-after-free in `FontFaceSet::load()`: the faces are collected
+as `Vector<std::reference_wrapper<CSSFontFace>>` (`Source/WebCore/css/CSSFontFaceSet.cpp`,
+`matchingFacesExcludingPreinstalledFonts`), the vector is iterated, and any `then` getter
+on `FontFace.prototype` runs synchronously inside the loop - so a getter that removes the
+victim stylesheet frees a `CSSFontFace` the loop is still holding. The published trigger
+page uses the **dual-family** call `document.fonts.load('1em a, x','AB')`; a single-family
+call never reaches that path, which is why an earlier page of ours (`ff155.html`) saw
+nothing.
+
+Replayed verbatim on 14.10 (page `ff155y.html`, capture
+`results/webkit/server_20261029_100443.log`):
+
+| beacon | time |
+|---|---|
+| `F155Y-PARSE` → `START` → `SETUP` → `CALL-LOAD` | 10:22:48.896 → .978 |
+| `GETTER-ENTER` → `STYLE-REMOVED` → `LAYOUT-DONE` → `SPRAYED` | 10:22:49.078 → .365 |
+| `CHECK-true` | 10:22:49.399 |
+| `GETTER-RETURN` → `RESOLVED` | 10:22:49.435 → .470 |
+| `FORCE-PRE` → `FORCE-POST-h21` | 10:22:49.575 → .614 |
+
+So the window is real and the getter runs inside the load: after the victim stylesheet is
+removed, `document.fonts.check('1em x')` still reports the face as present, and the load
+promise still resolves and lays out at height 21. **No fault, no kill** - where the
+14.10 bench in #155 reports 17/17 deaths immediately after `GETTER_RETURN`.
+
+Two readings remain open: either the reclaimed object's contents are benign (the same
+result lunarshe11 measured on 14.00 with a NUL fill), or the `CSSFontFace` is not actually
+released on this path. The discriminating run is a **hostile spray**: fill the whole
+256-byte reclaim buffer with `0x4141` (`ff155z.html`) instead of NULs with one marker.
+If the engine reads a vtable or a pointer out of the freed object, the fill turns it into
+`0x4141414141414141`; if it survives that too, nothing is dereferencing the freed slot and
+the #155 crash needs a different trigger than the one published.
+
+### 13a. `document.fonts.check()` is not an oracle here
+
+`ff155w.html` (capture in `results/webkit/server_20261029_100443.log`, 10:25:52):
+
+| phase | state | result |
+|---|---|---|
+| `P1` | family `x` **never defined at all** | `check('1em x')` = **true** |
+| `P2` | `@font-face x` present | true |
+| `P3` | stylesheet removed, outside any load | true |
+| `P4` | removed inside the load getter | true, then `RESOLVED` |
+
+So `check()` answers true for a family that does not exist on this build - it is
+reporting "the string can be rendered", and the default-font fallback satisfies
+that. The `CHECK=true` observation in issue #155 therefore carries no information
+about a fake font object: it is the default answer, with or without a spray, with
+or without a dangling `CSSFontFace`.
+
+Combined with the two trigger runs (`ff155y`, `ff155z`, both NUL-marked and
+`0x4141` fills, both surviving to `RESOLVED` and `h=21`), the published #155
+sequence does not fault on 14.10 here, and its central piece of evidence does not
+distinguish the claimed state from an empty one. `CSSFontFace` is
+`WTF_MAKE_FAST_ALLOCATED_WITH_HEAP_IDENTIFIER` (an IsoHeap cell), which JS strings
+cannot reclaim, so the "spray turns a string into a font" mechanism has no
+allocator route even if the reference does dangle.
+
+### 13b. Reclaim attempts on 14.10: the spray suppresses the death, and the fill does not matter
+
+Every arm uses the same working trigger (the `ff155y` shape: `FontFace('a','local(Helvetica)',
+{unicodeRange:'U+0041'})` primed with `void A.loaded`, a `<style id=victim-style>` with
+`@font-face x`, a `then` getter that removes the stylesheet, calls
+`document.fonts.delete(this)`, forces layout, sprays, and returns `undefined`), with a
+120 ms layout force on `font-family: x` after the call.
+
+| arm | getter fires | `fonts.delete` | spray (128 UTF-16 units = 256 B) | outcome |
+|---|---|---|---|---|
+| `ff155y` | yes | no | 2000 strings, NUL + `\u4141` at unit 64 | survived, `RESOLVED`, `h=21` |
+| `ff155z` | yes | no | 2000 strings, all `\u4141` | survived, `h=21` |
+| `ff155v` | yes | yes (`size` 1 -> 0) | 2000 strings, all NUL | survived, `h=21` |
+| `ff155u` | yes | yes | 2000 strings, `\u4141` at units 64-65 (bytes 128..131 = `0x41…41`) | survived, `h=21` |
+
+Read with Finding 12's numbers (without a spray the same trigger dies 4/5; with a 1000-rule
+`@font-face` spray it survives 20/20), the spray arms all sit in the "suppressed" regime, and
+placing a recognisable pointer at byte 128 makes no difference: nothing dereferences our fill.
+So on 14.10 the observable either does not reclaim the freed cell with JS strings, or the layout
+path never reads that offset. #155's phase 3 does not transfer as stated.
+
+### 13c. The 14.10 death is a timing race in `load()`, not a reclaimable use-after-free
+
+| arm | `fonts.delete` | getter work | outcome |
+|---|---|---|---|
+| `ff155n` | yes | nothing (returns immediately) | died, `GETTER-RETURN` last beacon |
+| `ff155t` | yes | one 256 B string | died, same |
+| `ff155u` | yes | 2000 strings, `0x41` at bytes 128..131 | survived, `h=21` |
+| `ff155q` | yes | 2000 strings, **every** byte `0x41` | survived, `h=21` |
+| `ff155r` | yes | 2000 strings allocated **before** the trigger | died, same |
+| `ff155o` | yes | **3 ms spin, zero allocation** | survived, `h=21` |
+
+`ff155q` should have been decisive and was not: if a sprayed string had taken the freed
+`CSSFontFace`, every pointer-shaped field would be `0x4141414141414141` and the engine would
+fault on first use. It survived. `ff155r` then removed allocator state as the cause (pre-filling
+the free list before the trigger changes nothing), and `ff155o` closed it: **3 ms of pure CPU in
+the getter, with no allocation at all, is enough to prevent the death**.
+
+So the observable on 14.10 is a window that closes with the getter's duration - the promise
+continuation races the client that `document.fonts.delete(this)` removed - not a freed object
+being read. Contents never mattered (`u` and `v` behave identically; `q` with all-`0x41` behaves
+like all-zero), which is what a timing race predicts and what a type confusion cannot.
+Issue #155's phases 3-4 (string spray, byte 128 as a pointer) do not transfer to 14.10.
+
+
+## 13d. The reclaim arms are not reproducible; no reclaim control is established (2026-10-29)
+
+The arm table in 13b and the position bisect were both built on single runs, and the
+same page does not repeat.
+
+- `ff155rate.html` (no spray, ten triggers per load): died at iteration 0 in **3/3**
+  loads, last beacon `RATE-0-LAY`. The no-spray death is stable.
+- `ff155one.html` (one 274-byte 16-bit string per trigger, poison at units 0-1):
+  died at iteration 0 in **3/3** loads, last beacon `SD-0-LAY`.
+- `ff155cnt.html` (spray count 1, 2, 3 ... per trigger): iteration 0 - the same single
+  string as `ff155one` iteration 0 - **survived**, and the load died on the
+  three-string iteration.
+
+So an identical arm produced both outcomes on different page loads, while the
+no-spray arm and the one-string arm each produced a clean 3/3. Every earlier
+single-run survivor (`ff155e/i/j/k/l/n2/o2/q/s/u/y2/c`) is therefore one sample of an
+unknown distribution and cannot be read as "this content suppresses the death".
+
+What is established: the trigger (Finding 12) frees a live `CSSFontFace` and the
+WebProcess dies deterministically when nothing is allocated in the `then` getter.
+What is not established: that any sprayed string ever occupies the freed cell, that
+the death moves to a different site depending on our bytes, or that the byte at any
+offset is read from our data. Without a crash address, an allocator probe, or a heap
+leak in the WebProcess, those questions cannot be answered from JavaScript, and no
+reclaim primitive can be claimed.
+
+### 13d addendum: the 2000-string arm dies as well (2026-10-29)
+
+`ff155big.html` - ten triggers per load, 2000 x 274-byte strings per getter - died at
+`FB-0-LAY` on its first load, i.e. the arm that was the only reproducible survivor
+(`ff155q`, `ff155v`, `ff155u`, all single samples) is not repeatable either. With no
+spray 3/3, one string 6/6, 2000 strings 1/1, the honest reading is that this trigger
+kills the WebProcess under every allocation we have tried, that all twelve earlier
+"survivors" were single samples of an unlucky minority, and that no reclamation of the
+freed `CSSFontFace` has ever been demonstrated on 14.10.
+
+### 13d addendum 2: the first trigger is safe, the second is fatal, and bytes never matter
+
+`ff155q.html` survived 2/2 (getter: remove, delete, layout, 2000 x 274-byte 16-bit
+strings, `check('1em x')`, return). Two ladders - `ff155delay` (stall 12 ms then 11 ms)
+and `ff155delay2` (stall 20 ms then 18 ms) - survived their **iteration 0** and died at
+**iteration 1** in both cases, so the stall length is irrelevant and the ordinal of the
+trigger is what changes the outcome. `ff155d3` repeated the experiment with the second
+trigger spraying 2000 all-NUL strings instead of `0x4141`: it died at the same point
+(`RET`), so the payload content is not the variable either.
+
+Net: the trigger is safe exactly once per page load when it allocates, fatal on the
+second use regardless of stall, size or content. Nothing we have sprayed - zeros,
+`0x41`, 128- or 274-byte, one or two thousand - has ever changed the outcome, so no
+reclamation of the freed `CSSFontFace` has been demonstrated, and with no crash address
+and no allocator probe in JS there is no way to observe the reuse from the page.
+
+## 13e. A controlled occupancy test: same-type allocation shifts the death and never gets written to (2026-10-29)
+
+The `13d` arms varied the fill, the size class and the timing. The parametrized pages
+below vary one thing at a time and always use the same trigger: a JS-added
+`FontFace('a', 'local("Helvetica")', {unicodeRange:'U+0041'})`, a style rule for
+family `x` with `unicode-range: U+0042`, `document.fonts.load('1em a, x', 'AB')`, and a
+`FontFace.prototype.then` getter that removes the style and calls
+`document.fonts.delete(this)` while the promise is being resolved. Every beacon is a
+synchronous XMLHttpRequest inside the measured window, so the beacon count itself is
+part of the allocation history.
+
+| page | variation | outcome |
+|---|---|---|
+| `par3` | five in-page trials, no allocation | trials 0-2 resolve, **trial 3 dies after the getter returns** (2/2 identical) |
+| `par7` | + 2000 x 274-byte `ArrayBuffer`s after each resolution (6000 held by trial 3) | dies at trial 3, unchanged |
+| `par8` | getter reduced to six no-op beacons, no DOM work | **all five trials complete** |
+| `par10` | `check()` moved out of the getter into the callback | dies at trial 3 - `check()` is irrelevant |
+| `par11` | per-trial string sprays of length 40/45/56/60/80/96/128 | dies at trial 3, every class |
+| `par12` | 400 fresh `FontFace` objects allocated inside the getter | **first trigger hangs** at `LOAD-CALLED`, no dialog |
+| `par13` | one canary `FontFace` per trial, `family` read after resolution | trial 0 completes with `FAM-CANARY`, trial 1 **dies at the getter return** |
+
+What this establishes:
+
+- the death needs the DOM mutations (`par8`); it does not need `check()` (`par10`);
+- neither fill, size class, timing, nor result-vector allocation changes the outcome
+  (`par5`, `par7`, `par11`);
+- allocating the same type does change the outcome (`par12` hangs, `par13` moves the
+  death from the fourth trigger to the second), so the allocation order is part of the
+  bug's state;
+- the canary is never written: `family` still reads `CANARY` after the resolution, so no
+  stale access to it is observed from JS.
+
+Conclusion: the trigger is a deterministic-per-page renderer crash whose point moves with
+heap layout, not a reclaimable use-after-free we can steer. Same-type allocation is the
+only lever that moves it, and it produces a hang or an earlier crash rather than control.
+There is no memory-disclosure or write primitive available from the page, so the line is
+closed as a crash bug and not pursued further without a crash address or an allocator
+probe that JS cannot provide.
+
+## 13f. The upstream fix for this bug identifies the exact path; 14.10 is unpatched and the crash is real, but the reuse is the engine's own (2026-10-29)
+
+The bug family is upstream WebKit **bug 312202**, fixed by commit
+`5f0480f771ba1749663a8257eafca70af17b7cec` — *"Use-after-free in
+`CSSFontFace::setStatus` and `CSSFontFace::pump`"*, cherry-picked to
+`safari-7624-branch`. The fix replaces `std::reference_wrapper` with `Ref` in the
+return value of `CSSFontFaceSet::matchingFacesExcludingPreinstalledFonts` and in the
+locals of `FontFaceSet::load`. The 14.10 tree (`WebKit_1400`, `Configurations/Version.xcconfig`
+= 616.1.27.211.1) still contains the `reference_wrapper` signature, so the firmware
+**carries the vulnerable code**. Its regression test,
+`LayoutTests/fast/text/fontface-setstatus-crash.html`, also gives the correct trigger
+shape, which none of the pages in 13a-13e used:
+
+- the JS face and the CSS face must share the **same family** so one
+  `document.fonts.load('1em x', 'AB')` matches both into a single `matchingFaces` vector;
+- the CSS source must be a **`url(...)`** so that face stays `Loading` while the JS
+  `local()` face resolves synchronously *inside* `for (auto& face : matchingFaces) face.get().load();`;
+- the free is `document.getElementById('s').sheet.deleteRule(0)` and the getter is gated
+  on `this === A`.
+
+Runs (`results/webkit/corpus/v156.html`-`v160.html`, server log
+`results/webkit/server_20261029_100443.log`):
+
+| page | variation | outcome |
+|---|---|---|
+| `v156` | upstream test verbatim + beacons, CSS source `/slowfont/?ms=5000` | getter fires inside `load()` (`V-GETTER-A → V-ALLOC → V-RULE-DELETED → V-LAYOUT → V-LOAD-RET`), survives |
+| `v157` | + 4000 x 255-char `'A'` spray in the getter, before the layout force | survives to `V-TIMEOUT-ALIVE` |
+| `v158` | no in-getter spray, spray at +1 s, beacon at +6 s | **dies right after `V-LAYOUT`**, inside `load()`, before `V-LOAD-RET` |
+| `v159` | `A` added before the `<style>` is created (face first in the vector), spray in the getter | survives through +6 s |
+| `v160` | status readback of both resolved faces with a 288-class zero spray | `FACE0-st-loaded`, `FACE1-st-loaded` — the style face's backing is **not** our bytes |
+
+The second-trigger crash is the one reproducible death: `par33`/`par36` (eight trials, no
+allocation at all) die after `TR1-RET`, three times out of three, and `par34`/`par37`
+(same page plus a 4000 x 255-char pre-spray *between* trials) survive all trials, twice
+out of two.
+
+What this establishes, and what it does not:
+
+- the vulnerable code path is present, reachable from a plain page load, and produces a
+  renderer death at the point the fix describes;
+- the death is allocation-sensitive (0/1 without a pre-spray, 2/2 with one), which is what
+  a freed `CSSFontFace` being reused by the engine's **own** next allocation looks like;
+- it is not steerable from JS: a uniform `'A'` fill and an all-NUL fill in the 288-byte
+  class both survived, and the status readback never observed our bytes in the freed
+  object. Without a controlled occupant at that class at that moment there is no field
+  control, no cast, and no primitive — only "the engine reuses its own hole or the
+  renderer dies".
+
+Practical consequence: closing this needs an allocator-visible occupant (or a crash
+address), neither of which the page can provide. The finding is recorded as a
+vulnerability-presence result for 14.10, not as an exploitation path.
+
+### 13f addendum: the suppression is allocation-shaped, not occupancy-shaped (2026-10-29)
+
+Follow-up runs on the same second-trigger page:
+
+| page | allocation between trials | outcome |
+|---|---|---|
+| `par33` / `par36` | none | dies after `TR1-RET` (3/3) |
+| `par37` | 4000 x 255-char NUL, then 4000 x 255-char `'A'` | survives (2/2) |
+| `par40` | 4002 attacker-authored `@font-face` rules (engine-created `CSSFontFace` objects) | **dies** |
+| `par41` | exactly **one** 255-char string | survives |
+| `par42` | exactly **one** 170-char string | survives |
+| `par39` | 4000 x 255-char NUL, then `vec0[1].status` | `loaded` — the held wrapper's `Ref` keeps the backing alive, so a held vector cannot observe the free |
+
+Volume is not the variable and the size class is not the variable: one allocation of either
+class suppresses, while 4002 same-type engine objects do not. That is a timing/heap-state
+effect, not an occupant we control. Combined with `v157`/`v159` (in-window spray with `'A'`
+or NULs never turns into a fault, and `par24`'s scan never observes an engine write into a
+string), the post-free access on this path is scalar-only: there is no pointer read that our
+bytes could steer, and no refcount write that could be observed. Without a second bug (type
+confusion) or an address leak, this cannot be converted into control.
+
+### 13g: the crash is structural, and it is not ours (2026-10-29)
+
+A real-font source replaced the never-completing `local()` face, which removed the OOM
+that had been masquerading as the bug (`par45`: no CSS face at all, eight trials complete).
+With `/realfont/?ms=300` serving a genuine `arial.ttf`:
+
+| page | change | outcome |
+|---|---|---|
+| `par46` | real font, no spray | trial 0 reaches `LOAD-CALLED`, promise never settles |
+| `par49` | ten timed trials, 288-class spray in the getter | dies at trial 1 |
+| `par50` | same, 96-class spray | dies at trial 1 |
+| `par51` | same, **no spray** | dies at trial 1 |
+| `par52` | spray moved after the layout force (after the recalc that frees the face) | dies at trial 1 |
+| `par53` | `document.fonts.delete` removed | dies, at trial 3 |
+| `par54`/`par58` | 160-class spray after recalc / in the inter-trial gap | dies at trial 1 |
+| `par55` | single trial | completes |
+| `par56` | single trial + 3 s of watcher beacons | completes; nothing touches the freed face |
+| `par57` | two trials 3 s apart | completes |
+| `par59` | cache-busting font URL per trial | dies at trial 1 |
+
+Every payload variant - size class, fill byte, placement inside the getter, placement
+between trials, cache state - leaves the death unchanged, and a single trial never dies.
+The fatal access is therefore engine-internal: it needs a second trial inside the same
+document and within ~400 ms of the first, and no allocation we can make from JS reaches it.
+There is no address oracle on the console (the WebProcess is replaced by the memory dialog),
+so occupancy cannot be confirmed even if it were achieved.
+
+`par60` closes the mechanism question: with the style removal scoped to **trial 0 only**,
+all ten trials complete (`TR9-LOAD-CALLED`, `TR-DONE-all`). No payload, no cache state, no
+delayed callback touches the freed face of trial 0. The fatal access requires the removal of
+a *later* trial, i.e. two removals of style-connected font faces in one document while a
+font load is pending. That is a two-trigger engine bug, reachable from a plain page, and it
+is exactly the shape Sony's 14.10 build still has (`reference_wrapper` in
+`matchingFacesExcludingPreinstalledFonts`).
+
+Control runs that bound the trigger (2026-10-29, all on the 14.10 console):
+
+| page | request state at removal | removals | outcome |
+|---|---|---|---|
+| `par55`/`par56` | in flight | one | completes, three seconds of watcher beacons clean |
+| `par60` | in flight (trial 0 only) | one | ten trials complete |
+| `par61` | `local(NonexistentFont)`, resolves to Failure | two | completes (`TR1-REJECTED`) |
+| `par63` | `url(/slowfont/?ms=0)`, fails immediately | two | completes (`TR1-REJECTED`) |
+| `par51` | `url(/realfont/?ms=300)`, in flight | two | dies at trial 1 |
+
+So the crash needs a request that is still **in flight** at the moment its style is removed,
+twice in one document. A failed or completed load never produces it.
+
+The window is not addressable from JavaScript: the getter is the last JS that runs before
+`FontFaceSet::load()` re-enters its loop, and no microtask, timer or XHR can execute between
+the removal's style recalculation and the loop's next access to the same face. Every arm that
+placed an occupant before the getter returned, after it, or between trials produced the
+identical crash, which is what that structural limit predicts.
+
+#### The occupant is real, and its bytes are consumed as an address (2026-10-29)
+
+With the trigger fixed (two removals, font in flight) and the spray placed after the
+recalculation in the 192-byte class:
+
+| page | occupant content | result |
+|---|---|---|
+| `par65` | none | dies at trial 1 |
+| `par64`, `par66` | 2000 x 175-char NUL (192 class) | **survives**, twice; `LEN-bad0` - no writes into any string |
+| `par67` | same, filled `0x41` | **dies at trial 1** |
+| `par68` | NUL fill with `0x41` x 8 at object offset **80** | **dies at trial 1** |
+
+Offset 80 is where the member layout puts `WeakPtr<FontFace> m_wrapper`, the field
+`FontFaceSet::load()` reads through `face.get().existingWrapper()`. The engine therefore takes
+a qword out of our string and dereferences it: attacker-controlled bytes at a known object
+offset, consumed as a pointer, inside the WebProcess.
+
+That is a controlled-dereference primitive. Turning it into code execution needs a valid
+address to place there - a leak in the WebProcess address space - and no leak has been found
+on this surface yet. Zeros (the NUL build) leave the wrapper null, which is why the page
+survives instead of crashing.
+
+#### Canvas readback on this build (2026-10-29)
+
+`canvas` works when it is **not** attached to the document: `getContext('2d')` returns null
+once the element is appended (`leak2`, `leak4`), `fillRect` + `getImageData` returns the exact
+pixel (`255,0,0,255`, `leak7`), `toDataURL` produces a real PNG, and `drawImage` of a PNG and
+of an inline SVG paints correctly (`leak8`, 1024 painted pixels each). A 1024x768 BMP loads
+with the right dimensions but contributes **zero** pixels (`leak6`), so the BMP path in this
+build does not hand data to the canvas.
+
+Consequence: canvas readback is a usable observation channel for filter and decoder work, but
+nothing it has produced so far exposes uninitialised bytes: fresh typed arrays, `DataView`,
+`ImageData`, `TextDecoder` invalid sequences, and truncated HTTP bodies all come back zeroed or
+error out (`L5-ERR-status0`).
+
+#### Leak sweep: twenty surfaces, no disclosure (2026-10-29)
+
+The offset-80 dereference needs one WebProcess address to aim at, so the surface was swept
+for a JS-reachable disclosure with a single-page harness (`results/webkit/corpus/suite1.html`,
+`suite2.html`, local-only) that churns the 175-character string class before each readback:
+
+| surface | result |
+|---|---|
+| `Uint8Array`, `Float64Array`, `DataView`, `ImageData`, `createImageData` | zeroed |
+| cleared canvas, `ctx.filter` blur, shadow blur, `copy` composite | zeroed |
+| PNG upscale, pattern fill, glyph rasterisation | painted uniformly, no stray bytes |
+| truncated HTTP body (`Content-Length` > bytes sent) | `status 0` error, no buffer |
+| `TextDecoder` invalid sequences, `Intl.DateTimeFormat`, `String.normalize` | clean |
+| SVG filter fed by a valid image, and by a 404 | draws nothing at all on this build |
+| `ReadableStream` BYOB reader | `getReader({mode:'byob'})` throws `TypeError` |
+| `OffscreenCanvas`, `WebAssembly` | absent |
+
+No surface handed engine memory to JS. The UAF therefore remains a controlled dereference
+with no address source, and is recorded as such rather than as an exploitable primitive.
+
+#### A present, deterministic grid abort (2026-10-29)
+
+Upstream commit `228b9ba219` (2025-05-22, bug 293392) fixes a crash when a subgrid acquires a
+line-name list (`subgrid [a] [b] [c]`) after a child was removed, because item placement on the
+parent is skipped and a stale position is used during the next layout. The fix's regression test
+`LayoutTests/fast/css-grid-layout/subgrid-with-line-name-list-crash.html` is **not** in the 14.10
+tree, and 4 of the 8 pre-fix lines are still present in `Source/WebCore/rendering/RenderBox.cpp`.
+
+`results/webkit/corpus/grid1.html` reproduces it: beacons print `G-START`, `G-SUBGRID-yes`,
+`G-LAYOUT1`, `G-REMOVED`, `G-STYLED`, and the WebProcess dies on the following
+`document.body.offsetHeight` (the console shows "There is not enough free system memory").
+
+The fault is not memory corruption. `GridTrackSizingAlgorithm::copyUsedTrackSizesForSubgrid()`
+in `Source/WebCore/rendering/GridTrackSizingAlgorithm.cpp` guards the copy with
+
+```cpp
+RELEASE_ASSERT((parentTracks.size() - 1) >= (numTracks - 1 + span.startLine()));
+for (int i = 0; i < numTracks; i++)
+    allTracks[i] = parentTracks[i + span.startLine()];
+```
+
+so the stale span trips the release assertion and aborts the process. `RELEASE_ASSERT` is always
+compiled in, so the abort is deterministic and independent of heap state. This is a denial of
+service (a page can kill the WebProcess on demand), not a read/write primitive, and is recorded
+for completeness rather than pursued.
+
+## 14. Unfixed WebKit UAFs on 14.10 are all second-stage only
+
+Method: `.local/crashscan2.py` samples WebKit commits 2023-07-01..2026-10-29 that add a
+`LayoutTests/**/*crash*` page, keeps the ones whose test file is absent from the 14.10 tree,
+then measures how much of each commit's removed `Source/` code is still present verbatim in
+`WebKit_1400.zip`. A ratio of 1.0 means the pre-fix code is what 14.10 ships.
+
+Absent fixes whose pre-fix code is fully present (r=1.0), all reachable from a plain page:
+
+| commit | defect | first stage? |
+|---|---|---|
+| `ebc83b8568` | `CachedLiveNodeList` gates deregistration on a WeakPtr-derived `hasValidCache()`, so `input.labels` after its `<label>` is collected leaves a freed list in `Document::m_listsInvalidatedAtDocument`; the next invalidation calls `invalidateCacheForDocument()` on freed memory | no - virtual call on a freed object |
+| `0bab5af95d` | `ManualSlotAssignment::slotManualAssignmentDidChange` keeps a raw pointer into `m_slots` across a re-entrant `WeakHashMap` rehash (the layout-corpus `named-slot-assignment-…-crash` hang) | no - reads a freed bucket array |
+| `eb617fc289` | `SVGAnimatedValueProperty::stopAnimation` drops `m_animVal` without `detach()`; a script-held `SVGAnimatedLength.animVal` keeps a dangling `m_owner`, and `len.value` calls `m_owner->attributeContextElement()` through it | no - virtual call on a freed object |
+| `be08720593` | `DataListButtonElement::defaultEventHandler` UAF | no - same class |
+| `9c6099bea0` | observed nodes collected during `MutationObserver` delivery | no - same class |
+
+Each is a control-flow primitive that needs a valid address to place at the freed object's
+offset 0. None reads attacker-visible data out of freed memory, so none is a first-stage
+ASLR oracle on its own. The JS-readable reads that were checked and rejected:
+
+- XPath `Value` uninitialized `m_bool`/`m_double` (`c4467fc5ae`): `toNumber()`/`toBoolean()`
+  branch on `m_type` first and never read the uninitialized members; MSan-only.
+- `[YARR]` surrogate fixes (`8c6275e144`, `7f53c2a455`): `readChecked()` returns
+  `errorCodePoint`, so the failures are wrong match results, not out-of-bounds bytes.
+- WebP/JPEG XL/AVIF frame-exceeds-canvas (`3f8ee96594`): `USE_AVIF OFF`, JPEG XL not built,
+  and Sony's libwebp rejects the demuxed rect before `applyPostProcessing` runs.
+
+Conclusion: closing the remaining gap needs either a leak primitive (none found) or a
+second-stage primitive that does not require one.

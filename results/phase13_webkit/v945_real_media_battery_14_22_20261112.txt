@@ -1,0 +1,25 @@
+V945 14.22 ROW - REAL-media battery: even the VALID ffmpeg MP4 is rejected instantly - no demuxer is reachable from JS in the User's Guide context
+================================================================================
+Date:    2026-11-12
+Log:     tools/browser_runner/beacon_logs/beacons_20261112_233710.log
+Result:  battery complete, zero crashes; 12/12 cases ERROR SRC_UNSUPPORTED
+         - INCLUDING the controls r00_valid.mp4 (ffmpeg H.264+AAC,
+         faststart, 64x64@10fps) and r00_valid.webm (VP8).
+READING: canPlayType says video/mp4 'maybe' and video/webm 'maybe'
+  (v943 ENV), but a REAL valid MP4 is rejected at sniff stage without
+  reaching the demuxer. Combined with v943's class map
+  (valid-but-undeclared AUDIO containers stall; everything else rejects
+  instantly), the media pipeline in the User's Guide browser context is
+  effectively INERT: no container parsing beyond magic sniffing, no
+  sample-table walk, no codec handoff. The v945 mutants (stco OOB, stsz
+  lie, avcC lie, mdat trunc, sizes lie, infinite segment) never touched
+  demuxer code because nothing does.
+CONTEXT CAVEAT [I]: every v9xx result ran inside the User's Guide webapp
+  (manuals.playstation.net). A stall-vs-instant-reject asymmetry between
+  audio and video suggests an async handoff that never completes in this
+  context - the full PS5 browser app (different webapp profile) may wire
+  the media pipeline for real. Re-measuring there is the next context
+  variable, not a 14.22-code conclusion.
+GRADE:  D for the media attack surface in this context - unreachable,
+  not hardened. The honest scoreboard line: media parsing is not a
+  reachable surface from a User's Guide page on 14.22.

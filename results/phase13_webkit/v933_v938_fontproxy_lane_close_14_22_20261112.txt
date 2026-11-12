@@ -1,0 +1,96 @@
+V933-V938 LANE CLOSE - FontProxy UAF (WebKit 673f4df5) structurally unreachable on 14.22; beginLayer UAF (e0558372) closed at the API gate
+(5 probes, all device-measured, all source-verified before send)
+================================================================================
+Date:      2026-11-12
+Bench:     PS5 retail 14.22 (26.07-14.22.00.00-00.00.00.0.1), client 192.168.0.39
+           server 192.168.0.70, serve.py DNS-hijack + --default
+Targets:   673f4df5 "Make CanvasRenderingContext2DBase::FontProxy ref-counted"
+           (tuankiet65, Bugzilla 323377, canonical 325725@main, Nov 2026 -
+           far past the 26.3-in/26.4-out cherry-pick cutoff, pre-fix assumed)
+           e0558372 "beginLayer UAF via realizeSavesLoop early exit"
+           (Bugzilla 318378, Sep 2026, requires CanvasLayersEnabled)
+Beacon:    tools/browser_runner/beacon_logs/beacons_2026111*_*.log (V933..V938)
+
+=== SEQUENCE OF FINDINGS ===
+
+v933 (verbatim shape, local(Helvetica)): getterFired=0 on all three
+variants, w=6 = fallback metrics. ROOT CAUSE (probe defect): faces were
+never document.fonts.add()-ed -> selector never consulted them -> no load,
+no settlement. Fixed in v934.
+
+v934 (add() fixed + width-oracle local-font scan): width oracle DEGENERATE -
+serif/sans-serif/monospace/26 candidate names ALL return w=6 for 'a'@10px.
+v936-W refined: a@30sans=17, WWW@30serif=WWW@30mono=WWW@30sans=87,
+iiiii@30mono=iiiii@30serif=40 - ALL generic families collide; integer
+quantization + either a single shipped font or generics mapping to one
+fallback. Width-based font enumeration is structurally dead on this port.
+MATCHED n=0 -> trigger not run.
+
+v935 (REJECT path): DOMException.prototype.then hook for the loaded-promise
+rejection settlement (spec: reject functions also Get(value,"then") on
+object values; FontFace failure rejects with a DOMException). RESULT: B/C
+faces stayed status=unloaded - on this port a local() source with NO match
+is never consulted by the selector (never a candidate), so the face never
+loads, never rejects, no DOMException settlement exists to hook. Reject
+path DEAD BY PORT BEHAVIOR. D-loop bonus: local('SST'), local('Arial'),
+local('Helvetica'), local('Times New Roman') all reached status=loaded
+synchronously (first system-font inventory via load-status oracle);
+Meiryo/Yu Gothic/Sony Sketch/Futura did not.
+
+v936 (settle anatomy + beginLayer):
+- ENV: beginLayer=undefined, endLayer=undefined on the 2d context.
+  e0558372 lane CLOSED AT THE API GATE (CanvasLayersEnabled off).
+- loadingdone listener: inWindowFlag=0 -> event dispatch is ASYNC.
+- A-FULFILL: loaded promise fulfills with typeof=object, isFace=true,
+  ctor=FontFace - the fork is spec-compliant on the fulfillment VALUE.
+  The thenable Get therefore exists - it just never runs inside the
+  measureText window (see v937).
+
+v937 (settle-window split):
+- S1: status=loaded IMMEDIATELY after ctx.font=... -> EAGER realization:
+  the local() load completes during the font property setter, BEFORE the
+  getter install. measureText finds a realized font and never reloads.
+- S2: getter installed FIRST -> fired DURING font-set (settle is inline at
+  load completion, Get(face,"then") synchronous) AND SURVIVED with 18
+  saves on a fresh (inline-stack) context. The font-set settle point holds
+  NO stale FontProxy/state reference across the realloc.
+- S3: face with generic family 'sans-serif' (src local('Arial')) NEVER
+  consulted by CJK (w=18) or emoji (w=20) glyph fallback - both rendered
+  by system fonts without touching the FontFaceSet.
+
+v938 (script-fallback sweep + reentrancy):
+- 27 faces named as CJK/emoji/Arabic fallback-family candidates
+  (Yu Gothic, Meiryo, MS Gothic, Hiragino, SST JP, Malgun Gothic, PingFang,
+  YaHei, NanumGothic, Apple Color Emoji, ...), ALL backed by local('SST')
+  (guaranteed sync load). measureText('\u4E2D'), emoji, Arabic with the
+  primary font realized: fired=0, flipped=none-flipped across ALL scripts.
+  The per-script fallback resolution does NOT consult FontFaceSet faces on
+  this port in any family probed.
+- R (reentrancy): reentrant ctx.measureText DURING the font-set settle
+  (mid-initialization) returned w=5 and SURVIVED - the setter is robust
+  to reentrant metrics too. No new bug shape.
+
+=== LAW (14.22, this port) ===
+
+FontFaceSet consultation happens EXCLUSIVELY at font-property-set time
+(eager cascade realization). Sources that match complete synchronously
+there; sources that do not match are never consulted (status stays
+'unloaded' forever until an explicit fonts.load()). NO settlement
+(promise or event) fires during measureText/drawText/metrics in any
+probed shape: not the loaded-fulfillment, not loadingdone, not
+script/glyph fallback. The only settle point (font-set) is benign -
+no stale FontProxy or State reference survives the realloc (S2, R).
+
+The documented reentry of 673f4df5 (then-getter inside
+metricsOfPrimaryFont) is STRUCTURALLY UNREACHABLE on 14.22: the UAF
+window requires a load to complete while measureText holds the raw
+FontProxy*, and on this port loads never complete inside that window.
+
+Consequence: the last public Canvas2D UAF candidate for 14.22 is closed
+by device measurement. The 14.22 scoreboard is unchanged: no address
+source, no userland exec path; kstuff/etaHEN port remains blocked
+without a non-WebKit vulnerability class.
+
+=== NEXT ===
+- Board post with the lane close (v933-v938 five-probe sequence).
+- If pastawithpesto publishes p719/p720/p721 or a NEW_CVE, resume there.

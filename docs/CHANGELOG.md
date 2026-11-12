@@ -1,3 +1,11 @@
+## 2026-11-12: v933-v938 lane close - FontProxy UAF (673f4df5) structurally unreachable on 14.22; beginLayer (e0558372) closed at the API gate
+
+- Source-verified both commits before any send (673f4df5 Nov 2026, far past the 26.3/26.4 cherry-pick cutoff; e0558372 requires CanvasLayersEnabled).
+- Five-probe sequence, all device-measured: v933 (probe defect: faces not add()-ed -> no consultation), v934 (width oracle DEGENERATE - all generics collide at every size; matched=0), v935 (reject path dead BY PORT: unmatched local() sources are never consulted, no rejection settlement exists to hook; system-font inventory via load-status oracle: SST/Arial/Helvetica/Times New Roman exist), v936 (beginLayer=undefined -> API gate; loadingdone async; loaded fulfills WITH the face - spec-compliant), v937 (EAGER realization law: load completes inside ctx.font= before getter install; settle inline at load completion but benign - 18 saves survived; generic-family fallback face never consulted), v938 (27 fallback-family faces backed by local('SST'): fired=0, none-flipped across CJK/emoji/Arabic - script fallback does not consult the FontFaceSet; reentrant measureText at font-set survived).
+- LAW: on 14.22, FontFaceSet consultation happens EXCLUSIVELY at font-set time; no settlement fires during metrics in any probed shape; the only settle point holds no stale reference. The 673f4df5 reentry is structurally unreachable - the UAF window never opens.
+- 14.22 scoreboard unchanged: no address source, no userland exec path; kstuff/etaHEN port still blocked without a non-WebKit vulnerability class.
+- Side deliverables: load-status oracle for system-font enumeration (width oracle is dead on this port); beginLayer absence measured.
+
 ## 2026-11-11: cobrajet inversion - v904 IS the band answer; Gigacage Primitive cage inactive on PS5 WebView (both generations)
 
 - v904 (AB(768) takes the freed 768B ctx slot) is reclaim IDENTITY - same allocator, same slot - possible only with the Gigacage fallback active => Gigacage::isEnabled() was false in that WebProcess. cobrajet re-grepped the routing chain (ArrayBuffer.cpp:132 -> WTF/Gigacage.cpp:92-96 -> bmalloc/Cache.h:101-106 -> HeapKind fallback) in the pinned drop.

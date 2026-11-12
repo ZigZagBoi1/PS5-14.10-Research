@@ -1,0 +1,16 @@
+=== 1339w AGGRESSIVE ===
+fdlimit: 1024
+pid=412
+gadgets OK
+spray=22..85 (64)
+starting 2000 trials
+t=182 tc=42
+t=500 u=1 f=499 r=0 o=0
+t=1000 u=1 f=999 r=0 o=0
+t=1046 tc=42
+t=1500 u=2 f=1498 r=0 o=0
+t=1510 tc=42
+t=2000 u=3 f=1997 r=0 o=0
+=== RESULTS: use=3 free=1997 reclaim=0 other=0 ===
+pid=412
+=== DONE ===

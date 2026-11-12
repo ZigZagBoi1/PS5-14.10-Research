@@ -1,0 +1,21 @@
+=== PROBE 975b: AIO SPECIAL FDS 10 / 14 ===
+
+[A] pid=217
+  [fd fd=10] submit=0x00000000_00000016 id=0x00000228
+    state=1
+    buf non-zero dwords=0 first-offset=0
+    delete err=0x80020010
+  [fd fd=14] submit=0xFFFFFFFFFFFFFFFF_803B0004 id=0x00000229
+    state=1
+    buf non-zero dwords=0 first-offset=0
+    delete err=0x80020010
+  [fd fd=3] submit=0x00000000_00000000 id=0x0000022A
+    state=1
+    buf non-zero dwords=0 first-offset=0
+    delete err=0x80020010
+  [fd fd=22] submit=0x00000000_00000000 id=0x0000022B
+    state=1
+    buf non-zero dwords=0 first-offset=0
+    delete err=0x80020010
+[Z] alive=217
+=== COMPLETE ===

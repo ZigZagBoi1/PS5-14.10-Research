@@ -1,0 +1,1 @@
+error loading script: [string "print("=== PROBE 1203a: LOCALISE THE SWEEP DEATH ===")..."]:12: '=' expected near 'and'

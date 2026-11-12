@@ -1,0 +1,8 @@
+=== PROBE 1074a: 622 COMMAND SWEEP (slot-0 command) ===
+
+[S] sigsys-ignore ok=true rv=0 pid=134
+
+[V] sentinel A5A5A5A5 dirty=0 first=-1 CLEAN
+
+[A] arm 7/8 arm202 0x202..0x271  commands=112
+  > 202

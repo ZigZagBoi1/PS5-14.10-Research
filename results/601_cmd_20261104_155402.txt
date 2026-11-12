@@ -1,0 +1,2 @@
+=== PROBE 1171a: ONE MDBG COMMAND ===
+[S] buf=0x310994020 proved=true (4096/4096)

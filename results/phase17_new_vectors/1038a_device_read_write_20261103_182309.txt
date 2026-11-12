@@ -1,0 +1,24 @@
+=== PROBE 1038a ===
+[S] shield ok=true rv=0 pid=80
+[R] /dev/usbctl fd=22 rv=-1 touched=0 kp=0
+[W] /dev/usbctl rdonly
+[R] /dev/ajm fd=22 rv=-1 touched=0 kp=0
+[W] /dev/ajm rdonly
+[R] /dev/ajmi fd=22 rv=-1 touched=0 kp=0
+[W] /dev/ajmi rdonly
+[R] /dev/gic fd=22 rv=-1 touched=0 kp=0
+[W] /dev/gic rv=-1
+[R] /dev/notification0 fd=22 rv=-1 touched=0 kp=0
+[W] /dev/notification0 rv=64
+[R] /dev/notification1 open=-1
+[R] /dev/gc fd=22 rv=-1 touched=0 kp=0
+[W] /dev/gc rv=-1
+[R] /dev/dce fd=22 rv=-1 touched=0 kp=0
+[W] /dev/dce rv=-1
+-- 622 mapped arg3 shapes
+[622] cmd=100 c,len,buf rv=0 q0=8002004E touched=1 kp=0
+[622] cmd=100 c,buf,len rv=-1 q0=CDCDCDCD touched=0 kp=0
+[622] cmd=100 c,buf,0 rv=-1 q0=CDCDCDCD touched=0 kp=0
+[622] cmd=200 c,len,buf rv=0 q0=FFFFFFFF touched=1 kp=0
+[622] cmd=200 c,buf,len rv=-1 q0=CDCDCDCD touched=0 kp=0
+[622] cmd=200 c,buf,0 rv=-1 q0=CDCDCDCD touched=0 kp=0

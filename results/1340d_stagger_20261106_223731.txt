@@ -1,0 +1,19 @@
+=== 1340d STAGGER ===
+fdlimit: 4096
+pid=424
+gadgets OK
+spray=22..130 (100)
+starting 10000 trials
+t=123 tc=42 (no reclaim)
+t=944 tc=42 (no reclaim)
+t=2000 u=2 f=1998 r=0
+t=4000 u=2 f=3998 r=0
+t=4372 tc=42 (no reclaim)
+t=5143 tc=42 (no reclaim)
+t=5517 tc=42 (no reclaim)
+t=6000 u=6 f=5994 r=0
+t=8000 u=15 f=7985 r=0
+EXHAUSTED t=8770
+=== RESULTS: use=17 free=8752 reclaim=0 first_use=123 ===
+pid=424
+=== DONE ===

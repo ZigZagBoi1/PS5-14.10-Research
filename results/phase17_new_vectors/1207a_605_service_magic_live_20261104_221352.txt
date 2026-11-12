@@ -1,0 +1,40 @@
+=== PROBE 1207a: syscall 605 five-magic service RPC, and its sibling 606 ===
+-- 605(magic) --
+605 magic=0x780263FF pcall=true err=22 Invalid argument
+605 magic=0x78026400 pcall=true err=2148336131 error_code=0x800d0203
+605 magic=0x78028A00 pcall=true err=2148336131 error_code=0x800d0203
+605 magic=0x78028300 pcall=true err=2148336131 error_code=0x800d0203
+605 magic=0x19810000 pcall=true err=2148336131 error_code=0x800d0203
+605 magic=0x3CC80700 pcall=true err=2148336131 error_code=0x800d0203
+605 magic=0x00000000 pcall=true err=22 Invalid argument
+605 magic=0xFFFFFFFF pcall=true err=22 Invalid argument
+605 magic=0x780263FE pcall=true err=22 Invalid argument
+605 magic=0x78026401 pcall=true err=22 Invalid argument
+605 magic=0x7802C500 pcall=true err=22 Invalid argument
+605 magic=0x78020200 pcall=true err=22 Invalid argument
+605 magic=0x78020300 pcall=true err=22 Invalid argument
+605 magic=0x7802A500 pcall=true err=22 Invalid argument
+605 magic=0x7802B200 pcall=true err=22 Invalid argument
+-- 606(arg1) --
+606 arg1=0x780263FF pcall=true err=22 Invalid argument
+606 arg1=0x78026400 pcall=true err=22 Invalid argument
+606 arg1=0x78028A00 pcall=true err=22 Invalid argument
+606 arg1=0x78028300 pcall=true err=22 Invalid argument
+606 arg1=0x19810000 pcall=true err=22 Invalid argument
+606 arg1=0x3CC80700 pcall=true err=22 Invalid argument
+606 arg1=0x00000000 pcall=true err=22 Invalid argument
+606 arg1=0xFFFFFFFF pcall=true err=22 Invalid argument
+606 arg1=0x780263FE pcall=true err=22 Invalid argument
+606 arg1=0x78026401 pcall=true err=22 Invalid argument
+606 arg1=0x7802C500 pcall=true err=22 Invalid argument
+606 arg1=0x78020200 pcall=true err=22 Invalid argument
+606 arg1=0x78020300 pcall=true err=22 Invalid argument
+606 arg1=0x7802A500 pcall=true err=22 Invalid argument
+606 arg1=0x7802B200 pcall=true err=22 Invalid argument
+-- 605 magic in arg1 instead --
+605 arg1=0x780263FF pcall=true err=22 Invalid argument
+605 arg1=0x78026400 pcall=true err=22 Invalid argument
+605 arg1=0x78028A00 pcall=true err=22 Invalid argument
+605 arg1=0x78028300 pcall=true err=22 Invalid argument
+605 arg1=0x19810000 pcall=true err=22 Invalid argument
+=== DONE

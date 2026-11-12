@@ -1,0 +1,16 @@
+=== PROBE 1245a: uninitialised copyout, dynamic diff ===
+[0] pid=101
+[A] fstat on a fresh socketpair member
+    socketpair rv=ok fd0=25
+  -- fstat(189) fd0                     run1=0x00000000_00000000 differing bytes=0
+       bytes written by the call: 120/256
+[B] gettimeofday(116)
+  -- gettimeofday(116)                  run1=0x00000000_00000000 differing bytes=2
+       +0x08 C3->24 +0x09 CC->DF
+       bytes written by the call: 16/256
+[C] module record 593(1, buf) - 0x160-byte output
+  -- sys593(1,buf) size=0x160           run1=0xFFFFFFFFFFFFFFFF_FFFFFFFF differing bytes=0
+       bytes written by the call: 8/256
+[D] getdirentries(196) on /dev
+    open(/dev) PCALL-FAIL
+=== DONE ===

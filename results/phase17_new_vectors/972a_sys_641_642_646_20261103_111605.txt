@@ -1,0 +1,20 @@
+=== PROBE 972a: SYS 641 / 642 / 646 ===
+
+[0] pid=210
+  [641 pid=210] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+   641 +0x00: 00000000 00000000
+   641 +0x08: 00000000 00000000
+   641 +0x10: 00000000 00000000
+   641 +0x18: 00000000 00000000
+   641 +0x20: 00000000 00000000
+   641 +0x28: 00000000 00000000
+   641 +0x30: 00000000 00000000
+[string "-- CRASH_CLASS: MODERATE..."]:29: attempt to compare number with table
+stack traceback:
+	[string "-- CRASH_CLASS: MODERATE..."]:29: in function 'scan'
+	[string "-- CRASH_CLASS: MODERATE..."]:51: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

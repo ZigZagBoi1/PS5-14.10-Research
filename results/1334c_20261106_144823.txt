@@ -1,0 +1,7 @@
+=== PROBE 1334c: ARG1 DEREFERENCE SURVEY ===
+[0] user=0x3108E4000 absent=0x7FFF00000000
+[572] U
+[572] U 0 err=2 No such file or directory
+[572] N
+[572] N -1 err=13 Permission denied
+[573] U

@@ -1,0 +1,4 @@
+=== PROBE 1042d ===
+[A] socketpair ok=true rv=0 fd=22
+[S] thread 1 spawn ok=true
+[S] GO

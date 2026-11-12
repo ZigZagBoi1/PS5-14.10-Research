@@ -1,0 +1,17 @@
+=== PROBE 1226a: dmem container then mmap_dmem ===
+[0] pid=87
+[1] 586 query form and indices
+  [586(0xFFFFFFFF)] ret=0x00000000_00000001 err=16 Device busy
+  [586(0)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=1 Operation not permitted
+  [586(1)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=1 Operation not permitted
+  [586(2)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=1 Operation not permitted
+  [586(3)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=1 Operation not permitted
+  [586(4)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=1 Operation not permitted
+[2] 628 mmap_dmem with the selected container
+    628(0,0x4000,prot=0x3) -> 0xFFFFFFFFFFFFFFFF err=16 Device busy
+    628(0,0x4000,prot=0x33) -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    628(0,0x4000,prot=0x1002) -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    628(0,0x4000,prot=0x0) -> 0xFFFFFFFFFFFFFFFF err=16 Device busy
+[3] no mapping
+[Z] pid_end=87
+=== DONE ===

@@ -1,0 +1,16 @@
+=== PROBE 1223a: blockpool handle -> type-0xb object ===
+[0] pid=80
+[1] an anonymous control page, then 547 on it
+    ctl mmap -> 0x3109F8000 err=14 Bad address
+  [547 control] ret=0x00000000_00000000 err=14 Bad address
+    control: 109F8000 00000003 109FC000 00000003 00000003 00610020
+[2] 653 flags=0 word2=0
+    handle = 0x17 (23) err=14 Bad address
+[3] mmap(0, 0x4000, RW, ANON|PRIVATE, fd=handle)
+    prot=0x3 flags=0x1002 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    prot=0x3 flags=0x2 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    prot=0x33 flags=0x1002 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    prot=0x3 flags=0x1 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+[4] mmap refused every shape; the handle is not a descriptor mmap accepts
+[Z] pid_end=80
+=== DONE ===

@@ -1,0 +1,12 @@
+=== PROBE 1050a: polled double free, parent vs native child ===
+[0] pid=163
+[0] eboot=6A288000 g=1781041554/1781865982/1781094269/1784906455/1781640295/1781126273
+[A] block=311750000 ID=311B54000 ST=311B58000
+[S] create ok=true rv=0 id=0000821D
+[S] poll ok=true st=00000003 rv=0
+[B] chain words=180012 bytes=1440096 head=311754000
+[S] spawn ok=true rv=0
+[P] parent delete ok=true st=80020003
+[D] child zero=1 nonzero=19999 first_zero=0 first_nonzero=1 res=163
+[D] total successes=1 (1 = normal, >1 = double free)
+[Z] alive pid=163

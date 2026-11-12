@@ -1,0 +1,10 @@
+=== PROBE 1200e: DEVFS IOCTL BY ERRNO ===
+/dev/null      fd=22  25 Inappropriate ioctl for device x256
+/dev/dmem0     fd=22  25 Inappropriate ioctl for device x256
+/dev/gc        fd=22  25 Inappropriate ioctl for device x256
+/dev/dce       fd=22  25 Inappropriate ioctl for device x256
+/dev/hid       fd=22  25 Inappropriate ioctl for device x256
+/dev/usbctl    OPEN FAILED err=13 Permission denied
+/dev/ugen0.2   fd=22  25 Inappropriate ioctl for device x256
+[Z] alive
+=== DONE

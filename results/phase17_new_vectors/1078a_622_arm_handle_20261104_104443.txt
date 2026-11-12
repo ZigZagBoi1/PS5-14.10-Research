@@ -1,0 +1,6 @@
+=== PROBE 1078a: 622 ARM WITH A REAL HANDLE ===
+
+[A] evf handle = 16901(g2/s517)
+[B] control: 622(0x300, handle, out, 0, 0, 0)
+    rv=0 out=0xFFFFFFFF
+[C] risky: 622(0x202, handle, out, 0, 0, 0)

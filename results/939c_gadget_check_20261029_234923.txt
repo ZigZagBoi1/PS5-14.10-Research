@@ -1,0 +1,8 @@
+=== 939c gadget check ===
+rv=0x0 base=0x152E8000 size=0x494000
+first dword at base = 1651076143
+pop rdi; ret           0x153B1DFE dword=2202583903
+pop rax; ret           0x152E8992 dword=2425406296
+mov [rsi],rax; ret     0x15488BA9 dword=3271985480
+mov [rdi],rax; ret     0x1537AC67 dword=3272051016
+=== 939c end ===

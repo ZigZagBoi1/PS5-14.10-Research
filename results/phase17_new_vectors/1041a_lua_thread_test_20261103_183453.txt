@@ -1,0 +1,25 @@
+=== PROBE 1041a ===
+[A] run_lua_code_in_new_thread = function
+[B] shared page = 310D31480
+[C] spawn ok=true err=table: 310b3d4e0
+[D] i=1 parent_spins=200000 child_alive=0 child_done=0 child_n=0
+[D] i=2 parent_spins=400000 child_alive=0 child_done=0 child_n=0
+[D] i=3 parent_spins=600000 child_alive=0 child_done=0 child_n=0
+[D] i=4 parent_spins=800000 child_alive=0 child_done=0 child_n=0
+[D] i=5 parent_spins=1000000 child_alive=1 child_done=0 child_n=0
+[D] i=6 parent_spins=1200000 child_alive=1 child_done=0 child_n=0
+[D] i=7 parent_spins=1400000 child_alive=1 child_done=0 child_n=0
+[D] i=8 parent_spins=1600000 child_alive=1 child_done=0 child_n=0
+[D] i=9 parent_spins=1800000 child_alive=1 child_done=0 child_n=0
+[D] i=10 parent_spins=2000000 child_alive=1 child_done=0 child_n=0
+[D] i=11 parent_spins=2200000 child_alive=1 child_done=0 child_n=0
+[D] i=12 parent_spins=2400000 child_alive=1 child_done=0 child_n=0
+[D] i=13 parent_spins=2600000 child_alive=1 child_done=0 child_n=0
+[D] i=14 parent_spins=2800000 child_alive=1 child_done=0 child_n=0
+[D] i=15 parent_spins=3000000 child_alive=1 child_done=0 child_n=0
+[D] i=16 parent_spins=3200000 child_alive=1 child_done=0 child_n=0
+[D] i=17 parent_spins=3400000 child_alive=1 child_done=0 child_n=0
+[D] i=18 parent_spins=3600000 child_alive=1 child_done=0 child_n=0
+[D] i=19 parent_spins=3800000 child_alive=1 child_done=0 child_n=0
+[D] i=20 parent_spins=4000000 child_alive=1 child_done=0 child_n=0
+[Z] end

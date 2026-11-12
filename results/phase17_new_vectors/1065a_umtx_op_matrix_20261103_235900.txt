@@ -1,0 +1,37 @@
+=== PROBE 1065a: _umtx_op op matrix ===
+
+[0] page=3106E0100 head=31064B940
+[1]  LOCK               op= 0 rv=-1 word=0
+[2]  UNLOCK             op= 1 rv=-1 word=0
+[3]  TRYLOCK            op= 4 rv=0 word=102027
+[4]  MUTEX_LOCK         op= 5 rv=0 word=102027
+[5]  MUTEX_UNLOCK       op= 6 rv=-1 word=0
+[6]  SET_CEILING        op= 7 rv=-1 word=0
+[7]  CV_SIGNAL          op= 9 rv=0 word=0
+[8]  CV_BROADCAST       op=10 rv=0 word=0
+[9]  RW_RDLOCK          op=12 rv=0 word=1
+[10] RW_UNLOCK          op=14 rv=-1 word=0
+[11] NWAKE_PRIVATE      op=21 rv=0 word=0
+[12] WAKE               op= 3 rv=0 word=0
+[B] waits with a non-matching value (must return EWOULDBLOCK)
+[B1] WAIT               op= 2 rv=0 word=0
+[B2] WAIT_UINT          op=11 rv=0 word=0
+[B3] WAIT_UINT_PRIVATE  op=15 rv=0 word=0
+[B4] CV_WAIT            op= 8 rv=-1 word=0
+[B5] MUTEX_WAIT         op=17 rv=0 word=0
+[B6] SEM_WAIT           op=19 rv=-1 word=0
+[B7] SEM2_WAIT          op=23 rv=0 word=0
+[C] PI / wake2
+[C1] MUTEX_WAKE2        op=22 rv=-1 word=0
+[C2] SEM_WAKE           op=20 rv=0 word=0
+[C3] SEM2_WAKE          op=24 rv=-1 word=0
+[C4] MUTEX_WAKE         op=18 rv=0 word=0
+[D] robust lists (uaddr1 = head, uaddr2 = len)
+[D1] ROBUST_LISTS len=0 rv=-1
+[D2] ROBUST_LISTS len=24 rv=-1
+[D3] ROBUST_LISTS len=4096 rv=-1
+[D4] ROBUST_LISTS len=0 rv=-1
+[E] SHM op
+[E1] SHM create         op=25 rv=0 word=0
+[Z] alive pid=279
+=== COMPLETE ===

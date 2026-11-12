@@ -1,0 +1,13 @@
+=== PROBE 1052a: poll vs delete race ===
+[0] pid=163
+[0] eboot=6A288000 gadgets ok=1781126273
+[A] D=311C38000 ID=311C3C000 ST=311C44000 blk=311C4C000
+[T1] id=0000621D spawn=true parent_del=80020003 child_poll=00000003 child_del=00000000 succ=1
+[T2] id=0000821D spawn=true parent_del=80020003 child_poll=00000003 child_del=00000000 succ=1
+[T3] id=0000A21D spawn=true parent_del=80020003 child_poll=00000003 child_del=00000000 succ=1
+[T4] id=0000C21D spawn=true parent_del=80020003 child_poll=00000003 child_del=00000000 succ=1
+[T5] id=0000E21D spawn=true parent_del=80020003 child_poll=00000003 child_del=00000000 succ=1
+[T6] id=0000021D spawn=true parent_del=80020003 child_poll=00000003 child_del=00000000 succ=1
+[T7] id=0000221D spawn=true parent_del=80020003 child_poll=00000003 child_del=00000000 succ=1
+[T8] id=0000421D spawn=true parent_del=80020003 child_poll=00000003 child_del=00000000 succ=1
+[Z] trials=8 doubles=0 alive pid=163

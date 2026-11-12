@@ -1,0 +1,16 @@
+{
+  "done_marker": false,
+  "elapsed_seconds": 6.891,
+  "ended_at": "2026-11-04T21:02:01+00:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\1199a_priv_grant_597_20261104_210201.json",
+  "output_path": "results\\phase17_new_vectors\\1199a_priv_grant_597_20261104_210201.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\1199a_priv_grant_597.lua",
+  "probe_bytes": 5172,
+  "probe_sha256": "d0bd713f3b3b2ed046b69ecad76941ddb447605f76f231ac8781e8afb52af3ed",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1358,
+  "started_at": "2026-11-04T21:01:54+00:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": 180.0
+}

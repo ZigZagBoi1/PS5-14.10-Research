@@ -1,0 +1,6 @@
+=== PROBE 1079a: 622 ARM SAMPLE ===
+
+[A] control 0x300 rv=0 out=0xFFFFFFFF
+[B] risky 0x246 handle=0 out=a5a5a5a5
+    rv=0 out=0xFFFFFFFF  (survived)
+=== 1079a DONE ===

@@ -1,0 +1,14 @@
+=== PROBE 1223b: blockpool_map ===
+[0] pid=80
+[1] blockpool_open(0,0) = 0x18 err=22 Invalid argument
+[2] blockpool_map(offset, length, access, 0, 0)
+    acc=3 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    acc=0 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    acc=10 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    acc=2 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+[3] no mapping; trying a 0x4000 length and a page offset
+    len=0x4000 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    len=0x200000 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+[3] blockpool_map refused every shape; nothing to inspect
+[Z] pid_end=80
+=== DONE ===

@@ -1,0 +1,5 @@
+=== PROBE 1061a: ip6_pktinfo free/reuse overlap ===
+
+[S] A fd=-1
+[S] B fd=-1
+[!] socket setup failed

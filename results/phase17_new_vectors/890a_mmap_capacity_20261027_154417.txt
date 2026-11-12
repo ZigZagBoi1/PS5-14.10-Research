@@ -1,0 +1,31 @@
+=== PROBE 890a: MMAP CAPACITY ===
+
+[A] self pid = 104
+[B] 64 MiB steps until a failure (max 16):
+  [step 1 (total 0 MiB)] ret=0x00000003_247DC000
+  [step 2 (total 64 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 3 (total 128 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 4 (total 192 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 5 (total 256 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 6 (total 320 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 7 (total 384 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 8 (total 448 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 9 (total 512 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 10 (total 576 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 11 (total 640 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 12 (total 704 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 13 (total 768 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 14 (total 832 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 15 (total 896 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+  [step 16 (total 960 MiB)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+[B] mapped before failure: 1024 MiB
+[C] raise the limit, then retry one step:
+  [637(pid,4GiB)] ret=0x00000000_00000000
+  [retry step] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+[C] retry after raised limit: OK
+[D] lower the limit to 64 MiB, then retry:
+  [637(pid,64MiB)] ret=0x00000000_00000000
+  [retry under 64MiB] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+[D] retry under small limit: OK
+
+=== PROBE 890a DONE ===

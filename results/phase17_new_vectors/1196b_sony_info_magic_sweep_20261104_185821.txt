@@ -1,0 +1,118 @@
+=== PROBE 1196b: STRUCTURED-ARGUMENT SWEEP OF THE SONY INFO FAMILY ===
+646  get_kernel_mem_statistics  buf,size,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+646  get_kernel_mem_statistics  buf,size,MAGIC,0,0   rv=-1           errno=1 Operation not permitted  changed=0      
+646  get_kernel_mem_statistics  buf,size,0,MAGIC,0   rv=-1           errno=1 Operation not permitted  changed=0      
+646  get_kernel_mem_statistics  buf,size,0,0,0x10    rv=-1           errno=1 Operation not permitted  changed=0      
+646  get_kernel_mem_statistics  size,buf,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+646  get_kernel_mem_statistics  buf,0,0,0,MAGIC      rv=-1           errno=1 Operation not permitted  changed=0      
+671  get_page_table_stats       buf,size,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+671  get_page_table_stats       buf,size,MAGIC,0,0   rv=-1           errno=1 Operation not permitted  changed=0      
+671  get_page_table_stats       buf,size,0,MAGIC,0   rv=-1           errno=1 Operation not permitted  changed=0      
+671  get_page_table_stats       buf,size,0,0,0x10    rv=-1           errno=1 Operation not permitted  changed=0      
+671  get_page_table_stats       size,buf,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+671  get_page_table_stats       buf,0,0,0,MAGIC      rv=-1           errno=1 Operation not permitted  changed=0      
+642  get_map_statistics         buf,size,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+642  get_map_statistics         buf,size,MAGIC,0,0   rv=-1           errno=1 Operation not permitted  changed=0      
+642  get_map_statistics         buf,size,0,MAGIC,0   rv=-1           errno=1 Operation not permitted  changed=0      
+642  get_map_statistics         buf,size,0,0,0x10    rv=-1           errno=1 Operation not permitted  changed=0      
+642  get_map_statistics         size,buf,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+642  get_map_statistics         buf,0,0,0,MAGIC      rv=-1           errno=1 Operation not permitted  changed=0      
+618  paging_stats_objects       buf,size,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+618  paging_stats_objects       buf,size,MAGIC,0,0   rv=-1           errno=1 Operation not permitted  changed=0      
+618  paging_stats_objects       buf,size,0,MAGIC,0   rv=-1           errno=1 Operation not permitted  changed=0      
+618  paging_stats_objects       buf,size,0,0,0x10    rv=-1           errno=1 Operation not permitted  changed=0      
+618  paging_stats_objects       size,buf,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+618  paging_stats_objects       buf,0,0,0,MAGIC      rv=-1           errno=1 Operation not permitted  changed=0      
+611  paging_stats_threads       buf,size,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+611  paging_stats_threads       buf,size,MAGIC,0,0   rv=-1           errno=1 Operation not permitted  changed=0      
+611  paging_stats_threads       buf,size,0,MAGIC,0   rv=-1           errno=1 Operation not permitted  changed=0      
+611  paging_stats_threads       buf,size,0,0,0x10    rv=-1           errno=1 Operation not permitted  changed=0      
+611  paging_stats_threads       size,buf,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+611  paging_stats_threads       buf,0,0,0,MAGIC      rv=-1           errno=1 Operation not permitted  changed=0      
+613  get_resident_count         buf,size,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+613  get_resident_count         buf,size,MAGIC,0,0   rv=-1           errno=1 Operation not permitted  changed=0      
+613  get_resident_count         buf,size,0,MAGIC,0   rv=-1           errno=1 Operation not permitted  changed=0      
+613  get_resident_count         buf,size,0,0,0x10    rv=-1           errno=1 Operation not permitted  changed=0      
+613  get_resident_count         size,buf,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+613  get_resident_count         buf,0,0,0,MAGIC      rv=-1           errno=1 Operation not permitted  changed=0      
+615  get_resident_fmem_count    buf,size,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+615  get_resident_fmem_count    buf,size,MAGIC,0,0   rv=-1           errno=1 Operation not permitted  changed=0      
+615  get_resident_fmem_count    buf,size,0,MAGIC,0   rv=-1           errno=1 Operation not permitted  changed=0      
+615  get_resident_fmem_count    buf,size,0,0,0x10    rv=-1           errno=1 Operation not permitted  changed=0      
+615  get_resident_fmem_count    size,buf,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+615  get_resident_fmem_count    buf,0,0,0,MAGIC      rv=-1           errno=1 Operation not permitted  changed=0      
+627  cpu_usage_all              buf,size,0,0,MAGIC   rv=-1           errno=78 Function not implemented changed=0      
+627  cpu_usage_all              buf,size,MAGIC,0,0   rv=-1           errno=78 Function not implemented changed=0      
+627  cpu_usage_all              buf,size,0,MAGIC,0   rv=-1           errno=78 Function not implemented changed=0      
+627  cpu_usage_all              buf,size,0,0,0x10    rv=-1           errno=78 Function not implemented changed=0      
+627  cpu_usage_all              size,buf,0,0,MAGIC   rv=-1           errno=78 Function not implemented changed=0      
+627  cpu_usage_all              buf,0,0,0,MAGIC      rv=-1           errno=78 Function not implemented changed=0      
+641  cpu_usage_proc             buf,size,0,0,MAGIC   rv=-1           errno=78 Function not implemented changed=0      
+641  cpu_usage_proc             buf,size,MAGIC,0,0   rv=-1           errno=78 Function not implemented changed=0      
+641  cpu_usage_proc             buf,size,0,MAGIC,0   rv=-1           errno=78 Function not implemented changed=0      
+641  cpu_usage_proc             buf,size,0,0,0x10    rv=-1           errno=78 Function not implemented changed=0      
+641  cpu_usage_proc             size,buf,0,0,MAGIC   rv=-1           errno=78 Function not implemented changed=0      
+641  cpu_usage_proc             buf,0,0,0,MAGIC      rv=-1           errno=78 Function not implemented changed=0      
+604  dl_get_metadata            buf,size,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+604  dl_get_metadata            buf,size,MAGIC,0,0   rv=-1           errno=1 Operation not permitted  changed=0      
+604  dl_get_metadata            buf,size,0,MAGIC,0   rv=-1           errno=1 Operation not permitted  changed=0      
+604  dl_get_metadata            buf,size,0,0,0x10    rv=-1           errno=1 Operation not permitted  changed=0      
+604  dl_get_metadata            size,buf,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+604  dl_get_metadata            buf,0,0,0,MAGIC      rv=-1           errno=1 Operation not permitted  changed=0      
+608  dynlib_get_info_ex         buf,size,0,0,MAGIC   rv=-1           errno=14 Bad address             changed=0      
+608  dynlib_get_info_ex         buf,size,MAGIC,0,0   rv=-1           errno=14 Bad address             changed=0      
+608  dynlib_get_info_ex         buf,size,0,MAGIC,0   rv=-1           errno=14 Bad address             changed=0      
+608  dynlib_get_info_ex         buf,size,0,0,0x10    rv=-1           errno=14 Bad address             changed=0      
+608  dynlib_get_info_ex         size,buf,0,0,MAGIC   rv=-1           errno=14 Bad address             changed=0      
+608  dynlib_get_info_ex         buf,0,0,0,MAGIC      rv=-1           errno=14 Bad address             changed=0      
+649  dynlib_get_obj_member      buf,size,0,0,MAGIC   rv=-1           errno=3 No such process          changed=0      
+649  dynlib_get_obj_member      buf,size,MAGIC,0,0   rv=-1           errno=3 No such process          changed=0      
+649  dynlib_get_obj_member      buf,size,0,MAGIC,0   rv=-1           errno=3 No such process          changed=0      
+649  dynlib_get_obj_member      buf,size,0,0,0x10    rv=-1           errno=3 No such process          changed=0      
+649  dynlib_get_obj_member      size,buf,0,0,MAGIC   rv=-1           errno=3 No such process          changed=0      
+649  dynlib_get_obj_member      buf,0,0,0,MAGIC      rv=-1           errno=3 No such process          changed=0      
+656  dynlib_info_libdbg         buf,size,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+656  dynlib_info_libdbg         buf,size,MAGIC,0,0   rv=-1           errno=1 Operation not permitted  changed=0      
+656  dynlib_info_libdbg         buf,size,0,MAGIC,0   rv=-1           errno=1 Operation not permitted  changed=0      
+656  dynlib_info_libdbg         buf,size,0,0,0x10    rv=-1           errno=1 Operation not permitted  changed=0      
+656  dynlib_info_libdbg         size,buf,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+656  dynlib_info_libdbg         buf,0,0,0,MAGIC      rv=-1           errno=1 Operation not permitted  changed=0      
+659  dynlib_get_list2           buf,size,0,0,MAGIC   rv=-1           errno=14 Bad address             changed=3      00000000 00000013 00000014 A5A5A5A5
+659  dynlib_get_list2           buf,size,MAGIC,0,0   rv=-1           errno=14 Bad address             changed=3      00000000 00000013 00000014 A5A5A5A5
+659  dynlib_get_list2           buf,size,0,MAGIC,0   rv=-1           errno=14 Bad address             changed=3      00000000 00000013 00000014 A5A5A5A5
+659  dynlib_get_list2           buf,size,0,0,0x10    rv=-1           errno=14 Bad address             changed=3      00000000 00000013 00000014 A5A5A5A5
+659  dynlib_get_list2           size,buf,0,0,MAGIC   rv=-1           errno=14 Bad address             changed=0      
+659  dynlib_get_list2           buf,0,0,0,MAGIC      rv=-1           errno=12 Cannot allocate memory  changed=0      
+660  dynlib_get_info2           buf,size,0,0,MAGIC   rv=-1           errno=14 Bad address             changed=0      
+660  dynlib_get_info2           buf,size,MAGIC,0,0   rv=-1           errno=14 Bad address             changed=0      
+660  dynlib_get_info2           buf,size,0,MAGIC,0   rv=-1           errno=14 Bad address             changed=0      
+660  dynlib_get_info2           buf,size,0,0,0x10    rv=-1           errno=14 Bad address             changed=0      
+660  dynlib_get_info2           size,buf,0,0,MAGIC   rv=-1           errno=22 Invalid argument        changed=0      
+660  dynlib_get_info2           buf,0,0,0,MAGIC      rv=-1           errno=14 Bad address             changed=0      
+672  dynlib_list_libdbg         buf,size,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+672  dynlib_list_libdbg         buf,size,MAGIC,0,0   rv=-1           errno=1 Operation not permitted  changed=0      
+672  dynlib_list_libdbg         buf,size,0,MAGIC,0   rv=-1           errno=1 Operation not permitted  changed=0      
+672  dynlib_list_libdbg         buf,size,0,0,0x10    rv=-1           errno=1 Operation not permitted  changed=0      
+672  dynlib_list_libdbg         size,buf,0,0,MAGIC   rv=-1           errno=1 Operation not permitted  changed=0      
+672  dynlib_list_libdbg         buf,0,0,0,MAGIC      rv=-1           errno=1 Operation not permitted  changed=0      
+676  cpumode_yield              buf,size,0,0,MAGIC   rv=-1           errno=22 Invalid argument        changed=0      
+676  cpumode_yield              buf,size,MAGIC,0,0   rv=-1           errno=22 Invalid argument        changed=0      
+676  cpumode_yield              buf,size,0,MAGIC,0   rv=-1           errno=22 Invalid argument        changed=0      
+676  cpumode_yield              buf,size,0,0,0x10    rv=-1           errno=22 Invalid argument        changed=0      
+676  cpumode_yield              size,buf,0,0,MAGIC   rv=-1           errno=22 Invalid argument        changed=0      
+676  cpumode_yield              buf,0,0,0,MAGIC      rv=-1           errno=22 Invalid argument        changed=0      
+675  reserve_2mb_page           buf,size,0,0,MAGIC   rv=0            errno=22 Invalid argument        changed=0      
+675  reserve_2mb_page           buf,size,MAGIC,0,0   rv=0            errno=22 Invalid argument        changed=0      
+675  reserve_2mb_page           buf,size,0,MAGIC,0   rv=0            errno=22 Invalid argument        changed=0      
+675  reserve_2mb_page           buf,size,0,0,0x10    rv=0            errno=22 Invalid argument        changed=0      
+675  reserve_2mb_page           size,buf,0,0,MAGIC   rv=0            errno=22 Invalid argument        changed=0      
+675  reserve_2mb_page           buf,0,0,0,MAGIC      rv=0            errno=22 Invalid argument        changed=0      
+674  virtual_query_all(CONTROL) buf,size,0,0,MAGIC   rv=0            errno=22 Invalid argument        changed=0      
+674  virtual_query_all(CONTROL) buf,size,MAGIC,0,0   rv=-1           errno=22 Invalid argument        changed=0      
+674  virtual_query_all(CONTROL) buf,size,0,MAGIC,0   rv=-1           errno=22 Invalid argument        changed=0      
+674  virtual_query_all(CONTROL) buf,size,0,0,0x10    rv=-1           errno=22 Invalid argument        changed=0      
+674  virtual_query_all(CONTROL) size,buf,0,0,MAGIC   rv=0            errno=22 Invalid argument        changed=0      
+674  virtual_query_all(CONTROL) buf,0,0,0,MAGIC      rv=0            errno=22 Invalid argument        changed=0      
+[SUM] syscalls that returned something other than -1: 646,671,642,618,611,613,615,627,641,604,608,649,656,659,660,672,676,675,674
+[Z] alive
+=== DONE ===

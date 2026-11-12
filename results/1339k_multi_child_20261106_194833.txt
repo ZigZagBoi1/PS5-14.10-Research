@@ -1,0 +1,9 @@
+=== 1339k MULTI-CHILD RACE ===
+pid=332
+ebase=567DC000
+params: FREE=1 USE=2 TOTAL=3 TRIALS=200 SPRAY=128 STACK=1000
+stacks: base=31145C000 total=3000 (3 children x 1000)
+  chains pre-written for 3 children
+  chain[0] verified OK
+gadgets: pop_rax=567DC992 pop_rdi=568A5DFE pop_rsi=567E977D pop_rdx=56B8C2D7 pop_rcx=567DCE64 fn=81379CB57
+  spawned 3 children

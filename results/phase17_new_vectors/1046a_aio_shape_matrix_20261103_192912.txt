@@ -1,0 +1,36 @@
+=== PROBE 1046a: create/delete shape matrix ===
+[0] pid=163
+[A] control create ok=true rv=0 id=00004205
+[A] control delete ok=true st=80020010 rv=0
+[S] f=00000001 c=1 m=1 id=00000206 del st=80020010 rv=0
+[S] f=00000001 c=1 m=2 id=00000207 del st=80020010 rv=0
+[S] f=00000001 c=1 m=3 id=00000208 del st=80020010 rv=0
+[S] f=00000002 c=1 m=1 id=00000209 del st=80020010 rv=0
+[S] f=00000002 c=1 m=2 id=0000020A del st=80020010 rv=0
+[S] f=00000002 c=1 m=3 id=0000020B del st=80020010 rv=0
+[S] f=00001001 c=1 m=1 id=0000020C del st=80020010 rv=0
+[S] f=00001001 c=1 m=2 id=0000020D del st=80020010 rv=0
+[S] f=00001001 c=1 m=3 id=0000020E del st=80020010 rv=0
+[S] f=00001001 c=2 m=1 id=0000020F del st=80020010 rv=0
+[S] f=00001001 c=2 m=2 id=00000210 del st=80020010 rv=0
+[S] f=00001001 c=2 m=3 id=00000211 del st=80020010 rv=0
+[S] f=00001002 c=1 m=1 id=00000212 del st=80020010 rv=0
+[S] f=00001002 c=2 m=1 id=00000213 del st=80020010 rv=0
+[S] f=00001002 c=4 m=2 id=00000214 del st=80020010 rv=0
+--- poll first, then delete ---
+[P] f=00000001 c=1 m=1 id=00000215 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00000001 c=1 m=2 id=00002215 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00000001 c=1 m=3 id=00004215 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00000002 c=1 m=1 id=00006215 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00000002 c=1 m=2 id=00008215 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00000002 c=1 m=3 id=0000A215 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00001001 c=1 m=1 id=0000C215 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00001001 c=1 m=2 id=0000E215 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00001001 c=1 m=3 id=00000215 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00001001 c=2 m=1 id=00002215 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00001001 c=2 m=2 id=00000216 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00001001 c=2 m=3 id=00000217 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00001002 c=1 m=1 id=00000218 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00001002 c=2 m=1 id=00002218 poll st=00000003 rv=0 | del st=00000000 rv=0
+[P] f=00001002 c=4 m=2 id=00000219 poll st=00000003 rv=0 | del st=00000000 rv=0
+[Z] alive pid=163

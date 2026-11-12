@@ -1,0 +1,19 @@
+=== 1339p SAFE RACE ===
+pid=381
+ebase=60098000
+params: TRIALS=50 SPRAY=128 OPTLEN=24
+t1:socket
+t1:tclass_set
+t1:sp=23,24
+t1:spawn_free
+t1:spawn_use
+t1:parking
+t1:released
+t1:waited
+t1:sprayed=128
+t2:socket
+t2:tclass_set
+t2:sp=24,25
+t2:spawn_free
+t2:spawn_use
+t2:parking

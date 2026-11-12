@@ -1,0 +1,19 @@
+=== PROBE 1021a: FSTAT AND NEIGHBOURS ===
+
+[A] open(fd)=23 pid=80
+[A] fstat rv=0
+[A] st=0x172904ff37 0x816d 0x0 0x608323bc
+[A] alive pid=80
+[B] sigaction(12,SIG_IGN) rv=0
+[B] control 4095 = -1
+[B] alive pid=80
+  sys 189 = -1
+  sys 190 = -1
+  sys 191 = -1
+  sys 192 = -1
+  sys 193 = -1
+  sys 194 = -1
+  sys 195 = -1
+  sys 196 = -1
+[C] alive pid=80
+=== COMPLETE ===

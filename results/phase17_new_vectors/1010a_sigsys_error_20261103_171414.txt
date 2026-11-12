@@ -1,0 +1,14 @@
+=== PROBE 1010a: SIGSYS ERROR TEXT ===
+
+[0] pid=80
+[1] sa=0x3114304C0 handler=0x8D318F4
+[2] sigaction(12) rv=0
+[N] ok=true ret=80 err=
+[N] alive pid=80
+[A] ok=false ret= err=[string "-- CRASH_CLASS: MODERATE..."]:33: attempt to call global 'as_
+[A] alive pid=80
+[B] ok=false ret= err=[string "-- CRASH_CLASS: MODERATE..."]:33: attempt to call global 'as_
+[B] alive pid=80
+[C] ok=false ret= err=[string "-- CRASH_CLASS: MODERATE..."]:33: attempt to call global 'as_
+[C] alive pid=80
+=== COMPLETE ===

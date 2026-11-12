@@ -1,0 +1,26 @@
+=== 1340f MULTIROUND ===
+fdlimit: 4096
+pid=429
+ebase=30614000
+pop_r8 bytes: 47 58 C3
+pop_r8 OK
+fd=22
+tc0=42
+spray=125
+sp rd=148 wr=149
+building chains (20000 rounds x 13 = 260010 qwords each)...
+FREE chain built
+USE chain built
+verify: [0]=30614991 (pop_r8=30614991) [1]=18 (24)
+chains verified
+spawning USE child...
+spawning FREE child...
+both spawned, parked on pipe
+RELEASE!
+done: free=CAFE01 use=CAFE02
+spraying 125 sockets with TCLASS=187...
+spray: 125/125
+=== master tc=0 ===
+tc=0: FREE won last (pktopts NULL)
+pid=429
+=== DONE ===

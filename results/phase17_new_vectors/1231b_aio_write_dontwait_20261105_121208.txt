@@ -1,0 +1,15 @@
+=== PROBE 1231b: aio write source copy ===
+[0] pid=80
+  [socketpair] ret=0x00000000_00000000 err=2 No such file or directory
+    fds 22 23
+[1] submit cmd=2 (write) from the marker buffer to fd0
+  [669 cmd=2] ret=0x00000000_00000000 err=2 No such file or directory
+    id=0x00004205
+[2] poll states a few times
+  [664] ret=0x00000000_00000000 err=2 No such file or directory
+    state=0x3 result=0xAAAAAAAA
+[3] receive on the peer with MSG_DONTWAIT=0x80
+  [recvfrom] ret=0x00000000_00000010 err=2 No such file or directory
+    peer bytes: 40 41 42 43 44 45 46 47 48 49 4A 4B 4C 4D 4E 4F
+[Z] pid_end=80
+=== DONE ===

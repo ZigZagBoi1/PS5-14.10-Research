@@ -1,0 +1,9 @@
+=== PROBE 1071a: READ EVERY ENUMERATED DEVICE ===
+
+[S] sigsys-ignore ok=true rv=0 pid=87
+
+[R] random         fd=22 rv=1024 touched=128 kp=0
+[R] urandom        fd=22 rv=1024 touched=128 kp=0
+[R] dipsw          fd=22 rv=-1 touched=0 kp=0
+[R] deci_stdout    open=FAIL
+[R] deci_stderr    open=FAIL

@@ -1,0 +1,7 @@
+=== PROBE 1049a: what invalidates a polled object ===
+[0] pid=163
+[0] eboot=6A288000 gadgets=1781041554/1781865982/1781640295/1781126273
+[A] id=0000221D poll=00000003 mmap=3112D0000 del=00000000
+[B] id=0000421D poll=00000003 spawn=true res=163 del=00000000
+[C] id=0000621D spawn=true poll_after_spawn=00000003 del=00000000
+[Z] alive pid=163

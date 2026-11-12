@@ -1,0 +1,9 @@
+=== PROBE 1022a: MAP_FIXED OUTSIDE THE USER HALF ===
+
+[0] pid=80
+[kernel half, below the image] rv=0xFFFFFFFFFFFFFFFF (-1)
+[kernel half, above the image] rv=0xFFFFFFFFFFFFFFFF (-1)
+[far outside both halves] rv=0xFFFFFFFFFFFFFFFF (-1)
+[top of the user half] rv=0xFFFFFFFFFFFFFFFF (-1)
+[Z] alive pid=80
+=== COMPLETE ===

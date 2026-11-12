@@ -1,0 +1,12 @@
+=== PROBE 1176a: 601 COMMAND SWEEP ON SACRIFICIAL THREADS ===
+[F] socket fd=21
+[L] 38 commands, 0x03/0x04/0x27 excluded
+[string "-- CRASH_CLASS: MODERATE  (one thread per c..."]:60: bad argument #3 to 'format' (no value)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: MODERATE  (one thread per c..."]:60: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

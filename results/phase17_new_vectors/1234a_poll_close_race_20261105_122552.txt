@@ -1,0 +1,70 @@
+=== PROBE 1234a: gpr mapping and poll+close ===
+[0] pid=80 eboot=0x6F798000
+    syscall stub = 0x8349D0B57
+[A] mapping test: child calls close(fd0)
+    fds 26 27
+    spawn close rax=6 rdi=0x1A -> rv=0 tid=0x311104280
+    fstat(fd0) after child = -1 err=9 Bad file descriptor  (EBADF => the child really closed it)
+[B] poll+close race, 60 iterations
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310FFE9C0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F25640
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x31114B1E0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310FF4E40
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310FD8C00
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x311126BE0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3110B0AE0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F106C0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x311194780
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310FC6880
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F23980
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310FF77A0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x311168B20
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3110EBB00
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F70B40
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F31EE0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F68B40
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3110D0940
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3111C5680
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x31118E5C0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310EB0A00
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3110B3EA0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x311195EA0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x311121BA0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310E60E20
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F78500
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F67AE0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F0D520
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3110FE700
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F4C6C0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3110D76C0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F0B1E0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3110DF8A0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310FC5D40
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310EA9140
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F11A60
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3110A3B80
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x31112C1E0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F8BD20
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F67F80
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x311109840
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x311138080
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3110EA840
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F22080
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x31117A280
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F0E540
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3110E0A40
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3111A0840
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310ED1BE0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3111241A0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x31113B840
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310FD38A0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F6F980
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310EED320
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x311174AA0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310FC8E00
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F89380
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310F984A0
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x310EC8720
+    spawn poll rax=209 rdi=0x311134D40 -> rv=0 tid=0x3110EB100
+    iterations=60 raced=60 pid_end=80
+=== DONE ===

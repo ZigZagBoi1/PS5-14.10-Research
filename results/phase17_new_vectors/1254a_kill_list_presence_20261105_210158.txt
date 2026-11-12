@@ -1,0 +1,38 @@
+=== PROBE 1254a: SIG_IGN presence oracle over the kill list ===
+
+[0] pid=80
+[1] SIG_IGN install ok=true rv=0
+[2] control 4095 -> ret=-1 err=78 Function not implemented
+[2] step 2 ok
+[661] aio_submit()
+  -> ok ret=-1 err=78 Function not implemented
+  -> alive pid=80
+[665] aio_get_data()
+  -> ok ret=-1 err=78 Function not implemented
+  -> alive pid=80
+[668] aio_create()
+  -> ok ret=-1 err=78 Function not implemented
+  -> alive pid=80
+[627] 627(0...)
+  -> ok ret=-1 err=78 Function not implemented
+  -> alive pid=80
+[628] 628(0...)
+  -> ok ret=-1 err=22 Invalid argument
+  -> alive pid=80
+[629] 629(0...)
+  -> ok ret=-1 err=14 Bad address
+  -> alive pid=80
+[630] 630(0...)
+  -> ok ret=-1 err=14 Bad address
+  -> alive pid=80
+[631] 631()
+  -> ok ret=-1 err=78 Function not implemented
+  -> alive pid=80
+[677] 677 wait6()
+  -> ok ret=-1 err=78 Function not implemented
+  -> alive pid=80
+[678] 678 cap_rights_limit()
+  -> ok ret=-1 err=78 Function not implemented
+  -> alive pid=80
+[9] final pid=80
+=== DONE 1254a ===

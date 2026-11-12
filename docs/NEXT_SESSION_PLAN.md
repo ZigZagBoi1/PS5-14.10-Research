@@ -18,6 +18,14 @@
 5. **Decider +0x82 complementar enfileirado**: seed byte-granular 0x03 +
    `fonts.load()` skip/resolve + controle positivo plantado (1 carga). Fecha
    "qual consumidor" (setStatus/pump vs FontFaceSet.cpp:207-215).
+6. **Erratum-exchange #276 15:15Z (cmt 6831530314)**: Vector-16B aceito por
+   ambos (trio +0x58 = stock [S]). Contra-alegação +0x94/float refutada no pin
+   (`FontSelectionAlgorithm.h:41` = int16_t, caps 18B → +0x82 stock). NOSSA
+   autocorreção: vptr É stock (`:64` virtual ~) — device frame = stock−vptr,
+   UM único delta de fork; timer stock @+0x90 (com vptr +0x98). Par-decider
+   +0x82/+0x94 pré-registrado (branch b = retratação pré-aceita).
+   Nota: +0x94 no frame device = high dword de m_unalignedNextFireTime
+   (dentro do timer) — manifestação esperada é timer-flavored, distinguível.
 
 ---
 

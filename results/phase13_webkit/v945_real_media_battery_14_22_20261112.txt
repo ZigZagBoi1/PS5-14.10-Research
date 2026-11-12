@@ -23,3 +23,13 @@ CONTEXT CAVEAT [I]: every v9xx result ran inside the User's Guide webapp
 GRADE:  D for the media attack surface in this context - unreachable,
   not hardened. The honest scoreboard line: media parsing is not a
   reachable surface from a User's Guide page on 14.22.
+
+ERRATUM 2026-11-12 (operator correction): the PS5 has NO standalone web
+browser application - unlike PS4, Sony never shipped one. The User's Guide
+(manuals.playstation.net) is the ONLY navigable browser context on the
+console, which is precisely why the scene enters through it. The context
+caveat above ('the full PS5 browser app may wire the media pipeline') is
+VOID - there is no other context to re-measure in. The inert-media
+conclusion stands as a PORT FACT: on PS5 14.22, no browser context exists
+with a wired media pipeline; <video>/<audio> in the sole browser surface
+rejects real media at sniff stage and cannot become an attack surface.

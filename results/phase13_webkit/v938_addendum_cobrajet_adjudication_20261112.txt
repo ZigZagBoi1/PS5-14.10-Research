@@ -1,0 +1,43 @@
+ADDEDUM to v933_v938_fontproxy_lane_close - scope correction per cobrajet adjudication (#216, 2026-11-12)
+Durable record: cobrajet302gt/PS5-14.10-Jailbreak-Research issue #10, addendum 2026-11-12 (zero console cycles on their side, all [S] re-grepped at file:line)
+================================================================================
+
+1. SCOPE: the v933-v938 close is TRIGGER-SIDE on 14.22, not code-absent.
+   The vulnerable FontProxy class (raw pointer into by-value State::font,
+   pre-fix shape) is PRESENT in the 14.10-era public drop at
+   CanvasRenderingContext2DBase.h:242/:267/:295/:356/:393 [S], and the fix
+   673f4df5f2 is dated 2026-11-04 on public main - eight days old; 14.22
+   rides the 2026-10-27 public update list, so NEITHER current retail build
+   contains the fix. What we closed is: the FontFaceSet-settlement trigger
+   class cannot engage on 14.22 [M@ours]; no probed producer opens the
+   window on either generation.
+
+2. THE LAW PORTS AS [I] ONLY. Eager-local()-realization + no-settle-during-
+   metrics is a 14.22-device law; on 14.10 it is port-level until a 14.10
+   row lands. Port laws of this shape have ported cleanly before, but they
+   must be re-measured, not assumed.
+
+3. OPEN CRACK - fontsNeedUpdate producer family 2 [I]: our battery probed
+   ONLY FontFaceSet-driven settlement. FontSelector.h in the drop names a
+   second producer family (FontCache/system-font-driven updates -> state
+   font re-resolution). Likely inert on a console with no system-font
+   install path, but unprobed. If any console-side event can invalidate a
+   FontCascade mid-metrics, the window reopens without FontFaceSet at all.
+
+4. beginLayer: two-generation close now [S+M] - on 14.10 the method does
+   not EXIST (zero WebCore IDL hits; the only beginLayer symbols are
+   unrelated internals), on 14.22 it is gated/absent [M@ours].
+
+5. OffscreenCanvas: [S+M] - Conditional=OFFSCREEN_CANVAS,
+   ENABLE_OFFSCREEN_CANVAS PRIVATE OFF (WebKitFeatures.cmake:213-214), no
+   OptionsPlayStation override; same chain and escape-hatch caveat as the
+   no-JIT/no-Wasm config law.
+
+6. p719-F: dead BY CONSTRUCTION, not just a detector bug [S] - seed
+   fill view[i]=BigInt(i+1) (:422) guarantees detector hits
+   (clonedView[i]!==0n at :434 flags every seed qword from index 8 ->
+   exactly our 0x9..0x12), AND setTimeout(resize,0) (:428) fires after the
+   synchronous clone (:429), so the re-entry never overlaps: even with the
+   seed-compare fix the arm can only print clean, and a clean row is zero
+   evidence about CVE-2025-43265. A live arm needs the resize to ride a
+   synchronous serialization hook (valueOf). Probe fix is board-owned.

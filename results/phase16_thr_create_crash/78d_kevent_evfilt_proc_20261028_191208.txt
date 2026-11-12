@@ -1,0 +1,6 @@
+=== PROBE 78d: KEVENT EVFILT_PROC ON THR_CREATE ===
+
+TEST_SECTION=1
+[0] canary pid=85 ok=true
+[0] self_tid=101831 ok=true
+[0] kqueue fd=23 ok=true

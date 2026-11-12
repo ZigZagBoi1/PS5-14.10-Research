@@ -1,0 +1,6 @@
+=== PROBE 1183b: LOCATE READABLE LIBKERNEL TEXT ===
+[I] libc gettimeofday import slot = 0x00000001E207F9A8
+[I] *slot (libkernel text ptr)  = 0x00000008083B4B50
+[I] syscall.syscall_address     = 0x00000008083B4B57
+[I] libkernel_base (derived)    = 0x00000008083B4000
+[I] sa - b0                     = 0x0000000000000B57

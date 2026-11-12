@@ -1,0 +1,14 @@
+=== PROBE 1240a: physhm through copyin and copyout ===
+[0] pid=96
+    socketpair ok=true -> 22 23
+[A] control: write(sock, marker, 0x20) then read back
+    write rv=32 err=3 No such process | recv rv=32 err=3 No such process | C0 C1 C2 C3 C4 C5 C6 C7 C8 C9 CA CB CC CD CE CF D0 D1 D2 D3 D4 D5 D6 D7 D8 D9 DA DB DC DD DE DF
+[B] physhm_open 629(1,2,0,0..3)
+    629(1,2,0,0) -> 24 err=3 No such process
+    629(1,2,0,1) -> 25 err=3 No such process
+    629(1,2,0,2) -> 26 err=3 No such process
+    629(1,2,0,3) -> 27 err=3 No such process
+    using fd 24
+[C] mmap the descriptor at several offsets, then copyin from it
+    flags=1 off=0x0 -> base=0x310D3C000 err=3 No such process
+      copyin write(s1, 0x310D3C000, 0x20) rv=-1 err=14 Bad address

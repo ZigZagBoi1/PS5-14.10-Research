@@ -1,0 +1,21 @@
+=== PROBE 904a: minimal child spawn ===
+[0] pid=80
+[0] gadgets rax=631196050 rdi=632020478 store=631794791 jmp=631280769
+[1] socketpair fd=26
+[R1] chain=25 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+      [W] 663 returned FFFFFFFF (0=woke normally, others=immediate error/timeout)
+[R2] chain=25 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+      [W] 663 returned FFFFFFFF (0=woke normally, others=immediate error/timeout)
+[R3] chain=25 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+      [W] 663 returned FFFFFFFF (0=woke normally, others=immediate error/timeout)
+[R4] chain=25 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+      [W] 663 returned FFFFFFFF (0=woke normally, others=immediate error/timeout)
+[R5] chain=25 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+      [W] 663 returned FFFFFFFF (0=woke normally, others=immediate error/timeout)
+[R6] chain=25 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+      [W] 663 returned FFFFFFFF (0=woke normally, others=immediate error/timeout)
+[R7] chain=25 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+      [W] 663 returned FFFFFFFF (0=woke normally, others=immediate error/timeout)
+[R8] chain=25 child errs=80020010,80020010 | parent ret=0 errs=80020003,80020003 | alive=80
+      [W] 663 returned FFFFFFFF (0=woke normally, others=immediate error/timeout)
+[Z] done

@@ -1,0 +1,45 @@
+=== PROBE 1194b: 601 ARG2 WRITE AND LEAK SWEEP ===
+[01] rv=-1  errno=22 Invalid argument          no-write
+[02] rv=-1  errno=78 Function not implemented  no-write
+[05] rv=-1  errno=78 Function not implemented  no-write
+[06] rv=-1  errno=78 Function not implemented  no-write
+[07] rv=0   errno=78 Function not implemented  no-write
+[09] rv=0   errno=78 Function not implemented  no-write
+[0A] rv=-1  errno=1 Operation not permitted    no-write
+[0B] rv=0   errno=1 Operation not permitted    no-write
+[0D] rv=0   errno=1 Operation not permitted    no-write
+[0E] rv=0   errno=1 Operation not permitted    WROTE 00000000 00000000 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5
+[0F] rv=-1  errno=1 Operation not permitted    no-write
+[10] rv=-1  errno=22 Invalid argument          no-write
+[11] rv=-1  errno=22 Invalid argument          no-write
+[12] rv=-1  errno=22 Invalid argument          no-write
+[13] rv=0   errno=22 Invalid argument          no-write
+[14] rv=0   errno=22 Invalid argument          no-write
+[15] rv=-1  errno=1 Operation not permitted    no-write
+[16] rv=-1  errno=78 Function not implemented  no-write
+[17] rv=-1  errno=78 Function not implemented  no-write
+[18] rv=-1  errno=1 Operation not permitted    no-write
+[19] rv=0   errno=1 Operation not permitted    no-write
+[1A] rv=0   errno=1 Operation not permitted    WROTE 00000000 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5
+[1C] rv=-1  errno=14 Bad address               no-write
+[1D] rv=0   errno=14 Bad address               no-write
+[1E] rv=-1  errno=22 Invalid argument          no-write
+[1F] rv=-1  errno=14 Bad address               no-write
+[20] rv=0   errno=14 Bad address               no-write
+[21] rv=-1  errno=22 Invalid argument          no-write
+[22] rv=-1  errno=78 Function not implemented  no-write
+[23] rv=-1  errno=22 Invalid argument          no-write
+[24] rv=-1  errno=1 Operation not permitted    no-write
+[25] rv=-1  errno=1 Operation not permitted    no-write
+[26] rv=-1  errno=1 Operation not permitted    no-write
+[28] rv=-1  errno=78 Function not implemented  no-write
+[29] rv=-1  errno=78 Function not implemented  no-write
+[2A] rv=-1  errno=78 Function not implemented  no-write
+[2B] rv=-1  errno=78 Function not implemented  no-write
+[2C] rv=-1  errno=78 Function not implemented  no-write
+[2D] rv=-1  errno=78 Function not implemented  no-write
+[2E] rv=-1  errno=78 Function not implemented  no-write
+[2F] rv=-1  errno=78 Function not implemented  no-write
+[SUM] writers = 14,26
+[Z] alive
+=== DONE ===

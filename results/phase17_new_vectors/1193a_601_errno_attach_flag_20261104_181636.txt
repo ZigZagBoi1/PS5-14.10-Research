@@ -1,0 +1,90 @@
+=== PROBE 1193a: 601 ERRNO-AWARE SWEEP + ATTACH FLAG TEST ===
+-- pass 1 (before any attach attempt) --
+[01] rv=-1   raw=0xffffffffffffffffffffffff errno=22 Invalid argument
+[02] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[05] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[06] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[07] rv=0    raw=0x0                  errno=78 Function not implemented
+[09] rv=0    raw=0x0                  errno=78 Function not implemented
+[0A] rv=-1   raw=0xffffffffffffffffffffffff errno=1 Operation not permitted
+[0B] rv=0    raw=0x0                  errno=1 Operation not permitted
+[0D] rv=0    raw=0x0                  errno=1 Operation not permitted
+[0E] rv=0    raw=0x0                  errno=1 Operation not permitted
+[0F] rv=-1   raw=0xffffffffffffffffffffffff errno=1 Operation not permitted
+[10] rv=-1   raw=0xffffffffffffffffffffffff errno=22 Invalid argument
+[11] rv=-1   raw=0xffffffffffffffffffffffff errno=22 Invalid argument
+[12] rv=-1   raw=0xffffffffffffffffffffffff errno=22 Invalid argument
+[13] rv=0    raw=0x0                  errno=22 Invalid argument
+[14] rv=0    raw=0x0                  errno=22 Invalid argument
+[15] rv=-1   raw=0xffffffffffffffffffffffff errno=1 Operation not permitted
+[16] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[17] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[18] rv=-1   raw=0xffffffffffffffffffffffff errno=1 Operation not permitted
+[19] rv=0    raw=0x0                  errno=1 Operation not permitted
+[1A] rv=0    raw=0x0                  errno=1 Operation not permitted
+[1C] rv=-1   raw=0xffffffffffffffffffffffff errno=14 Bad address
+[1D] rv=0    raw=0x0                  errno=14 Bad address
+[1E] rv=-1   raw=0xffffffffffffffffffffffff errno=22 Invalid argument
+[1F] rv=-1   raw=0xffffffffffffffffffffffff errno=14 Bad address
+[20] rv=0    raw=0x0                  errno=14 Bad address
+[21] rv=-1   raw=0xffffffffffffffffffffffff errno=22 Invalid argument
+[22] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[23] rv=-1   raw=0xffffffffffffffffffffffff errno=22 Invalid argument
+[24] rv=-1   raw=0xffffffffffffffffffffffff errno=1 Operation not permitted
+[25] rv=-1   raw=0xffffffffffffffffffffffff errno=1 Operation not permitted
+[26] rv=-1   raw=0xffffffffffffffffffffffff errno=1 Operation not permitted
+[28] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[29] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[2A] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[2B] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[2C] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[2D] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[2E] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+[2F] rv=-1   raw=0xffffffffffffffffffffffff errno=78 Function not implemented
+-- attach attempt: 601(0x00, mapped 0x100 buffer, 0) --
+[00] rv=0 raw=0x0 errno=78 Function not implemented  cap=0x0000000000000100
+-- pass 2 (after the attach attempt) --
+[01] rv=-1   errno=22 Invalid argument          
+[02] rv=-1   errno=78 Function not implemented  
+[05] rv=-1   errno=78 Function not implemented  
+[06] rv=-1   errno=78 Function not implemented  
+[07] rv=0    errno=78 Function not implemented  
+[09] rv=0    errno=78 Function not implemented  
+[0A] rv=-1   errno=1 Operation not permitted    
+[0B] rv=0    errno=1 Operation not permitted    
+[0D] rv=0    errno=1 Operation not permitted    
+[0E] rv=0    errno=1 Operation not permitted    
+[0F] rv=-1   errno=1 Operation not permitted    
+[10] rv=-1   errno=22 Invalid argument          
+[11] rv=-1   errno=22 Invalid argument          
+[12] rv=-1   errno=22 Invalid argument          
+[13] rv=0    errno=22 Invalid argument          
+[14] rv=0    errno=22 Invalid argument          
+[15] rv=-1   errno=1 Operation not permitted    
+[16] rv=-1   errno=78 Function not implemented  
+[17] rv=-1   errno=78 Function not implemented  
+[18] rv=-1   errno=1 Operation not permitted    
+[19] rv=0    errno=1 Operation not permitted    
+[1A] rv=0    errno=1 Operation not permitted    
+[1C] rv=-1   errno=14 Bad address               
+[1D] rv=0    errno=14 Bad address               
+[1E] rv=-1   errno=22 Invalid argument          
+[1F] rv=-1   errno=14 Bad address               
+[20] rv=0    errno=14 Bad address               
+[21] rv=-1   errno=22 Invalid argument          
+[22] rv=-1   errno=78 Function not implemented  
+[23] rv=-1   errno=22 Invalid argument          
+[24] rv=-1   errno=1 Operation not permitted    
+[25] rv=-1   errno=1 Operation not permitted    
+[26] rv=-1   errno=1 Operation not permitted    
+[28] rv=-1   errno=78 Function not implemented  
+[29] rv=-1   errno=78 Function not implemented  
+[2A] rv=-1   errno=78 Function not implemented  
+[2B] rv=-1   errno=78 Function not implemented  
+[2C] rv=-1   errno=78 Function not implemented  
+[2D] rv=-1   errno=78 Function not implemented  
+[2E] rv=-1   errno=78 Function not implemented  
+[2F] rv=-1   errno=78 Function not implemented  
+[SUM] no command changed after the 0x00 call: 0x00 is not the flag setter, or the flag is per-thread and already set
+[Z] alive
+=== DONE ===

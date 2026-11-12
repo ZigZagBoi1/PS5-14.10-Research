@@ -1,0 +1,3 @@
+=== PROBE 1058a: 4 KB kernel image readability sweep ===
+[0] pid=218 base=FFFFFFFF95000000 n=25088
+[1] outs=3110EC000 stacks=310F7C000 ctx=311047B00

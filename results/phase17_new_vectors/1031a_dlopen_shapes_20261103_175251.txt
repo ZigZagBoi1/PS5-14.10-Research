@@ -1,0 +1,19 @@
+=== PROBE 1031a ===
+[A] 592 rv=0 count=39
+[A] h0=0 h1=8193 h2=2
+[S1] 589(str2) libSceSystemService.sprx rv=-1 h=0
+[S2] 589(str2) libSceNet.sprx rv=-1 h=0
+[S3] 589(str2) libkernel.sprx rv=-1 h=0
+[S4] 589(str2) libSceLibcInternal.sprx rv=-1 h=0
+[T1] 589(str3) libSceSystemService.sprx rv=-1 h=0
+[T2] 589(str3) libSceNet.sprx rv=-1 h=0
+[T3] 589(str3) libkernel.sprx rv=-1 h=0
+[T4] 589(str3) libSceLibcInternal.sprx rv=-1 h=0
+[U1] 594(str) libSceSystemService.sprx rv=0 h=8E
+[U2] 594(str) libSceNet.sprx rv=0 h=22
+[U3] 594(str) libkernel.sprx rv=0 h=2001
+[U4] 594(str) libSceLibcInternal.sprx rv=0 h=2
+[V1] 595 handle=0 rv=-1
+[V2] 595 handle=2001 rv=-1
+[V3] 595 handle=2 rv=-1
+[Z] 592b rv=0 count=39 alive

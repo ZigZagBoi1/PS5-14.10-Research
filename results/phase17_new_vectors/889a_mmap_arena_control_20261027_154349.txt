@@ -1,0 +1,16 @@
+=== PROBE 889a: MMAP ARENA CONTROL ===
+
+[A] self pid = 104
+[B] 256 MiB reservations, no 637 call anywhere in this section:
+  [mmap 256M #1] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (lo=4294967295)
+  [mmap 256M #2] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (lo=4294967295)
+  [mmap 256M #3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (lo=4294967295)
+  [mmap 256M #4] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (lo=4294967295)
+[C] now set a 1-byte limit and map 1 MiB:
+  [637(pid,1)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF (lo=4294967295)
+  [mmap 256K] ret=0x00000003_2079C000 (lo=544849920)
+  [mmap 64M] ret=0x00000003_207DC000 (lo=545112064)
+[D] restore 1 GiB:
+  [637 restore] ret=0x00000000_00000000 (lo=0)
+
+=== PROBE 889a DONE ===

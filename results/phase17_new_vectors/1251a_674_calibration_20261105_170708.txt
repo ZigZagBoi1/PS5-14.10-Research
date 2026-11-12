@@ -1,0 +1,57 @@
+=== PROBE 1251a: 674 EXEC-ORACLE CALIBRATION ===
+
+[1] creating the mappings under test
+    anon prot=3  -> 0x310D88000
+    anon prot=7  -> 0x310D8C000
+    anon prot=7  writable, read back 90
+    open(/app0/eboot.bin) -> 22
+    fstat -> size=0x10000
+    file prot=1  -> 0x310D90000  first dword 1D3D154F
+    file prot=5  -> 0x310D94000  first dword 1D3D154F
+    file prot=7  -> 0x310D98000  first dword 1D3D154F
+    step 1 ok
+
+[2] one 674 call, 55f shape (STRIDE=72 MAX=512 arg5=0x40000000), buffer +0x100 slack
+    674 -> rv=0 errno=2 No such file or directory count=322
+    parsed 322 records
+    step 2 ok
+
+[3] the first three records, to show the real layout
+    [1] 0x10B4000 - 0x1548000  prot=0x5 r-x  name=.executable............................
+    [2] 0x16B4000 - 0x16CC000  prot=0x1 r--  name=.executable............................
+    [3] 0x18B4000 - 0x19F8000  prot=0x3 rw-  name=.executable............................
+    step 3 ok
+
+[4] the calibration set
+    anon prot3  0x310D88000  0x310D88000 - 0x310D8C000  prot=0x3 rw-  name=.anon:00000127599e.....................
+    anon prot7  0x310D8C000  0x310D8C000 - 0x310D90000  prot=0x3 rw-  name=.anon:00000127599e.....................
+    file prot1  0x310D90000  0x310D90000 - 0x310D94000  prot=0x1 r--  name=.anon:00000127599e.....................
+    file prot5  0x310D94000  0x310D94000 - 0x310D98000  prot=0x1 r--  name=.anon:00000127599e.....................
+    file prot7  0x310D98000  0x310D98000 - 0x310D9C000  prot=0x3 rw-  name=.anon:00000127599e.....................
+    eboot text candidate = 0x10B4000
+    eboot text  0x10B4000  0x10B4000 - 0x1548000  prot=0x5 r-x  name=.executable............................
+    step 4 ok
+
+[5] full 72-byte dump of one record (self-describing layout)
+    record for 0x310D98000:
+      +00  00000003_10D98000
+      +08  00000003_10D9C000
+      +10  00000000_00000000
+      +18  00000000_00000003
+      +20  30303A6E_6F6E6111
+      +28  39353732_31303030
+      +30  00000000_00006539
+      +38  00000000_00000000
+      +40  00000000_00000000
+      name bytes +0x20.. = .anon:00000127599e.....................
+    step 5 ok
+
+[6] VERDICT
+    anon prot7  prot=0x3 exec=false   (ground truth: NOT executable, 1245a)
+    anon prot3  prot=0x3 exec=false   (ground truth: NOT executable)
+    file prot7  prot=0x3 exec=false   (unknown - this is the question)
+    eboot text  prot=0x5 exec=true   (ground truth: EXECUTABLE)
+    oracle USABLE: separates a known-executable region from the known-dead anon prot7 page
+    -> 1248a's gate is meaningful; if file prot7 reports exec, run 1251b
+
+=== DONE 1251a ===

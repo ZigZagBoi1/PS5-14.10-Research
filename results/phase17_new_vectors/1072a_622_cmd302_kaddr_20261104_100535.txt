@@ -1,0 +1,5 @@
+=== PROBE 1072a: 622 / 0x302 ARG3 AS KERNEL POINTER ===
+
+[S] sigsys-ignore ok=true rv=0 pid=92
+
+[K-base] 622(0x302, a2=0, a3=buf, a4=FFFFFFFF9C800000, 0, 0)

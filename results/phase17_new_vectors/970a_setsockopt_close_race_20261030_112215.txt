@@ -1,0 +1,18 @@
+=== PROBE 970a: SETSOCKOPT vs CLOSE ===
+
+[0] pid=80 base=0x7A7A0000 pop_rax=0x7A7A0992
+  [1] socket(AF_INET6,SOCK_DGRAM) = 22
+  [r1] fd=23 spawned=true close=true
+  [r2] fd=23 spawned=true close=true
+  [r3] fd=23 spawned=true close=true
+  [r4] fd=23 spawned=true close=true
+  [r5] fd=23 spawned=true close=true
+  [r6] fd=23 spawned=true close=true
+  [r7] fd=23 spawned=true close=true
+  [r8] fd=23 spawned=true close=true
+  [r9] fd=23 spawned=true close=true
+  [r10] fd=23 spawned=true close=true
+  [r11] fd=23 spawned=true close=true
+  [r12] fd=23 spawned=true close=true
+[Z] alive pid=80 close_ok=12
+=== COMPLETE ===

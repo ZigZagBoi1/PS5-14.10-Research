@@ -1,0 +1,11 @@
+=== PROBE 1041a ===
+[A] run_lua_code_in_new_thread = function
+[B] shared page = 310C771A0
+[C] spawn ok=true err=table: 310b51960
+[D] i=1 parent_spins=200000 child_alive=0 child_done=0 child_n=0
+[D] i=2 parent_spins=400000 child_alive=0 child_done=0 child_n=0
+[D] i=3 parent_spins=600000 child_alive=0 child_done=0 child_n=0
+[D] i=4 parent_spins=800000 child_alive=0 child_done=0 child_n=0
+[D] i=5 parent_spins=1000000 child_alive=1 child_done=0 child_n=0
+[D] i=6 parent_spins=1200000 child_alive=1 child_done=1 child_n=200000
+[Z] end

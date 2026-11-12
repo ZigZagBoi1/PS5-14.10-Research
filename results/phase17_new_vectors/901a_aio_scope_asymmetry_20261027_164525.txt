@@ -1,0 +1,10 @@
+=== PROBE 901a: aio scope asymmetry ===
+[0] pid=80
+[0] gadgets rax=710756754 rdi=711581182 rsi=710809469 rdx=714621655 store=711355495 jmp=710841473
+[1] socketpair fd=32
+[2] submit ret=0 ids=210,10210
+[3] after cancel(1): st=4,1  (4=terminal, 2=in flight)
+[4] child failed: /savedata0/misc.lua:15: uint64:new: invalid type passed to constructor (nil)
+[4] CHILD delete ret=-998 rax=0 errs=0,0
+[5] OWNER delete ret=0 errs=0,80020010
+[Z] alive pid=80

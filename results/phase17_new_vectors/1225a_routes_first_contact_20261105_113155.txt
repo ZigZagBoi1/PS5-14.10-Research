@@ -1,0 +1,28 @@
+=== PROBE 1225a: 604 / 572 / 656 / 560 first contact ===
+[0] pid=87 libkernel=0x81DB3C000
+[A] 604 dl_get_metadata
+  [604 zeros] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=1 Operation not permitted
+  [604 pid,buf] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=1 Operation not permitted
+    buf[0..3]=00000000 00000000
+[B] 572 virtual_query on a page we own
+    owned va=0x311388000 err=1 Operation not permitted
+  [572 flags=0x0] ret=0x00000000_00000000 err=1 Operation not permitted
+      out=00000000 00000000 00000000 00000000
+  [572 flags=0x1] ret=0x00000000_00000000 err=1 Operation not permitted
+      out=00000000 00000000 00000000 00000000
+  [572 flags=0x2] ret=0x00000000_00000000 err=1 Operation not permitted
+      out=00000000 00000000 00000000 00000000
+  [572 flags=0x10000] ret=0x00000000_00000000 err=1 Operation not permitted
+      out=00000000 00000000 00000000 00000000
+  [572 flags=0x10002] ret=0x00000000_00000000 err=1 Operation not permitted
+      out=00000000 00000000 00000000 00000000
+[C] 656 dynlib_get_info_for_libdbg
+  [656 id=0] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=1 Operation not permitted
+    buf=00000160 00000000 00000000 00000000
+  [656 id=1] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=1 Operation not permitted
+[D] 560 debug_init: write-once oracle
+  [560(0x41)] ret=0x00000000_00000000 err=1 Operation not permitted
+  [560(0x41) again] ret=0x00000000_00000000 err=1 Operation not permitted
+  [560(0x42)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=16 Device busy
+[Z] pid_end=87
+=== DONE ===

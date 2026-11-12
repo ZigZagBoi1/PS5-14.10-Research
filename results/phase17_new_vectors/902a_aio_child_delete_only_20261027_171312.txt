@@ -1,0 +1,19 @@
+=== PROBE 902a: child delete, no cancel ===
+[0] pid=80
+[0] gadgets rax=2082326930 rdi=2083151358 rsi=2082379645 rdx=2086191831 rcx=2082328164 store=2082925671 jmp=2082411649
+[1] socketpair fd=26
+/savedata0/misc.lua:15: uint64:new: invalid type passed to constructor (nil)
+stack traceback:
+	[C]: in function 'assert'
+	/savedata0/misc.lua:15: in function 'error'
+	/savedata0/misc.lua:19: in function 'errorf'
+	/savedata0/uint64.lua:65: in function </savedata0/uint64.lua:40>
+	(tail call): ?
+	/savedata0/uint64.lua:119: in function </savedata0/uint64.lua:118>
+	[string "-- CRASH_CLASS: HIGH..."]:58: in function 'child4'
+	[string "-- CRASH_CLASS: HIGH..."]:79: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

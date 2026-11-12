@@ -1,0 +1,5 @@
+=== PROBE 1151a: DEVFS OPEN MODE MATRIX ===
+
+[ID] uid=1
+[ID] euid=1
+[ID] gid=1

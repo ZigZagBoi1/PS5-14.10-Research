@@ -1,0 +1,22 @@
+=== PROBE 1219b: locating the count-2-mode-0 guard ===
+[0] pid=80 libkernel=0x817E1C000
+[A] same call through four different verified stubs
+  count2 mode0                   stub=3B0 n=2 mode=0 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument    out=AAAAAAAA AAAAAAAA
+  count2 mode0                   stub=3F0 n=2 mode=0 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument    out=AAAAAAAA AAAAAAAA
+  count2 mode0                   stub=410 n=2 mode=0 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument    out=AAAAAAAA AAAAAAAA
+  count2 mode0                   stub=B70 n=2 mode=0 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument    out=AAAAAAAA AAAAAAAA
+[B] controls through the same stubs
+  count1 mode0                   stub=3B0 n=1 mode=0 ret=0x00000000_00000000 err=22 Invalid argument    out=80020003 AAAAAAAA
+  count2 mode1                   stub=3B0 n=2 mode=1 ret=0x00000000_00000000 err=22 Invalid argument    out=80020003 80020003
+  count2 mode2                   stub=3B0 n=2 mode=2 ret=0x00000000_00000000 err=22 Invalid argument    out=80020003 80020003
+[C] argument shapes
+  count2 mode0 ids=NULL          stub=3B0 n=2 mode=0 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument    out=AAAAAAAA AAAAAAAA
+  count2 mode0 tmo=NULL          stub=3B0 n=2 mode=0 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument    out=AAAAAAAA AAAAAAAA
+  count2 mode0 both NULL         stub=3B0 n=2 mode=0 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument    out=AAAAAAAA AAAAAAAA
+  count0x80 mode0                stub=3B0 n=128 mode=0 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument    out=AAAAAAAA AAAAAAAA
+  count0x80 mode1                stub=3B0 n=128 mode=1 ret=0x00000000_00000000 err=22 Invalid argument    out=80020003 80020003
+  count3 mode0                   stub=3B0 n=3 mode=0 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument    out=AAAAAAAA AAAAAAAA
+  count2 mode3                   stub=3B0 n=2 mode=3 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument    out=AAAAAAAA AAAAAAAA
+  count2 mode0 again             stub=3B0 n=2 mode=0 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument    out=AAAAAAAA AAAAAAAA
+[Z] pid_end=80
+=== DONE ===

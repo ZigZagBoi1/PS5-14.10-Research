@@ -1,0 +1,28 @@
+=== PROBE 1030a ===
+[S] shield=-1
+[L] list before=false
+[L] rv5592=-1
+[L] q0=0
+[L] q1=2
+[L] q2=13
+[L] q3=22
+[L] q4=32
+[L] q5=34
+[L] q6=36
+[L] q7=38
+[D1] /system/common/lib/libSceSystemService.sprx rv=-1 handle=0
+[D2] libSceSystemService.sprx rv=-1 handle=0
+[D3] /system/common/lib/libSceHttp2.sprx rv=-1 handle=0
+[D4] /system/common/lib/libkernel.sprx rv=-1 handle=0
+[D5] /system/common/lib/libSceLibcInternal.sprx rv=-1 handle=0
+[L] after:
+[L] rv5592b=-1
+[L] q0=0
+[L] q1=2
+[L] q2=13
+[L] q3=22
+[L] q4=32
+[L] q5=34
+[L] q6=36
+[L] q7=38
+[Z] alive

@@ -1,0 +1,13 @@
+=== PROBE 1047a: aio double-free detector (poll before delete) ===
+[0] pid=163 eboot=6A288000 g=1781041554/1781865982/1781094269/1784906455/1781640295/1781126273
+[A] block=310E70000 ID=310B64000 ST=311270000
+[S0] create ok=true rv=0 id=538
+[S0] serial delete ok=true st=80020010
+[S1] recreate ok=true rv=0 id=539 same_as_first=false
+[S1] poll ok=true st=00000003 rv=0
+[B] chain words=180012 bytes=1440096 head=310E74000
+[S2] spawn ok=true rv=0
+[P] parent delete ok=true st=80020003 rv=0
+[D] child status words: zero=0 nonzero=20000 res=163
+[D] total successes=0 (1 = normal, >1 = double free)
+[Z] alive pid=163

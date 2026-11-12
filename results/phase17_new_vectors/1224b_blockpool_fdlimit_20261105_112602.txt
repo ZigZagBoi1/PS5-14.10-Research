@@ -1,0 +1,10 @@
+=== PROBE 1224b: fd limit, then blockpool_open and mmap matrix ===
+[0] pid=80
+  [getrlimit NOFILE(8)] ret=0x00000000_00000000 err=22 Invalid argument
+    cur=13952 max=13952
+[1] blockpool_open
+    653 #1 = 0xFFFFFFFFFFFFFFFF err=24 Too many open files
+    653 #2 = 0xFFFFFFFFFFFFFFFF err=24 Too many open files
+    653 #3 = 0xFFFFFFFFFFFFFFFF err=24 Too many open files
+[1] no descriptor
+=== DONE ===

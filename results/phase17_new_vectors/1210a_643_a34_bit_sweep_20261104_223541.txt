@@ -1,0 +1,16 @@
+=== PROBE 1210a: sys 643 proc+0xa34 bit sweep ===
+/savedata0/misc.lua:15: uint64:new: invalid type passed to constructor (nil)
+stack traceback:
+	[C]: in function 'assert'
+	/savedata0/misc.lua:15: in function 'error'
+	/savedata0/misc.lua:19: in function 'errorf'
+	/savedata0/uint64.lua:65: in function </savedata0/uint64.lua:40>
+	(tail call): ?
+	/savedata0/uint64.lua:27: in function 'ub8'
+	/savedata0/memory.lua:66: in function 'write_byte'
+	[string "-- CRASH_CLASS: MEDIUM..."]:24: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

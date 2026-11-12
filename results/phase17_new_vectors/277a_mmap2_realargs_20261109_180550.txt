@@ -1,0 +1,3 @@
+=== PROBE 277a: mmap2 real args ===
+
+[A] baseline: 477-known-good shape through 725

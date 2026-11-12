@@ -1,0 +1,10 @@
+=== PROBE 1066a: sys 613 0x88 copyout ===
+
+[0] pid=279 pipe=000000082B180B57
+>zero arg0=0x0 rv=-1
+>one arg0=0x1 rv=-1
+>two arg0=0x2 rv=-1
+>pid arg0=0x117 rv=-1
+>nil arg0=0xFFFFFFFF rv=-1
+>sel0x10 arg0=0x10 rv=-1
+[Z] alive pid=279

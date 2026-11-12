@@ -1,0 +1,14 @@
+=== PROBE 1221a: stock stub vs 0x3B7 trampoline ===
+[0] pid=80 stock=0x803534B57 tramp=0x8035343B7
+[0] buffer 0x310A7CA20
+[A] 379(va,len,id,prot) stock vs trampoline, identical arguments
+  prot=0x002 stock ret=0xFFFFFFFF err=13 Permission denied     tramp ret=0xFFFFFFFF err=13 Permission denied
+  prot=0x008 stock ret=0xFFFFFFFF err=22 Invalid argument      tramp ret=0xFFFFFFFF err=22 Invalid argument
+  prot=0x010 stock ret=0xFFFFFFFF err=45 Operation not supported tramp ret=0xFFFFFFFF err=45 Operation not supported
+  prot=0x200 stock ret=0xFFFFFFFF err=13 Permission denied     tramp ret=0xFFFFFFFF err=13 Permission denied
+[B] 663 stock vs trampoline, count 1 mode 0 (no guard) and count 2 mode 0 (guard)
+  n=1 mode=0 stock out=80020003 err=13 Permission denied   | tramp out=80020003 err=13 Permission denied
+  n=1 mode=1 stock out=80020003 err=13 Permission denied   | tramp out=80020003 err=13 Permission denied
+  n=2 mode=0 stock out=AAAAAAAA err=22 Invalid argument    | tramp out=AAAAAAAA err=22 Invalid argument
+  n=2 mode=1 stock out=80020003 err=22 Invalid argument    | tramp out=80020003 err=22 Invalid argument
+=== DONE ===

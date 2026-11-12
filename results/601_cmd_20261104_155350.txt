@@ -1,0 +1,4 @@
+=== PROBE 1171a: ONE MDBG COMMAND ===
+[S] buf=0x31094c7a0 proved=true (4096/4096)
+[R] cmd=0x2C rv=-1 changed=0 first=-1 text_hit=false
+=== 1171a DONE ===

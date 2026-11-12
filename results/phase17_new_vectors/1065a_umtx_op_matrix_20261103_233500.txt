@@ -1,0 +1,37 @@
+=== PROBE 1065a: _umtx_op op matrix ===
+
+[0] page=3121BEB20 head=3105F2AC0
+[A] non-blocking ops
+[A1] op=0 rv=-1 word=0
+[A2] op=1 rv=-1 word=0
+[A3] op=4 rv=-1 word=0
+[A4] op=6 rv=-1 word=0
+[A5] op=7 rv=-1 word=0
+[A6] op=9 rv=-1 word=0
+[A7] op=10 rv=-1 word=0
+[A8] op=11 rv=-1 word=0
+[A9] op=14 rv=-1 word=0
+[A10] op=21 rv=-1 word=0
+[A11] op=3 rv=-1 word=0
+[B] lock ops on a fresh word
+[B1] op=12 rv=-1 word=0
+[B2] op=14 rv=-1 word=0
+[B3] op=13 rv=-1 word=0
+[B4] op=14 rv=-1 word=0
+[C] PI mutex ops
+[C1] op=22 rv=-1 word=0
+[C2] op=23 rv=-1 word=0
+[C3] op=24 rv=-1 word=0
+[D] sem ops
+[D1] op=16 rv=-1 word=0
+[D2] op=17 rv=-1 word=0
+[E] robust lists
+[E1] op=26 rv=-1 word=0
+[E2] op=26 rv=-1 word=0
+[F] SHM op (known stub)
+[F1] op=25 rv=-1 word=0
+[G] blocking-shaped ops with non-matching value
+[G1] op=2 rv=-1 word=0
+[G2] op=8 rv=-1 word=0
+[Z] alive pid=274
+=== COMPLETE ===

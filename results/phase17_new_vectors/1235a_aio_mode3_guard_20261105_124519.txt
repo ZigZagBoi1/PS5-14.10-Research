@@ -1,0 +1,5 @@
+=== PROBE 1235a: 663 mode space at count 2 ===
+[0] pid=87 trampoline=0x81D1C43B7
+[1] mode=0x0
+    fds 25 26 ids 0x00004205 0x00014205
+    ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument out=AAAAAAAA AAAAAAAA AAAAAAAA

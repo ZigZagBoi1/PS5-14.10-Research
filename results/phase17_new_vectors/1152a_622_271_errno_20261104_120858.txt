@@ -1,0 +1,9 @@
+=== PROBE 1152a: 622 0x271 ERRNO ===
+
+[A] control 0x300 rv=0 out=0xFFFFFFFF errno=78 Function not implemented
+[B] 0x271 handle=0 out=a5a5a5a5
+    rv=0 out=0x8002004E errno=78 Function not implemented
+[C] 0x271 again, out pre-zeroed, second read of errno
+    rv=0 out=0x8002004E errno=78 Function not implemented
+
+=== DONE ===

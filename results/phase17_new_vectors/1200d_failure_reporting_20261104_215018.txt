@@ -1,0 +1,16 @@
+=== PROBE 1200d: FAILURE REPORTING CALIBRATION ===
+  open(/nonexistent)                       rv=00000000   err=22 Invalid argument
+  open(/no/such/path)                      rv=00000000   err=2 No such file or directory
+  close(9999)                              rv=00000000   err=9 Bad file descriptor
+  fcntl(9999,F_GETFL)                      rv=00000000   err=9 Bad file descriptor
+  read(9999,buf,4)                         rv=00000000   err=9 Bad file descriptor
+  ioctl(9999,TCGETS,buf)                   rv=00000000   err=25 Inappropriate ioctl for device
+[A] /dev/null fd=24  /dev/dmem0 fd=25
+  ioctl(null,TCGETS,buf)                   rv=00000000   err=25 Inappropriate ioctl for device
+  ioctl(null,0xDEAD,buf)                   rv=00000000   err=25 Inappropriate ioctl for device
+  ioctl(dmem0,TCGETS,buf)                  rv=00000000   err=25 Inappropriate ioctl for device
+  fcntl(null,F_GETFL)                      rv=00000002   err=25 Inappropriate ioctl for device
+  fcntl(null,F_SETFL 0)                    rv=00000000   err=25 Inappropriate ioctl for device
+  read(null,buf,4)                         rv=00000000   err=25 Inappropriate ioctl for device
+[Z] alive
+=== DONE

@@ -1,0 +1,15 @@
+=== PROBE 971b: BLOCKED recvmsg vs CLOSE ===
+
+[0] pid=94 base=0x4A2B0000 pop_rax=0x4A2B0992 store_rsi=0x4A450BA9
+  [r1] fds=41,43 child_ret=0x00000000 ctrl_len=0 close=true
+  [r2] fds=43,44 child_ret=0x00000000 ctrl_len=0 close=true
+  [r3] fds=44,45 child_ret=0x00000000 ctrl_len=0 close=true
+  [r4] fds=45,46 child_ret=0x00000000 ctrl_len=0 close=true
+  [r5] fds=46,47 child_ret=0x00000000 ctrl_len=0 close=true
+  [r6] fds=47,48 child_ret=0x00000000 ctrl_len=0 close=true
+  [r7] fds=48,49 child_ret=0x00000000 ctrl_len=0 close=true
+  [r8] fds=49,50 child_ret=0x00000000 ctrl_len=0 close=true
+  [r9] fds=50,51 child_ret=0x00000000 ctrl_len=0 close=true
+  [r10] fds=51,52 child_ret=0x00000000 ctrl_len=0 close=true
+[Z] alive pid=94 rounds=10
+=== COMPLETE ===

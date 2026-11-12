@@ -1,0 +1,8 @@
+=== PROBE 1208a: Sony-range branch oracle sweep (error-string channel) ===
+S 602  | Z=22 Invalid argument | a0=1 Operation not permitted | a1=1 Operation not permitted | a2=1 Operation not permitted | a3=1 Operation not permitted | one=1 Operation not permitted | 0x1_2=1 Operation not permitted  <<<
+S 603  | Z=1 Operation not permitted | a0=1 Operation not permitted | a1=1 Operation not permitted | a2=1 Operation not permitted | a3=1 Operation not permitted | one=1 Operation not permitted | 0x1_2=1 Operation not permitted
+S 604  | Z=1 Operation not permitted | a0=1 Operation not permitted | a1=1 Operation not permitted | a2=1 Operation not permitted | a3=1 Operation not permitted | one=1 Operation not permitted | 0x1_2=1 Operation not permitted
+S 605  | Z=22 Invalid argument | a0=22 Invalid argument | a1=22 Invalid argument | a2=22 Invalid argument | a3=22 Invalid argument | one=22 Invalid argument | 0x1_2=22 Invalid argument
+S 606  | Z=22 Invalid argument | a0=22 Invalid argument | a1=22 Invalid argument | a2=22 Invalid argument | a3=22 Invalid argument | one=22 Invalid argument | 0x1_2=22 Invalid argument
+S 607  | Z=14 Bad address | a0=2 No such file or directory | a1=14 Bad address | a2=14 Bad address | a3=14 Bad address | one=14 Bad address | 0x1_2=14 Bad address  <<<
+S 608  | Z=14 Bad address | a0=14 Bad address | a1=14 Bad address | a2=22 Invalid argument | a3=14 Bad address | one=14 Bad address | 0x1_2=14 Bad address  <<<

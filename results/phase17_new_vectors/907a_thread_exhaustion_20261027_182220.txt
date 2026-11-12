@@ -1,0 +1,9 @@
+=== PROBE 904a: minimal child spawn ===
+[0] pid=80
+[0] gadgets rax=1317767570 rdi=1318591998 store=1318366311 jmp=1317852289
+[T1] spawn ok=true rv=0x0 out=50
+[T2] spawn ok=true rv=0x0 out=50
+[T3] spawn ok=true rv=0x0 out=50
+[T4] spawn ok=true rv=0x0 out=50
+[T5] spawn ok=true rv=0x0 out=50
+[T6] spawn ok=true rv=0x0 out=50

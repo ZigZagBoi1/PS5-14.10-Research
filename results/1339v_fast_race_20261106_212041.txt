@@ -1,0 +1,6 @@
+=== 1339v FAST RACE v2 ===
+pid=407
+gadgets OK
+spray stopped at i=1 v=7.9228162514264e+28
+ABORT: spray
+=== DONE ===

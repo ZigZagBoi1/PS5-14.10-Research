@@ -1,0 +1,6 @@
+=== PROBE 1216b: stub table walk, one syscall per slot ===
+[0] pid=80 libkernel=0x817E1C000
+   0x03B0 ok=true out0=0x80020003 err=2 No such file or directory
+   *** ARG4 ARRIVED ***
+[1] trampoline = libkernel+0x3B0
+=== DONE ===

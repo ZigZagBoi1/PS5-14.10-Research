@@ -1,0 +1,17 @@
+=== PROBE 1173a: LIBC GADGET SCAN ===
+[A] libc_base=0x000000011F2C8000
+[P] 0/120000
+[P] 30000/120000
+[P] 60000/120000
+[P] 90000/120000
+[P] C0000/120000
+[P] F0000/120000
+[syscall;ret        (0f 05 c3)] count=0 first=[]
+[syscall;jb         (0f 05 72)] count=0 first=[]
+[syscall           (0f 05)] count=1 first=[BECF8 ]
+[vzeroupper        (c5 f8 77)] count=0 first=[]
+[vmovupd [rdi],ymm0 (c5 fd 11 07)] count=0 first=[]
+[vmovups [rdi],ymm0 (c5 fc 11 07)] count=0 first=[]
+[vmovdqu [rdi],ymm0 (c5 fe 7f 07)] count=0 first=[]
+[Z] scanned=120000 unreadable_dwords=0 (0 means the whole window is mapped)
+=== 1173a DONE ===

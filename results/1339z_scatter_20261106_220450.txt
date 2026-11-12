@@ -1,0 +1,25 @@
+=== 1339z SCATTER ===
+fdlimit: 4096
+pid=417
+gadgets OK
+spray=22..85 (64)
+test_socket: 86
+starting 1500 trials
+t=23 tc=42 → scatter-spray
+  tc2=42 (no reclaim)
+t=44 tc=42 → scatter-spray
+  tc2=42 (no reclaim)
+t=500 u=2 f=498 r=0
+t=674 tc=42 → scatter-spray
+  tc2=42 (no reclaim)
+t=866 tc=42 → scatter-spray
+  tc2=42 (no reclaim)
+t=1000 u=4 f=996 r=0
+t=1147 tc=42 → scatter-spray
+  tc2=42 (no reclaim)
+t=1178 tc=42 → scatter-spray
+  tc2=42 (no reclaim)
+t=1500 u=6 f=1494 r=0
+=== RESULTS: use=6 free=1494 reclaim=0 ===
+pid=417
+=== DONE ===

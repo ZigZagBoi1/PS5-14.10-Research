@@ -1,0 +1,10 @@
+=== PROBE 1337a: 648 STRUCTURED CALL ===
+/savedata0/uint64.lua:80: attempt to perform arithmetic on field 'l' (a nil value)
+stack traceback:
+	/savedata0/uint64.lua:80: in function 'tonumber'
+	[string "-- CRASH_CLASS: MODERATE..."]:48: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

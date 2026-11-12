@@ -1,0 +1,25 @@
+=== PROBE 953a: MAP_FIXED + mprotect(X) ===
+[0] pid=601 fn=80BD54B57
+[0] ebase=13384000 rax=13384992 rdi=1344DDFE store=13416C67 jmp=13399481
+--- A: MAP_FIXED R|W|X over an execute-only page ---
+  page 0x137C4000 start=0x13384000 end=0x13818000 prot=0x4
+  page 0x13784000 start=0x13384000 end=0x13818000 prot=0x4
+  page 0x13684000 start=0x13384000 end=0x13818000 prot=0x4
+  page 0x13584000 start=0x13384000 end=0x13818000 prot=0x4
+  target=0x137C4000 mmap ret=0x137C4000
+  self write read back C3078948
+  entry after mmap: prot=0x4
+
+--- B: was the page really replaced? bytes +8..+16 ---
+  qword +8 = 0x0  qword +0x10 = 0x0
+
+--- C: mprotect(target, PAGE, 4) ---
+  mprotect(4) ret=-1
+[string "-- CRASH_CLASS: HIGH..."]:126: attempt to index local 'b3' (a number value)
+stack traceback:
+	[string "-- CRASH_CLASS: HIGH..."]:126: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

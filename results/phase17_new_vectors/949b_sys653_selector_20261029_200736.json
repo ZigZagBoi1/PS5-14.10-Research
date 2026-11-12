@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.063,
+  "ended_at": "2026-10-29T20:07:36+00:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\942a_sys653_selector_20261029_200736.json",
+  "output_path": "results\\phase17_new_vectors\\942a_sys653_selector_20261029_200736.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\942a_sys653_selector.lua",
+  "probe_bytes": 2482,
+  "probe_sha256": "f78bd4bdd362962592b2a95210a983375eac35b0c77927ef3c8c7a7af49cfc76",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1193,
+  "started_at": "2026-10-29T20:07:36+00:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

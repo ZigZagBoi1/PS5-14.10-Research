@@ -1,0 +1,40 @@
+=== PROBE 975d: FD IDENTIFICATION ===
+
+[A] pid=217
+[B] control: socketpair fds then the real table
+  socketpair = 30, 31
+[C] table 0..40
+  fd=0  fl=0x0 other  
+  fd=1  fl=0x1 other  
+  fd=2  fl=0x1 other  
+  fd=3  fl=0x1 other  
+  fd=4  fl=0x2 RDRW?  
+  fd=5  fl=0x2 RDRW?  
+  fd=6  fl=0x2 RDRW?  
+  fd=7  fl=0x1 other  
+  fd=8  fl=0x2 RDRW?  
+  fd=9  fl=0x2 RDRW?  
+  fd=10 fl=0x2 RDRW?  
+  fd=11 fl=0x2 RDRW?  
+  fd=12 fl=0x2 RDRW?  
+  fd=13 fl=0x2 RDRW?  
+  fd=14 fl=0x0 other  
+  fd=15 fl=0x2 RDRW?  
+  fd=16 fl=0x2 RDRW?  
+  fd=17 fl=0x2 RDRW?  
+  fd=18 fl=0x0 other  
+  fd=19 fl=0x1 other  
+  fd=20 fl=0x2 SOCKET inet port=9026
+  fd=21 fl=0x2 SOCKET inet port=9026
+  fd=22 fl=0x2 SOCKET 
+  fd=23 fl=0x2 SOCKET 
+  fd=24 fl=0x2 SOCKET 
+  fd=25 fl=0x2 SOCKET 
+  fd=26 fl=0x2 SOCKET 
+  fd=27 fl=0x2 SOCKET 
+  fd=28 fl=0x2 SOCKET 
+  fd=29 fl=0x2 SOCKET 
+  fd=30 fl=0x2 SOCKET 
+  fd=31 fl=0x2 SOCKET 
+[Z] alive=217
+=== COMPLETE ===

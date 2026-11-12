@@ -1,0 +1,43 @@
+=== PROBE 1180a: 601 SWEEP 0x30..0x4F ===
+[F] fd=21 buf=0x10573C40
+[L] 32 commands
+T4F rv=-1
+T4E rv=-1
+T4D rv=-1
+T4C rv=-1
+T4B rv=-1
+T4A rv=-1
+T49 rv=-1
+T48 rv=-1
+T47 rv=-1
+T46 rv=-1
+T45 rv=-1
+T44 rv=-1
+T43 rv=-1
+T42 rv=-1
+T41 rv=-1
+T40 rv=-1
+T3F rv=-1
+T3E rv=-1
+T3D rv=-1
+T3C rv=-1
+T3B rv=-1
+T3A rv=-1
+T39 rv=-1
+T38 rv=-1
+T37 rv=-1
+T36 rv=-1
+T35 rv=-1
+T34 rv=-1
+T33 rv=-1
+T32 rv=-1
+T31 rv=-1
+T30 rv=-1
+WAIT-1
+WAIT-2
+WAIT-3
+WAIT-4
+WAIT-5
+WAIT-6
+[Z] alive
+=== DONE ===

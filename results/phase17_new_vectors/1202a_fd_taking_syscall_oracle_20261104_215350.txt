@@ -1,0 +1,8 @@
+=== PROBE 1202a: WHICH SYSCALL TAKES (fd, cmd, arg) ===
+[A] /dev/dmem0 fd=22 err=25 Inappropriate ioctl for device
+  615: badfd -> 1 Operation not permitted | dmem0 -> 1 Operation not permitted | wrote=false
+  616: badfd -> 3 No such process | dmem0 -> 3 No such process | wrote=false
+  617: badfd -> 3 No such process | dmem0 -> 3 No such process | wrote=false
+  618: badfd -> 1 Operation not permitted | dmem0 -> 1 Operation not permitted | wrote=false
+  619: badfd -> 78 Function not implemented | dmem0 -> 78 Function not implemented | wrote=false
+  620: badfd -> 78 Function not implemented | dmem0 -> 78 Function not implemented | wrote=false

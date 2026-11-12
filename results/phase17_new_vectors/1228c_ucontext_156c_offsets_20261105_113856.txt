@@ -1,0 +1,18 @@
+=== PROBE 1228c: ucontext family with 156c offsets ===
+[0] pid=87 eboot=0x206C0000
+    jmp $ = 0x206D5481
+[A] stack=0x31139C000
+[B] 430 with 156c offsets
+  [430] ret=0x00000000_00000000 err=3 No such process
+    tid = 0x18E3D
+  [433(tid,0)] ret=0x00000000_00000000 err=3 No such process
+[C] 632 then 634
+  [632(tid)] ret=0x00000000_00000000 err=3 No such process
+  [634(tid,buf)] ret=0x00000000_00000000 err=3 No such process
+    first: 00000000 00000000 00000000 00000000
+    634 raw: 0 supervisor qwords 
+[D] 633 resume
+  [633(tid)] ret=0x00000000_00000000 err=3 No such process
+  [433(tid,0)] ret=0x00000000_00000000 err=3 No such process
+[Z] pid_end=87
+=== DONE ===

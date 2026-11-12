@@ -1,0 +1,32 @@
+=== PROBE 50k: cmsg validation battery ===
+[0] srv=22 bind=0 port=61079 pid=116
+[1] connect=0
+
+  case                                   expect  ret
+  PKTINFO 20 bytes, ifindex 0            send    4
+  PKTINFO 4 bytes                        EINVAL  4
+  PKTINFO 24 bytes                       EINVAL  4
+  PKTINFO ifindex 0x7FFFFFFF             ENXIO   4
+  HOPLIMIT 4 bytes = 300                 EINVAL  4
+  HOPLIMIT 2 bytes                       EINVAL  4
+  HOPLIMIT 4 bytes = 5 (valid)           send    4
+  TCLASS 4 bytes = 300                   EINVAL  4
+  NEXTHOP 8 bytes                        EINVAL  4
+  type 0x7F unknown                      EINVAL  4
+  type 0 unknown                         EINVAL  4
+  RTHDR len8 rlen255 segleft1            EINVAL  4
+  RTHDR len8 rlen0 segleft1              EINVAL  4
+  HOPOPTS len8 hdrlen255                 EINVAL  4
+  HOPOPTS len8 hdrlen0 (valid)           send    4
+  cmsg_len 15 (< header)                 EINVAL  4
+  level 0xFFFF (skipped)                 send    4
+
+--- receiver view ---
+  recv 1 ret=4
+  recv 2 ret=4
+  recv 3 ret=4
+  recv 4 ret=4
+  recv 5 ret=4
+  recv 6 ret=4
+[Z] alive=116
+=== PROBE 50k COMPLETE ===

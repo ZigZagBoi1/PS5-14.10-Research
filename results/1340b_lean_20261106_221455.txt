@@ -1,0 +1,12 @@
+=== 1340b LEAN ===
+fdlimit: 4096
+pid=417
+gadgets OK
+spray=22..71
+test_fd: 72
+starting 2000 trials
+t=500 u=0 f=500 r=0
+t=506 tc=42 (no reclaim)
+t=678 tc=42 (no reclaim)
+t=754 tc=42 (no reclaim)
+t=1000 u=3 f=997 r=0

@@ -1,0 +1,6 @@
+=== PROBE 944a: EXTATTR SURFACE ===
+
+[0] pid=148
+[0] open(O_RDWR|O_CREAT|O_TRUNC) fd=nil
+[!] cannot create the test file - aborting
+=== PROBE 944a COMPLETE ===

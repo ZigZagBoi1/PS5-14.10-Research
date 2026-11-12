@@ -1,0 +1,5 @@
+=== PROBE 945a: SYS 374 ISOLATION ===
+
+[0] pid=160
+[0] open = 22
+[A] shapes that should fail before copyout

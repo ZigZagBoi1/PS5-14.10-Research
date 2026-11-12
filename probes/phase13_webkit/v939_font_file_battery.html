@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V939</title></head>
+<body><pre id="out">V939 - font FILE parser battery: 16 payloads (sfnt mutants + WOFF wrapper + WOFF mutants) via @font-face url() from /fuzzcases/fonts/</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V939-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v939 - the FontFace API campaign (v919-v938) never sent a malformed font
+ * FILE. The file parser (sfnt/WOFF) is a separate C++ layer downstream of
+ * everything we mapped; url() sources make the browser fetch bytes WE
+ * generate (gen_v939_v941_payloads.py -> /fuzzcases/fonts/).
+ *
+ * Base: OUTLOOK.TTF (Windows, 17KB). Mutants: magic flip, numTables 0xFFFF,
+ * truncations, OTTO-on-TTF, table length lies, OOB table offset, zeroed
+ * checksums, trailing garbage, zero tables, a real WOFF wrapper (tables
+ * stored uncompressed), WOFF numTables lie, WOFF OOB table offset, and a
+ * TTF body named .woff2 (magic-mismatch test).
+ *
+ * READOUT per file: face.status after load attempt (loaded = parser
+ * SURVIVED and accepted; error = clean reject; crash = beacons stop).
+ * A loaded malformed font is the interesting class - the parser tolerated
+ * structural lies. Loaded faces get a measureText probe to exercise glyph
+ * paths on the accepted data.
+ */
+
+var FONTS=['f00_valid.ttf','f01_badmagic.ttf','f02_numtables_ffff.ttf',
+ 'f03_trunc_half.ttf','f04_trunc_hdr.ttf','f05_otto.ttf','f06_head_len_lie.ttf',
+ 'f07_cmap_len_lie.ttf','f08_trailing_garbage.ttf','f09_table_oob.ttf',
+ 'f10_zero_checksums.ttf','f11_zero_tables.ttf','f12_woff_valid.woff',
+ 'f13_woff_badnum.woff','f14_woff_oob_offset.woff','f15_ttf_as_woff2.woff2'];
+
+bk('ENV','FontFace='+typeof FontFace+' fonts='+typeof document.fonts);
+
+(async function(){
+  for(var i=0;i<FONTS.length;i++){
+    var name=FONTS[i], fam='FF'+i;
+    bk('PRE',name);
+    var face=null;
+    try{
+      face=new FontFace(fam,"url('/fuzzcases/fonts/"+name+"')");
+      face.loaded;
+      document.fonts.add(face);
+    }catch(e){ bk(name+'-ERR',String(e)); continue; }
+    try{
+      await document.fonts.load('12px '+fam,'a');
+    }catch(e){ /* load() rejects on parse failure; status tells the class */ }
+    bk(name,face.status);
+    if(face.status==='loaded'){
+      try{
+        var c=document.createElement('canvas').getContext('2d');
+        c.font='12px '+fam;
+        bk(name+'-W','measureText a='+c.measureText('a').width+' WWW='+c.measureText('WWW').width);
+      }catch(e){ bk(name+'-W-throw',String(e)); }
+    }
+  }
+  bk('DONE','battery complete');
+})();
+</script></body></html>

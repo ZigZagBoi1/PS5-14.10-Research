@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V940</title></head>
+<body><pre id="out">V940 - HTTP response-parser fuzz: 16 malformed responses served RAW from our TLS server via /rawresp/</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V940-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v940 - in ~940 probes we have ALWAYS served well-formed responses. The
+ * browser's HTTP response parser is a C++ layer we fully control the input
+ * of (serve.py /rawresp/<case> writes raw bytes into the TLS stream and
+ * closes the socket). One case per malformed-response class:
+ *   r00 control (well-formed)   r08 chunked size overflow
+ *   r01 bad version             r09 response with no headers
+ *   r02 500-header flood        r10 64KB reason phrase
+ *   r03 CL+TE smuggling         r11 CL smaller than body
+ *   r04 CL lie (huge)           r12 NUL byte in header value
+ *   r05 CL 4GiB overflow        r13 obs-fold continuation header
+ *   r06 duplicate CL            r14 non-numeric status code
+ *   r07 chunked negative size   r15 64KB single header
+ * Beacon order diagnoses: PRE-x then no POST-x = WebProcess died parsing
+ * case x. fetch resolving or throwing is both fine - the parser chewed
+ * the bytes either way; we never need to READ the bodies.
+ */
+
+var CASES=['r00_control','r01_bad_version','r02_header_flood','r03_header_smuggle',
+ 'r04_cl_lie_big','r05_cl_overflow','r06_cl_duplicate','r07_chunked_malformed',
+ 'r08_chunked_size_overflow','r09_no_headers','r10_huge_reason','r11_cl_lie_small',
+ 'r12_nul_header','r13_obs_fold','r14_status_nonnum','r15_huge_header'];
+
+bk('ENV','fetch='+typeof fetch+' location='+location.pathname.slice(0,40));
+
+(async function(){
+  for(var i=0;i<CASES.length;i++){
+    var c=CASES[i];
+    bk('PRE',c);
+    try{
+      var r=await fetch('/rawresp/'+c);
+      var len=-1;
+      try{ var t=await r.text(); len=t.length; }catch(e){ len='text-throw:'+String(e).slice(0,60); }
+      bk('POST',c+' status='+r.status+' bodylen='+len);
+    }catch(e){
+      bk('POST',c+' fetch-throw:'+String(e).slice(0,120));
+    }
+  }
+  bk('DONE','battery complete');
+})();
+</script></body></html>

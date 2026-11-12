@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V941</title></head>
+<body><pre id="out">V941 - image decoder INVENTORY: which formats does this WebKit decode? (PNG/GIF/BMP/JPEG/ICO/TIFF/WebP/SVG/AVIF/JXL + mutants)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V941-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v941 - APNG and WebP got the campaign's image attention (p595/p609/p631/
+ * v918-v923); JPEG, GIF, BMP, ICO, TIFF never received a single byte. This
+ * probe inventories WHICH decoders exist before any mutant battery: per
+ * file, an <img> load reports onload/onerror + natural dimensions.
+ * A malformed file that LOADS (i20/i21/i22...) means the decoder tolerated
+ * structural lies - the interesting class. Files served from
+ * /fuzzcases/images/ (gen_v939_v941_payloads.py).
+ *
+ * i0x = valid controls, i1x = magic-sniff garbage (avif/jxl), i2x png
+ * mutants, i3x gif, i4x jpg, i5x bmp, i6x ico, i7x webp.
+ */
+
+var FILES=['i00_valid.png','i00_valid.gif','i00_valid.bmp','i00_valid.jpg',
+ 'i00_valid.ico','i00_valid.tif','i00_valid.webp','i00_valid.svg',
+ 'i10_avif_magic.bin','i11_jxl_magic.bin',
+ 'i20_png_dims_lie.png','i21_png_no_iend.png','i22_png_bad_crc.png',
+ 'i23_png_trunc_half.png','i30_gif_trunc.gif','i31_gif_dims_lie.gif',
+ 'i40_jpg_trunc.jpg','i41_jpg_dims_lie.jpg','i50_bmp_offset_oob.bmp',
+ 'i60_ico_count255.ico','i70_webp_riff_lie.webp','i71_webp_trunc.webp'];
+
+bk('ENV','img='+typeof Image);
+
+function loadOne(name){
+  return new Promise(function(res){
+    var img=new Image();
+    var done=false;
+    var finish=function(kind){
+      if(done) return; done=true;
+      bk(name,kind+' '+img.naturalWidth+'x'+img.naturalHeight);
+      res();
+    };
+    img.onload=function(){ finish('LOAD'); };
+    img.onerror=function(){ finish('ERROR'); };
+    setTimeout(function(){ finish('TIMEOUT'); },8000);
+    img.src='/fuzzcases/images/'+name+'?t='+Date.now();
+  });
+}
+
+(async function(){
+  for(var i=0;i<FILES.length;i++){ await loadOne(FILES[i]); }
+  bk('DONE','inventory complete');
+})();
+</script></body></html>

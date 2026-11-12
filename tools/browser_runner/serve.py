@@ -208,6 +208,42 @@ class DNSServer(socketserver.ThreadingUDPServer):
         super().__init__(address, DNSHandler)
 
 
+# v940 response-fuzz corpus: one malformed HTTP response per case, written
+# raw into the TLS stream. Well-formed-ish cases carry Connection: close;
+# the handler return closes the socket for every case (HTTP/1.0 semantics).
+RAW_RESPONSES = {}
+_body = b'v940-body-0123456789' * 8
+RAW_RESPONSES['r00_control'] = (b'HTTP/1.1 200 OK\r\nContent-Type: text/plain\r\n'
+    b'Content-Length: ' + str(len(_body)).encode() + b'\r\nConnection: close\r\n\r\n' + _body)
+RAW_RESPONSES['r01_bad_version'] = b'FUZZ/9.9 200 OK\r\nContent-Length: 4\r\n\r\nABCD'
+RAW_RESPONSES['r02_header_flood'] = (b'HTTP/1.1 200 OK\r\n' +
+    b''.join(b'X-F%d: v\r\n' % i for i in range(500)) + b'Connection: close\r\n\r\n' + _body)
+RAW_RESPONSES['r03_header_smuggle'] = (b'HTTP/1.1 200 OK\r\nX-A: one\r\nX-B: two\r\n'
+    b'Content-Length: 4\r\nTransfer-Encoding: chunked\r\n\r\n0\r\n\r\nGET /smuggled HTTP/1.1\r\nHost: x\r\n\r\n')
+RAW_RESPONSES['r04_cl_lie_big'] = (b'HTTP/1.1 200 OK\r\nContent-Length: 100000\r\n'
+    b'Connection: close\r\n\r\n' + _body)
+RAW_RESPONSES['r05_cl_overflow'] = (b'HTTP/1.1 200 OK\r\nContent-Length: 4294967296\r\n'
+    b'Connection: close\r\n\r\n' + _body)
+RAW_RESPONSES['r06_cl_duplicate'] = (b'HTTP/1.1 200 OK\r\nContent-Length: 100\r\n'
+    b'Content-Length: 5\r\nConnection: close\r\n\r\n' + _body)
+RAW_RESPONSES['r07_chunked_malformed'] = (b'HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n'
+    b'Connection: close\r\n\r\n-1\r\n' + _body)
+RAW_RESPONSES['r08_chunked_size_overflow'] = (b'HTTP/1.1 200 OK\r\nTransfer-Encoding: chunked\r\n'
+    b'Connection: close\r\n\r\nFFFFFFFFFFFFFFFF\r\n' + _body)
+RAW_RESPONSES['r09_no_headers'] = b'HTTP/1.1 200 OK\r\n\r\n' + _body
+RAW_RESPONSES['r10_huge_reason'] = (b'HTTP/1.1 200 ' + b'A' * 65536 + b'\r\n'
+    b'Content-Length: 4\r\n\r\nABCD')
+RAW_RESPONSES['r11_cl_lie_small'] = (b'HTTP/1.1 200 OK\r\nContent-Length: 10\r\n'
+    b'Connection: close\r\n\r\n' + _body)
+RAW_RESPONSES['r12_nul_header'] = (b'HTTP/1.1 200 OK\r\nX-Nul: a\x00b\r\n'
+    b'Content-Length: 4\r\n\r\nABCD')
+RAW_RESPONSES['r13_obs_fold'] = (b'HTTP/1.1 200 OK\r\nX-Fold: first\r\n\tsecond\r\n'
+    b'Content-Length: 4\r\n\r\nABCD')
+RAW_RESPONSES['r14_status_nonnum'] = b'HTTP/1.1 abc def\r\nContent-Length: 4\r\n\r\nABCD'
+RAW_RESPONSES['r15_huge_header'] = (b'HTTP/1.1 200 OK\r\nX-Big: ' + b'B' * 65536 +
+    b'\r\nContent-Length: 4\r\n\r\nABCD')
+
+
 class ProbeHandler(http.server.BaseHTTPRequestHandler):
     server_version = 'PS5Probe/1.0'
     log_file = None
@@ -313,6 +349,18 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             self.send_header('Cache-Control', 'no-store')
             self.end_headers()
             self.wfile.write(data)
+            return
+
+        # v940: raw malformed HTTP responses for response-parser fuzzing.
+        # Writes arbitrary bytes into the TLS stream; the socket closes when
+        # the handler returns (HTTP/1.0 semantics), so EOF ends each case.
+        if path.startswith('/rawresp/'):
+            case = path.split('/rawresp/', 1)[1]
+            raw = RAW_RESPONSES.get(case)
+            if raw is not None:
+                self.wfile.write(raw)
+                return
+            self.send_error(404, 'Not found')
             return
 
         self.send_error(404, 'Not found')

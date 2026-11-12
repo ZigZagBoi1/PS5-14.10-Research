@@ -166,10 +166,18 @@ function seedLane(dv, i) {
   /* round/lane-tagged float marker @+0x44 (data-only) */
   dv.setFloat32(0x44, 100 + round + i * 0.001, true);
   if (i < 5) {
-    /* corridor: candidate P (64-bit LE) at variant +0x08 */
+    /* corridor: candidate P (64-bit LE) at variant union +0x08,
+       + variant index byte at +0x10 (COMPILE-VERIFIED: std::variant
+       libc++/libstdc++ layout = union 8B + index byte at +8 of the
+       variant => face+0x10. Seeding ONLY +0x08/+0x0C leaves index=0
+       (MutableStyleProperties arm) and cssConnection() returns nullptr —
+       the connection path is NEVER exercised. A2 mining: 91/91 historical
+       dumps had index in {0, 0x10-as-hiword}, i.e. the connection arm
+       never ran on-device to date. We now arm it explicitly. */
     if (CANDS[i] > 0) {
       dv.setUint32(0x08, (CANDS[i] % 4294967296) >>> 0, true);
       dv.setUint32(0x0C, Math.floor(CANDS[i] / 4294967296), true);
+      dv.setUint8(0x10, 1); /* index=1 => Ref<StyleRuleFontFace> arm */
     }
     /* rc-armor (arm=1): external/directed candidates only — operator
        asserts P lives inside our spray; wrap keeps rc huge post-ref() */

@@ -38,10 +38,17 @@ teardown: CSSFontFaceSet::remove(face)               CSSFontFaceSet.cpp:250-277
    lane sob nosso controle) → cada deref decrementa 1, nunca atinge 0,
    P nunca é deletado. Com P em lane lida por dump, o rc vira um
    CONTADOR DE TOQUES do engine (read primitive por decremento observável).
-4. **Semântica do discriminant**: index @ +0x0C (u32). 0 = properties
-   (benigno), 1 = connection (o caminho ativo). Dump p685: hi-word=1 em
-   nosso seed (erro de high-word corrigido) — engine leu index=1 e foi
-   pelo caminho connection. Coexistiu com T/W/rc sem crash.
+4. **Semântica do discriminant [CORRIGIDO 2026-11-12 A2+compile]**: o index
+   do std::variant NÃO é o hi-dword @+0x0C — é BYTE no offset +8 do variant
+   = **face+0x10** (compile-verified g++ 16, libc++/libstdc++ idem shape:
+   union 8B + index byte). 0 = properties (benigno), 1 = connection.
+   Mineração A2 (91 dumps): index observado sempre {0, ou 0x10 que era
+   hi-dword de seed W} → **o braço connection NUNCA rodou em device até
+   hoje**. p685 rodou 100% no braço benigno; p690 corrigido semeia
+   +0x10=1 explicitamente (dv.setUint8(0x10,1)) ao semear candidato.
+   Consequência: com index=1 armado, o dtor da face deref P
+   INCONDICIONALMENTE (caminho A3 §1) — lane 0x1 vira discriminador
+   empírico dtor-deref vs HashMap-only.
 5. **Correção do snapshot**: m_constituentCSSConnections NÃO é membro do
    CSSFontSelector (não existe no 616.1.27) — é HashMap do CSSFontFaceSet
    (CSSFontFaceSet.h:131). Os misses p686–p688 varreram bandas erradas:

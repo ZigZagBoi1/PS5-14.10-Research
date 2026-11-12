@@ -11,7 +11,7 @@ import pathlib
 from PIL import Image
 
 HERE = pathlib.Path(__file__).resolve().parent
-FUZZ = HERE.parent / 'browser_runner' / 'fuzzcases'
+FUZZ = HERE / 'browser_runner' / 'fuzzcases'
 FONT_DIR = FUZZ / 'fonts'
 IMG_DIR = FUZZ / 'images'
 FONT_DIR.mkdir(parents=True, exist_ok=True)

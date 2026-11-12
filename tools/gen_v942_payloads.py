@@ -11,7 +11,7 @@ B3 bmp_dims_lie_up.bmp   : declares 64x8 with only 8x8 pixels - over-decode
 import struct, pathlib
 
 HERE = pathlib.Path(__file__).resolve().parent
-IMG = HERE.parent / 'browser_runner' / 'fuzzcases' / 'images'
+IMG = HERE / 'browser_runner' / 'fuzzcases' / 'images'
 IMG.mkdir(parents=True, exist_ok=True)
 
 def bmp_header(w, h, off):

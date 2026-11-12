@@ -1,0 +1,37 @@
+V942 14.22 ROW - BMP pixel-source readback + font glyph-path exercise: blind in-file deref PROVEN, buffer-exit reads are zero-filled, no heap residue; SVG/ICO inventory correction
+================================================================================
+Date:    2026-11-12
+Log:     tools/browser_runner/beacon_logs/beacons_20261112_230617.log
+         (first pass 2259xx: B-section 404 due to a generator root-path bug,
+         payloads regenerated at the served location and re-run; F/S
+         sections valid from both passes)
+B-SECTION (pixel readback via canvas getImageData):
+- B1 marker-offset (bfOffBits aimed at an in-file marker region):
+  nonred=64/64, first pixels exactly our planted markers (a5,5a + sequential
+  index in the third channel) -> the BMP decoder dereferences bfOffBits
+  BLINDLY. In-file misreference PROVEN. Bounded: everything it can read is
+  attacker-served bytes - not a leak channel by itself.
+- B2 offset 64KB past EOF: ALL pixels (0,0,0,0). Not clamp-to-file, not
+  residue: zero-fill (alpha 0) when the pixel source leaves the buffer.
+- B3 dims-lie-up (64x8 declared, 8x8 supplied): 64x8 decoded, ALL (0,0,0,0)
+  - over-decode rows are zero-filled. No over-read past the pixel buffer.
+  VERDICT: the tolerant-parse class does NOT convert into a read primitive
+  at first order - the BMP decoder uses bounded accessors that zero-fill
+  beyond the source. Grade D for the leak question; the blind-deref fact
+  is banked [M] (it matters only if a second decoder ever shares that
+  buffer without zero-fill).
+F-SECTION:
+- f09 (table offset past EOF): fillText SURVIVED (width=14) - the OOB table
+  pointer is never dereferenced on the glyph path either; sfnt table loads
+  are lazy to the end. Lead closed.
+- f07 (2GB cmap length-lie): 10-codepoint walk (Latin/CJK/emoji/Arabic/
+  math) clean widths - the length lie is inert on the cmap walk. Lead closed.
+S-SECTION (MIME retests, serve.py now carries image/* types):
+- SVG loads (silent onload; v941 ERROR was a MIME artifact).
+- hand-built valid ICO loads (v941 ERROR was an invalid generated file).
+  INVENTORY CORRECTION: decoders PRESENT = PNG, GIF, BMP, JPEG, WebP, SVG,
+  ICO. Absent: TIFF, AVIF, JXL. SVG-as-image is in scope for future
+  malformed-SVG batteries.
+GRADE:  D for all three leak leads; M for the blind-deref fact and the
+  decoder inventory correction. Zero crashes across v939-v942: the font,
+  image and HTTP-response parsers are hardened at first order on 14.22.

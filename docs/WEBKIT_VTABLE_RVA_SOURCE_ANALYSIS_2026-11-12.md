@@ -111,6 +111,45 @@ a DIFFERENT vtable that is not the one VP points to.
   single slot for validating the table identity on-device, because it is the
   one slot that is guaranteed NOT to fold to the empty-function address.
 
+## Measured confirmation (companion build, 2026-11-12)
+
+The WebCore-enabled reproduction build (`Build-wc`, same tree and flags as the
+text_size build) compiled the two unified sources that carry these classes. The
+relocation records and disassembly CONFIRM the source-level model above — this
+upgrades the slot-identity claim from [S] to [M-on-reproduction]:
+
+From `objdump -r` on `UnifiedSource-2f84417a-13.cpp.o` (contains `FontFace.cpp`),
+the `FontFace` vtable `_ZTVN7WebCore8FontFaceE` (size 0xb8) has its secondary
+`CSSFontFace::Client` address point at +0x70, with these slot relocations:
+
+| Offset | Relocation target | Slot | Identity |
+|--------|-------------------|------|----------|
+| +0x78 | `_ZThn32_N7WebCore8FontFaceD1Ev` | s0 | ~FontFace complete-dtor thunk |
+| +0x80 | `_ZThn32_N7WebCore8FontFaceD0Ev` | s1 | ~FontFace deleting-dtor thunk |
+| +0x88 | `_ZN7WebCore11CSSFontFace6Client10fontLoadedERS0_` | s2 | Client::fontLoaded (empty) |
+| +0x90 | `_ZThn32_N7WebCore8FontFace16fontStateChangedE...` | s3 | FontFace::fontStateChanged thunk (REAL) |
+| +0x98 | `_ZN7WebCore11CSSFontFace6Client19fontPropertyChangedE...` | s4 | Client::fontPropertyChanged (empty) |
+| +0xa0 | `_ZN7WebCore11CSSFontFace6Client20updateStyleIfNeededE...` | s5 | Client::updateStyleIfNeeded (empty) |
+| +0xa8 | `_ZThn32_N7WebCore8FontFace3refEv` | s6 | FontFace::ref thunk |
+| +0xb0 | `_ZThn32_N7WebCore8FontFace5derefEv` | s7 | FontFace::deref thunk |
+
+Disassembly of the three base `Client::` virtuals confirms each is a single-byte
+empty body (`0xc3 ret`):
+
+  Client::fontLoaded          -> ret
+  Client::fontPropertyChanged -> ret
+  Client::updateStyleIfNeeded -> ret
+
+Three identical one-byte `ret` bodies fold to one address under link-time ICF —
+exactly why the on-device beacon reads the same address at s2, s4, s5
+(0x80c26d750). And `FontFace::fontStateChanged` (s3) disassembles to a real
+multi-instruction prologue (`push %r15; push %r14; push %r13; ...`), confirming
+it is the one non-empty, class-specific callback — the discriminating slot.
+
+This is a reproduction-build measurement, not an on-device one: the GTK build's
+ICF coalesces the three empty bodies the same way Sony's link does, so it
+validates the MECHANISM. It does not give the PS5's absolute slot addresses.
+
 ## Bearing on the RVA blocker
 
 The RVA itself (VP - WebProcess_base) remains open — it is a link-time fact

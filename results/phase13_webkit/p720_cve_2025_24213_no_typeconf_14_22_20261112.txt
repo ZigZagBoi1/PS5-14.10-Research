@@ -1,0 +1,23 @@
+P720 14.22 ROW - CVE-2025-24213 float type confusion: NO-TYPE-CONFUSION, canonical board-shape negative
+================================================================================
+Date:    2026-11-12
+Log:     tools/browser_runner/beacon_logs/beacons_20261112_223224.log
+Result:  P715-RESULT:NO-TYPE-CONFUSION  (probe self-labels P715; this is the
+         p720 file - internal tag mismatch only)
+Section outcomes:
+- A poly-array typeconf: warmed double AND function paths - NO-TYPE-CONFUSION.
+- B int32 overflow: INT32_MAX+1 = 2147483648 proper double
+  (0x41e0000000000000), neg overflow proper double, mul overflow proper -
+  all IEEE-correct, no bit confusion.
+- C NaN edge cases: 5 patterns incl. 0x7fffffff_ffffffff and
+  7ff80000_deadbeef ALL quieted to canonical 7ff80000_0 - payload PRESERVED
+  check fails; boxDouble purification law (p604) re-confirmed on the board
+  shape.
+- D valueOf oscillation: number/string alternation correct across 9 samples.
+- E sort comparator: 563 calls, SORT-CLEAN.
+- F f64 pointer oracle: object readback stays type=number val=NaN (no
+  addrof), raw bits = seeded doubles verbatim, mixed array elem2 stays
+  object. No confusion.
+GRADE:  D - consistent with the local v927/v928 grading (24213 -> timing-
+        shape inventory) and with LLInt-only (JIT-dependent type confusions
+        are config-silent on this build).

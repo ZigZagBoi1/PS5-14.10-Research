@@ -1,0 +1,25 @@
+P719 14.22 ROW - CVE-2025-43265 OOB read (Bug 294182): 6 vectors, 1 false-positive HIT, no foreign memory
+================================================================================
+Date:    2026-11-12
+Log:     tools/browser_runner/beacon_logs/beacons_20261112_223147.log
+Result:  P714-RESULT:HITS=F:rab-clone-stale  (probe self-labels P714; this is
+         the p719 file - internal tag mismatch only)
+Vector outcomes:
+- A RAB stale read: stale view len=32 after resize(256), GROWN-NONZERO=0 -
+  no OOB. Consistent with p555 (RAB bounds spec-compliant).
+- B string length OOB: NO-OOB-CHARS. clean.
+- C RegExp capture mutation: valueOf fired 4 replace calls, match/index/input
+  all correct. clean.
+- D transfer stale slice: "Receiver is detached" / "Buffer is already
+  detached" - both throw correctly. clean.
+- E DataView RAB OOB: first OOB access THREW at 256, DFG-shape DataView also
+  threw "Out of bounds access". clean.
+- F structuredClone valueOf: clone REFUSED ("The object can not be cloned"),
+  then the detector scanned a NORMAL clone of the original RAB and flagged
+  non-zero bytes 8:0x9..17:0x12 as "stale". VERDICT: FALSE POSITIVE - the
+  flagged bytes are the probe's own seed (i+9 pattern); the detector marks
+  any legitimate clone content as a leak. Zero foreign memory, zero
+  addresses. Detector bug, not a bug in the port.
+GRADE:  D (dead end on 14.22; the 3 UNKNOWN vectors C/D/F from
+        results/analysis/p719_preflight.md are now measured: all clean)
+Action: p719 detector fix worth one line to the board (flag -> seed compare).

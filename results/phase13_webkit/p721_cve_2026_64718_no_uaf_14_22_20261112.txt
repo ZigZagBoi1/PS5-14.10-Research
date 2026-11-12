@@ -1,0 +1,24 @@
+P721 14.22 ROW - CVE-2026-64718 Canvas UAF #2 (Bugzilla 313935): NO-UAF-DETECTED, 6 variants clean
+================================================================================
+Date:    2026-11-12
+Log:     tools/browser_runner/beacon_logs/beacons_20261112_223029.log
+Result:  P721-RESULT:NO-UAF-DETECTED
+Variant outcomes:
+- A OffscreenCanvas transfer: ABSENT on this port (A:NO-OFFSCREEN-CANVAS)
+  - new API inventory fact; the OffscreenCanvas UAF variant of 313935 is
+  unreachable before it starts.
+- B toBlob replace: callback fired, 374-byte VALID PNG (first8 PNG magic) -
+  the blob path is clean and functional; no bitmaprenderer confusion
+  (GOT-BITMAPRENDERER:no).
+- C drawImage removal: 50 draws, 0 errors, dst pixels green=4096/other=0 -
+  removed-source drawImage copies intact data, no stale read.
+- D context-switch race: 3 rounds, every round re-getContext OK, stale-2d
+  draws OK with the probe's own marker pixels only (0,178,7 / 3,100,14 /
+  6,200,28 - synthetic patterns, no foreign bytes).
+- E cloneNode: clone clean (CLONE-BLUE-PIXELS=0), orig/clone isolation holds
+  after destroy.
+- F ImageBitmap destroy: dst pixel intact after destroy, SENTINEL-CORRUPT
+  0/16, close() correctly throws "The object is in an invalid state".
+GRADE:  D (dead end for this CVE on 14.22 - no UAF in any probed shape)
+Note:   this is the FIRST device row for the board's p721; pairs with the
+        CVE-2026-64718 entry in docs/NEW_CVE_CANDIDATES_2026_11.md.

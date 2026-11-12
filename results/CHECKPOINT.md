@@ -1,44 +1,62 @@
 # Research Checkpoint
 
 ## Last Updated
-2026-11-11T22:30:00Z
+2026-11-12T00:50:00Z
 
-## Offline Research Sprint — COMPLETE
+## Console Probe Batch — 2026-11-12
 
-### Summary
-All 54 queued analysis tasks completed. 0 failures.
+### Infrastructure
+- PS5 browser accessed via User Guide page (DNS interception: manuals.playstation.net → 10.0.0.80)
+- nginx serves probes from /var/www/ps5-guide-entry/probes/, telemetry server on port 8081
+- Automation: PostMessage to chiaki-ng window (key "2" = page refresh), no focus required
+- Entry: index.html auto-redirects to current probe after 2s
 
-### Task Breakdown
-- **P0 Contradictions (2):** Both RESOLVED (C3 UMA zones, C9 double-report)
-- **P2 CVE Cross-Refs (31):** 30 analyzed + 1 prior. 8 HIGH, 7 MEDIUM, 8 LOW, 7 already-dead
-- **P3 Calculations (2):** Both complete. Critical finding: only kernel_text is measured.
-- **P4 Reproducibility (1):** KASLR defeat confirmed across 3+ boots
-- **P5 Blocker Docs (14):** CULLED — documentation-only, no research value
-- **Remaining (4):** Final CVEs closed (1 DEAD, 1 DoS-only, 1 component-absent, 1 probes-ready)
+### Results
 
-### Key Discoveries
-1. **CVE-2025-43265 → DEAD (CONFIG-SILENT)** — Root cause is YARR JIT sentinel tracking in `YarrJIT.cpp`, gated on `ENABLE(JIT)` which is OFF on PS5 14.10. Vulnerable code never compiled. Probe p719 tests generic vectors, none matching the actual bug. See results/analysis/cve_2025_43265_preflight.md.
-2. **SDK-derived addresses are UNVALIDATED** — kernel_data, allproc, security_flags, rootvnode all come from SDK v0.45, never measured on device. Only kernel_text is measured via fault oracle. (Docs already correctly label this.)
-3. **2 CVEs downgraded** — CVE-2025-24213 and CVE-2024-54505 are likely JIT-dependent (probes built on false DFG assumption)
-4. **CVE-2023-41976 (SVG animation UAF) elevated** — different size class than FontFace, JIT-independent, could provide complementary UAF primitive
-5. **CVE-2024-23213 flagged HIGH** — JIT-independent memory handling ACE, probes p689/p690 ready
+| Probe | CVE | Result | Grade |
+|-------|-----|--------|-------|
+| p686 | CVE-2023-41976 SVG Animation UAF | NO-UAF-DETECTED (5/5 sections) | V |
+| p689 | CVE-2024-23213 Fetch body lifetime | NO-UAF-DETECTED (5/5 sections) | V |
+| p690 | CVE-2024-23213 TextDecoder stream | NO-UAF-DETECTED (5/5 sections) | V |
+| p692-diag | FontFace API diagnostic | .loaded hangs, .load() works | M |
+| p692-sz | FontFace spray reclaim | 0 hits across 64-512 byte sizes | M |
+| p692 | FontFace UAF chain | FAIL-no-reclaim (free mechanism wrong) | M |
+| p693 | CVE-2023-42890 Memory handling | NO-BUG-DETECTED (5/5 sections) | V |
+| p694 | CVE-2023-42950 Heap UAF | NO-UAF-DETECTED (5/5 sections) | V |
 
-### Console Probe Priority (when online, revised after p719 preflight)
-1. **p721** — CVE-2026-64718 Canvas UAF (DEFINITELY unpatched, post-cutoff fix)
-2. **p686** — CVE-2023-41976 SVG animation UAF (different size class from FontFace)
-3. **p686** — CVE-2023-41976 SVG animation UAF (different size class)
-4. **p692** — CVE-2023-40447 DOM UAF
-5. **p694** — CVE-2023-42950 Heap UAF (Proxy trap vector)
-6. **p693** — CVE-2023-42890 Memory handling
-7. **p689/p690** — CVE-2024-23213 Fetch/TextDecoder
+### Key Findings
+1. **FontFace `.loaded` promise NEVER RESOLVES on PS5** — must use `.load()` explicitly
+2. **`document.fonts.delete()` does NOT free backing C++ object** — spray/reclaim impossible via this path
+3. **p692 UAF free mechanism is fundamentally wrong** — needs Canvas2D getContext reentry (CVE-2026-43720), not FontFace deletion
+4. **OffscreenCanvas absent** on PS5 (p693-B confirmed)
+5. **`bitmaprenderer` context returns null** — only `2d` context available
+6. All tested CVE patterns returned VOID — PS5 may have backported fixes or patterns don't match actual vulnerable paths
 
-### Kernel R/W Assessment: NO MATERIAL CHANGE
-The exploitation chain remains: FontFace UAF → forge → code-reuse → kernel exploit. The missing piece is still WebProcess text base RVA (VP leaked, RVA unknown). CVE-2025-43265 is the most promising new path to that RVA. No new kernel R/W primitive was discovered — all kernel-side vectors remain exhausted.
+### VOID ≠ Proof of Absence
+These are negative observations from specific test patterns. The CVEs may still be exploitable via different triggers, timing, or content combinations.
 
-## Repository Overhaul Status
-- Phases 0-4: COMPLETE
-- Phase 5 (offline research sprint): COMPLETE
-- Next: Console probe execution when game process relaunched
+### Raw Data
+- 239 telemetry events in `results/captures/telemetry-2026-11-12-session.jsonl`
+- Adapted probe files in `probes/phase13_webkit/adapted-guide-entry/`
+- Full capture report: `results/captures/CAPTURE_REPORT_2026-11-12.md`
+
+## Unfinished Tasks
+1. **p692 redesign** — Needs correct UAF free trigger using Canvas2D getContext reentry (CVE-2026-43720). Current probe triggers FontFace UAF + spray but free mechanism doesn't work.
+2. **p800 TransformStream typeconf** — Not yet tested on console
+3. **Lua probes 1407a/1408a/1409a** — Queued but require game process relaunch (Lua loader on TCP 9026 broken)
+4. **chiaki-ng programmatic API** — User requested adding API to ZigZagBoi1/chiaki-ng fork for automated input without PostMessage. PostMessage works but requires chiaki-ng window to exist.
+
+## Blockers
+- **W^X enforced** — bit 0x4 refused, no kernel R/W primitive
+- **Heap NX** — no JIT on PS5, LLInt-only
+- **WebProcess text base RVA unknown** — VP leaked at p691 but base scan failed (p692 reclaim broken)
+- **Game process TCP 9026** — port open but resets on data, needs relaunch for Lua probes
+
+## Next Actions (priority order)
+1. Redesign p692 UAF: use getContext reentry as free trigger, not document.fonts.delete()
+2. Test p800 TransformStream typeconf probe
+3. Research alternative WebProcess base discovery (e.g., CSS property leak, Error.stack parsing)
+4. If game process relaunched: run queued Lua probes 1407a-1409a
 
 ## Continuation
-Console probes ready in priority order above. Game process needs relaunch on 10.0.0.96.
+Run `python tools/state.py check --ip 10.0.0.96` then read STATE.md and tail of INDEX.md.

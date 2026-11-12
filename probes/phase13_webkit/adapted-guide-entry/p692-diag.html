@@ -1,0 +1,100 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p692-diag</title></head>
+<body><pre id="out">p692-diag: FontFace diagnostic</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(tag,d){
+  var msg='DIAG-'+tag+(d!==undefined?'-'+String(d).slice(0,800):'');
+  say(msg);
+  try{
+    var x=new XMLHttpRequest();
+    x.open('POST','/api/beacon',false);
+    x.setRequestHeader('Content-Type','application/json');
+    x.send(JSON.stringify({stage:'diag',msg:msg,level:'info',sid:'diag-'+Date.now(),ua:navigator.userAgent}));
+  }catch(e){
+    try{new Image().src='/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now();}catch(e2){}
+  }
+}
+
+bk('START');
+
+// 1. Check FontFace API
+bk('FONTFACE-API', typeof FontFace);
+
+// 2. Check document.fonts
+bk('DOC-FONTS', typeof document.fonts);
+if(document.fonts){
+  bk('FONTS-SIZE', document.fonts.size);
+  bk('FONTS-READY', typeof document.fonts.ready);
+}
+
+// 3. Try creating FontFace with local fonts
+var fonts=['Arial','Helvetica','sans-serif','Times','Courier','monospace','serif'];
+var testIdx=0;
+function testFont(){
+  if(testIdx>=fonts.length){bk('FONT-TESTS-DONE');testCanvas();return;}
+  var name=fonts[testIdx++];
+  bk('TRY-FONT',name);
+  try{
+    var f=new FontFace('test'+testIdx,'local('+name+')',{});
+    bk('CTOR-OK',name);
+    f.load().then(function(){
+      bk('LOAD-OK',name+'-status='+f.status);
+      testFont();
+    }).catch(function(e){
+      bk('LOAD-FAIL',name+'-'+e.message+'-status='+f.status);
+      testFont();
+    });
+    // Timeout fallback
+    setTimeout(function(){
+      if(f.status==='unloaded'||f.status==='loading'){
+        bk('LOAD-TIMEOUT',name+'-status='+f.status);
+        testFont();
+      }
+    },3000);
+  }catch(e){
+    bk('CTOR-ERR',name+'-'+e.message);
+    testFont();
+  }
+}
+
+// 4. Test Canvas getContext (CVE-2026-43720 reentry mechanism)
+function testCanvas(){
+  bk('CANVAS-TEST');
+  try{
+    var c=document.createElement('canvas');
+    c.width=100;c.height=100;
+    var ctx=c.getContext('2d');
+    bk('CTX-2D',ctx?'OK':'null');
+    var ctx2=c.getContext('bitmaprenderer');
+    bk('CTX-BITMAP',ctx2?'OK':'null');
+  }catch(e){
+    bk('CANVAS-ERR',e.message);
+  }
+
+  // 5. Test document.fonts.add
+  try{
+    var f=new FontFace('probe','local(sans-serif)',{});
+    document.fonts.add(f);
+    bk('FONTS-ADD-OK','size='+document.fonts.size);
+    // Try .loaded promise
+    f.loaded.then(function(){
+      bk('LOADED-RESOLVED','status='+f.status);
+    }).catch(function(e){
+      bk('LOADED-REJECTED',e.message);
+    });
+    setTimeout(function(){
+      bk('LOADED-TIMEOUT','status='+f.status);
+      bk('DONE');
+    },5000);
+  }catch(e){
+    bk('FONTS-ADD-ERR',e.message);
+    bk('DONE');
+  }
+}
+
+testFont();
+</script></body></html>

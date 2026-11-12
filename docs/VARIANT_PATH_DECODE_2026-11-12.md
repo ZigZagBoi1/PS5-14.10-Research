@@ -72,7 +72,43 @@ teardown: CSSFontFaceSet::remove(face)               CSSFontFaceSet.cpp:250-277
 - [ ] Mineração dos dumps p673/p685–p688: procurar valores @+0x08 que
       não sejam 0 nem nosso seed → candidatos reais StyleRuleFontFace*
       (banda alvo do p690).
-- [ ] Confirmar sizeof(StyleRuleBase)+0x00 rc layout (source) para
-      prever rc-armor landing em lane.
+- [x] Confirmar sizeof(StyleRuleBase)+0x00 rc layout (source) para
+      prever rc-armor landing em lane. → FECHADO pelo A3 (abaixo).
 - [ ] Simulador: emular HashMap::remove walk (bucket compare) + deref
       para validar previsões hit/miss antes da bancada.
+
+## ERRATUM + upgrades (validação A3 — 2026-11-12, 16 CHECKs compilados, g++ 16.1.0)
+
+1. **HashMap::remove(P) NÃO deref P.** `m_constituentCSSConnections` é
+   `HashMap<StyleRuleFontFace*, CSSFontFace*>` com **value ponteiro cru**
+   (CSSFontFaceSet.h:131): remove do mapa não toca refcount de ninguém.
+   O deref de P ocorre **no dtor da face**: `~CSSFontFace()=default`
+   (CSSFontFace.cpp:109) → dtor membros em ordem REVERSA → `~variant` →
+   `~Ref<StyleRuleFontFace>` → `ptr->deref()` (Ref.h:54-61) → derefBase
+   lê u32@P+0x00 (RefCounted.h:128-146,187-191). Minha frase "hit ⇒ ~Ref
+   do value" estava certa no efeito, errada no mecanismo: o alvo do deref
+   é P (a KEY, via dtor da face), não o value.
+2. **StyleRuleBase NÃO tem vptr — nem stock nem fork.** Zero `virtual`
+   em StyleRule.h; dispatch via m_type+visitDerived (StyleRule.cpp:81-134);
+   delete via destroying delete operator (StyleRule.h:86, StyleRule.cpp:136-142).
+   Layout REAL: rc@+0x00 (u32), typeFlags@+0x04 (m_type=5 FontFace em bits 0-4),
+   m_properties@+0x08 (Ref ptr). **sizeof(StyleRuleFontFace)=16B**.
+3. **rc típico de regra viva = 2** (StyleSheetContents.m_childRules
+   StyleSheetContents.h:172 + variant da face CSSFontSelector.cpp:202);
+   com wrapper CSSOM = 3. HIT em regra real ⇒ decremento 2→1, NÃO mata.
+   Única janela de morte: rc==1 exato. rc==0 em NDEBUG faz WRAP para
+   0xFFFFFFFF (não deleta!) — ASSERT compilado out.
+4. **Armor confirmado**: 0xFFFFFFFF@P+0x00 estável (falta 2^32−1 derefs);
+   nenhum caminho lê P+0x04/P+0x08 antes da decisão de deletar.
+5. **ISOHEAP REFUTADO nesta era**: MALLOC_HEAP_BREAKDOWN=0 (PlatformEnable.h:567-568)
+   → FastMalloc comum; libpas PS5 com PAS_ENABLE_ISO=0 (pas_config.h:68-75);
+   segregação real = SIZE-CLASS em páginas 16KB (pas_internal_config.h:40-41).
+   ⇒ StyleRuleFontFace (16B) clusteriza em páginas de size class 16 (com
+   qualquer objeto WebCore de 9-16B), banda PRÁTICA distinta das T-tables
+   (KB-classes) e da W-island — mas SEM offset VM fixo.
+   **Discriminante confiável de StyleRuleFontFace real em dump:
+   u32@P+0x04 ∈ {0x00000005, 0x00000025} (m_type=5) E rc@P+0x00 ∈ {2,3} —
+   não a banda de endereço.**
+6. **Implicação p690**: alvo = pool size-class-16; morte prevista de HIT
+   real = só rc==1; HIT rc≥2 = sobrevivência COM decremento observável
+   (= primitive de leitura por delta). Ver cross-check com A4 §morte(ii).

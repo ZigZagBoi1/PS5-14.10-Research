@@ -1,0 +1,32 @@
+V943 14.22 ROW - media demuxer battery: zero crashes; codec registry = MP4/WebM only ('maybe'); three behavior classes incl. a STALL class on valid-but-undeclared containers
+================================================================================
+Date:    2026-11-12
+Log:     tools/browser_runner/beacon_logs/beacons_20261112_231543.log
+Result:  battery complete, zero crashes across 23 hand-built payloads
+CODEC REGISTRY (canPlayType, ENV beacon):
+  audio/wav '-' audio/mpeg '-' audio/flac '-' audio/ogg '-'
+  video/mp4 'maybe' video/webm 'maybe'
+  -> the codec database declares ONLY mp4/webm, both non-committal.
+BEHAVIOR CLASSES:
+1. FAST-REJECT (SRC_UNSUPPORTED, immediate): every malformed mutant
+   (wav riff-lie/chans-255/rate-max/data-lie/trunc/bits-0, mp3 id3-lie,
+   flac len-lie, ogg trunc, ALL five mp4 shapes incl. ftyp-only and
+   ftyp+mdat, ALL three webm shapes) AND the valid mp3 and valid ogg.
+   Rejection happens at local sniffing before any deep demux.
+2. STALL (no metadata, no error within 4s): m00_valid.wav, m11_mp3_trunc,
+   m20_valid.flac, m31_ogg_bad_crc. Pattern: containers that are
+   STRUCTURALLY VALID but codec-undeclared do not reject - they enter an
+   async accept path that never completes. Four independent stalls
+   including bad-CRC ogg (worse handling than the valid ogg). OPEN
+   QUESTION: does each stalled element hold a pipeline resource? If N
+   stalled media elements accumulate memory/threads, that is a
+   resource-exhaustion DoS class (follow-up candidate, not pursued here).
+3. METADATA: never reached by any file - no duration/dims extraction
+   observed at all.
+MP4 NOTE: 'maybe' in canPlayType but our minimal moov structures rejected
+  at sniff stage - hand-built boxes never reached the real demuxer. A
+  REAL mp4 (ffmpeg-generated H.264+AAC) with byte mutants is required to
+  exercise demuxer internals: queued as v945 (ffmpeg 8.0.1 available on
+  the bench PC).
+GRADE:  M - codec registry inventory + the stall-class observation;
+  zero crash signal in the media pipeline at first order.

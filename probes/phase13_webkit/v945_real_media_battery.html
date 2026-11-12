@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V945</title></head>
+<body><pre id="out">V945 - REAL-media demuxer battery: ffmpeg-generated H.264+AAC MP4 / VP8 WebM + byte mutants (box sizes, stco/stsz/stts sample-table lies, avcC lie, mdat trunc, infinite segment)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V945-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v943 proved hand-built containers die at sniff stage ('maybe' codecs or
+ * stall). v945 uses REAL ffmpeg media so the demuxer must actually walk
+ * the box tree, sample tables and codec records:
+ *   r00 valid controls (both formats) - MUST reach METADATA
+ *   r01 every top-level box size inflated (+16MB each)
+ *   r02 stco chunk-offset points 1MB past EOF (sample-data OOB)
+ *   r03 stsz declares every sample 1MB (over-allocation/OOB class)
+ *   r04 avcC SPS/PPS length 0xFFFF
+ *   r05 mdat truncated (frame data cut at 16B)
+ *   r06 no ftyp at all
+ *   r07 stts entry count 0xFFFFFFF0
+ *   r08 mvhd duration 0xFFFFFFF0
+ *   r09 webm segment size = infinite vint
+ *   r10 webm truncated at half
+ * The MONEY class: a case that reaches METADATA with wrong dimensions/
+ * duration, or stalls with decoder state half-built - or a crash.
+ */
+
+var FILES=[
+ ['r00_valid.mp4','video'],['r01_mp4_sizes_lie.mp4','video'],
+ ['r02_mp4_stco_oob.mp4','video'],['r03_mp4_stsz_lie.mp4','video'],
+ ['r04_mp4_avcc_lie.mp4','video'],['r05_mp4_mdat_trunc.mp4','video'],
+ ['r06_mp4_no_ftyp.mp4','video'],['r07_mp4_stts_count_lie.mp4','video'],
+ ['r08_mp4_dur_lie.mp4','video'],
+ ['r00_valid.webm','video'],['r09_webm_seg_inf.webm','video'],['r10_webm_trunc.webm','video']];
+
+var ERR={1:'ABORTED',2:'NETWORK',3:'DECODE',4:'SRC_UNSUPPORTED'};
+
+function probe(tag,kind,file){
+  return new Promise(function(res){
+    var el=document.createElement(kind);
+    el.preload='auto'; el.muted=true;
+    var done=false;
+    var finish=function(line){ if(done)return; done=true; bk(tag,line); res(); };
+    el.onloadedmetadata=function(){
+      finish('METADATA dur='+(isFinite(el.duration)?el.duration.toFixed(2):String(el.duration))+
+        ' res='+el.videoWidth+'x'+el.videoHeight);
+    };
+    el.onerror=function(){
+      var c=el.error?el.error.code:-1;
+      finish('ERROR '+(ERR[c]||('code='+c))+(el.error&&el.error.message?(' msg='+el.error.message.slice(0,60)):''));
+    };
+    setTimeout(function(){ finish('TIMEOUT'); },4000);
+    el.src='/fuzzcases/media/'+file+'?t='+Date.now();
+  });
+}
+
+(async function(){
+  for(var i=0;i<FILES.length;i++){ await probe('PRE-'+FILES[i][0],FILES[i][1],FILES[i][0]); }
+  bk('DONE','battery complete');
+})();
+</script></body></html>

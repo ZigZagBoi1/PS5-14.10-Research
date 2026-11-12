@@ -3,9 +3,7 @@
     "chiaki-ng": {
       "command": "python",
       "args": [
-        "C:\\Users\\Marwan's Laptop\\Desktop\\chiaki-ng\\scripts\\mcp\\chiaki-mcp-stdio.py",
-        "--launch",
-        "C:\\Program Files\\chiaki-ng\\chiaki.exe"
+        "F:\\PS5-14.10-Research\\tools\\chiaki-mcp-stdio.py"
       ]
     }
   }

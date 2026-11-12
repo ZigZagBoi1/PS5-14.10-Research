@@ -1,0 +1,186 @@
+=== PROBE 1376e: ARG1 = USER PAGE, 433-531 ===
+[0] pid=300 sigign=10/10
+[U] arg1 = mapped user page
+n433
+  n=433 rv=-1 errno=3 No such process
+n434
+  n=434 rv=-1 errno=78 Function not implemented
+n435
+  n=435 rv=-1 errno=78 Function not implemented
+n436
+  n=436 rv=-1 errno=78 Function not implemented
+n437
+  n=437 rv=-1 errno=78 Function not implemented
+n438
+  n=438 rv=-1 errno=78 Function not implemented
+n439
+  n=439 rv=-1 errno=78 Function not implemented
+n440
+  n=440 rv=-1 errno=78 Function not implemented
+n443
+  n=443 rv=-1 errno=3 No such process
+n444
+  n=444 rv=-1 errno=78 Function not implemented
+n445
+  n=445 rv=-1 errno=78 Function not implemented
+n446
+  n=446 rv=-1 errno=78 Function not implemented
+n447
+  n=447 rv=-1 errno=78 Function not implemented
+n448
+  n=448 rv=-1 errno=78 Function not implemented
+n449
+  n=449 rv=-1 errno=78 Function not implemented
+n450
+  n=450 rv=-1 errno=78 Function not implemented
+n451
+  n=451 rv=-1 errno=78 Function not implemented
+n452
+  n=452 rv=-1 errno=78 Function not implemented
+n453
+  n=453 rv=-1 errno=78 Function not implemented
+n454
+  n=454 rv=-1 errno=45 Operation not supported
+n456
+  n=456 rv=-1 errno=3 No such process
+n457
+  n=457 rv=-1 errno=78 Function not implemented
+n458
+  n=458 rv=-1 errno=78 Function not implemented
+n459
+  n=459 rv=-1 errno=78 Function not implemented
+n463
+  n=463 rv=-1 errno=78 Function not implemented
+n464
+  n=464 rv=-1 errno=3 No such process
+n466
+  n=466 rv=-1 errno=22 Invalid argument
+n467
+  n=467 rv=-1 errno=78 Function not implemented
+n468
+  n=468 rv=-1 errno=78 Function not implemented
+n469
+  n=469 rv=-1 errno=78 Function not implemented
+n470
+  n=470 rv=-1 errno=78 Function not implemented
+n471
+  n=471 rv=-1 errno=78 Function not implemented
+n472
+  n=472 rv=-1 errno=78 Function not implemented
+n473
+  n=473 rv=-1 errno=78 Function not implemented
+n474
+  n=474 rv=-1 errno=78 Function not implemented
+n475
+  n=475 rv=-1 errno=9 Bad file descriptor
+n476
+  n=476 rv=-1 errno=9 Bad file descriptor
+n477
+  n=477 rv=-1 errno=22 Invalid argument
+n478
+  n=478 rv=-1 errno=9 Bad file descriptor
+n479
+  n=479 rv=-1 errno=63 File name too long
+n480
+  n=480 rv=-1 errno=9 Bad file descriptor
+n481
+  n=481 rv=-1 errno=3 No such process
+n482
+  n=482 rv=-1 errno=63 File name too long
+n483
+  n=483 rv=-1 errno=63 File name too long
+n484
+  n=484 rv=-1 errno=78 Function not implemented
+n485
+  n=485 rv=-1 errno=78 Function not implemented
+n486
+  n=486 rv=-1 errno=22 Invalid argument
+n487
+  n=487 rv=-1 errno=34 Result too large
+n488
+  n=488 rv=-1 errno=34 Result too large
+n489
+  n=489 rv=-1 errno=78 Function not implemented
+n490
+  n=490 rv=-1 errno=78 Function not implemented
+n491
+  n=491 rv=-1 errno=78 Function not implemented
+n492
+  n=492 rv=-1 errno=78 Function not implemented
+n493
+  n=493 rv=-1 errno=78 Function not implemented
+n494
+  n=494 rv=-1 errno=78 Function not implemented
+n495
+  n=495 rv=-1 errno=78 Function not implemented
+n496
+  n=496 rv=-1 errno=78 Function not implemented
+n497
+  n=497 rv=-1 errno=78 Function not implemented
+n498
+  n=498 rv=-1 errno=78 Function not implemented
+n499
+  n=499 rv=-1 errno=1 Operation not permitted
+n500
+  n=500 rv=-1 errno=78 Function not implemented
+n501
+  n=501 rv=-1 errno=78 Function not implemented
+n502
+  n=502 rv=-1 errno=78 Function not implemented
+n503
+  n=503 rv=-1 errno=78 Function not implemented
+n504
+  n=504 rv=-1 errno=78 Function not implemented
+n505
+  n=505 rv=-1 errno=78 Function not implemented
+n506
+  n=506 rv=-1 errno=78 Function not implemented
+n507
+  n=507 rv=-1 errno=78 Function not implemented
+n508
+  n=508 rv=-1 errno=78 Function not implemented
+n509
+  n=509 rv=-1 errno=78 Function not implemented
+n510
+  n=510 rv=-1 errno=78 Function not implemented
+n511
+  n=511 rv=-1 errno=78 Function not implemented
+n512
+  n=512 rv=-1 errno=78 Function not implemented
+n513
+  n=513 rv=-1 errno=78 Function not implemented
+n514
+  n=514 rv=-1 errno=78 Function not implemented
+n515
+  n=515 rv=-1 errno=78 Function not implemented
+n516
+  n=516 rv=-1 errno=78 Function not implemented
+n517
+  n=517 rv=-1 errno=78 Function not implemented
+n518
+  n=518 rv=-1 errno=78 Function not implemented
+n519
+  n=519 rv=-1 errno=78 Function not implemented
+n520
+  n=520 rv=-1 errno=78 Function not implemented
+n521
+  n=521 rv=-1 errno=78 Function not implemented
+n523
+  n=523 rv=-1 errno=78 Function not implemented
+n524
+  n=524 rv=-1 errno=78 Function not implemented
+n525
+  n=525 rv=-1 errno=78 Function not implemented
+n526
+  n=526 rv=-1 errno=78 Function not implemented
+n527
+  n=527 rv=-1 errno=78 Function not implemented
+n528
+  n=528 rv=-1 errno=78 Function not implemented
+n529
+  n=529 rv=-1 errno=78 Function not implemented
+n531
+  n=531 rv=-1 errno=78 Function not implemented
+[U] done: 0 non-negative
+[K] arg1 = kernel image base, for the non-negative rows
+=== PROBE 1376e COMPLETE ===

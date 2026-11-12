@@ -1,0 +1,151 @@
+=== PROBE 1392a: SMUGGLED-POINTER STRUCT SWEEP ===
+[0] pid=343
+[0] SIG_IGN installed on 10/10 signals
+
+[A] num(struct of kernel pointers, out, 0x800), then the same with 0x100 fields
+  533 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  534 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  535 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  536 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  537 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  538 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  539 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  540 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  541 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  542 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  543 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  544 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  545 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  546 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  547 KP=0/3 No such process/6   kp=0  INT=0/3 No such process/6   kp=0  10D28000 00000003 10D38000 00000003 00000003 00610020 10BD8000 00000003 10BE8000 00000003 00000003 00610020
+  548 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  549 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  550 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  551 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  552 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  553 KP=-1/14 Bad address/0   kp=0  INT=-1/14 Bad address/0   kp=0   
+  554 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  555 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  556 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  557 KP=16901/3 No such process/0   kp=0  INT=518/3 No such process/0   kp=0     (ptr-vs-int differs)
+  558 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  559 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  560 KP=-1/16 Device busy/0   kp=0  INT=-1/16 Device busy/0   kp=0   
+  563 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  564 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  565 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  566 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  567 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  568 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  569 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  572 KP=0/78 Function not implemented/0   kp=0  INT=0/78 Function not implemented/0   kp=0   
+  574 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  575 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  576 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  577 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  578 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  579 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  580 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  581 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  582 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  583 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  584 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  585 KP=1/78 Function not implemented/0   kp=0  INT=1/78 Function not implemented/0   kp=0   
+  586 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  587 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  588 KP=-1/14 Bad address/0   kp=0  INT=-1/14 Bad address/0   kp=0   
+  589 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  590 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  591 KP=-1/63 File name too long/0   kp=0  INT=-1/63 File name too long/0   kp=0   
+  592 KP=-1/14 Bad address/0   kp=0  INT=-1/14 Bad address/0   kp=0   
+  593 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  594 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  595 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  596 KP=0/3 No such process/0   kp=0  INT=0/3 No such process/0   kp=0   
+  597 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  598 KP=0/78 Function not implemented/2   kp=0  INT=0/78 Function not implemented/2   kp=0  00000060 00000000 00000060 00000000
+  599 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  600 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  602 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  603 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  604 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  605 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  606 KP=0/22 Invalid argument/0   kp=0  INT=0/22 Invalid argument/0   kp=0   
+  607 KP=-1/2 No such file or directory/0   kp=0  INT=-1/2 No such file or directory/0   kp=0   
+  608 KP=-1/14 Bad address/0   kp=0  INT=-1/14 Bad address/0   kp=0   
+  610 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  611 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  612 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  613 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  615 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  616 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  617 KP=0/3 No such process/0   kp=0  INT=0/3 No such process/0   kp=0   
+  618 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  619 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  620 KP=0/78 Function not implemented/0   kp=0  INT=0/78 Function not implemented/0   kp=0   
+  623 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  624 KP=3394/1 Operation not permitted/0   kp=0  INT=3394/1 Operation not permitted/0   kp=0   
+  625 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  626 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  627 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  628 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  629 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  630 KP=-1/2 No such file or directory/0   kp=0  INT=-1/2 No such file or directory/0   kp=0   
+  632 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  633 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  634 KP=-1/3 No such process/0   kp=0  INT=-1/3 No such process/0   kp=0   
+  635 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  636 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  637 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  638 KP=-1/14 Bad address/2   kp=0  INT=-1/14 Bad address/2   kp=0  10D35880 00000003 10BD8020 00000003
+  639 KP=-1/14 Bad address/0   kp=0  INT=-1/14 Bad address/0   kp=0   
+  640 KP=0/14 Bad address/0   kp=0  INT=0/14 Bad address/0   kp=0   
+  641 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  642 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  643 KP=0/1 Operation not permitted/0   kp=0  INT=0/1 Operation not permitted/0   kp=0   
+  644 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  645 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  646 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  647 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  648 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  652 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  653 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  654 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  655 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  656 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  658 KP=-1/9 Bad file descriptor/0   kp=0  INT=-1/9 Bad file descriptor/0   kp=0   
+  659 KP=-1/14 Bad address/0   kp=0  INT=-1/14 Bad address/0   kp=0   
+  660 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  661 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  665 KP=-1/78 Function not implemented/0   kp=0  INT=-1/78 Function not implemented/0   kp=0   
+  672 KP=-1/1 Operation not permitted/0   kp=0  INT=-1/1 Operation not permitted/0   kp=0   
+  674 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+  675 KP=0/22 Invalid argument/0   kp=0  INT=0/22 Invalid argument/0   kp=0   
+  676 KP=-1/22 Invalid argument/0   kp=0  INT=-1/22 Invalid argument/0   kp=0   
+
+[B] dispatchers with the struct in a non-arg1 slot
+  532(0x18, 0, out, KPTR, 0x800) rv=0        22 Invalid argument    changed=1   kp=0 800D0203
+  532(0x18, 0, out, 0x100, 0x800) rv=0        22 Invalid argument    changed=1   kp=0 800D0203
+  532(0x19, 0, out, KPTR, 0x800) rv=0        22 Invalid argument    changed=1   kp=0 800D0203
+  532(0x19, 0, out, 0x100, 0x800) rv=0        22 Invalid argument    changed=1   kp=0 800D0203
+  532(0x1E, 0, out, KPTR, 0x800) rv=0        22 Invalid argument    changed=1   kp=0 00000000
+  532(0x1E, 0, out, 0x100, 0x800) rv=0        22 Invalid argument    changed=1   kp=0 00000000
+  532(0x1F, 0, out, KPTR, 0x800) rv=-1       1 Operation not permitted changed=0   kp=0 
+  532(0x1F, 0, out, 0x100, 0x800) rv=-1       1 Operation not permitted changed=0   kp=0 
+  532(0x20, 0, out, KPTR, 0x800) rv=0        1 Operation not permitted changed=1   kp=0 800D0208
+  532(0x20, 0, out, 0x100, 0x800) rv=0        1 Operation not permitted changed=1   kp=0 800D0208
+  532(0x2F, 0, out, KPTR, 0x800) rv=0        1 Operation not permitted changed=1   kp=0 00000000
+  532(0x2F, 0, out, 0x100, 0x800) rv=0        1 Operation not permitted changed=1   kp=0 00000000
+  601(0x00, KPTR, KPTR) rv=0        1 Operation not permitted changed=0   kp=0 
+  601(0x07, KPTR, KPTR) rv=0        1 Operation not permitted changed=0   kp=0 
+  601(0x09, KPTR, KPTR) rv=0        1 Operation not permitted changed=0   kp=0 
+  601(0x0B, KPTR, KPTR) rv=0        1 Operation not permitted changed=0   kp=0 
+  601(0x0D, KPTR, KPTR) rv=0        1 Operation not permitted changed=0   kp=0 
+  601(0x0E, KPTR, KPTR) rv=0        1 Operation not permitted changed=0   kp=0 
+  601(0x13, KPTR, KPTR) rv=0        1 Operation not permitted changed=0   kp=0 
+  601(0x14, KPTR, KPTR) rv=0        1 Operation not permitted changed=0   kp=0 
+  601(0x19, KPTR, KPTR) rv=0        1 Operation not permitted changed=0   kp=0 
+  601(0x1A, KPTR, KPTR) rv=0        1 Operation not permitted changed=0   kp=0 
+
+[C] 0 number(s) returned kernel-band output
+=== PROBE 1392a COMPLETE ===

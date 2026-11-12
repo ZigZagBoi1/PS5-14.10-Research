@@ -1,0 +1,27 @@
+=== PROBE 1354a: 532 CMD 0x2F WRITE DESTINATION ===
+[0] pid=143
+  out=0x310854000 in=0x310858000
+
+[A] 0x2F into a sentinel region at in+0x800
+  size=0x030 0x0_00000000 st=0x00000000 changed_dwords=12 dst[0]=0x00000000 dst[12]=0xA5A5A5A5 dst[13]=0xA5A5A5A5
+  size=0x040 0x0_00000000 st=0x00000000 changed_dwords=16 dst[0]=0x00000000 dst[12]=0x00000000 dst[13]=0x00000000
+  size=0x100 0x0_00000000 st=0x00000000 changed_dwords=64 dst[0]=0x00000000 dst[12]=0x00000000 dst[13]=0x00000000
+
+[B] 0x1E return value against input patterns (size 0x30)
+  all0 0x0_00000000 st=0x00000000
+  all_1122 0x0_00000000 st=0x00000003
+  first1 0x0_00000000 st=0x00000003
+  alt1 0x0_00000000 st=0x00000003
+
+[C] 0x20 after 0x1E and 0x2F
+  0x20 after init: 0x0_00000000 st=0x800D0219
+
+[D] 0x2F with a null arg3
+  arg3=0: 0x0_00000000 st=0x00000000
+
+[E] 0x2F destination validation
+  arg3=0x1000 (unmapped): 0x0_00000000 st=0x800D0210
+  arg3=kernel 0xFFFFFFFFC1000000: 0x0_00000000 st=0x800D0210
+
+[Z] alive pid=143
+=== PROBE 1354a COMPLETE ===

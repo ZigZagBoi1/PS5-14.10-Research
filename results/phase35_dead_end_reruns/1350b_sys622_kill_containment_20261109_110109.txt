@@ -1,0 +1,5 @@
+=== PROBE 1350b: 622 KILL CONTAINMENT ===
+[0] pid=150 fd=21 page=0x3114BC000 buf=0x311401040 shared=0x311400260
+[A] spawn cmd=0x1 size=0x40
+[A] MAIN-1
+T-ENTER

@@ -1,0 +1,145 @@
+=== PROBE 1379a: O_WRONLY GATE AND write() ON /dev ===
+[A] open modes per node: W=O_WRONLY R=O_RDWR N=O_WRONLY|O_NONBLOCK
+  usb            W=-1(21 Is a directory) R=-1(21 Is a directory) N=-1(21 Is a directory)
+  usbctl         W=-1(13 Permission denied) R=-1(13 Permission denied) N=-1(13 Permission denied)
+  ugen0.2        W=27 R=28 N=29
+  ajm            W=-1(13 Permission denied) R=-1(13 Permission denied) N=-1(13 Permission denied)
+  ajmi           W=-1(13 Permission denied) R=-1(13 Permission denied) N=-1(13 Permission denied)
+  rng            W=-1(13 Permission denied) R=-1(13 Permission denied) N=-1(13 Permission denied)
+  sce_zlib       W=28 R=-1(16 Device busy) N=-1(16 Device busy)
+  dmem0          W=29 R=30 N=31
+  dmem1          W=30 R=31 N=32
+  dmem2          W=31 R=32 N=33
+  uvd_enc        W=32 R=-1(5100 error_code=0x000013ec) N=-1(5100 error_code=0x000013ec)
+  dipsw          W=-1(13 Permission denied) R=-1(13 Permission denied) N=-1(13 Permission denied)
+  hmd_cmd        W=33 R=34 N=35
+  hmd2_cmd       W=34 R=35 N=36
+  bt             W=35 R=36 N=37
+  notification0  W=36 R=37 N=38
+  gic            W=37 R=38 N=39
+  gc             W=38 R=39 N=40
+  dce            W=39 R=40 N=41
+  camera         W=40 R=41 N=42
+  hid            W=41 R=42 N=43
+  deci_stdout    W=42 R=-1(1 Operation not permitted) N=43
+[B] write() ladders on the fds that opened writable
+wugen0.2
+  ugen0.2        fd=27 len=0x0 rv=-1 errno=5 Input/output error
+  ugen0.2        fd=27 len=0x1 rv=-1 same errno=5 Input/output error
+  ugen0.2        fd=27 len=0x8 rv=-1 same errno=5 Input/output error
+  ugen0.2        fd=27 len=0x10 rv=-1 same errno=5 Input/output error
+  ugen0.2        fd=27 len=0x100 rv=-1 same errno=5 Input/output error
+  ugen0.2        fd=27 len=0x1000 rv=-1 same errno=5 Input/output error
+wsce_zlib
+  sce_zlib       fd=28 len=0x0 rv=-1 errno=19 Operation not supported by device
+  sce_zlib       fd=28 len=0x1 rv=-1 same errno=19 Operation not supported by device
+  sce_zlib       fd=28 len=0x8 rv=-1 same errno=19 Operation not supported by device
+  sce_zlib       fd=28 len=0x10 rv=-1 same errno=19 Operation not supported by device
+  sce_zlib       fd=28 len=0x100 rv=-1 same errno=19 Operation not supported by device
+  sce_zlib       fd=28 len=0x1000 rv=-1 same errno=19 Operation not supported by device
+wdmem0
+  dmem0          fd=29 len=0x0 rv=-1 errno=19 Operation not supported by device
+  dmem0          fd=29 len=0x1 rv=-1 same errno=19 Operation not supported by device
+  dmem0          fd=29 len=0x8 rv=-1 same errno=19 Operation not supported by device
+  dmem0          fd=29 len=0x10 rv=-1 same errno=19 Operation not supported by device
+  dmem0          fd=29 len=0x100 rv=-1 same errno=19 Operation not supported by device
+  dmem0          fd=29 len=0x1000 rv=-1 same errno=19 Operation not supported by device
+wdmem1
+  dmem1          fd=30 len=0x0 rv=-1 errno=19 Operation not supported by device
+  dmem1          fd=30 len=0x1 rv=-1 same errno=19 Operation not supported by device
+  dmem1          fd=30 len=0x8 rv=-1 same errno=19 Operation not supported by device
+  dmem1          fd=30 len=0x10 rv=-1 same errno=19 Operation not supported by device
+  dmem1          fd=30 len=0x100 rv=-1 same errno=19 Operation not supported by device
+  dmem1          fd=30 len=0x1000 rv=-1 same errno=19 Operation not supported by device
+wdmem2
+  dmem2          fd=31 len=0x0 rv=-1 errno=19 Operation not supported by device
+  dmem2          fd=31 len=0x1 rv=-1 same errno=19 Operation not supported by device
+  dmem2          fd=31 len=0x8 rv=-1 same errno=19 Operation not supported by device
+  dmem2          fd=31 len=0x10 rv=-1 same errno=19 Operation not supported by device
+  dmem2          fd=31 len=0x100 rv=-1 same errno=19 Operation not supported by device
+  dmem2          fd=31 len=0x1000 rv=-1 same errno=19 Operation not supported by device
+wuvd_enc
+  uvd_enc        fd=32 len=0x0 rv=-1 errno=19 Operation not supported by device
+  uvd_enc        fd=32 len=0x1 rv=-1 same errno=19 Operation not supported by device
+  uvd_enc        fd=32 len=0x8 rv=-1 same errno=19 Operation not supported by device
+  uvd_enc        fd=32 len=0x10 rv=-1 same errno=19 Operation not supported by device
+  uvd_enc        fd=32 len=0x100 rv=-1 same errno=19 Operation not supported by device
+  uvd_enc        fd=32 len=0x1000 rv=-1 same errno=19 Operation not supported by device
+whmd_cmd
+  hmd_cmd        fd=33 len=0x0 rv=-1 errno=19 Operation not supported by device
+  hmd_cmd        fd=33 len=0x1 rv=-1 same errno=19 Operation not supported by device
+  hmd_cmd        fd=33 len=0x8 rv=-1 same errno=19 Operation not supported by device
+  hmd_cmd        fd=33 len=0x10 rv=-1 same errno=19 Operation not supported by device
+  hmd_cmd        fd=33 len=0x100 rv=-1 same errno=19 Operation not supported by device
+  hmd_cmd        fd=33 len=0x1000 rv=-1 same errno=19 Operation not supported by device
+whmd2_cmd
+  hmd2_cmd       fd=34 len=0x0 rv=-1 errno=19 Operation not supported by device
+  hmd2_cmd       fd=34 len=0x1 rv=-1 same errno=19 Operation not supported by device
+  hmd2_cmd       fd=34 len=0x8 rv=-1 same errno=19 Operation not supported by device
+  hmd2_cmd       fd=34 len=0x10 rv=-1 same errno=19 Operation not supported by device
+  hmd2_cmd       fd=34 len=0x100 rv=-1 same errno=19 Operation not supported by device
+  hmd2_cmd       fd=34 len=0x1000 rv=-1 same errno=19 Operation not supported by device
+wbt
+  bt             fd=35 len=0x0 rv=-1 errno=22 Invalid argument
+  bt             fd=35 len=0x1 rv=-1 same errno=22 Invalid argument
+  bt             fd=35 len=0x8 rv=8
+  bt             fd=35 len=0x10 rv=-1 errno=22 Invalid argument
+  bt             fd=35 len=0x100 rv=-1 same errno=22 Invalid argument
+  bt             fd=35 len=0x1000 rv=-1 same errno=22 Invalid argument
+wnotification0
+  notification0  fd=36 len=0x0 rv=0
+  notification0  fd=36 len=0x1 rv=1
+  notification0  fd=36 len=0x8 rv=8
+  notification0  fd=36 len=0x10 rv=16
+  notification0  fd=36 len=0x100 rv=256
+  notification0  fd=36 len=0x1000 rv=4096
+wgic
+  gic            fd=37 len=0x0 rv=-1 errno=19 Operation not supported by device
+  gic            fd=37 len=0x1 rv=-1 same errno=19 Operation not supported by device
+  gic            fd=37 len=0x8 rv=-1 same errno=19 Operation not supported by device
+  gic            fd=37 len=0x10 rv=-1 same errno=19 Operation not supported by device
+  gic            fd=37 len=0x100 rv=-1 same errno=19 Operation not supported by device
+  gic            fd=37 len=0x1000 rv=-1 same errno=19 Operation not supported by device
+wgc
+  gc             fd=38 len=0x0 rv=-1 errno=19 Operation not supported by device
+  gc             fd=38 len=0x1 rv=-1 same errno=19 Operation not supported by device
+  gc             fd=38 len=0x8 rv=-1 same errno=19 Operation not supported by device
+  gc             fd=38 len=0x10 rv=-1 same errno=19 Operation not supported by device
+  gc             fd=38 len=0x100 rv=-1 same errno=19 Operation not supported by device
+  gc             fd=38 len=0x1000 rv=-1 same errno=19 Operation not supported by device
+wdce
+  dce            fd=39 len=0x0 rv=-1 errno=19 Operation not supported by device
+  dce            fd=39 len=0x1 rv=-1 same errno=19 Operation not supported by device
+  dce            fd=39 len=0x8 rv=-1 same errno=19 Operation not supported by device
+  dce            fd=39 len=0x10 rv=-1 same errno=19 Operation not supported by device
+  dce            fd=39 len=0x100 rv=-1 same errno=19 Operation not supported by device
+  dce            fd=39 len=0x1000 rv=-1 same errno=19 Operation not supported by device
+wcamera
+  camera         fd=40 len=0x0 rv=-1 errno=2150498320 error_code=0x802e0010
+  camera         fd=40 len=0x1 rv=1
+  camera         fd=40 len=0x8 rv=-1 errno=2150498320 error_code=0x802e0010
+  camera         fd=40 len=0x10 rv=-1 same errno=2150498320 error_code=0x802e0010
+  camera         fd=40 len=0x100 rv=-1 same errno=2150498320 error_code=0x802e0010
+  camera         fd=40 len=0x1000 rv=-1 same errno=2150498320 error_code=0x802e0010
+whid
+  hid            fd=41 len=0x0 rv=-1 errno=19 Operation not supported by device
+  hid            fd=41 len=0x1 rv=-1 same errno=19 Operation not supported by device
+  hid            fd=41 len=0x8 rv=-1 same errno=19 Operation not supported by device
+  hid            fd=41 len=0x10 rv=-1 same errno=19 Operation not supported by device
+  hid            fd=41 len=0x100 rv=-1 same errno=19 Operation not supported by device
+  hid            fd=41 len=0x1000 rv=-1 same errno=19 Operation not supported by device
+wdeci_stdout
+  deci_stdout    fd=42 len=0x0 rv=0
+  deci_stdout    fd=42 len=0x1 rv=1
+  deci_stdout    fd=42 len=0x8 rv=8
+  deci_stdout    fd=42 len=0x10 rv=16
+  deci_stdout    fd=42 len=0x100 rv=256
+  deci_stdout    fd=42 len=0x1000 rv=4096
+[C] the calls never made on a devfs fd
+  gc fd=27
+  ftruncate(gc,0) rv=-1 errno=22 Invalid argument
+  ftruncate(gc,0x1000) rv=-1 errno=22 Invalid argument
+  fsync(gc) rv=-1 errno=15 Block device required
+  close twice: 0 then -1 errno=9 Bad file descriptor
+  /dev/fd/22 open=-1 errno=2 No such file or directory
+=== PROBE 1379a COMPLETE ===

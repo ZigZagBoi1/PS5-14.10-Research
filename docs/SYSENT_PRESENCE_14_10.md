@@ -11,6 +11,10 @@ So a "kills" row means *not callable with zeros*, and the slot needs a second pr
 plausible arguments before it can be written off. `622` now has that second probe (`1335a`);
 the rest of this map does not. See `docs/SYSCALL_ABSENT_VS_LETHAL.md`.
 
+Called with a real pointer instead of six zeros, the same range answers very differently:
+507 of 531 slots now have a measured `arg1` row, 346 of them are the shared `nosys` stub and
+the rest are real handlers with specific errnos. See `docs/ARG1_CLASSES_BSD_14_10.md`.
+
 Names come from the 13.60 sysent capture (`docs/sysent-names-13.60.csv`) and are labels for
 the slot, not proof that 14.10 ships the same handler body. Every presence and return value
 below is measured on 14.10 by `tools/syscall_isolation_sweep.py`: six zero `uint64`
@@ -707,6 +711,26 @@ exist to be called. Capture:
 `results/phase15_native_sent/syscall_isolation_sweep_20261020_200248.txt`.
 
 **Update (2026-10-21, offline):** the recovered kernel text resolves every 677-734 thunk in the 13.60 CSV — 53 real handlers (wait6/cap_*/bindat/connectat/chflagsat/accept4/pipe2/aio_mlock/procctl/ppoll/futimens/utimensat/numa_* at 677-694; apr_* 700-704; get_phys_page_size 705 through trace_ctrl 734), only 695-699 are nosys. The 14.10 kill range 677-707 therefore includes 24 slots that are real read-only or buffer-taking handlers on 13.60. Probe 275a calls the fault-proof members (705, 713, 733, 687, 690) with real arguments; a return value proves the 14.10 table extends past 676, a kill on 705 (zero-arg read) is the strongest table-end signal available.
+
+**Update (2026-11-09, measured):** the kills above 676 were the `nosys` `SIGSYS`
+trampoline, not a table end. Probe 1378a installs `SIG_IGN` for signals 5/6/7/8/12/24-26/30/31
+(`sigaction(416, 12, handler 1)`) and then calls every number 677-750: **all of them return
+`-1` with errno 78 (`ENOSYS`)**, and the control `4095` — a number that cannot have a handler
+— returns exactly the same. So the "kills" column for 677+ records the default disposition of
+`SIGSYS`, the same artefact corrected for 568/569/589 in `docs/ARG1_CLASSES_14_10.md`. The
+conclusion stands (the sysent ends at 676) but the evidence for it is now a positive ENOSYS,
+not a death. Capture:
+`results/phase35_dead_end_reruns/1378a_sys677_sigign_20261109_132716.txt`. 275a is
+consequently unnecessary: a call that answers `ENOSYS` has no handler to prove.
+
+**Confirmation (2026-11-09, second probe):** 1422a repeats the test independently, with all
+six arguments pointing at one mapped zero page so that a real handler could not fault on an
+argument, and prints the errno text for each number: 676 answers `-1`/`EINVAL` and **677-735
+answer `-1`/`ENOSYS(78)`**, matching the controls 568 (nosys) and 4095. Capture:
+`results/phase36_realargs/1422a_sysent_tail_errno_20261109_155915.txt`. The same probe also
+shows that `596` and `557` return `0x0` and `0x4205` while `get_error_string()` still reports
+`ENOSYS` — errno is stale on success, so it is a discriminator only when the return value is
+`-1`.
 
 This conflicts with the 13.60 capture, whose table has 735 entries and names 677 `wait6`,
 687 `pipe2`, 690 `ppoll`, 705 `get_phys_page_size`, 715 `ioreq`, 725 `mmap2` and 728

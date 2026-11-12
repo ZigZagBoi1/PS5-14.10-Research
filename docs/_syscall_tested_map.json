@@ -1,0 +1,1297 @@
+{
+"454": [
+"CHANGELOG.md",
+"docs/ALL_PROBES.md",
+"docs/EXPLOIT_SURFACE_ANALYSIS_13.60.md",
+"docs/PROBE_INDEX.md"
+],
+"202": [
+"CLAUDE.md",
+"docs/ALL_PROBES.md",
+"docs/CVE-2026-49422-PS5-14.10.md",
+"docs/CVE-2026-49424-PS5-14.10.md"
+],
+"593": [
+"CLAUDE.md",
+"docs/ALL_PROBES.md",
+"docs/RESEARCH_PAPER.md",
+"probes/42h2_rop_exploit2.lua"
+],
+"477": [
+".local/622_arm_cmd.lua",
+".local/case_test.lua",
+".local/fuzz_shapes.py",
+"CLAUDE.md"
+],
+"416": [
+".local/fuzz_shapes.py",
+".local/sweep601w.py",
+".local/sysent_survey.py",
+"CLAUDE.md"
+],
+"622": [
+".local/622_arm_cmd.lua",
+"docs/ALL_PROBES.md",
+"docs/SYSCALL_ABSENT_VS_LETHAL.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua"
+],
+"73": [
+".local/case_test.lua",
+"docs/ALL_PROBES.md",
+"probes/42f2_fast_phys_scan.lua",
+"probes/42g2_high_phys_decode.lua"
+],
+"532": [
+".local/case_test.lua",
+".local/sys532_probe.md",
+"docs/ALL_PROBES.md",
+"docs/MAGIC_GATE_CENSUS_13_60.md"
+],
+"674": [
+".local/dbg674.lua",
+".local/sweep601w.py",
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55e_vm_cred_survey.lua"
+],
+"97": [
+".local/NEXT_SESSION.md",
+"docs/ALL_PROBES.md",
+"docs/CREATIVE_ROUTES_II_14_10.md",
+"probes/phase10_untested_theories/43m_sockopt_overflow.lua"
+],
+"20": [
+".local/pid.lua",
+"docs/ALL_PROBES.md",
+"docs/ALL_RESULTS.md",
+"docs/THREADING_ALIVE_14_10.md"
+],
+"601": [
+".local/sweep601.py",
+".local/sweep601w.py",
+"docs/ALL_PROBES.md",
+"docs/CREATIVE_ROUTES_14_10.md"
+],
+"83": [
+".local/sweep601w.py"
+],
+"649": [
+".local/sweep649.py",
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54f_kaslr_deep.lua",
+"probes/phase14_final_push/54k_sys649_deep_and_rdmsr.lua"
+],
+"558": [
+".local/sys532_report.md",
+"probes/phase17_new_vectors/111a_heap_feng_shui.lua",
+"probes/phase17_new_vectors/436a_handle_reuse.lua",
+"probes/phase17_new_vectors/799a_named_object_lifecycle.lua"
+],
+"5": [
+"docs/ALL_PROBES.md",
+"docs/research/gpu_dma_research.md",
+"probes/42f2_fast_phys_scan.lua",
+"probes/42g2_high_phys_decode.lua"
+],
+"6": [
+"docs/ALL_PROBES.md",
+"docs/CHANGELOG.md",
+"probes/42f2_fast_phys_scan.lua",
+"probes/42g2_high_phys_decode.lua"
+],
+"390": [
+"docs/ALL_PROBES.md",
+"probes/42g2_high_phys_decode.lua",
+"probes/phase14_final_push/55f_post_jail.lua",
+"probes/phase8_live_network/42a_kernel_rw.lua"
+],
+"307": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43a_kldstat_kaslr.lua",
+"probes/phase14_final_push/55f_post_jail.lua",
+"probes/phase14_final_push/56k4_kldstat_kaslr.lua"
+],
+"309": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43a_kldstat_kaslr.lua",
+"probes/phase14_final_push/56h2_kldsym_kaslr.lua",
+"probes/phase14_final_push/56h_kldstat_kaslr.lua"
+],
+"337": [
+"docs/ALL_PROBES.md",
+"docs/CHANGELOG.md",
+"docs/UNTESTED_THEORIES.md",
+"probes/phase10_untested_theories/43b_kldsym_resolve.lua"
+],
+"165": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43c_sysarch_gsbase.lua",
+"probes/phase14_final_push/56j_timing_kaslr.lua",
+"probes/phase9_kaslr_defeat/42b_kaslr_defeat.lua"
+],
+"41": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43e_blocked_syscall_bypass.lua",
+"probes/phase17_new_vectors/235a_netcontrol_dup.lua"
+],
+"90": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43e_blocked_syscall_bypass.lua"
+],
+"189": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43e_blocked_syscall_bypass.lua",
+"probes/phase10_untested_theories/43n_hid_ioctl.lua",
+"probes/phase14_final_push/56i6_kaslr_pivot.lua"
+],
+"54": [
+"docs/ALL_PROBES.md",
+"docs/CVE-2026-58093-PS5-14.10.md",
+"docs/FINDINGS.md",
+"docs/research/gpu_dma_research.md"
+],
+"455": [
+"docs/ALL_PROBES.md",
+"docs/SYSCALL_430_MISLABEL.md",
+"docs/UNTESTED_THEORIES.md",
+"probes/phase10_untested_theories/43e_blocked_syscall_bypass.lua"
+],
+"542": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43e_blocked_syscall_bypass.lua",
+"probes/phase17_new_vectors/105a_evfilt_proc_kptr_leak.lua",
+"probes/phase17_new_vectors/120a_pdfork_capsicum.lua"
+],
+"544": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43e_blocked_syscall_bypass.lua",
+"probes/phase17_new_vectors/121a_procctl_comprehensive.lua",
+"probes/phase17_new_vectors/336a_evf_handle.lua"
+],
+"588": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43h_mtypeprotect_wxbypass.lua",
+"probes/phase10_untested_theories/44a_mtypeprotect_exec.lua",
+"probes/phase10_untested_theories/45a_native_exec_kaslr.lua"
+],
+"74": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43h_mtypeprotect_wxbypass.lua",
+"probes/phase14_final_push/54l_rwx_verify.lua",
+"probes/phase14_final_push/55a_chicken_switches.lua"
+],
+"585": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43h_mtypeprotect_wxbypass.lua",
+"probes/phase10_untested_theories/43k_cpuusage_deep.lua",
+"probes/phase10_untested_theories/44a_mtypeprotect_exec.lua"
+],
+"42": [
+"docs/ALL_PROBES.md",
+"docs/UNTESTED_THEORIES.md",
+"probes/phase10_untested_theories/43i_fn_redirect.lua",
+"probes/phase14_final_push/55e_aio_race.lua"
+],
+"617": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43k_cpuusage_deep.lua",
+"probes/phase17_new_vectors/99a_hw_write_vm_selfmod.lua",
+"probes/phase17_new_vectors/99a_secB.lua"
+],
+"78": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43l_mincore_kaslr.lua",
+"probes/phase14_final_push/56k_kaslr_bruteforce.lua",
+"probes/phase17_new_vectors/106a_sigreturn_srop.lua"
+],
+"105": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43m_sockopt_overflow.lua",
+"probes/phase10_untested_theories/43o_afroute_kaslr.lua",
+"probes/phase10_untested_theories/44c_sockopt_heap_corrupt.lua"
+],
+"118": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43m_sockopt_overflow.lua",
+"probes/phase10_untested_theories/43o_afroute_kaslr.lua",
+"probes/phase10_untested_theories/44c_sockopt_heap_corrupt.lua"
+],
+"3": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43n_hid_ioctl.lua",
+"probes/phase10_untested_theories/43o_afroute_kaslr.lua",
+"probes/phase10_untested_theories/52b_race_setup.lua"
+],
+"4": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43o_afroute_kaslr.lua",
+"probes/phase10_untested_theories/52b_race_setup.lua",
+"probes/phase10_untested_theories/52b_race_worker.lua"
+],
+"134": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43o_afroute_kaslr.lua",
+"probes/phase10_untested_theories/52b_race_worker.lua",
+"probes/phase11_network_attacks/50b_timer_manipulation.lua"
+],
+"92": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43o_afroute_kaslr.lua",
+"probes/phase11_network_attacks/50b_timer_manipulation.lua",
+"probes/phase11_network_attacks/50c_resource_exhaustion.lua"
+],
+"317": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43p_aio_bypass.lua"
+],
+"316": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43p_aio_bypass.lua"
+],
+"314": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43p_aio_bypass.lua"
+],
+"255": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43p_aio_bypass.lua"
+],
+"256": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43p_aio_bypass.lua"
+],
+"359": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43p_aio_bypass.lua"
+],
+"257": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/43p_aio_bypass.lua"
+],
+"557": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/44b_sony557_deep.lua",
+"probes/phase11_network_attacks/46a_sony_syscall_deep.lua",
+"probes/phase11_network_attacks/47a_dispatch_deep.lua"
+],
+"432": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/44b_sony557_deep.lua",
+"probes/phase15_native_sysent/59b_thr_family_survey.lua",
+"probes/phase16_thr_create_crash/78d_kevent_evfilt_proc.lua"
+],
+"104": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/52b_race_setup.lua",
+"probes/phase10_untested_theories/52b_race_worker.lua",
+"probes/phase11_network_attacks/48a_sctp_ipv6_icmp.lua"
+],
+"106": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/52b_race_setup.lua",
+"probes/phase11_network_attacks/49a_tcp_inject_loopback.lua",
+"probes/phase11_network_attacks/50b_timer_manipulation.lua"
+],
+"30": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/52b_race_setup.lua",
+"probes/phase11_network_attacks/49a_tcp_inject_loopback.lua",
+"probes/phase11_network_attacks/50b_timer_manipulation.lua"
+],
+"209": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/52b_race_setup.lua",
+"probes/phase17_new_vectors/470a_dce_command_footprint.lua"
+],
+"32": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/52b_race_setup.lua",
+"probes/phase11_network_attacks/49a_tcp_inject_loopback.lua",
+"probes/phase11_network_attacks/50b_timer_manipulation.lua"
+],
+"98": [
+"docs/ALL_PROBES.md",
+"probes/phase10_untested_theories/52b_race_worker.lua",
+"probes/phase11_network_attacks/48a_sctp_ipv6_icmp.lua",
+"probes/phase11_network_attacks/49a_tcp_inject_loopback.lua"
+],
+"620": [
+"docs/ALL_PROBES.md",
+"probes/phase11_network_attacks/46a_sony_syscall_deep.lua",
+"probes/phase17_new_vectors/99a_hw_write_vm_selfmod.lua",
+"probes/phase17_new_vectors/99a_secB.lua"
+],
+"133": [
+"docs/ALL_PROBES.md",
+"probes/phase11_network_attacks/48a_sctp_ipv6_icmp.lua",
+"probes/phase11_network_attacks/48b_sctp_loopback_fuzz.lua",
+"probes/phase11_network_attacks/48c_ipv6_exthdr_fuzz.lua"
+],
+"93": [
+"docs/ALL_PROBES.md",
+"probes/phase11_network_attacks/50b_timer_manipulation.lua",
+"probes/phase17_new_vectors/484b_localhost_nonblock.lua",
+"probes/phase17_new_vectors/484c_connect_diag.lua"
+],
+"240": [
+"docs/ALL_PROBES.md",
+"probes/phase11_network_attacks/50b_timer_manipulation.lua",
+"probes/phase11_network_attacks/50c_resource_exhaustion.lua",
+"probes/phase16_thr_create_crash/76e_thr_create_exit_wait.lua"
+],
+"596": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua"
+],
+"599": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase9_kaslr_defeat/42d_dmem_kaslr.lua"
+],
+"591": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase17_new_vectors/512a_dlsym_handles.lua",
+"probes/phase17_new_vectors/513a_dlsym_argument_shapes.lua"
+],
+"592": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase17_new_vectors/1030a_dynlib_dlopen.lua",
+"probes/phase17_new_vectors/1031a_dlopen_shapes.lua"
+],
+"594": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase17_new_vectors/1031a_dlopen_shapes.lua",
+"probes/phase17_new_vectors/1032a_loadprx_growth.lua"
+],
+"595": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase17_new_vectors/1031a_dlopen_shapes.lua"
+],
+"608": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua"
+],
+"612": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase14_final_push/54f_kaslr_deep.lua",
+"probes/phase14_final_push/54k_sys649_deep_and_rdmsr.lua"
+],
+"624": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase13_52batch/52b_624_oracle.lua",
+"probes/phase14_final_push/54j_sys624_oracle.lua"
+],
+"559": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase17_new_vectors/113a_untested_handler_trio.lua",
+"probes/phase17_new_vectors/115a_flag_or_priv_bypass.lua"
+],
+"547": [
+"docs/ALL_PROBES.md",
+"docs/CREATIVE_ROUTES_II_14_10.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase14_final_push/55b_batch_vm_ops.lua"
+],
+"607": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua"
+],
+"637": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase17_new_vectors/1162a_636_637_gate_639_abi.lua",
+"probes/phase17_new_vectors/339a_637_598_659.lua"
+],
+"646": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase17_new_vectors/356a_chicken_retest.lua",
+"probes/phase17_new_vectors/591a_chicken_gate_retest.lua"
+],
+"647": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua"
+],
+"606": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase12_kernel_dump/51a_sony_syscall_survey.lua",
+"probes/phase17_new_vectors/113a_untested_handler_trio.lua"
+],
+"600": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase17_new_vectors/936a_bit62_gate_oracle.lua"
+],
+"605": [
+"docs/ALL_PROBES.md",
+"docs/MAGIC_GATE_CENSUS_13_60.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase17_new_vectors/112a_sys605_gpu_rw_flag_or.lua"
+],
+"643": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase14_final_push/54c_aio_full_attack.lua",
+"probes/phase14_final_push/55a_chicken_switches.lua"
+],
+"632": [
+"docs/ALL_PROBES.md",
+"docs/CREATIVE_ROUTES_II_14_10.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase15_native_sysent/59b_thr_family_survey.lua"
+],
+"633": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase15_native_sysent/59b_thr_family_survey.lua",
+"probes/phase17_new_vectors/325a_thr_ucontext.lua"
+],
+"616": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase15_native_sysent/59b_thr_family_survey.lua",
+"probes/phase17_new_vectors/891a_gate_free_branches.lua"
+],
+"634": [
+"docs/ALL_PROBES.md",
+"docs/CREATIVE_ROUTES_14_10.md",
+"docs/CREATIVE_ROUTES_II_14_10.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua"
+],
+"640": [
+"docs/ALL_PROBES.md",
+"docs/CREATIVE_ROUTES_II_14_10.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase12_kernel_dump/51a_sony_syscall_survey.lua"
+],
+"628": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase17_new_vectors/101a_sys628_mmap_variant.lua",
+"probes/phase17_new_vectors/102a_chicken_combined_chain.lua"
+],
+"648": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase17_new_vectors/591a_chicken_gate_retest.lua",
+"probes/phase17_new_vectors/88a_handle_namespace_confusion.lua"
+],
+"652": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua"
+],
+"676": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_analysis/51b_accessible_syscall_deep.lua",
+"probes/phase14_final_push/55e_vm_cred_survey.lua",
+"probes/phase17_new_vectors/591a_chicken_gate_retest.lua"
+],
+"560": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_dump/51a_sony_syscall_survey.lua",
+"probes/phase17_new_vectors/119a_evfilt_proc_leak.lua",
+"probes/phase17_new_vectors/327a_opmc_scope.lua"
+],
+"522": [
+"docs/ALL_PROBES.md",
+"probes/phase12_kernel_dump/51b_dynlib_cluster_fuzz.lua"
+],
+"362": [
+"docs/ALL_PROBES.md",
+"probes/phase13_52batch/52b_624_oracle.lua",
+"probes/phase16_thr_create_crash/78d_kevent_evfilt_proc.lua",
+"probes/phase17_new_vectors/105a_evfilt_proc_kptr_leak.lua"
+],
+"27": [
+"docs/ALL_PROBES.md",
+"probes/phase13_53batch/53b_afroute_retest.lua",
+"probes/phase17_new_vectors/736a_sys28_zeros.lua"
+],
+"626": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54a2_rdmsr_precise.lua",
+"probes/phase14_final_push/54a_rdmsr_leak.lua",
+"probes/phase14_final_push/54k_sys649_deep_and_rdmsr.lua"
+],
+"629": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54b_jail_bypass.lua",
+"probes/phase14_final_push/55f_post_jail.lua",
+"probes/phase17_new_vectors/1034a_physhm_arg1.lua"
+],
+"661": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54c_aio_full_attack.lua",
+"probes/phase14_final_push/54f_kaslr_deep.lua",
+"probes/phase14_final_push/55b_post_kaslr_kwrite.lua"
+],
+"663": [
+"docs/ALL_PROBES.md",
+"docs/research/relapse_variant_analysis.md",
+"probes/phase14_final_push/54c_aio_full_attack.lua",
+"probes/phase14_final_push/55e_aio_race.lua"
+],
+"670": [
+"docs/ALL_PROBES.md",
+"docs/research/relapse_variant_analysis.md",
+"probes/phase14_final_push/54c_aio_full_attack.lua",
+"probes/phase17_new_vectors/170a_sys_670_side_effects.lua"
+],
+"639": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54c_aio_full_attack.lua",
+"probes/phase14_final_push/54f_kaslr_deep.lua",
+"probes/phase14_final_push/54h_lua_webkit_bridge.lua"
+],
+"598": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54c_aio_full_attack.lua",
+"probes/phase14_final_push/54f_kaslr_deep.lua",
+"probes/phase17_new_vectors/339a_637_598_659.lua"
+],
+"625": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54c_aio_full_attack.lua",
+"probes/phase17_new_vectors/115a_flag_or_priv_bypass.lua",
+"probes/phase17_new_vectors/181a_opmc_set_hw_surface.lua"
+],
+"675": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54c_aio_full_attack.lua",
+"probes/phase14_final_push/55e_vm_cred_survey.lua",
+"results/webkit_kernel_crossref/webkit_path_5_jail_module.md"
+],
+"638": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54f_kaslr_deep.lua",
+"probes/phase14_final_push/55a_post_kaslr_kread.lua",
+"probes/phase17_new_vectors/100a_kernel_table_modlist.lua"
+],
+"572": [
+"docs/ALL_PROBES.md",
+"docs/CREATIVE_ROUTES_II_14_10.md",
+"probes/phase14_final_push/54f_kaslr_deep.lua",
+"probes/phase14_final_push/54i_sys572_buffer_exam.lua"
+],
+"563": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54i_sys567_pmc_read.lua",
+"probes/phase17_new_vectors/177d_opmc_state.lua",
+"probes/phase17_new_vectors/182a_opmc_get_hw_surface.lua"
+],
+"564": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54i_sys567_pmc_read.lua",
+"probes/phase17_new_vectors/177d_opmc_state.lua",
+"probes/phase17_new_vectors/327a_opmc_scope.lua"
+],
+"567": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/54i_sys567_pmc_read.lua",
+"probes/phase14_final_push/54k_sys649_deep_and_rdmsr.lua",
+"probes/phase17_new_vectors/177d_opmc_state.lua"
+],
+"2": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55a_chicken_switches.lua",
+"probes/phase14_final_push/55f_post_jail.lua",
+"probes/phase17_new_vectors/115a_flag_or_priv_bypass.lua"
+],
+"308": [
+"docs/ALL_PROBES.md",
+"docs/UNTESTED_THEORIES.md",
+"probes/phase14_final_push/55a_chicken_switches.lua",
+"probes/phase14_final_push/55f_post_jail.lua"
+],
+"548": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55b_batch_vm_ops.lua",
+"probes/phase17_new_vectors/102a_chicken_combined_chain.lua",
+"probes/phase17_new_vectors/236a_batch_vm_548.lua"
+],
+"24": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55b_post_kaslr_kwrite.lua",
+"probes/phase17_new_vectors/511a_identity_and_native.lua"
+],
+"25": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55b_post_kaslr_kwrite.lua",
+"probes/phase17_new_vectors/511a_identity_and_native.lua"
+],
+"340": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55d_rwx_shellcode.lua",
+"probes/phase17_new_vectors/361b_socket_consumption.lua",
+"probes/phase17_new_vectors/441a_compositor_size_diff.lua"
+],
+"37": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55d_rwx_shellcode.lua",
+"probes/phase17_new_vectors/119a_evfilt_proc_leak.lua"
+],
+"662": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55e_aio_race.lua",
+"probes/phase17_new_vectors/235a_recovered_contracts.lua",
+"probes/phase17_new_vectors/237a_aio_ids_and_protection.lua"
+],
+"664": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55e_aio_race.lua",
+"probes/phase17_new_vectors/235a_recovered_contracts.lua",
+"probes/phase17_new_vectors/237a_aio_ids_and_protection.lua"
+],
+"665": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55e_aio_race.lua",
+"probes/phase17_new_vectors/186a_count_and_aio_structs.lua",
+"probes/phase18_race_ingredients/79c_aio_race_ingredients.lua"
+],
+"666": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55e_aio_race.lua",
+"probes/phase17_new_vectors/355a_aio_class.lua",
+"probes/phase17_new_vectors/411a_aio_race.lua"
+],
+"587": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55e_vm_cred_survey.lua",
+"probes/phase14_final_push/56i3_kaslr_deep_scan.lua",
+"probes/phase14_final_push/56i8_eboot_data_kptr.lua"
+],
+"672": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55e_vm_cred_survey.lua",
+"probes/phase17_new_vectors/591a_chicken_gate_retest.lua"
+],
+"671": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55e_vm_cred_survey.lua",
+"probes/phase17_new_vectors/435a_kernel_gauge.lua",
+"probes/phase17_new_vectors/887a_sys637_self_gate.lua"
+],
+"673": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55e_vm_cred_survey.lua",
+"probes/phase17_new_vectors/591a_chicken_gate_retest.lua"
+],
+"26": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55f_post_jail.lua",
+"probes/phase9_kaslr_defeat/42j_thread_ptrace.lua"
+],
+"301": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55f_post_jail.lua",
+"probes/phase14_final_push/56h2_kldsym_kaslr.lua",
+"probes/phase14_final_push/56h_kldstat_kaslr.lua"
+],
+"251": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55f_post_jail.lua",
+"probes/phase17_new_vectors/115a_flag_or_priv_bypass.lua",
+"probes/phase17_new_vectors/85a_dispatch_retaddr_global.lua"
+],
+"378": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/55f_post_jail.lua"
+],
+"302": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56h2_kldsym_kaslr.lua",
+"probes/phase14_final_push/56h_kldstat_kaslr.lua",
+"probes/phase14_final_push/56k4_kldstat_kaslr.lua"
+],
+"303": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56h2_kldsym_kaslr.lua",
+"probes/phase14_final_push/56h_kldstat_kaslr.lua"
+],
+"304": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56h2_kldsym_kaslr.lua",
+"probes/phase14_final_push/56h_kldstat_kaslr.lua"
+],
+"343": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56i6_kaslr_pivot.lua"
+],
+"53": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56i6_kaslr_pivot.lua"
+],
+"196": [
+"docs/ALL_PROBES.md",
+"docs/DEVFS_NAMESPACE_14_10.md",
+"probes/phase14_final_push/56i6_kaslr_pivot.lua",
+"probes/phase17_new_vectors/294a_jail_layout.lua"
+],
+"121": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56i9_kaslr_bruteforce.lua"
+],
+"232": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56j_timing_kaslr.lua",
+"probes/phase14_final_push/56k2_signal_oracle.lua",
+"probes/phase14_final_push/56k3_external_oracle.lua"
+],
+"117": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56j_timing_kaslr.lua"
+],
+"306": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56k4_kldstat_kaslr.lua",
+"probes/phase14_final_push/56k5_modsys_kaslr.lua"
+],
+"300": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56k4_kldstat_kaslr.lua",
+"probes/phase14_final_push/56k5_modsys_kaslr.lua"
+],
+"227": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56k_kaslr_bruteforce.lua"
+],
+"75": [
+"docs/ALL_PROBES.md",
+"probes/phase14_final_push/56k_kaslr_bruteforce.lua",
+"probes/phase17_new_vectors/114a_gpu_mmap_alias_race.lua",
+"probes/phase17_new_vectors/114a_secC.lua"
+],
+"549": [
+"docs/ALL_PROBES.md",
+"probes/phase17_new_vectors/349a_osem_family.lua",
+"probes/phase17_new_vectors/349b_osem_order.lua",
+"probes/phase17_new_vectors/349c_osem_wait.lua"
+],
+"550": [
+"docs/ALL_PROBES.md",
+"probes/phase17_new_vectors/349a_osem_family.lua",
+"probes/phase17_new_vectors/349b_osem_order.lua",
+"probes/phase17_new_vectors/349c_osem_wait.lua"
+],
+"552": [
+"docs/ALL_PROBES.md",
+"probes/phase17_new_vectors/349a_osem_family.lua",
+"probes/phase17_new_vectors/349b_osem_order.lua",
+"probes/phase17_new_vectors/349c_osem_wait.lua"
+],
+"538": [
+"docs/ALL_PROBES.md",
+"probes/phase17_new_vectors/1078a_622_arm_handle.lua",
+"probes/phase17_new_vectors/336a_evf_handle.lua",
+"probes/phase17_new_vectors/338a_evf_handle_space.lua"
+],
+"539": [
+"docs/ALL_PROBES.md",
+"probes/phase17_new_vectors/435a_kernel_gauge.lua",
+"probes/phase17_new_vectors/437a_slot_reuse.lua",
+"probes/phase17_new_vectors/438a_slot_prediction.lua"
+],
+"573": [
+"docs/ALL_PROBES.md",
+"probes/phase17_new_vectors/337a_mdbg_minimal.lua",
+"probes/phase9_kaslr_defeat/42d_dmem_kaslr.lua"
+],
+"614": [
+"docs/ALL_PROBES.md",
+"probes/phase9_kaslr_defeat/42d_dmem_kaslr.lua"
+],
+"618": [
+"docs/ALL_PROBES.md",
+"probes/phase17_new_vectors/356a_chicken_retest.lua",
+"probes/phase9_kaslr_defeat/42d_dmem_kaslr.lua"
+],
+"586": [
+"docs/ALL_PROBES.md",
+"probes/phase17_new_vectors/891a_gate_free_branches.lua",
+"probes/phase9_kaslr_defeat/42f_ps5_syscall_scan.lua"
+],
+"619": [
+"docs/CREATIVE_ROUTES_14_10.md",
+"probes/phase17_new_vectors/179a_debug_rwmem_args.lua",
+"probes/phase17_new_vectors/447a_debug_rwmem.lua",
+"probes/phase17_new_vectors/892a_sys619_sweep.lua"
+],
+"417": [
+"docs/CREATIVE_ROUTES_14_10.md",
+"docs/CREATIVE_ROUTES_II_14_10.md",
+"probes/phase17_new_vectors/106a_sigreturn_srop.lua",
+"probes/phase17_new_vectors/814b_sigreturn_roundtrip.lua"
+],
+"379": [
+"docs/CREATIVE_ROUTES_II_14_10.md"
+],
+"659": [
+"docs/CREATIVE_ROUTES_II_14_10.md",
+"probes/phase17_new_vectors/100a_kernel_table_modlist.lua",
+"probes/phase17_new_vectors/235a_recovered_contracts.lua",
+"probes/phase17_new_vectors/237a_aio_ids_and_protection.lua"
+],
+"393": [
+"docs/CREATIVE_ROUTES_II_14_10.md",
+"docs/CVE-2026-49427-PS5-14.10.md",
+"probes/phase15_native_sysent/58d_shm_sendfile_reachability.lua"
+],
+"623": [
+"docs/CREATIVE_ROUTES_II_14_10.md"
+],
+"226": [
+"docs/CVE-2026-49418-PS5-14.10.md",
+"docs/FREEBSD_CVE_TRIAGE_14_10.md",
+"probes/phase15_native_sysent/58a_msync_reachability.lua"
+],
+"496": [
+"docs/CVE-2026-49419-PS5-14.10.md"
+],
+"497": [
+"docs/CVE-2026-49419-PS5-14.10.md"
+],
+"338": [
+"docs/CVE-2026-49419-PS5-14.10.md"
+],
+"429": [
+"docs/CVE-2026-49419-PS5-14.10.md"
+],
+"482": [
+"docs/CVE-2026-49427-PS5-14.10.md",
+"probes/phase15_native_sysent/58d_shm_sendfile_reachability.lua",
+"probes/phase17_new_vectors/356a_chicken_retest.lua",
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"367": [
+"docs/UNTESTED_THEORIES.md"
+],
+"668": [
+"docs/research/relapse_variant_analysis.md",
+"probes/phase17_new_vectors/169a_sys_668_argument_shape.lua",
+"probes/phase17_new_vectors/186a_count_and_aio_structs.lua",
+"probes/phase17_new_vectors/486b_aio_create_probe.lua"
+],
+"235": [
+"probes/phase14_final_push/56l_corrected_mib_probe.lua",
+"probes/phase17_new_vectors/105a_evfilt_proc_kptr_leak.lua",
+"probes/phase17_new_vectors/79c_ktimer_signal_reentrancy.lua"
+],
+"236": [
+"probes/phase14_final_push/56l_corrected_mib_probe.lua",
+"probes/phase17_new_vectors/105a_evfilt_proc_kptr_leak.lua",
+"probes/phase17_new_vectors/79c_ktimer_signal_reentrancy.lua"
+],
+"237": [
+"probes/phase14_final_push/56l_corrected_mib_probe.lua",
+"probes/phase17_new_vectors/105a_evfilt_proc_kptr_leak.lua",
+"probes/phase17_new_vectors/79c_ktimer_signal_reentrancy.lua"
+],
+"238": [
+"probes/phase14_final_push/56l_corrected_mib_probe.lua",
+"probes/phase17_new_vectors/105a_evfilt_proc_kptr_leak.lua",
+"probes/phase17_new_vectors/79c_ktimer_signal_reentrancy.lua"
+],
+"483": [
+"probes/phase15_native_sysent/58d_shm_sendfile_reachability.lua",
+"probes/phase17_new_vectors/356a_chicken_retest.lua",
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua",
+"probes/phase17_new_vectors/932a_shm_object_lifecycle.lua"
+],
+"480": [
+"probes/phase15_native_sysent/58d_shm_sendfile_reachability.lua",
+"probes/phase17_new_vectors/356a_chicken_retest.lua",
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua",
+"probes/phase17_new_vectors/82a_umtx_exploit_vectors.lua"
+],
+"580": [
+"probes/phase15_native_sysent/58d_shm_sendfile_reachability.lua"
+],
+"430": [
+"probes/phase15_native_sysent/58e_thr_create_ucontext.lua",
+"probes/phase16_thr_create_crash/58e_thr_create_reachability.lua",
+"probes/phase16_thr_create_crash/76e_thr_create_exit_wait.lua",
+"probes/phase16_thr_create_crash/77a_panic_boundary_map.lua"
+],
+"433": [
+"probes/phase15_native_sysent/59b_thr_family_survey.lua",
+"probes/phase16_thr_create_crash/78a_thr_suspend_race.lua",
+"probes/phase17_new_vectors/156a_thr_create_spin_observable.lua",
+"probes/phase17_new_vectors/156c_thr_create_correct_offsets.lua"
+],
+"442": [
+"probes/phase15_native_sysent/59b_thr_family_survey.lua",
+"probes/phase16_thr_create_crash/78a_thr_suspend_race.lua",
+"probes/phase17_new_vectors/156a_thr_create_spin_observable.lua",
+"probes/phase17_new_vectors/156c_thr_create_correct_offsets.lua"
+],
+"443": [
+"probes/phase15_native_sysent/59b_thr_family_survey.lua",
+"probes/phase16_thr_create_crash/78a_thr_suspend_race.lua",
+"probes/phase17_new_vectors/156a_thr_create_spin_observable.lua",
+"probes/phase17_new_vectors/80a_thr_create_cs43_threading.lua"
+],
+"464": [
+"probes/phase15_native_sysent/59b_thr_family_survey.lua"
+],
+"481": [
+"probes/phase15_native_sysent/59b_thr_family_survey.lua"
+],
+"635": [
+"probes/phase15_native_sysent/59b_thr_family_survey.lua",
+"probes/phase17_new_vectors/326a_thr_set_ucontext.lua"
+],
+"363": [
+"probes/phase16_thr_create_crash/78d_kevent_evfilt_proc.lua",
+"probes/phase17_new_vectors/105a_evfilt_proc_kptr_leak.lua",
+"probes/phase17_new_vectors/119a_evfilt_proc_leak.lua",
+"probes/phase17_new_vectors/421a_kevent_close_race.lua"
+],
+"660": [
+"probes/phase17_new_vectors/100a_kernel_table_modlist.lua",
+"probes/phase17_new_vectors/235a_recovered_contracts.lua",
+"probes/phase17_new_vectors/237a_aio_ids_and_protection.lua",
+"probes/phase17_new_vectors/239a_aio_id_slots.lua"
+],
+"654": [
+"probes/phase17_new_vectors/102a_chicken_combined_chain.lua",
+"probes/phase17_new_vectors/183a_blockpool.lua",
+"probes/phase17_new_vectors/311a_sys654_range_op.lua",
+"probes/phase17_new_vectors/312a_sys654_region_scan.lua"
+],
+"655": [
+"probes/phase17_new_vectors/102a_chicken_combined_chain.lua",
+"probes/phase17_new_vectors/183a_blockpool.lua",
+"probes/phase17_new_vectors/184a_blockpool_batch.lua",
+"probes/phase17_new_vectors/586a_blockpool_map.lua"
+],
+"657": [
+"probes/phase17_new_vectors/102a_chicken_combined_chain.lua",
+"probes/phase17_new_vectors/183a_blockpool.lua",
+"probes/phase17_new_vectors/184a_blockpool_batch.lua",
+"probes/phase17_new_vectors/235a_recovered_contracts.lua"
+],
+"589": [
+"probes/phase17_new_vectors/1030a_dynlib_dlopen.lua",
+"probes/phase17_new_vectors/1031a_dlopen_shapes.lua"
+],
+"613": [
+"probes/phase17_new_vectors/1066a_sys613_copyout.lua",
+"probes/phase17_new_vectors/186a_count_and_aio_structs.lua"
+],
+"421": [
+"probes/phase17_new_vectors/106a_sigreturn_srop.lua",
+"probes/phase17_new_vectors/814a_getcontext_dump.lua",
+"probes/phase17_new_vectors/814b_sigreturn_roundtrip.lua",
+"probes/phase17_new_vectors/816a_rflags_iopl.lua"
+],
+"324": [
+"probes/phase17_new_vectors/110a_vm_page_manipulation.lua"
+],
+"135": [
+"probes/phase17_new_vectors/111a_heap_feng_shui.lua",
+"probes/phase17_new_vectors/235a_netcontrol_dup.lua",
+"probes/phase17_new_vectors/408a_chain_writes.lua",
+"probes/phase17_new_vectors/409a_chain_arg_gadgets.lua"
+],
+"615": [
+"probes/phase17_new_vectors/113a_untested_handler_trio.lua"
+],
+"636": [
+"probes/phase17_new_vectors/113a_untested_handler_trio.lua",
+"probes/phase17_new_vectors/115a_flag_or_priv_bypass.lua",
+"probes/phase17_new_vectors/1162a_636_637_gate_639_abi.lua",
+"probes/phase17_new_vectors/936a_bit62_gate_oracle.lua"
+],
+"203": [
+"probes/phase17_new_vectors/114a_gpu_mmap_alias_race.lua",
+"probes/phase17_new_vectors/114a_secC.lua",
+"probes/phase17_new_vectors/114b_secB.lua",
+"probes/phase17_new_vectors/114c_secC.lua"
+],
+"204": [
+"probes/phase17_new_vectors/114a_gpu_mmap_alias_race.lua",
+"probes/phase17_new_vectors/114a_secC.lua",
+"probes/phase17_new_vectors/114b_secB.lua",
+"probes/phase17_new_vectors/114c_secC.lua"
+],
+"603": [
+"probes/phase17_new_vectors/115a_flag_or_priv_bypass.lua",
+"probes/phase17_new_vectors/447a_debug_rwmem.lua"
+],
+"518": [
+"probes/phase17_new_vectors/120a_pdfork_capsicum.lua"
+],
+"519": [
+"probes/phase17_new_vectors/120a_pdfork_capsicum.lua"
+],
+"520": [
+"probes/phase17_new_vectors/120a_pdfork_capsicum.lua"
+],
+"521": [
+"probes/phase17_new_vectors/120a_pdfork_capsicum.lua"
+],
+"517": [
+"probes/phase17_new_vectors/120a_pdfork_capsicum.lua"
+],
+"516": [
+"probes/phase17_new_vectors/120a_pdfork_capsicum.lua"
+],
+"515": [
+"probes/phase17_new_vectors/120a_pdfork_capsicum.lua"
+],
+"116": [
+"probes/phase17_new_vectors/159a_syscall_path_control.lua",
+"probes/phase17_new_vectors/160a_thread_umtx_return.lua",
+"probes/phase17_new_vectors/161a_umtx_op_enumeration.lua",
+"probes/phase17_new_vectors/162a_umtx_arg_validation.lua"
+],
+"570": [
+"probes/phase17_new_vectors/172a_sysctlbyname.lua",
+"probes/phase17_new_vectors/353c_absent_or_rejecting.lua",
+"probes/phase17_new_vectors/353d_fstat_kldstat.lua"
+],
+"565": [
+"probes/phase17_new_vectors/177d_opmc_state.lua",
+"probes/phase17_new_vectors/327a_opmc_scope.lua",
+"probes/phase17_new_vectors/332a_authid_gates.lua",
+"probes/phase17_new_vectors/92a_pmu_hardware_exploit.lua"
+],
+"566": [
+"probes/phase17_new_vectors/177d_opmc_state.lua",
+"probes/phase17_new_vectors/327a_opmc_scope.lua",
+"probes/phase17_new_vectors/332a_authid_gates.lua",
+"probes/phase17_new_vectors/92a_pmu_hardware_exploit.lua"
+],
+"653": [
+"probes/phase17_new_vectors/183a_blockpool.lua",
+"probes/phase17_new_vectors/184a_blockpool_batch.lua",
+"probes/phase17_new_vectors/310a_sys653_value_map.lua",
+"probes/phase17_new_vectors/355b_blockpool_fd.lua"
+],
+"561": [
+"probes/phase17_new_vectors/186a_count_and_aio_structs.lua"
+],
+"562": [
+"probes/phase17_new_vectors/186a_count_and_aio_structs.lua"
+],
+"99": [
+"probes/phase17_new_vectors/235a_netcontrol_dup.lua"
+],
+"29": [
+"probes/phase17_new_vectors/235a_netcontrol_dup.lua",
+"probes/phase17_new_vectors/296a_system_sockets.lua",
+"probes/phase17_new_vectors/297a_socket_framing.lua",
+"probes/phase17_new_vectors/361a_socket_consumption.lua"
+],
+"533": [
+"probes/phase17_new_vectors/236a_batch_vm_548.lua",
+"probes/phase17_new_vectors/862a_sys533_jitshm.lua",
+"probes/phase17_new_vectors/862b_sys533_slots.lua"
+],
+"630": [
+"probes/phase17_new_vectors/313a_physhm_open.lua",
+"probes/phase17_new_vectors/84a_sys653_gpu_pte_nopriv.lua",
+"probes/phase17_new_vectors/91a_sys630_mount_enum.lua",
+"results/webkit_kernel_crossref/webkit_path_5_jail_module.md"
+],
+"535": [
+"probes/phase17_new_vectors/332a_authid_gates.lua",
+"probes/phase17_new_vectors/333a_cred_foreign_pid.lua"
+],
+"536": [
+"probes/phase17_new_vectors/332a_authid_gates.lua",
+"probes/phase17_new_vectors/333a_cred_foreign_pid.lua"
+],
+"540": [
+"probes/phase17_new_vectors/336a_evf_handle.lua",
+"probes/phase17_new_vectors/341a_named_objects_create.lua",
+"probes/phase17_new_vectors/342a_named_objects_after_relaunch.lua",
+"probes/phase17_new_vectors/347a_handle_family_confusion.lua"
+],
+"541": [
+"probes/phase17_new_vectors/336a_evf_handle.lua",
+"probes/phase17_new_vectors/442a_evf_lifetime.lua",
+"probes/phase17_new_vectors/443a_named_leak.lua",
+"probes/phase17_new_vectors/444a_evf_delete.lua"
+],
+"543": [
+"probes/phase17_new_vectors/336a_evf_handle.lua",
+"probes/phase17_new_vectors/442a_evf_lifetime.lua",
+"probes/phase17_new_vectors/88a_handle_namespace_confusion.lua"
+],
+"545": [
+"probes/phase17_new_vectors/336a_evf_handle.lua",
+"probes/phase17_new_vectors/338a_evf_handle_space.lua",
+"probes/phase17_new_vectors/442a_evf_lifetime.lua"
+],
+"546": [
+"probes/phase17_new_vectors/336a_evf_handle.lua",
+"probes/phase17_new_vectors/338a_evf_handle_space.lua",
+"probes/phase17_new_vectors/442a_evf_lifetime.lua"
+],
+"555": [
+"probes/phase17_new_vectors/349a_osem_family.lua",
+"probes/phase17_new_vectors/349b_osem_order.lua",
+"probes/phase17_new_vectors/349c_osem_wait.lua",
+"probes/phase17_new_vectors/439a_osem_lifetime.lua"
+],
+"554": [
+"probes/phase17_new_vectors/349a_osem_family.lua",
+"probes/phase17_new_vectors/349b_osem_order.lua",
+"probes/phase17_new_vectors/349c_osem_wait.lua",
+"probes/phase17_new_vectors/439a_osem_lifetime.lua"
+],
+"553": [
+"probes/phase17_new_vectors/349a_osem_family.lua",
+"probes/phase17_new_vectors/349b_osem_order.lua",
+"probes/phase17_new_vectors/349c_osem_wait.lua",
+"probes/phase17_new_vectors/349d_osem_timeout_ptr.lua"
+],
+"556": [
+"probes/phase17_new_vectors/349a_osem_family.lua",
+"probes/phase17_new_vectors/349b_osem_order.lua",
+"probes/phase17_new_vectors/349c_osem_wait.lua"
+],
+"551": [
+"probes/phase17_new_vectors/349a_osem_family.lua",
+"probes/phase17_new_vectors/349b_osem_order.lua",
+"probes/phase17_new_vectors/349c_osem_wait.lua",
+"probes/phase17_new_vectors/392a_thread_syscall_storm.lua"
+],
+"669": [
+"probes/phase17_new_vectors/355a_aio_class.lua",
+"probes/phase17_new_vectors/411a_aio_race.lua",
+"probes/phase17_new_vectors/412a_aio_race_long.lua",
+"probes/phase17_new_vectors/413a_chain_control_long.lua"
+],
+"475": [
+"probes/phase17_new_vectors/355b_blockpool_fd.lua"
+],
+"478": [
+"probes/phase17_new_vectors/355b_blockpool_fd.lua",
+"probes/phase17_new_vectors/388a_self_header.lua",
+"probes/phase17_new_vectors/389a_elf_segments.lua",
+"probes/phase17_new_vectors/390a_self_plaintext.lua"
+],
+"499": [
+"probes/phase17_new_vectors/356a_chicken_retest.lua"
+],
+"188": [
+"probes/phase17_new_vectors/362b_socket_state.lua",
+"probes/phase17_new_vectors/378a_jail_artifacts.lua"
+],
+"58": [
+"probes/phase17_new_vectors/379a_socket_targets.lua"
+],
+"431": [
+"probes/phase17_new_vectors/392a_thread_syscall_storm.lua",
+"probes/phase17_new_vectors/393a_storm_bisect.lua",
+"probes/phase17_new_vectors/395a_storm_small.lua",
+"probes/phase17_new_vectors/397a_thread_idle.lua"
+],
+"100": [
+"probes/phase17_new_vectors/441a_compositor_size_diff.lua"
+],
+"65": [
+"probes/phase17_new_vectors/455a_msync_invalidate.lua",
+"probes/phase17_new_vectors/455b_msync_flags.lua",
+"probes/phase17_new_vectors/455c_msync_device_flags.lua",
+"probes/phase17_new_vectors/455d_msync_vnode.lua"
+],
+"1": [
+"probes/phase17_new_vectors/486k_aio662_slot_sweep.lua"
+],
+"47": [
+"probes/phase17_new_vectors/511a_identity_and_native.lua"
+],
+"43": [
+"probes/phase17_new_vectors/511a_identity_and_native.lua"
+],
+"28": [
+"probes/phase17_new_vectors/736a_sys28_zeros.lua"
+],
+"239": [
+"probes/phase17_new_vectors/79c_ktimer_signal_reentrancy.lua"
+],
+"404": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"405": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"400": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"401": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"402": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"403": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"406": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"407": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"408": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"457": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"463": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"460": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"461": [
+"probes/phase17_new_vectors/79d_shm_sem_mqueuee.lua"
+],
+"422": [
+"probes/phase17_new_vectors/81a_srop_sigreturn_setcontext.lua"
+],
+"534": [
+"probes/phase17_new_vectors/862a_sys533_jitshm.lua",
+"probes/phase17_new_vectors/862b_sys533_slots.lua"
+],
+"221": [
+"probes/phase17_new_vectors/936a_sysv_ipc_reach.lua",
+"probes/phase17_new_vectors/936b_sysv_creators_ordered.lua",
+"probes/phase17_new_vectors/936c_sysv_lookup_only.lua"
+],
+"225": [
+"probes/phase17_new_vectors/936a_sysv_ipc_reach.lua",
+"probes/phase17_new_vectors/936b_sysv_creators_ordered.lua",
+"probes/phase17_new_vectors/936c_sysv_lookup_only.lua"
+],
+"231": [
+"probes/phase17_new_vectors/936a_sysv_ipc_reach.lua",
+"probes/phase17_new_vectors/936b_sysv_creators_ordered.lua",
+"probes/phase17_new_vectors/936c_sysv_lookup_only.lua"
+],
+"228": [
+"probes/phase17_new_vectors/936a_sysv_ipc_reach.lua",
+"probes/phase17_new_vectors/936b_sysv_creators_ordered.lua"
+],
+"642": [
+"probes/phase17_new_vectors/937a_stats_handlers_641_642_646.lua"
+],
+"641": [
+"probes/phase17_new_vectors/937a_stats_handlers_641_642_646.lua"
+],
+"59": [
+"tools/test_remaining_cve_triage.py"
+]
+}

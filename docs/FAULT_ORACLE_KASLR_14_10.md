@@ -70,12 +70,25 @@ python3 -B -m unittest -v tools.test_fault_oracle_boundary
 The checker verifies observations and a conditional bracket, not mapping-state stability
 or firmware authenticity. It requires no console and does not execute probe code.
 
+Edge resolution (page counts corrected 2026-11-10):
+- Leading edge is at `0xFFFFFFFFD4000000` (2 MB aligned) — that position comes from 1199b's
+  single-capture bracket; 1199c does not sample the address, and the finer bracket is the
+  conditional cross-capture one described above
+- All 512 *samples* in the last 2 MB step are mapped. The kernel page is **16 KiB** (`1544a`: one
+  `0x40000` mmap is one 547 record and sixteen addresses at `0x4000` stride each read a distinct
+  sentinel), so 2 MB / `0x4000` = **128 pages**, and the 512 probes are four samples per page. The
+  oracle's true edge resolution is therefore **16 KiB, not 4 KB** — a present/absent fault is uniform
+  across a 16 KiB page, so the first 4 KiB sample of the first absent page still names a true page
+  boundary and every conclusion below survives.
+- First page past image (`DA600000`) is unmapped
+- 8 KiB below image start are all unmapped — that is **2 pages** of 16 KiB, not 8
+
 ## Performance
 
 - 512 probes per connection, 33 seconds, process survives
 - 60 ms sleep between child spawns (enough for handler + thr_exit)
 - 1024 total probes (lower + upper half) to cover entire kernel VA range
-- 528 probes for edge resolution at 4 KB
+- 528 probes for edge resolution (4 KiB stride, 16 KiB actual resolution)
 
 ## What it is and is not
 

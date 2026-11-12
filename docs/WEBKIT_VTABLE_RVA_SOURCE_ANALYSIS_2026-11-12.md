@@ -60,8 +60,11 @@ There are (at least) two concrete subclasses in the tree:
      (`{ }`, CSSFontFaceSet.h:94)
    It does NOT override `fontLoaded` — inherits the empty `Client::fontLoaded`.
 
-2. **`FontFace`** (`Source/WebCore/css/FontFace.h`) — the wrapper that the UAF
-   actually frees — is also a `CSSFontFace::Client`. It overrides:
+2. **`FontFace`** (`Source/WebCore/css/FontFace.h`) — the wrapper JS holds — is
+   also a `CSSFontFace::Client`. (Note: the UAF frees the backing `CSSFontFace`,
+   NOT the wrapper — the wrapper stays alive and rooted, holding `m_backing` as
+   a dangling strong ref to the freed face slot. See the correction note below.)
+   It overrides:
    - `fontStateChanged(...)` — `final` (FontFace.h:92)
    - `ref()`/`deref()` — `final` (FontFace.h:94-95)
    It does **NOT** override `fontLoaded`, `fontPropertyChanged`, or
@@ -69,10 +72,11 @@ There are (at least) two concrete subclasses in the tree:
 
 ## Why the beacon shows s2 == s4 == s5
 
-The p691 walk chain leaked VP from the **freed CSSFontFace wrapper** (the
-object reclaimed by the 192B ArrayBuffer spray). The relevant vtable is the
-secondary `CSSFontFace::Client` table at FontFace+0x20
-(`docs/FONTFACE_ITANIUM_ABI_RESOLUTION.md`).
+The p691 walk chain read VP out of the freed `CSSFontFace`'s client set, via
+the **alive, rooted `FontFace` wrapper** (the 192B ArrayBuffer spray reclaims
+the freed face slot; the wrapper is the client registered in that set). The
+relevant vtable is the wrapper's secondary `CSSFontFace::Client` table at
+FontFace+0x20 (`docs/FONTFACE_ITANIUM_ABI_RESOLUTION.md`).
 
 For `FontFace`'s Client table:
 - s2 `fontLoaded`          = `Client::fontLoaded`          (empty, inherited)

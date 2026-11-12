@@ -1,0 +1,110 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p692b-ctx-diag</title></head>
+<body><pre id="out">p692b: Canvas context type enumeration</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(tag,d){
+  var msg='CTX-'+tag+(d!==undefined?'-'+String(d).slice(0,800):'');
+  say(msg);
+  try{
+    var x=new XMLHttpRequest();
+    x.open('POST','/api/beacon',false);
+    x.setRequestHeader('Content-Type','application/json');
+    x.send(JSON.stringify({stage:'p692b',msg:msg,level:'info',sid:'p692b-'+Date.now(),ua:navigator.userAgent}));
+  }catch(e){
+    try{new Image().src='/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now();}catch(e2){}
+  }
+}
+
+bk('START', navigator.userAgent);
+
+// Test every known canvas context type
+var types = ['2d','webgl','webgl2','bitmaprenderer','webgpu'];
+for(var i=0;i<types.length;i++){
+  var t=types[i];
+  try{
+    var c=document.createElement('canvas');
+    c.width=1;c.height=1;
+    var ctx=c.getContext(t);
+    if(ctx){
+      bk(t, 'YES constructor='+ctx.constructor.name);
+    } else {
+      bk(t, 'NULL');
+    }
+  }catch(e){
+    bk(t, 'ERR:'+e.message);
+  }
+}
+
+// Test OffscreenCanvas
+bk('OffscreenCanvas', typeof OffscreenCanvas);
+
+// Test reentry: for each available type pair (A,B) where A!=B,
+// try getContext(A, {alpha getter -> getContext(B)})
+bk('REENTRY-TESTS','starting');
+var available=[];
+for(var i=0;i<types.length;i++){
+  try{
+    var c=document.createElement('canvas');c.width=1;c.height=1;
+    if(c.getContext(types[i])) available.push(types[i]);
+  }catch(e){}
+}
+bk('AVAILABLE', available.join(','));
+
+for(var i=0;i<available.length;i++){
+  for(var j=0;j<available.length;j++){
+    if(i===j) continue;
+    var outerType=available[i];
+    var innerType=available[j];
+    try{
+      var cv=document.createElement('canvas');cv.width=1;cv.height=1;
+      var innerResult=null;
+      var getterFired=false;
+      var opts={};
+      Object.defineProperty(opts,'alpha',{
+        get:(function(cv2,it){
+          return function(){
+            getterFired=true;
+            innerResult=cv2.getContext(it);
+            return true;
+          };
+        })(cv,innerType)
+      });
+      var outerResult=cv.getContext(outerType,opts);
+      bk('PAIR-'+outerType+'+'+innerType,
+        'getter='+getterFired+
+        ' inner='+(innerResult?innerResult.constructor.name:'null')+
+        ' outer='+(outerResult?outerResult.constructor.name:'null'));
+      // If both returned non-null different types, that's the reentry condition
+      if(innerResult && outerResult && innerResult!==outerResult){
+        bk('CONFLICT', outerType+'+'+innerType+' BOTH RETURNED DIFFERENT OBJECTS');
+      }
+    }catch(e){
+      bk('PAIR-'+outerType+'+'+innerType, 'ERR:'+e.message);
+    }
+  }
+}
+
+// Test: same-type reentry (2d+2d) — does the getter fire at all?
+try{
+  var cv2=document.createElement('canvas');cv2.width=1;cv2.height=1;
+  var gf2=false;
+  var inner2d=null;
+  var o2={};
+  Object.defineProperty(o2,'alpha',{get:function(){gf2=true;inner2d=cv2.getContext('2d');return false;}});
+  var outer2d=cv2.getContext('2d',o2);
+  bk('SAME-2d+2d',
+    'getter='+gf2+
+    ' inner='+(inner2d?'obj':'null')+
+    ' outer='+(outer2d?'obj':'null')+
+    ' same='+(inner2d===outer2d));
+}catch(e){
+  bk('SAME-2d+2d','ERR:'+e.message);
+}
+
+bk('DONE');
+</script>
+</body></html>

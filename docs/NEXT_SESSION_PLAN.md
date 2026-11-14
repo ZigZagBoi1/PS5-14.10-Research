@@ -79,6 +79,20 @@
       de 30s).
     - **Negative honesto**: lane de address-mapping deles = sem addrof/
       fakeobj ainda (v2 em rotação). Board honesto, sem overclaim.
+11. **VARREDURA …450 (2026-11-14, nós, zero boots) — lei NÃO falsificada:**
+    357 logs varridos (história completa, além dos 156 do A2). 3 avistamentos
+    `…450 mod 0x1000`, TODOS em cargas vencedoras (hit), ZERO em perdedores:
+    - `10007e5450` (W) — P663-R0 hit=1, 10/11 23:38 (beacons_1171a6ad:21)
+    - `10007df450` (W) — P570H PH2 HIT UAF-OK-g1, 10/11 00:47 (beacons_241f8b0b:25)
+    - `1000820450` (W2) — P656M-P2 hit=55 forge=false, 10/11 01:33 (beacons_2def2bbf:142)
+    CAVEATS HONESTOS: (1) nossos logs não são walk-capable (teste estrito deles
+    exige lane p691 — o que temos é evidência adjacente, não o teste direto);
+    (2) nossos 3 são ponteiros W-família, não L1/célula-de-walk — população
+    diferente; (3) taxa 3/~675 (0,44%) é estatisticamente compatível com base
+    uniforme (1/256=0,39%) → marker segue não-falsificado porém não-provado.
+    Suas contagens ficam 10/10 winner-co-occurrence com nossos dados adjacentes.
+    Nenhuma ação nossa pendente; se lane p691-style entrar no runbook, o teste
+    estrito vira automático.
 
 ---
 

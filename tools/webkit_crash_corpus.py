@@ -44,6 +44,7 @@ from __future__ import annotations
 import argparse
 import concurrent.futures
 import json
+import hashlib
 import os
 import re
 import subprocess
@@ -386,6 +387,28 @@ assert "<script" not in JSC_SHIM_JS and "</script" not in JSC_SHIM_JS
 JSC_SHIM_JS = "var window = this;\n" + JSC_SHIM_JS
 
 JSC_DIRECTIVE = re.compile(r"^\s*//@")
+JSC_UNAVAILABLE_OPTIONS = re.compile(
+    r'(?<![\w-])--(useJIT|useBaselineJIT|useDFGJIT|useFTLJIT|useWebAssembly)=true(?=$|[\s\"\',)])')
+
+
+def jsc_preconditions(source):
+    """Retain upstream configuration requests before the browser strips them.
+
+    This is a source audit, not a JavaScript/Ruby parser or a vulnerability
+    verdict. Even a conditional directive is only a requested configuration.
+    """
+    directives = [{"line": number, "text": line.strip()}
+                  for number, line in enumerate(source.splitlines(), 1)
+                  if JSC_DIRECTIVE.match(line)]
+    requests = [{"line": item["line"], "option": match.group(0)}
+                for item in directives
+                for match in JSC_UNAVAILABLE_OPTIONS.finditer(item["text"])]
+    return {"decoded_source_sha256": hashlib.sha256(source.encode("utf-8")).hexdigest(),
+            "directives": directives, "unavailable_option_requests": requests,
+            "review_status": "configuration_review_required" if requests else "unassessed",
+            "vulnerability_status": "unknown"}
+
+
 JSC_LOAD = re.compile(r"^\s*load\(")
 JSC_VM = re.compile(r"\$(vm|262|host|debug|gc)\b")
 # `quit()` and `transferArrayBuffer()` are the shell's own process control and
@@ -746,6 +769,7 @@ def jsc_build() -> int:
         if re.match(r"jsc-\d+-.*\.html$", stale):
             os.remove(os.path.join(CORPUS, stale))
     bodies = []
+    preconditions = []
     dropped = 0
     slow_sources = set()
     if os.path.exists(JSC_TIME):
@@ -755,6 +779,8 @@ def jsc_build() -> int:
         with open(os.path.join(JSC_SRC, entry["file"]), encoding="utf-8",
                   errors="replace") as fh:
             source = fh.read()
+        preconditions.append(dict(jsc_preconditions(source), path=entry["path"],
+                                  source_file=entry["file"], commit=entry.get("sha")))
         if JSC_VM.search(source) or JSC_SHELL_ONLY.search(source):
             dropped += 1
             continue
@@ -791,6 +817,10 @@ def jsc_build() -> int:
         listing_out.append(item)
     with open(os.path.join(CORPUS, "jsc.json"), "w", encoding="utf-8") as fh:
         json.dump(listing_out, fh, indent=1)
+    with open(os.path.join(CORPUS, "preconditions-jsc.json"), "w", encoding="utf-8") as fh:
+        json.dump({"profile": "documented-ps5-14.10-jit-off",
+                   "scope": "source requests only; conditional directives are not evaluated",
+                   "tests": preconditions}, fh, indent=2)
     print("built %d pages (%d dropped as shell-only or memory-limited) into %s"
           % (len(listing_out), dropped, CORPUS))
     return 0

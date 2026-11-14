@@ -1,0 +1,123 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p802</title></head>
+<body><pre id="out">p802: deep API scan — new attack surfaces</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(tag,d){
+  var msg='P802-'+tag+(d!==undefined?'-'+String(d).slice(0,400):'');
+  say(msg);
+  try{new Image().src='/beacon/P802-'+encodeURIComponent(tag+(d!==undefined?'-'+String(d).slice(0,400):''))+'?t='+Date.now();}catch(e){}
+}
+
+bk('START',navigator.userAgent);
+
+// AudioWorklet
+try{bk('AUDIO-WL',typeof AudioWorklet+','+typeof AudioWorkletNode);}catch(e){bk('AUDIO-WL','absent');}
+try{var ac=new(window.AudioContext||window.webkitAudioContext)();bk('AUDIO-CTX','sampleRate='+ac.sampleRate+',state='+ac.state);ac.close();}catch(e){bk('AUDIO-CTX','ERR:'+e.message.slice(0,40));}
+
+// CSS Paint API
+try{bk('CSS-PAINT',typeof CSS!=='undefined'&&typeof CSS.paintWorklet);}catch(e){bk('CSS-PAINT','absent');}
+
+// OffscreenCanvas (re-check)
+try{bk('OFFSCREEN',typeof OffscreenCanvas);}catch(e){bk('OFFSCREEN','absent');}
+
+// WebRTC
+try{bk('WEBRTC-PC',typeof RTCPeerConnection);}catch(e){bk('WEBRTC-PC','absent');}
+try{bk('WEBRTC-DC',typeof RTCDataChannel);}catch(e){bk('WEBRTC-DC','absent');}
+
+// Blob URL reading
+try{var b=new Blob(['test'],{type:'text/plain'});var u=URL.createObjectURL(b);bk('BLOB-URL',u.slice(0,40));URL.revokeObjectURL(u);}catch(e){bk('BLOB','ERR');}
+
+// fetch with ArrayBuffer
+try{bk('FETCH',typeof fetch);}catch(e){bk('FETCH','absent');}
+
+// TextEncoder/TextDecoder
+try{var enc=new TextEncoder();var dec2=new TextDecoder();bk('TEXT-CODEC','enc='+!!enc+',dec='+!!dec2);}catch(e){bk('TEXT-CODEC','absent');}
+
+// Crypto subtle
+try{bk('CRYPTO',typeof crypto.subtle);}catch(e){bk('CRYPTO','absent');}
+
+// eval and Function constructor
+try{var r=eval('1+1');bk('EVAL',r);}catch(e){bk('EVAL','ERR:'+e.message.slice(0,40));}
+try{var f=new Function('return 42');bk('FUNC-CTOR',f());}catch(e){bk('FUNC-CTOR','ERR:'+e.message.slice(0,40));}
+
+// ArrayBuffer.transfer (if available)
+try{
+  var ab=new ArrayBuffer(16);
+  new Uint8Array(ab)[0]=0x42;
+  if(ab.transfer){var ab2=ab.transfer(32);bk('AB-TRANSFER','detached='+(!ab.byteLength)+',new='+ab2.byteLength+',val='+new Uint8Array(ab2)[0]);}
+  else if(typeof structuredClone!=='undefined'){bk('AB-TRANSFER','no .transfer(), use structuredClone');}
+  else{bk('AB-TRANSFER','absent');}
+}catch(e){bk('AB-TRANSFER','ERR:'+e.message.slice(0,40));}
+
+// ArrayBuffer.transferToFixedLength
+try{
+  var rab=new ArrayBuffer(64,{maxByteLength:256});
+  if(rab.transferToFixedLength){var fixed=rab.transferToFixedLength();bk('TRANSFER-FIXED','len='+fixed.byteLength+',resizable='+fixed.resizable);}
+  else bk('TRANSFER-FIXED','absent');
+}catch(e){bk('TRANSFER-FIXED','ERR:'+e.message.slice(0,40));}
+
+// Iterator helpers
+try{bk('ITER-HELPERS',typeof [].values().map);}catch(e){bk('ITER-HELPERS','absent');}
+
+// Temporal (probably absent)
+try{bk('TEMPORAL',typeof Temporal);}catch(e){bk('TEMPORAL','absent');}
+
+// MathML
+try{var ml=document.createElementNS('http://www.w3.org/1998/Math/MathML','math');bk('MATHML',!!ml);}catch(e){bk('MATHML','absent');}
+
+// SVG Filter
+try{
+  var svg=document.createElementNS('http://www.w3.org/2000/svg','svg');
+  var filter=document.createElementNS('http://www.w3.org/2000/svg','filter');
+  var feImg=document.createElementNS('http://www.w3.org/2000/svg','feImage');
+  var feCM=document.createElementNS('http://www.w3.org/2000/svg','feColorMatrix');
+  var feDM=document.createElementNS('http://www.w3.org/2000/svg','feDisplacementMap');
+  bk('SVG-FILTER','feImage='+!!feImg+',feColorMatrix='+!!feCM+',feDisplacementMap='+!!feDM);
+}catch(e){bk('SVG-FILTER','ERR');}
+
+// Service Worker
+try{bk('SW',typeof navigator.serviceWorker);}catch(e){bk('SW','absent');}
+
+// Cache API
+try{bk('CACHE-API',typeof caches);}catch(e){bk('CACHE-API','absent');}
+
+// IndexedDB
+try{bk('IDB',typeof indexedDB);}catch(e){bk('IDB','absent');}
+
+// Performance observer
+try{bk('PERF-OBS',typeof PerformanceObserver);}catch(e){bk('PERF-OBS','absent');}
+try{
+  var entries=performance.getEntriesByType('resource');
+  bk('PERF-RES','count='+entries.length+(entries.length>0?',first='+entries[0].name.slice(0,40):''));
+}catch(e){bk('PERF-RES','ERR');}
+
+// Navigation timing (may leak referer addresses)
+try{
+  var nt=performance.getEntriesByType('navigation');
+  if(nt.length>0)bk('NAV-TIMING','type='+nt[0].type+',dur='+nt[0].duration+',transferSize='+nt[0].transferSize);
+  else bk('NAV-TIMING','empty');
+}catch(e){bk('NAV-TIMING','ERR:'+e.message.slice(0,40));}
+
+// Import maps / dynamic import
+try{bk('DYN-IMPORT',typeof import);}catch(e){bk('DYN-IMPORT','absent or keyword');}
+
+// window.crossOriginIsolated
+try{bk('COI',window.crossOriginIsolated);}catch(e){bk('COI','absent');}
+
+// Object.getOwnPropertyNames on window (check for hidden APIs)
+try{
+  var allNames=Object.getOwnPropertyNames(window);
+  var interesting=allNames.filter(function(n){
+    return n.indexOf('webkit')===0||n.indexOf('Web')===0||n.indexOf('Audio')===0||
+           n.indexOf('IDB')===0||n.indexOf('RTC')===0||n.indexOf('GPU')===0||
+           n.indexOf('Payment')===0||n.indexOf('Credential')===0||
+           n.indexOf('Notification')===0||n.indexOf('Push')===0;
+  });
+  bk('WINDOW-APIS',interesting.slice(0,20).join(','));
+  bk('WINDOW-TOTAL',allNames.length+' props');
+}catch(e){bk('WINDOW-APIS','ERR');}
+
+bk('DONE','complete');
+</script></body></html>

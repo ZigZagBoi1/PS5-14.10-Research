@@ -1,0 +1,34 @@
+V947 14.22 ROW - WOFF2 mutant battery: zero crashes; one tolerated header lie (totalSfntSize), corrupted transformed-glyf content survives glyph paths; first-order hardened
+================================================================================
+Date:    2026-11-14
+Log:     tools/browser_runner/beacon_logs/beacons_20261114_130746.log
+Probe:   probes/phase13_webkit/v947_woff2_battery.html (12 mutants + control)
+Control: w00 (fonttools/zlib+?no - fonttools brotli) loads, metrics a=7 WWW=33
+         - the benchmark; identical metrics across w04/w11 also.
+
+CLASSES:
+- CLEAN-REJECT (status=error): w01 length 4GB lie, w02 numTables 0xFFFF,
+  w03 totalCompressedSize small, w05/w05b/w05c meta/priv offset-length lies,
+  w06 transform-flag flip, w07 origLength base128 inflate, w08 stream
+  truncated at half, w09 brotli stream flips, w10 directory truncated.
+  The WOFF2 header+directory+stream layer validates EVERYTHING at first
+  order - notably tighter than the raw-sfnt layer of v939 (which accepted
+  numTables lies and cmap length lies).
+- TOLERATED (loaded, correct metrics): w04 totalSfntSize=0xFFFFFF00 - the
+  field is used as an allocation hint and not validated against EOF.
+- LOADED-WITH-CORRUPTED-CONTENT: w11 - the brotli stream decompresses
+  cleanly (we rebuilt totalCompressedSize+length so only the CONTENT is
+  corrupt), 0xFF quadruples planted inside the transformed glyf block
+  (~offset 5043 of the 10086-byte decompressed buffer), and the face
+  LOADED with CORRECT metrics and surv1ved measureText+fillText('AB') -
+  i.e. the FreeType glyf-reconstruction path processed corrupted glyph
+  bytes without dying AND without mutating metrics (advances come from
+  the untransformed hmtx, not glyf). Reading of the result: the corruption
+  did not reach actionable glyph structures (or was tolerated) - NOT a
+  clean negative of the content-corruption class; a variant aimed at hmtx
+  (untransformed - its bytes go straight to metrics) or at the glyf
+  header/bbox region would discriminate "decoder builds state from lies"
+  directly. Queued, second order.
+GRADE:  M - first-order battery over the reopened WOFF2 lane: header/
+  directory/stream hardened, one tolerated hint-field lie, content
+  corruption inconclusive-but-surviving, zero crashes across 13 loads.

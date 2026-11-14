@@ -1,0 +1,34 @@
+﻿=== PS5 14.10 WebProcess Address Leak — 2026-11-14 ===
+
+Boot 1 (10:47):
+VP = 0x80c6a1b28 (CSSFontFaceSet vtable pointer)
+SELF = 0x1000380b40 (spray buffer VA)
+FO = 0x10003e6e40 (CSSFontFaceSet client)
+
+Boot 2 run A (15:52):
+VP = 0x8242f9b28
+SELF = 0x1000c45ec0
+FO = 0x10003eee88
+IM = 0x1000dbd480
+
+Boot 2 run B (15:52):
+VP = 0x8402e9b28
+SELF = 0x1000c35ec0
+FO = 0x10002df080
+IM = 0x1000da54c0
+
+VP low12 = 0xB28 (STABLE across all runs — confirms RVA)
+VP RVA candidates: 0xC6A1B28, 0x242F9B28, 0x402E9B28
+
+Vtable slots (run B):
+s0 = 0x083ebd8fb0
+s1 = 0x083ebd8fe0
+s2 = 0x083d09d750
+s3 = 0x083ebd96b0
+s4 = 0x083d09d750
+s5 = 0x083d09d750
+s6 = 0x083e82f400
+s7 = 0x083ebd9810
+
+Key fix: status=0 (Loading) + m_ranges.size=1 before PH3
+Pre-fault: 8000 extra 192B buffers + K=1024 spray

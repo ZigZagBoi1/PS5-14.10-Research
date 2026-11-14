@@ -53,6 +53,32 @@
    no board, todas blob-pinned. Zero disputas de layout abertas. +0x64 dword
    = teste de linhagem contra stock público. Nota pública: variant index =
    byte @ variant+8 (fork +0x10 / stock +0x18).
+10. **GANHOS CROSS-BENCH #181 (12-14/11, device-side deles) — integrar segunda:**
+    - **CSSValuePool .bss = NOVA família de âncora module-fixed**: pool global
+      estático (CSSValuePool.h:64, LazyNeverDestroyed → .bss); CSSValue 16B
+      NÃO-virtual (CSSValue.h:273-288, rc+bitfields 8B; PrimitiveValue +8B
+      union); head de m_identifierValues = 772×16 = **+0x3040** do pool;
+      fórmula `pool+0x3040+id·16` [S]+[M]. Qualquer ponteiro de pool lido
+      ⇒ base do módulo por aritmética (2º caminho além de VP−0x724DB28).
+    - **Refcounts estáticos do pool = odd, stepping ±2** (makeStatic :269-272,
+      flag 0x1, incr 0x2): delete inalcançável em deref engine. CUIDADO no
+      nosso ~variant: RefCounted::deref é −1 cru → odd→even DESTROI a flag
+      estática (UAF engine-side tardio). Pool = alvo de LEAK, não de deref.
+    - **Vtable segment RO [M, 2 bancadas]**: VP write-fault confirmado ⇒
+      rewrite de vptr in-place MORTO; COOP exige vtable forjada em memória
+      gravável (heap) — coerente com nosso endgame.
+    - **WALK-ok 8/8 (p691 deles, device)**: SELF=0x1000384480 constante; VP−
+      0x724DB28 = base módulo page-aligned (run8: 0x82E408000). RVA law
+      confirmada em hardware — nosso decider VP-0x10 segue válido e agora
+      tem a RVA irmã para aritmética de base.
+    - **Marker L1 `…450 mod 0x1000`**: 7/7 vencedores terminaram …450;
+      ~490 perdedores nunca; run8 falsificou NECESSIDADE (walk de slot não-
+      450), SUFICIÊNCIA de pé = marcador forward, não definição. AÇÃO NOSSA
+      (zero boots): varrer nossos dumps por endings 0x450 nos T/L1 — se um
+      perdedor nosso tiver …450, a lei cai com dados nossos (falsificação
+      de 30s).
+    - **Negative honesto**: lane de address-mapping deles = sem addrof/
+      fakeobj ainda (v2 em rotação). Board honesto, sem overclaim.
 
 ---
 

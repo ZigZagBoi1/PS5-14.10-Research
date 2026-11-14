@@ -205,10 +205,13 @@ sendBeacon-style path messages. Transfer-Encoding and Expect negotiation are
 unsupported, even when a Content-Length is also supplied. The existing base
 HTTP parser handles request-line/header limits and unsupported methods (501).
 Bodies are read as exact bytes in bounded chunks using BufferedReader.read1.
-There is a 5-second socket/read idle timeout and a 10-second overall body deadline
-using a monotonic clock. A trickle cannot reset the overall body deadline.
-These limits start after headers; there is no overall header or TLS-handshake
-deadline. The server remains serial and is not a general hostile-network service.
+There is a 5-second socket/read idle timeout. The request line and all headers
+share a 10-second overall deadline using a monotonic clock; completing a header
+line does not reset it. A header timeout closes the connection without accepting
+a beacon or marking capture storage failed. Body reads get a separate 10-second
+overall budget after header parsing. A trickle cannot reset either budget.
+There is no TLS-handshake deadline. The server remains serial and is not a
+general hostile-network service.
 
 The HTTP body is exactly the Content-Length-framed bytes. Trailing connection
 bytes beyond that length are discarded on close, not guessed to be body bytes
@@ -282,7 +285,7 @@ behavior.
 The local hashes and metadata do not authenticate executed source, consoles,
 firmware or boot identity. No STATE.md/INDEX.md management or automatic newest-file
 association is added; PR #233 owns that ledger. PHP/Apache parity, real browser
-behavior, TLS runtime, cross-version Python behavior and power-loss durability
+behavior, PS5 TLS behavior, cross-version Python behavior and power-loss durability
 remain unverified.
 
 ## Tests and resource limits
@@ -296,7 +299,9 @@ Loopback tests in the same module are skipped unless explicitly enabled:
     BROWSER_RUNNER_LOOPBACK_TESTS=1 python3 -B -m unittest -v tools.test_browser_runner_http.LoopbackTests tools.test_browser_runner_http.RunLoopbackTests
 
 These opt-in tests bind only 127.0.0.1 on an ephemeral port, use dummy payloads and
-never contact a console. Socket permission is required; a skipped or denied run
+never contact a console. The TLS header-timeout/binary-body fixture requires
+`openssl` to generate a temporary self-signed localhost certificate; it is
+skipped if that executable is absent. Socket permission is required; a skipped or denied run
 is not evidence of measured transport correctness. The default verifier never
 starts them. Preserve independent literal byte/value oracles alongside the shared
 interpretation checker.

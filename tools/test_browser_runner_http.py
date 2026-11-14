@@ -6,6 +6,9 @@ import json
 import os
 from pathlib import Path
 import socket
+import shutil
+import ssl
+import subprocess
 import tempfile
 import threading
 import time
@@ -325,13 +328,49 @@ class HttpFixtureTests(unittest.TestCase):
         self.assertEqual(self.events(),[])
 
     def test_overall_deadline_with_deterministic_trickle(self):
+        clock = [0]
         class Trickle(io.BytesIO):
-            def read1(self,n):return b'x'
+            def read1(self,n):
+                clock[0] += 4
+                return b'x'
         # Header parser reads from this same stream, then body read1 trickles.
         reader=Trickle(b'POST /beacon/T HTTP/1.1\r\nHost: localhost\r\nContent-Length: 9\r\n\r\n')
-        with mock.patch.object(serve.time,'monotonic',side_effect=[0,0,4,4,8,8,11]):
+        with mock.patch.object(serve.time,'monotonic',side_effect=lambda: clock[0]):
             self.assertEqual(self.request(reader=reader),408)
         self.assertEqual(self.events(),[])
+
+    def test_trickled_request_line_and_headers_share_one_deadline(self):
+        for slow_after in (0, len(b'GET /beacon/T HTTP/1.1\r\n')):
+            with self.subTest(slow_after=slow_after):
+                clock = [0]
+                class SlowHeaders(io.BytesIO):
+                    def read(self, n=-1):
+                        if self.tell() >= slow_after:
+                            clock[0] += 1
+                        return super().read(n)
+                wire = b'GET /beacon/T HTTP/1.1\r\nHost: localhost\r\n\r\n'
+                reader = SlowHeaders(wire)
+                with mock.patch.object(serve.time, 'monotonic', side_effect=lambda: clock[0]):
+                    self.assertIsNone(self.request(reader=reader))
+                self.assertEqual(self.events(), [])
+                self.assertFalse(self.server.capture_failed)
+                self.assertEqual(clock[0], 10)
+        self.assertEqual(self.request('/beacon/after-timeout'), 204)
+        self.assertEqual(len(self.events()), 1)
+
+    def test_header_budget_is_not_reset_for_each_line(self):
+        clock = [0]
+        class SlowLines(io.BytesIO):
+            def read(self, n=-1):
+                data = super().read(n)
+                if data == b'\n':
+                    clock[0] += 3
+                return data
+        wire = b'GET /beacon/T HTTP/1.1\r\nHost: localhost\r\nX-A: a\r\nX-B: b\r\n\r\n'
+        with mock.patch.object(serve.time, 'monotonic', side_effect=lambda: clock[0]):
+            self.assertIsNone(self.request(reader=SlowLines(wire)))
+        self.assertEqual(self.events(), [])
+        self.assertFalse(self.server.capture_failed)
 
     def test_socket_idle_timeout(self):
         class TimeoutReader(io.BytesIO):
@@ -339,6 +378,23 @@ class HttpFixtureTests(unittest.TestCase):
         reader=TimeoutReader(b'POST /beacon/T HTTP/1.1\r\nHost: localhost\r\nContent-Length: 9\r\n\r\n')
         self.assertEqual(self.request(reader=reader),408)
         self.assertEqual(self.events(),[])
+
+    def test_body_gets_a_fresh_budget_after_slow_valid_headers(self):
+        clock = [0]
+        class SlowButValid(io.BytesIO):
+            def read(self, n=-1):
+                data = super().read(n)
+                if data == b'\n':
+                    clock[0] += 2
+                return data
+            def read1(self, n):
+                clock[0] += 4
+                return super().read1(n)
+        wire = b'POST /beacon/T HTTP/1.1\r\nHost: localhost\r\nContent-Length: 3\r\n\r\nabc'
+        with mock.patch.object(serve.time, 'monotonic', side_effect=lambda: clock[0]):
+            self.assertEqual(self.request(reader=SlowButValid(wire)), 204)
+        self.assertEqual(clock[0], 12)
+        self.assertEqual(base64.b64decode(self.events()[0]['body_base64']), b'abc')
 
 
 class StaticTransportTests(unittest.TestCase):
@@ -1029,6 +1085,8 @@ class LoopbackTests(unittest.TestCase):
         self.addCleanup(self.temp.cleanup)
         self.writer=CaptureWriter.create(Path(self.temp.name))
         class Handler(serve.ProbeHandler):
+            timeout=0.2
+            header_deadline=0.45
             body_read_timeout=0.2
             body_deadline=0.45
             def log_message(self,*args):pass
@@ -1055,6 +1113,84 @@ class LoopbackTests(unittest.TestCase):
                 if not data:break
                 response+=data
         return int(response.split(b' ',2)[1])
+
+    def test_real_trickled_request_line_and_headers_release_server(self):
+        for prefix in (b'G', b'GET /beacon/late HTTP/1.1\r\nHost: '):
+            with self.subTest(prefix=prefix):
+                with socket.create_connection(self.server.server_address, timeout=2) as client:
+                    client.sendall(prefix)
+                    for _ in range(12):
+                        time.sleep(0.06)  # below idle timeout; exceeds total budget
+                        try:
+                            client.sendall(b'x')
+                        except OSError:
+                            break
+                    try:
+                        self.assertEqual(client.recv(8192), b'')
+                    except ConnectionResetError:
+                        pass  # unread partial headers may produce a TCP reset
+                self.assertFalse(self.server.capture_failed)
+                self.assertEqual(self.exchange(
+                    b'GET /beacon/recovered HTTP/1.1\r\nHost: localhost\r\n\r\n'), 204)
+        rows = [json.loads(line) for line in self.writer.path.read_bytes().splitlines()]
+        events = [row for row in rows if row['record_type'] == 'event']
+        self.assertEqual([row['request']['measurement'] for row in events],
+                         ['recovered', 'recovered'])
+
+    @unittest.skipUnless(shutil.which('openssl'), 'TLS fixture needs openssl for a local certificate')
+    def test_tls_header_timeout_then_binary_post(self):
+        root = Path(self.temp.name)
+        cert, key = root/'cert.pem', root/'key.pem'
+        subprocess.run(['openssl', 'req', '-x509', '-newkey', 'rsa:2048', '-nodes',
+                        '-keyout', str(key), '-out', str(cert), '-days', '1',
+                        '-subj', '/CN=localhost'], check=True,
+                       stdout=subprocess.PIPE, stderr=subprocess.PIPE, timeout=15)
+        server = serve.CaptureHTTPServer(('127.0.0.1', 0), self.server.RequestHandlerClass,
+                                        capture=self.writer)
+        context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+        context.load_cert_chain(cert, key)
+        try:
+            server.socket = context.wrap_socket(server.socket, server_side=True)
+            worker = threading.Thread(target=server.serve_forever,
+                                      kwargs={'poll_interval': 0.01})
+            worker.start()
+            client_context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            client_context.check_hostname = False
+            client_context.verify_mode = ssl.CERT_NONE  # generated local test cert
+            try:
+                with socket.create_connection(server.server_address, timeout=2) as raw:
+                    with client_context.wrap_socket(raw, server_hostname='localhost') as client:
+                        client.sendall(b'GET /beacon/late HTTP/1.1\r\nHost: ')
+                        for _ in range(12):
+                            time.sleep(0.06)
+                            try:
+                                client.sendall(b'x')
+                            except OSError:
+                                break
+                        self.assertEqual(client.recv(8192), b'')
+                body = bytes(range(256)) * 20
+                with socket.create_connection(server.server_address, timeout=2) as raw:
+                    with client_context.wrap_socket(raw, server_hostname='localhost') as client:
+                        client.sendall(b'POST /beacon/TLS HTTP/1.1\r\nHost: localhost\r\n'
+                                       b'Content-Length: 5120\r\n\r\n' + body)
+                        response = b''
+                        while True:
+                            chunk = client.recv(8192)
+                            if not chunk:
+                                break
+                            response += chunk
+                self.assertEqual(int(response.split(b' ', 2)[1]), 204)
+                self.assertFalse(server.capture_failed)
+                rows = [json.loads(line) for line in self.writer.path.read_bytes().splitlines()]
+                events = [row for row in rows if row['record_type'] == 'event']
+                self.assertEqual(len(events), 1)
+                self.assertEqual(base64.b64decode(events[0]['request']['body_base64']), body)
+            finally:
+                server.shutdown()
+                worker.join(timeout=3)
+                self.assertFalse(worker.is_alive())
+        finally:
+            server.server_close()
 
     def test_real_http_tagged_post_binary_and_eof(self):
         self.assertEqual(self.exchange(b'GET /beacon/P560-B-POST?d=1%2C2%2C3%2C4 HTTP/1.1\r\nHost: localhost\r\n\r\n'),204)

@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V948</title></head>
+<body><pre id="out">V948 - WOFF2 content-level discriminators with byte-exact aim: hmtx (untransformed, feeds metrics) max/zero + glyf-transformed header 0xFF + combined</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V948-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v947's content corruption was blunt. v948 aims:
+ *   x12 hmtx advances -> 0xFFFF: hmtx is UNTRANSFORMED, its bytes pass the
+ *       stream verbatim into the metric path - if the face LOADS with
+ *       huge metrics, the decoder builds JS-visible state from stream
+ *       content ("state from lies" proven); a=7 -> huge, WWW=33 -> huge.
+ *   x13 hmtx -> 0: zero-width glyphs (complementary readback).
+ *   x14 transformed-glyf HEADER -> 0xFF (numGlyphs/indexFormat garbage):
+ *       aims straight at the FreeType glyf-reconstruction path - the
+ *       crash candidate.
+ *   x15 combined.
+ * Readout: status + metrics + decl flag vs the a=7/WWW=33 benchmark.
+ * Beacon order diagnoses a death: PRE-x then nothing = dead in that case.
+ */
+
+var FILES=['x12_hmtx_maxadv.woff2','x13_hmtx_zerowidth.woff2',
+ 'x14_glyf_header_ff.woff2','x15_hmtx_and_glyf.woff2'];
+
+(async function(){
+  for(var i=0;i<FILES.length;i++){
+    var name=FILES[i], fam='X4F'+i;
+    bk('PRE',name);
+    var face=null;
+    try{
+      face=new FontFace(fam,"url('/fuzzcases/fonts/"+name+"')");
+      face.loaded; document.fonts.add(face);
+    }catch(e){ bk(name+'-ERR',String(e)); continue; }
+    try{ await document.fonts.load('12px '+fam,'a'); }catch(e){}
+    var line='status='+face.status;
+    if(face.status==='loaded'){
+      try{
+        var c=document.createElement('canvas').getContext('2d');
+        c.font='12px '+fam;
+        var wa=c.measureText('a').width;
+        c.fillText('AB',0,12);
+        line+=' a='+wa+' decl='+(wa===7?'':'MUTATED');
+      }catch(e){ line+=' metrics-throw:'+String(e).slice(0,80); }
+    }
+    bk(name,line);
+  }
+  bk('DONE','discriminators complete');
+})();
+</script></body></html>

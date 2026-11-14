@@ -1,0 +1,21 @@
+=== PROBE 1250a: shm (629) fault-in correction, exec mapping, offsets ===
+[0] pid=124
+[A] 629 anon form, flags sweep (bit0 must be set, bits outside 0x200203 rejected)
+    flags=000000 -> rv=-1 errno="22 Invalid argument"
+    flags=000001 -> rv=-1 errno="22 Invalid argument"
+    flags=000002 -> rv=-1 errno="22 Invalid argument"
+    flags=000003 -> rv=-1 errno="22 Invalid argument"
+    flags=000200 -> rv=-1 errno="22 Invalid argument"
+    flags=000201 -> rv=-1 errno="22 Invalid argument"
+    flags=020000 -> rv=-1 errno="22 Invalid argument"
+    flags=200000 -> rv=-1 errno="22 Invalid argument"
+    flags=400000 -> rv=-1 errno="22 Invalid argument"
+[A] first usable fd = -1 (flags -)
+[E] 629 named form: which name shape is accepted
+    name="shm"        -> rv=-1 errno="22 Invalid argument"
+    name="/shm"       -> rv=-1 errno="22 Invalid argument"
+    name="/"          -> rv=-1 errno="22 Invalid argument"
+    name="/a"         -> rv=-1 errno="22 Invalid argument"
+    name="/shm/test"  -> rv=-1 errno="22 Invalid argument"
+    name="/SceShm"    -> rv=-1 errno="22 Invalid argument"
+=== DONE 1250a ===

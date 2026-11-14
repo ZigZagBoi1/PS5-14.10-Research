@@ -1,0 +1,25 @@
+=== 1339n CMSG FORMAT TEST ===
+fd=22
+initial TCLASS=99
+
+[TEST 1] single cmsg entry, 24 bytes
+  rv=0x0 ok=true
+  TCLASS=77 (expect 77)
+
+[TEST 2] two cmsg entries, 48 bytes
+  rv=0x0 ok=true
+  TCLASS=66 (expect 66, last entry wins)
+
+[TEST 3] twenty cmsg entries, 480 bytes
+  rv=0x0 ok=true
+  TCLASS=42 (expect 42)
+
+[TEST 4] twenty entries, last=256 (should EINVAL)
+  rv=0xffffffffffffffffffffffff ok=true
+  TCLASS=0 (expect 0 if pktopts freed, or 99)
+
+[TEST 5] re-alloc after free via setsockopt(61)
+  TCLASS=88 (expect 88)
+
+pid=353
+=== DONE ===

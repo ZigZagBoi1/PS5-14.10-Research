@@ -1,0 +1,10 @@
+=== PROBE 1568a_dce_word_in_8: dce 0xC008820B ===
+[C] about to send 0xC008820B with a zeroed 0x1000 page
+
+[0] pid=81
+[A] open('/dev/dce', O_RDWR) fd=22
+[B] control 0x80088209 rv=0 (want 0)
+[C] sending now
+[C] 0xC008820B rv=-1 buf[0]=0x0
+[D] closing
+=== PROBE 1568a_dce_word_in_8 COMPLETE ===

@@ -1,0 +1,43 @@
+=== PROBE 975a: AIO AS FD ORACLE ===
+
+[A] pid=217
+  socketpair fds = 26, 27
+[B] discrimination: a live socketpair fd vs a definitely-bad fd
+  [live fd=26] submit=0 id=0x00000207 state=1
+  [live-peer fd=27] submit=0 id=0x00000208 state=1
+  [bad fd=2047] submit=0 id=0x00000209 state=1
+[C] sweep the low descriptors
+  [sweep fd=0] submit=0 id=0x0000020A state=1
+  [sweep fd=1] submit=0 id=0x0000020B state=1
+  [sweep fd=2] submit=0 id=0x0000020C state=1
+  [sweep fd=3] submit=0 id=0x0000020D state=1
+  [sweep fd=4] submit=0 id=0x0000020E state=1
+  [sweep fd=5] submit=0 id=0x0000020F state=1
+  [sweep fd=6] submit=0 id=0x00000210 state=1
+  [sweep fd=7] submit=0 id=0x00000211 state=1
+  [sweep fd=8] submit=0 id=0x00000212 state=1
+  [sweep fd=9] submit=0 id=0x00000213 state=1
+  [sweep fd=10] submit=22 id=0x00000214 state=1
+  [sweep fd=11] submit=0 id=0x00000215 state=1
+  [sweep fd=12] submit=0 id=0x00000216 state=1
+  [sweep fd=13] submit=0 id=0x00000217 state=1
+  [sweep fd=14] submit=-2143617020 id=0x00000218 state=1
+  [sweep fd=15] submit=0 id=0x00000219 state=1
+  [sweep fd=16] submit=0 id=0x0000021A state=1
+  [sweep fd=17] submit=0 id=0x0000021B state=1
+  [sweep fd=18] submit=0 id=0x0000021C state=1
+  [sweep fd=19] submit=0 id=0x0000021D state=1
+  [sweep fd=20] submit=0 id=0x0000021E state=1
+  [sweep fd=21] submit=0 id=0x0000021F state=1
+  [sweep fd=22] submit=0 id=0x00000220 state=1
+  [sweep fd=23] submit=0 id=0x00000221 state=1
+  [sweep fd=24] submit=0 id=0x00000222 state=1
+  [sweep fd=25] submit=0 id=0x00000223 state=1
+  [sweep fd=28] submit=0 id=0x00000224 state=1
+  [sweep fd=29] submit=0 id=0x00000225 state=1
+  [sweep fd=30] submit=0 id=0x00000226 state=1
+  [sweep fd=31] submit=0 id=0x00000227 state=1
+[D] sweep: live=28 dead=0 other=2
+    live fds: 0,1,2,3,4,5,6,7,8,9,11,12,13,15,16,17,18,19,20,21,22,23,24,25,28,29,30,31,
+[Z] alive=217
+=== COMPLETE ===

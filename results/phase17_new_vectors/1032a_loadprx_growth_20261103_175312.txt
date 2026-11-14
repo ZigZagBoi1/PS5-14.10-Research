@@ -1,0 +1,15 @@
+=== PROBE 1032a ===
+[A] count0=39
+[P1] libSceAudioOut.sprx              rv=0 h=3A count=39
+[P2] libScePad.sprx                   rv=0 h=41 count=39
+[P3] libSceUserService.sprx           rv=0 h=9F count=39
+[P4] libSceCommonDialog.sprx          rv=0 h=A0 count=39
+[P5] libSceSaveData.sprx              rv=0 h=8D count=39
+[P6] libSceSysUtil.sprx               rv=0 h=A2 count=39
+[P7] libSceNetCtl.sprx                rv=0 h=48 count=39
+[P8] libSceHttp.sprx                  rv=0 h=4A count=39
+[P9] libSceVideoRecording.sprx        rv=-1 h=0 count=39
+[P10] libSceCamera.sprx                rv=0 h=42 count=39
+[P11] libSceMouse.sprx                 rv=-1 h=0 count=39
+[P12] libSceKeyboard.sprx              rv=-1 h=0 count=39
+[Z] count_final=39 alive

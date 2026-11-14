@@ -1,0 +1,69 @@
+=== PROBE 1485a: PROTECT AN EXECUTE-ONLY ENTRY ===
+[0] pid=92
+[0] 674 rv=0 records=319
+
+--- [A] 37 execute-only entries ---
+    #1  0x800000000 -0x800004000  len 0x4000    sigtramp_alias
+    #2  0x8049E8000 -0x804A0C000  len 0x24000   libSceCamera.sprx
+    #3  0x806098000 -0x8060CC000  len 0x34000   libSceNpCommon.sprx
+    #4  0x806EF0000 -0x806F00000  len 0x10000   libSceUserService.sprx
+    #5  0x808B60000 -0x808B64000  len 0x4000    libSceAjm.sprx
+    #6  0x8095F8000 -0x8095FC000  len 0x4000    libSceNpGameIntent.sprx
+    #7  0x80E9C4000 -0x80E9D0000  len 0xC000    libSceRazorCpu.sprx
+    #8  0x80EB2C000 -0x80EB4C000  len 0x20000   libSceVideoOut.sprx
+    #9  0x80F0B8000 -0x80F0FC000  len 0x44000   libSceNpManager.sprx
+    #10 0x80F944000 -0x80F978000  len 0x34000   libSceNet.sprx
+    #11 0x810F78000 -0x810F84000  len 0xC000    libSceGnmDriverForNeoMode.sprx
+    #12 0x81230C000 -0x812324000  len 0x18000   libSceIme.sprx
+    #13 0x81492C000 -0x814A20000  len 0xF4000   libSceSsl.sprx
+    #14 0x816938000 -0x81694C000  len 0x14000   libSceNpWebApi.sprx
+    #15 0x816D7C000 -0x816D98000  len 0x1C000   libScePad.sprx
+    #16 0x819128000 -0x81912C000  len 0x4000    libSceRegMgr.sprx
+    #17 0x81A3F4000 -0x81A43C000  len 0x48000   libkernel.sprx
+    #18 0x81C400000 -0x81C408000  len 0x8000    libSceNetCtl.sprx
+    #19 0x81C71C000 -0x81C728000  len 0xC000    libSceSysmodule.sprx
+    #20 0x81D448000 -0x81D478000  len 0x30000   libSceHttp.sprx
+    #21 0x81DA44000 -0x81DA48000  len 0x4000    libSceSysUtil.sprx
+    #22 0x821FB0000 -0x821FB8000  len 0x8000    libSceIpmi.sprx
+    #23 0x82A198000 -0x82A19C000  len 0x4000    libSceCommonDialog.sprx
+    #24 0x82A310000 -0x82A328000  len 0x18000   libSceSaveDataDialog.sprx
+    #25 0x82A484000 -0x82A4C4000  len 0x40000   libSceAvPlayer.sprx
+    #26 0x82A6A8000 -0x82A6E4000  len 0x3C000   libSceAudioOut.sprx
+    #27 0x82BE48000 -0x82BE74000  len 0x2C000   libSceHttp2.sprx
+    #28 0x8310D4000 -0x8310DC000  len 0x8000    libSceImeDialog.sprx
+    #29 0x831E10000 -0x831E3C000  len 0x2C000   libSceSystemService.sprx
+    #30 0x8323C0000 -0x8323C8000  len 0x8000    libSceAudioIn.sprx
+    #31 0x832738000 -0x832780000  len 0x48000   libSceSaveData.sprx
+    #32 0x835360000 -0x835374000  len 0x14000   libSceAvSetting.sprx
+    #33 0x837544000 -0x83754C000  len 0x8000    libSceMbus.sprx
+    #34 0x839624000 -0x839628000  len 0x4000    libSceMsgDialog.sprx
+    #35 0x83A6E8000 -0x83A810000  len 0x128000  libSceLibcInternal.sprx
+    #36 0x83A92C000 -0x83A94C000  len 0x20000   libSceNpWebApi2.sprx
+    #37 0x83E9F8000 -0x83E9FC000  len 0x4000    libSceRtc.sprx
+
+--- [B] protect attempts ---
+    TRY sigtramp_alias           0x800000000 len 0x4000 prot 3
+      -> -1 13 Permission denied processed=0
+    TRY libSceCamera.sprx        0x8049E8000 len 0x4000 prot 3
+      -> -1 13 Permission denied processed=0
+    TRY libSceNpCommon.sprx      0x806098000 len 0x4000 prot 3
+      -> -1 13 Permission denied processed=0
+    TRY libSceUserService.sprx   0x806EF0000 len 0x4000 prot 3
+      -> -1 13 Permission denied processed=0
+    TRY libSceAjm.sprx           0x808B60000 len 0x4000 prot 3
+      -> -1 13 Permission denied processed=0
+    TRY libSceNpGameIntent.sprx  0x8095F8000 len 0x4000 prot 3
+      -> -1 13 Permission denied processed=0
+    TRY libSceRazorCpu.sprx      0x80E9C4000 len 0x4000 prot 3
+      -> -1 13 Permission denied processed=0
+    TRY libSceVideoOut.sprx      0x80EB2C000 len 0x4000 prot 3
+      -> -1 13 Permission denied processed=0
+
+[B] no execute-only entry accepted prot 3
+    TRY sigtramp_alias prot 2
+      -> -1 13 Permission denied
+    TRY sigtramp_alias prot 1
+      -> -1 13 Permission denied
+
+final canary: pid=92 (started 92)
+=== PROBE 1485a COMPLETE ===

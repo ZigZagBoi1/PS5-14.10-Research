@@ -1,0 +1,28 @@
+=== PROBE 1253a: sysent tail, SIG_IGN + fault-proof args ===
+
+[0] pid=80
+[1] install ok=true rv=0
+[1] readback ok=true handler=0x00000000_00000001
+[2] control 4095
+[2] ok=true ret=-1 err=78 Function not implemented alive_pid=80
+[2] step 2 ok
+[3] 705 get_phys_page_size()
+[3] ok=true ret=-1 err=78 Function not implemented
+[3] step 3 ok
+[4] 687 pipe2(fds,0)
+[4] ok=true ret=-1 err=78 Function not implemented fds=0,0
+[4] step 4 ok
+[5] 690 ppoll(pfd,1,ts0)
+[5] ok=true ret=-1 err=78 Function not implemented revents=0x0
+[5] step 5 ok
+[6] 728 virtual_query_by_pid(self, heap, buf)
+[6] ok=true ret=-1 err=78 Function not implemented buf0=0x41414141_41414000
+[6] step 6 ok
+[7] 725 mmap2(...)
+[7] ok=true ret=-1 err=78 Function not implemented
+[7] step 7 ok
+[8] 715 ioreq(0...)
+[8] ok=true ret=-1 err=78 Function not implemented
+[8] step 8 ok
+[9] alive pid=80
+=== DONE 1253a ===

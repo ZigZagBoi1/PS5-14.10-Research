@@ -1,0 +1,33 @@
+=== PROBE 1211a: aio_multi_wait mode 0, count 2 ===
+
+[0] pid=176
+  [socketpair] ret=0x00000000_00000000 err=2 No such file or directory
+    fds = 22, 23
+[P1] control: submit 2 pending reads, 663(mode=1, count=2, timeout=2000us)
+  [submitA] ret=0x00000000_00000000 err=2 No such file or directory
+    id0=0x00004205 id1=0x00014205
+  [wait_m1] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=60 Operation timed out
+    out0=0x00000000 out1=0x00000000
+  [pollA] ret=0x00000000_00000000 err=60 Operation timed out
+    state0=0x00000002 state1=0x00000002
+[P2] exploit shape: submit 2 pending reads, 663(mode=0, count=2, timeout=2000us)
+  [submitB] ret=0x00000000_00000000 err=60 Operation timed out
+    id0=0x00000206 id1=0x00010206
+  [wait_m0] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument
+    out0=0x00000000 out1=0x00000000  (a 0x10000 bit means the node was already armed)
+  [pollB] ret=0x00000000_00000000 err=22 Invalid argument
+    state0=0x00000001 state1=0x00000001
+[P3] complete one request while its waiter node is freed
+  [write] ret=0x00000000_00000010 err=22 Invalid argument
+  [pollC] ret=0x00000000_00000000 err=22 Invalid argument
+    state0=0x00000002 state1=0x00000001
+[P4] drive completion with a single-id mode 1 wait on id0
+  [wait_single] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=60 Operation timed out
+    out=0x00000000
+  [pollD] ret=0x00000000_00000000 err=60 Operation timed out
+    state0=0x00000002 state1=0x00000001
+[P5] delete both, then alive check
+  [delete] ret=0x00000000_00000000 err=60 Operation timed out
+    err0=0x80020010 err1=0x80020010
+[Z] pid_end=176 (start 176)
+=== 1211a DONE ===

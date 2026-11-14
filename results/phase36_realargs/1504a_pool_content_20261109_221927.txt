@@ -1,0 +1,22 @@
+=== PROBE 1504a: POOL CONTENT INSIDE THE APERTURE ===
+[0] pid=125
+
+--- [A] open /dev/dmem0 ---
+  fd=27 
+
+--- [B] map pool 0x100000000 .. 0x101000000, prot 1 ---
+  va=0x313060000
+  resident: 1024 of 4096 pages
+
+--- [C] per-page density and physical-pointer scan ---
+  non-resident pages skipped: 3072
+  dense pages (>512 nonzero bytes): 0 of the resident set
+  qwords with bits 32..63 == 1: 0
+
+--- [D] is the rest of the aperture-resident pool backed too? ---
+  off 0x110000000 -> rv=-1 13 Permission denied
+  off 0x118000000 -> rv=-1 13 Permission denied
+  off 0x11F000000 -> rv=-1 13 Permission denied
+
+final canary live: true (pid 125)
+=== PROBE 1504a COMPLETE ===

@@ -1,0 +1,152 @@
+=== PROBE 1391a: KERNEL-ADDRESS ARGUMENT SWEEP ===
+[0] pid=343
+[0] SIG_IGN installed on 10/10 signals
+
+[A] num(K1) vs num(K3) vs num(absent); a difference between a mapped and an absent
+    kernel address is the signature of a dereference
+  533 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  534 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  535 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  536 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  537 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  538 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  539 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  540 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  541 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  542 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  543 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  544 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  545 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  546 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  547 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  548 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  549 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  550 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  551 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  552 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  553 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  554 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  555 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  556 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  557 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  558 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  559 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  560 K1=-1/16 Device busy/0    K3=-1/16 Device busy/0    ABS=-1/16 Device busy/0  
+  563 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  564 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  565 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  566 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  567 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  568 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  569 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  572 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  574 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  575 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  576 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  577 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  578 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  579 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  580 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  581 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  582 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  583 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  584 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  585 K1=1/78 Function not implemented/0    K3=1/78 Function not implemented/0    ABS=1/78 Function not implemented/0  
+  586 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  587 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  588 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  589 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  590 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  591 K1=-1/63 File name too long/0    K3=-1/63 File name too long/0    ABS=-1/63 File name too long/0  
+  592 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  593 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  594 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  595 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  596 K1=0/3 No such process/0    K3=0/3 No such process/0    ABS=0/3 No such process/0  
+  597 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  598 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  599 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  600 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  602 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  603 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  604 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  605 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  606 K1=0/22 Invalid argument/0    K3=0/22 Invalid argument/0    ABS=0/22 Invalid argument/0  
+  607 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  608 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  610 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  611 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  612 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  613 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  615 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  616 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  617 K1=0/3 No such process/0    K3=0/3 No such process/0    ABS=0/3 No such process/0  
+  618 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  619 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  620 K1=0/78 Function not implemented/0    K3=0/78 Function not implemented/0    ABS=0/78 Function not implemented/0  
+  623 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  624 K1=3394/1 Operation not permitted/0    K3=3394/1 Operation not permitted/0    ABS=3394/1 Operation not permitted/0  
+  625 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  626 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  627 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  628 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  629 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  630 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  632 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  633 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  634 K1=-1/3 No such process/0    K3=-1/3 No such process/0    ABS=-1/3 No such process/0  
+  635 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  636 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  637 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  638 K1=-1/14 Bad address/2    K3=-1/14 Bad address/2    ABS=-1/14 Bad address/2  
+  639 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  640 K1=0/14 Bad address/0    K3=0/14 Bad address/0    ABS=0/14 Bad address/0  
+  641 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  642 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  643 K1=0/1 Operation not permitted/0    K3=0/1 Operation not permitted/0    ABS=0/1 Operation not permitted/0  
+  644 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  645 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  646 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  647 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  648 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  652 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  653 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  654 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  655 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  656 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  658 K1=-1/9 Bad file descriptor/0    K3=-1/9 Bad file descriptor/0    ABS=-1/9 Bad file descriptor/0  
+  659 K1=-1/14 Bad address/0    K3=-1/14 Bad address/0    ABS=-1/14 Bad address/0  
+  660 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  661 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  665 K1=-1/78 Function not implemented/0    K3=-1/78 Function not implemented/0    ABS=-1/78 Function not implemented/0  
+  672 K1=-1/1 Operation not permitted/0    K3=-1/1 Operation not permitted/0    ABS=-1/1 Operation not permitted/0  
+  674 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+  675 K1=0/22 Invalid argument/0    K3=0/22 Invalid argument/0    ABS=0/22 Invalid argument/0  
+  676 K1=-1/22 Invalid argument/0    K3=-1/22 Invalid argument/0    ABS=-1/22 Invalid argument/0  
+
+[A] no number answered a mapped kernel address differently from an absent one
+
+[B] command dispatchers with kernel addresses in their pointer slots
+  532(0x18, 0, out=K1 , in=K1 , 0x40) rv=-1       14 Bad address         changed=0 
+  532(0x19, 0, out=K1 , in=K1 , 0x40) rv=-1       14 Bad address         changed=0 
+  532(0x1E, 0, out=K1 , in=K1 , 0x40) rv=-1       14 Bad address         changed=0 
+  532(0x1F, 0, out=K1 , in=K1 , 0x40) rv=-1       1 Operation not permitted changed=0 
+  532(0x20, 0, out=K1 , in=K1 , 0x40) rv=-1       14 Bad address         changed=0 
+  532(0x2F, 0, out=K1 , in=K1 , 0x40) rv=-1       14 Bad address         changed=0 
+  532(0x2F, 0, out=ABS, in=ABS, 0x40) rv=-1       14 Bad address         changed=0 
+  532(0x2F, 0, out=K1 , in=U  , 0x40) rv=-1       14 Bad address         changed=16 00000000 00000000 00000000 00000000 00000000 00000000
+  532(0x2F, 0, out=U  , in=K1 , 0x40) rv=0        14 Bad address         changed=1 800D0210
+  601(0x00, K1 , K1 ) rv=-1       14 Bad address         changed=0 
+  601(0x07, K1 , K1 ) rv=0        14 Bad address         changed=0 
+  601(0x09, K1 , K1 ) rv=0        14 Bad address         changed=0 
+  601(0x0B, K1 , K1 ) rv=0        14 Bad address         changed=0 
+  601(0x0D, K1 , K1 ) rv=0        14 Bad address         changed=0 
+  601(0x0E, K1 , K1 ) rv=-1       14 Bad address         changed=0 
+  601(0x13, K1 , K1 ) rv=0        14 Bad address         changed=0 
+  601(0x14, K1 , K1 ) rv=0        14 Bad address         changed=0 
+  601(0x19, K1 , K1 ) rv=0        14 Bad address         changed=0 
+  601(0x1A, K1 , K1 ) rv=-1       14 Bad address         changed=0 
+  601(0x00, ABS, ABS) rv=-1       14 Bad address         changed=0 
+  601(0x0D, ABS, ABS) rv=0        14 Bad address         changed=0 
+  601(0x0E, ABS, ABS) rv=-1       14 Bad address         changed=0 
+=== PROBE 1391a COMPLETE ===

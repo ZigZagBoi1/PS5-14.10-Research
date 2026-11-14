@@ -1,0 +1,18 @@
+=== PROBE 1241a: SENDFILE PRESENCE ===
+
+[id] pid=101
+[setup] open(/app0/eboot.bin) -> 22 (rv==-1 means errno=2 No such file or directory)
+[setup] socketpair rv=0 fds=23,24 (rv==-1 means errno=2 No such file or directory)
+[call] 393(fd=22, s=24, off=0, nbytes=0x100, hdtr=NULL, sbytes=&out)
+[call] a SIGSYS death from an absent slot stops the output here
+[call] rv=0 sbytes=256
+[recv] n=256
+[string "-- CRASH_CLASS: MODERATE..."]:86: bad argument #2 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: MODERATE..."]:86: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

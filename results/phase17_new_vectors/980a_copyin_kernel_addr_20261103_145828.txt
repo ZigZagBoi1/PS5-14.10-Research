@@ -1,0 +1,24 @@
+=== PROBE 980a: COPYIN WITH A KERNEL SOURCE ===
+
+[A] pid=90
+  fds=24,25
+  [sendto user] ret=0x00000000_00000020
+     -> recv 32
+        [00] 55555555
+        [04] 55555555
+        [08] 55555555
+        [0C] 55555555
+        [10] 55555555
+        [14] 55555555
+        [18] 55555555
+        [1C] 55555555
+  [sendto ktext_hi] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+     -> recv -1
+  [sendto ktext_mid] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+     -> recv -1
+  [sendto kdata_lo] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+     -> recv -1
+  [sendto zero_ku] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+     -> recv -1
+[Z] alive pid=90
+=== COMPLETE ===

@@ -1,0 +1,83 @@
+=== PROBE 1390a: /dev READ PATH ===
+[0] pid=343
+[0] SIG_IGN installed on 10/10 signals
+
+[A] per node: open, read 0x4000, fstat, write(0)
+usb          fd=22  READ...
+  read  rv=280      21 Is a directory        changed=70   00000152 0104000C 0000002E 00000002 0204000C 00002E2E 000000CC 05020010
+  fstat rv=0        21 Is a directory        changed=30   7116FFCD 00000152 0000416D 00000000 00000000 00000000 6AF1D3C1 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      9 Bad file descriptor
+usbctl       fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 0000009F 000021A4 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      9 Bad file descriptor
+ajm          fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 00000070 000021A4 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      9 Bad file descriptor
+ajmi         fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 0000006F 000021A4 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      9 Bad file descriptor
+rng          fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 00000075 00002124 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      9 Bad file descriptor
+sce_zlib     fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 00000052 000021B6 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      19 Operation not supported by device
+dmem0        fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 00000063 000021FF 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      19 Operation not supported by device
+dmem1        fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 00000064 000021FF 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      19 Operation not supported by device
+dmem2        fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 00000065 000021FF 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      19 Operation not supported by device
+uvd_enc      fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 00000082 000021B6 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      19 Operation not supported by device
+dipsw        fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 00000006 000021A4 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      9 Bad file descriptor
+hmd_cmd      fd=22  READ...
+  read  rv=-1       2165375238 error_code=0x81110106 changed=0    
+  fstat rv=0        2165375238 error_code=0x81110106 changed=30   7116FFCD 00000048 000021B6 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      19 Operation not supported by device
+hmd2_cmd     fd=22  READ...
+  read  rv=-1       2322731014 error_code=0x8a721006 changed=0    
+  fstat rv=0        2322731014 error_code=0x8a721006 changed=30   7116FFCD 0000003A 000021B6 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      19 Operation not supported by device
+bt           fd=22  READ...
+  read  rv=0        19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 00000059 000021B6 00000000 00000000 00000000 6AF1D449 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      22 Invalid argument
+gic          fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 0000008F 000021B6 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      19 Operation not supported by device
+gc           fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 0000006C 000021B6 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      19 Operation not supported by device
+dce          fd=22  READ...
+  read  rv=-1       19 Operation not supported by device changed=0    
+  fstat rv=0        19 Operation not supported by device changed=30   7116FFCD 00000074 000021B6 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      19 Operation not supported by device
+camera       fd=22  READ...
+  read  rv=-1       2150498320 error_code=0x802e0010 changed=0    
+  fstat rv=0        2150498320 error_code=0x802e0010 changed=30   7116FFCD 000000A1 000021B6 00000000 00000000 00000000 6AF18CDB 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      2150498320 error_code=0x802e0010
+hid          fd=22  READ...
+  read  rv=0        2150498320 error_code=0x802e0010 changed=0    
+  fstat rv=0        2150498320 error_code=0x802e0010 changed=30   7116FFCD 0000005A 000021B6 00000000 00000000 00000000 6AF1D449 00000000 KPTR +68:FFFFFFFF
+  write0 rv=-1      19 Operation not supported by device
+deci_stdout  SKIP (does not open)
+=== PROBE 1390a COMPLETE ===

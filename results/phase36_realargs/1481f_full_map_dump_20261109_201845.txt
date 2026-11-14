@@ -1,0 +1,343 @@
+=== PROBE 1481f: FULL 674 MAP ===
+[0] pid=87
+[0] 674 rv=0 records=336
+  0 0x69188000   -0x6961C000    sz=0x494000   prot=0x5   fl=0x0    executable               62696C2F 63657865 2D646C2F 2E666C65 
+  1 0x69788000   -0x697A0000    sz=0x18000    prot=0x1   fl=0x0    executable               00000000 00000000 00000000 00000000 
+  2 0x69988000   -0x69ACC000    sz=0x144000   prot=0x3   fl=0x0    executable               00000060 00000000 4942524F 00000005 
+  3 0x69ACC000   -0x69B08000    sz=0x3C000    prot=0x3   fl=0x0    executable               00000000 00000000 0000000F 00000000 
+  4 0xA3C50000   -0xA3CB0000    sz=0x60000    prot=0x5   fl=0x0    libSceFios2.prx          E5894855 56415741 54415541 8D485053 
+  5 0xA3CB0000   -0xA3CB4000    sz=0x4000     prot=0x1   fl=0x0    libSceFios2.prx          A3C97D84 00000000 A3C97D9C 00000000 
+  6 0xA3CB4000   -0xA3CC4000    sz=0x10000    prot=0x3   fl=0x0    libSceFios2.prx          00000020 00000000 3C13F4BF 00000002 
+  7 0xA3CC4000   -0xA3DE0000    sz=0x11C000   prot=0x3   fl=0x0    libSceFios2.prx          00000000 00000000 00000000 00000000 
+  8 0xF0000000   -0xF0004000    sz=0x4000     prot=0x3   fl=0x0    (NoName)eboot.bin        00000000 00000000 00000000 00000000 
+  9 0xFB000000   -0xFB004000    sz=0x4000     prot=0x3   fl=0x0    anon:00006934999e        00000000 00000000 00000000 00000000 
+ 10 0x11A07C000  -0x11A190000   sz=0x114000   prot=0x5   fl=0x0    libc.prx                 E5894855 56415741 54415541 8D485053 
+ 11 0x11A190000  -0x11A194000   sz=0x4000     prot=0x1   fl=0x0    libc.prx                 1A190A20 00000001 1A146710 00000001 
+ 12 0x11A194000  -0x11A19C000   sz=0x8000     prot=0x3   fl=0x0    libc.prx                 00000020 00000000 3C13F4BF 00000002 
+ 13 0x200C9C000  -0x200CB0000   sz=0x14000    prot=0x3   fl=0xC    anon:0008238b2e86        00000000 00000000 00000000 00000000 
+ 14 0x200CB0000  -0x200CB4000   sz=0x4000     prot=0x1   fl=0x0    SceShellCoreUtil         6DF17259 6ED81EDE 00000000 00000000 
+ 15 0x200CB4000  -0x200CB8000   sz=0x4000     prot=0x3   fl=0x0    anon:0008140b5067        00010006 FFFFFFFF FFFFFFFF 00000000 
+ 16 0x200CB8000  -0x200CC8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 17 0x200CC8000  -0x200CE8000   sz=0x20000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 18 0x200CE8000  -0x200CF8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 19 0x200CF8000  -0x200D08000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 20 0x200D08000  -0x200D48000   sz=0x40000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 21 0x200D48000  -0x200D58000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 22 0x200D58000  -0x200D68000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 23 0x200D68000  -0x200D78000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 24 0x200D78000  -0x200D88000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 25 0x200D88000  -0x200D98000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 26 0x200D98000  -0x200DA8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 27 0x200DA8000  -0x200DB8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 28 0x200DB8000  -0x200DC8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 29 0x200DC8000  -0x200DD8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 30 0x200DD8000  -0x200DE8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 31 0x200DE8000  -0x200DF8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 32 0x200DF8000  -0x200E08000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 33 0x200E08000  -0x200E18000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 34 0x200E18000  -0x200E28000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 35 0x200E28000  -0x200E48000   sz=0x20000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 36 0x200E48000  -0x200E58000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 37 0x200E58000  -0x200E68000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 38 0x200E68000  -0x200E78000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 39 0x200E78000  -0x200E98000   sz=0x20000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 40 0x200E98000  -0x200EA8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 41 0x200EA8000  -0x200EB8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 42 0x200EB8000  -0x200EC8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 43 0x200EC8000  -0x200ED8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 44 0x200ED8000  -0x200EE8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 45 0x200EE8000  -0x200EF8000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 46 0x200EF8000  -0x200F08000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 47 0x200F08000  -0x200F28000   sz=0x20000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 48 0x200F28000  -0x200F38000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 49 0x200F38000  -0x200F48000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 50 0x200F48000  -0x200F68000   sz=0x20000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 51 0x200F68000  -0x200F6C000   sz=0x4000     prot=0x1   fl=0x0    anon:00082f8ed9b3        00002018 00000000 FFFFFFFF FFFFFFFF 
+ 52 0x200F6C000  -0x200F70000   sz=0x4000     prot=0x3   fl=0xC    /AOCtx_0000000087_ko675L 00000000 00000000 00000000 00000000 
+ 53 0x200F70000  -0x200F74000   sz=0x4000     prot=0x3   fl=0x0    anon:00006920c4fa        00000000 00000000 00000000 00000000 
+ 54 0x200F74000  -0x210F70000   sz=0xFFFC000  prot=0x33  fl=0x0    anon:00006920c4fa        (prot 0x33, not read)
+ 55 0x210F70000  -0x210F74000   sz=0x4000     prot=0x3   fl=0x3    anon:00006920c4fa        00000000 00000000 00000000 00000000 
+ 56 0x210F74000  -0x211470000   sz=0x4FC000   prot=0x33  fl=0x3    anon:00006920c4fa        (prot 0x33, not read)
+ 57 0x211470000  -0x211474000   sz=0x4000     prot=0x3   fl=0x3    anon:00006920c4fa        00000000 00000000 00000000 00000000 
+ 58 0x211474000  -0x211CE0000   sz=0x86C000   prot=0x33  fl=0x3    anon:00006920c4fa        (prot 0x33, not read)
+ 59 0x211CE0000  -0x211CE4000   sz=0x4000     prot=0x3   fl=0x3    anon:00006920c4fa        AFAFAFAF AFAFAFAF AFAFAFAF F0AFAFAF 
+ 60 0x211CE4000  -0x211CF0000   sz=0xC000     prot=0x33  fl=0x3    anon:00006920c4fa        (prot 0x33, not read)
+ 61 0x211CF0000  -0x211CF4000   sz=0x4000     prot=0x3   fl=0x3    anon:00006920c4fa        00000000 00000000 00000000 00000000 
+ 62 0x211CF4000  -0x212560000   sz=0x86C000   prot=0x33  fl=0x3    anon:00006920c4fa        (prot 0x33, not read)
+ 63 0x212560000  -0x212564000   sz=0x4000     prot=0x3   fl=0x3    anon:00006920c4fa        AFAFAFAF AFAFAFAF AFAFAFAF F0AFAFAF 
+ 64 0x212564000  -0x212570000   sz=0xC000     prot=0x33  fl=0x3    anon:00006920c4fa        (prot 0x33, not read)
+ 65 0x212570000  -0x212574000   sz=0x4000     prot=0x3   fl=0x3    anon:00006920c4fa        00000000 00000000 00000000 00000000 
+ 66 0x212574000  -0x212DE0000   sz=0x86C000   prot=0x33  fl=0x3    anon:00006920c4fa        (prot 0x33, not read)
+ 67 0x212DE0000  -0x212DE4000   sz=0x4000     prot=0x3   fl=0x3    anon:00006920c4fa        AFAFAFAF AFAFAFAF AFAFAFAF F0AFAFAF 
+ 68 0x212DE4000  -0x310F70000   sz=0xFE18C000 prot=0x33  fl=0x3    anon:00006920c4fa        (prot 0x33, not read)
+ 69 0x310F70000  -0x310F78000   sz=0x8000     prot=0x1   fl=0xC    /AOSharedState           00000000 C28C0000 0000003B 00000000 
+ 70 0x310F78000  -0x310F88000   sz=0x10000    prot=0x3   fl=0xC    /AOP_0000000087_C000_P00 00000000 00000000 00000000 00000000 
+ 71 0x310F88000  -0x310F8C000   sz=0x4000     prot=0x3   fl=0xC    /AOCtx_0000000087_zJQt62 00000000 00000000 00000000 00000000 
+ 72 0x310F8C000  -0x310F9C000   sz=0x10000    prot=0x3   fl=0xC    /AOP_0000000087_C001_P00 00000000 00000000 00000000 00000000 
+ 73 0x310F9C000  -0x310FAC000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 74 0x310FAC000  -0x310FB0000   sz=0x4000     prot=0x3   fl=0xC    /AOCtx_0000000087_l0lL61 00000000 00000000 00000000 00000000 
+ 75 0x310FB0000  -0x310FC0000   sz=0x10000    prot=0x3   fl=0xC    /AOP_0000000087_C002_P00 00000000 00000000 00000000 00000000 
+ 76 0x310FC0000  -0x310FC4000   sz=0x4000     prot=0x3   fl=0xC    /AOCtx_0000000087_xqDrVF 00000000 00000000 00000000 00000000 
+ 77 0x310FC4000  -0x310FD4000   sz=0x10000    prot=0x3   fl=0xC    /AOP_0000000087_C003_P00 00000000 00000000 00000000 00000000 
+ 78 0x310FD4000  -0x310FD8000   sz=0x4000     prot=0x3   fl=0xC    /AOCtx_0000000087_G0CjSl 00000000 00000000 00000000 00000000 
+ 79 0x310FD8000  -0x310FE8000   sz=0x10000    prot=0x3   fl=0xC    /AOP_0000000087_C004_P00 00000000 00000000 00000000 00000000 
+ 80 0x310FE8000  -0x310FEC000   sz=0x4000     prot=0x3   fl=0xC    /AOCtx_0000000087_p2i0Rv 00000000 00000000 00000000 00000000 
+ 81 0x310FEC000  -0x310FFC000   sz=0x10000    prot=0x3   fl=0xC    /AOP_0000000087_C005_P00 00000000 00000000 00000000 00000000 
+ 82 0x310FFC000  -0x31100C000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 83 0x31100C000  -0x311010000   sz=0x4000     prot=0x3   fl=0xC    /AOCtx_0000000087_C1RNO9 00000000 00000000 00000000 00000000 
+ 84 0x311010000  -0x311020000   sz=0x10000    prot=0x3   fl=0xC    /AOP_0000000087_C006_P00 00000000 00000000 00000000 00000000 
+ 85 0x311020000  -0x311030000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 86 0x311030000  -0x311040000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 87 0x311040000  -0x311060000   sz=0x20000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 88 0x311060000  -0x311080000   sz=0x20000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 89 0x311080000  -0x311090000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 90 0x311090000  -0x3110A0000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 91 0x3110A0000  -0x3110C0000   sz=0x20000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 92 0x3110C0000  -0x3110D0000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 93 0x3110D0000  -0x3110F0000   sz=0x20000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 94 0x3110F0000  -0x311110000   sz=0x20000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 95 0x311110000  -0x311120000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 96 0x311120000  -0x311130000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 97 0x311130000  -0x3111C0000   sz=0x90000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 98 0x3111C0000  -0x311250000   sz=0x90000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+ 99 0x311250000  -0x311260000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+100 0x311260000  -0x311270000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+101 0x311270000  -0x311280000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+102 0x311280000  -0x311290000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+103 0x311290000  -0x3112A0000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+104 0x3112A0000  -0x3112B0000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+105 0x3112B0000  -0x3112C0000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+106 0x3112C0000  -0x3112D0000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+107 0x3112D0000  -0x3112E0000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+108 0x3112E0000  -0x3112F0000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+109 0x3112F0000  -0x311300000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+110 0x311300000  -0x311310000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+111 0x311310000  -0x311320000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+112 0x311320000  -0x311330000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+113 0x311330000  -0x311338000   sz=0x8000     prot=0x3   fl=0x0    anon:00006934999e        5A5A5678 00000000 00000000 00000000 
+114 0x311338000  -0x311340000   sz=0x8000     prot=0x3   fl=0x0    anon:00006934999e        11112222 00000000 00000000 00000000 
+115 0x311340000  -0x311350000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+116 0x311350000  -0x311360000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+117 0x311360000  -0x311370000   sz=0x10000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+118 0x311370000  -0x311378000   sz=0x8000     prot=0x3   fl=0x0    anon:00006934999e        33334444 00000000 00000000 00000000 
+119 0x311378000  -0x31137C000   sz=0x4000     prot=0x3   fl=0x0    anon:00006934999e        11223344 00000000 00000000 00000000 
+120 0x311380000  -0x311400000   sz=0x80000    prot=0x3   fl=0x0    SceLibcHeap              00000000 00000000 00000000 00000000 
+121 0x311400000  -0x311408000   sz=0x8000     prot=0x3   fl=0x0    anon:0008140b411a        00000001 00000001 00000400 FFFFFFFF 
+122 0x311408000  -0x31140C000   sz=0x4000     prot=0x3   fl=0x0    anon:00006934999e        47524142 00000000 00000000 00000000 
+123 0x31140C000  -0x311410000   sz=0x4000     prot=0x3   fl=0x0    anon:00006934999e        AAAAAAAA 00000000 00000000 00000000 
+124 0x311410000  -0x311414000   sz=0x4000     prot=0x3   fl=0x0    anon:00006934999e        BBBBBBBB 00000000 00000000 00000000 
+125 0x311414000  -0x311418000   sz=0x4000     prot=0x3   fl=0x0    anon:00006934999e        00000000 00000000 00000000 00000000 
+126 0x311418000  -0x31141C000   sz=0x4000     prot=0x3   fl=0x0    anon:00006934999e        00000000 00000000 00000000 00000000 
+127 0x31141C000  -0x311420000   sz=0x4000     prot=0x1   fl=0x0    anon:00006934999e        00000000 00000000 00000000 00000000 
+128 0x311420000  -0x311424000   sz=0x4000     prot=0x1   fl=0x0    anon:00006934999e        00000000 00000000 00000000 00000000 
+129 0x311424000  -0x311434000   sz=0x10000    prot=0x3   fl=0x0    anon:00006934999e        00000000 00000000 00000000 00000000 
+130 0x7EEE68000  -0x7EEE6C000   sz=0x4000     prot=0x0   fl=0x0    stack guard              (prot 0x0, not read)
+131 0x7EEE6C000  -0x7EEE7C000   sz=0x10000    prot=0x3   fl=0x0    SceLibc_Thr              00000000 00000000 00000000 00000000 
+132 0x7EEE7C000  -0x7EEE80000   sz=0x4000     prot=0x0   fl=0x0    stack guard              (prot 0x0, not read)
+133 0x7EEE80000  -0x7EEE90000   sz=0x10000    prot=0x3   fl=0x0    SceLibc_Thr              00000000 00000000 00000000 00000000 
+134 0x7EEE90000  -0x7EEE94000   sz=0x4000     prot=0x0   fl=0x0    stack guard              (prot 0x0, not read)
+135 0x7EEE94000  -0x7EEEA4000   sz=0x10000    prot=0x3   fl=0x0    SceLibc_Thr              00000000 00000000 00000000 00000000 
+136 0x7EEEA4000  -0x7EEEA8000   sz=0x4000     prot=0x0   fl=0x0    stack guard              (prot 0x0, not read)
+137 0x7EEEA8000  -0x7EEEB8000   sz=0x10000    prot=0x3   fl=0x0    SceLibc_Thr              00000000 00000000 00000000 00000000 
+138 0x7EEEB8000  -0x7EEEBC000   sz=0x4000     prot=0x0   fl=0x0    stack guard              (prot 0x0, not read)
+139 0x7EEEBC000  -0x7EEECC000   sz=0x10000    prot=0x3   fl=0x0    SceLibc_Thr              00000000 00000000 00000000 00000000 
+140 0x7EEECC000  -0x7EEED0000   sz=0x4000     prot=0x0   fl=0x0    stack guard              (prot 0x0, not read)
+141 0x7EEED0000  -0x7EEEE0000   sz=0x10000    prot=0x3   fl=0x0    SceLibc_Thr              00000000 00000000 00000000 00000000 
+142 0x7EEEE0000  -0x7EEEE4000   sz=0x4000     prot=0x0   fl=0x0    stack guard              (prot 0x0, not read)
+143 0x7EEEE4000  -0x7EEEF4000   sz=0x10000    prot=0x3   fl=0x0    SceLibc_Thr              00000000 00000000 00000000 00000000 
+144 0x7EEEF4000  -0x7EEEF8000   sz=0x4000     prot=0x0   fl=0x0    stack guard              (prot 0x0, not read)
+145 0x7EEEF8000  -0x7EEF08000   sz=0x10000    prot=0x3   fl=0x0    SceLibc_Thr              00000000 00000000 00000000 00000000 
+146 0x7EEF08000  -0x7EEF0C000   sz=0x4000     prot=0x0   fl=0x0    stack guard              (prot 0x0, not read)
+147 0x7EEF0C000  -0x7EEF1C000   sz=0x10000    prot=0x3   fl=0x0    SceLibc_Thr              00000000 00000000 00000000 00000000 
+148 0x7EEF1C000  -0x7EEF20000   sz=0x4000     prot=0x0   fl=0x0    stack guard              (prot 0x0, not read)
+149 0x7EEF20000  -0x7EEF24000   sz=0x4000     prot=0x3   fl=0x0    SceVideoOutServiceThread 00000000 00000000 00000000 00000000 
+150 0x7EEF24000  -0x7EEF28000   sz=0x4000     prot=0x0   fl=0x0    stack guard              (prot 0x0, not read)
+151 0x7EEF28000  -0x7EEF38000   sz=0x10000    prot=0x3   fl=0x0    SceUserServiceEvent      00000000 00000000 00000000 00000000 
+152 0x7EEF38000  -0x7EEF3C000   sz=0x4000     prot=0x3   fl=0x0    (NoName)eboot.bin        00000000 00000000 00000000 00000000 
+153 0x7EEF3C000  -0x7EF13C000   sz=0x200000   prot=0x3   fl=0x0    main stack               00000000 00000000 00000000 00000000 
+154 0x7EF13C000  -0x7EF140000   sz=0x4000     prot=0x5   fl=0x0    (NoName)SceSysCore.elf   00000001 00000001 00000002 00000000 
+155 0x800000000  -0x800004000   sz=0x4000     prot=0x4   fl=0x0    sigtramp_alias           (prot 0x4, not read)
+156 0x80066C000  -0x800760000   sz=0xF4000    prot=0x4   fl=0x0    libSceSsl.sprx           (prot 0x4, not read)
+157 0x800760000  -0x8007B8000   sz=0x58000    prot=0x1   fl=0x0    libSceSsl.sprx           3B031B01 000097E4 000012FB FFF0C100 
+158 0x8007B8000  -0x8007D4000   sz=0x1C000    prot=0x1   fl=0x0    libSceSsl.sprx           0079A678 00000008 00791322 00000008 
+159 0x8007D4000  -0x8007D8000   sz=0x4000     prot=0x3   fl=0x0    libSceSsl.sprx           007D4000 00000008 3A552084 00000008 
+160 0x8049AC000  -0x8049F0000   sz=0x44000    prot=0x4   fl=0x0    libSceNpManager.sprx     (prot 0x4, not read)
+161 0x8049F0000  -0x804A08000   sz=0x18000    prot=0x1   fl=0x0    libSceNpManager.sprx     3B031B01 00003AEC 0000075C FFFBC0D0 
+162 0x804A08000  -0x804A0C000   sz=0x4000     prot=0x1   fl=0x0    libSceNpManager.sprx     00000000 00000000 00000000 00000000 
+163 0x804A0C000  -0x804A10000   sz=0x4000     prot=0x3   fl=0x0    libSceNpManager.sprx     04A0C000 00000008 3A552084 00000008 
+164 0x807864000  -0x80787C000   sz=0x18000    prot=0x4   fl=0x0    libSceSaveDataDialog.spr (prot 0x4, not read)
+165 0x80787C000  -0x807884000   sz=0x8000     prot=0x1   fl=0x0    libSceSaveDataDialog.spr 3B031B01 00001304 0000025F FFFE80D0 
+166 0x807884000  -0x807888000   sz=0x4000     prot=0x1   fl=0x0    libSceSaveDataDialog.spr 00000000 00000000 00000000 00000000 
+167 0x807888000  -0x80788C000   sz=0x4000     prot=0x3   fl=0x0    libSceSaveDataDialog.spr 07888000 00000008 3A552084 00000008 
+168 0x80851C000  -0x808558000   sz=0x3C000    prot=0x4   fl=0x0    libSceAudioOut.sprx      (prot 0x4, not read)
+169 0x808558000  -0x808568000   sz=0x10000    prot=0x1   fl=0x0    libSceAudioOut.sprx      3B031B01 000017AC 000002F4 FFFC40D0 
+170 0x808568000  -0x80856C000   sz=0x4000     prot=0x1   fl=0x0    libSceAudioOut.sprx      00000000 00000000 00000000 00000000 
+171 0x80856C000  -0x808570000   sz=0x4000     prot=0x3   fl=0x0    libSceAudioOut.sprx      0856C000 00000008 3A552084 00000008 
+172 0x808570000  -0x8085BC000   sz=0x4C000    prot=0x3   fl=0x0    libSceAudioOut.sprx      00000000 00000000 00000000 00000000 
+173 0x808D34000  -0x808D38000   sz=0x4000     prot=0x4   fl=0x0    libSceRtc.sprx           (prot 0x4, not read)
+174 0x808D38000  -0x808D3C000   sz=0x4000     prot=0x1   fl=0x0    libSceRtc.sprx           3B031B01 000001E4 0000003B FFFFC0D0 
+175 0x808D3C000  -0x808D40000   sz=0x4000     prot=0x1   fl=0x0    libSceRtc.sprx           08D34100 00000008 3A3FA830 00000008 
+176 0x808D40000  -0x808D44000   sz=0x4000     prot=0x3   fl=0x0    libSceRtc.sprx           08D40000 00000008 3A552084 00000008 
+177 0x809D18000  -0x809D3C000   sz=0x24000    prot=0x4   fl=0x0    libSceCamera.sprx        (prot 0x4, not read)
+178 0x809D3C000  -0x809D48000   sz=0xC000     prot=0x1   fl=0x0    libSceCamera.sprx        3B031B01 00000F0C 000001E0 FFFDC0D0 
+179 0x809D48000  -0x809D4C000   sz=0x4000     prot=0x1   fl=0x0    libSceCamera.sprx        09D76B80 00000008 09D76B98 00000008 
+180 0x809D4C000  -0x809D50000   sz=0x4000     prot=0x3   fl=0x0    libSceCamera.sprx        09D4C000 00000008 3A552084 00000008 
+181 0x809D50000  -0x809D7C000   sz=0x2C000    prot=0x3   fl=0x0    libSceCamera.sprx        00000000 00000000 00000000 00000000 
+182 0x80BF04000  -0x80BF08000   sz=0x4000     prot=0x4   fl=0x0    libSceAjm.sprx           (prot 0x4, not read)
+183 0x80BF08000  -0x80BF0C000   sz=0x4000     prot=0x1   fl=0x0    libSceAjm.sprx           3B031B01 000000DC 0000001A FFFFC0D0 
+184 0x80BF0C000  -0x80BF10000   sz=0x4000     prot=0x1   fl=0x0    libSceAjm.sprx           0BF09260 00000008 00000007 00000000 
+185 0x80BF10000  -0x80BF14000   sz=0x4000     prot=0x3   fl=0x0    libSceAjm.sprx           0BF10000 00000008 3A552084 00000008 
+186 0x80E29C000  -0x80E2A4000   sz=0x8000     prot=0x4   fl=0x0    libSceImeDialog.sprx     (prot 0x4, not read)
+187 0x80E2A4000  -0x80E2A8000   sz=0x4000     prot=0x1   fl=0x0    libSceImeDialog.sprx     3B031B01 0000024C 00000048 FFFF80D0 
+188 0x80E2A8000  -0x80E2AC000   sz=0x4000     prot=0x1   fl=0x0    libSceImeDialog.sprx     0E29C0F0 00000008 3A3FA830 00000008 
+189 0x80E2AC000  -0x80E2B0000   sz=0x4000     prot=0x3   fl=0x0    libSceImeDialog.sprx     0E2AC000 00000008 3A552084 00000008 
+190 0x8140B4000  -0x8140B8000   sz=0x4000     prot=0x4   fl=0x0    libSceCommonDialog.sprx  (prot 0x4, not read)
+191 0x8140B8000  -0x8140BC000   sz=0x4000     prot=0x1   fl=0x0    libSceCommonDialog.sprx  3B031B01 0000042C 00000084 FFFFC0D0 
+192 0x8140BC000  -0x8140C0000   sz=0x4000     prot=0x1   fl=0x0    libSceCommonDialog.sprx  00000000 00000000 00000000 00000000 
+193 0x8140C0000  -0x8140C4000   sz=0x4000     prot=0x3   fl=0x0    libSceCommonDialog.sprx  140C0000 00000008 3A552084 00000008 
+194 0x8146C4000  -0x8146E4000   sz=0x20000    prot=0x4   fl=0x0    libSceNpWebApi2.sprx     (prot 0x4, not read)
+195 0x8146E4000  -0x8146EC000   sz=0x8000     prot=0x1   fl=0x0    libSceNpWebApi2.sprx     3B031B01 00001484 0000028F FFFE00D0 
+196 0x8146EC000  -0x8146F0000   sz=0x4000     prot=0x1   fl=0x0    libSceNpWebApi2.sprx     00000000 00000000 00000000 00000000 
+197 0x8146F0000  -0x8146F4000   sz=0x4000     prot=0x3   fl=0x0    libSceNpWebApi2.sprx     146F0000 00000008 3A552084 00000008 
+198 0x818A00000  -0x818A34000   sz=0x34000    prot=0x4   fl=0x0    libSceNet.sprx           (prot 0x4, not read)
+199 0x818A34000  -0x818A40000   sz=0xC000     prot=0x1   fl=0x0    libSceNet.sprx           3B031B01 00001384 0000026F FFFCC0D0 
+200 0x818A40000  -0x818A44000   sz=0x4000     prot=0x1   fl=0x0    libSceNet.sprx           18A640C8 00000008 18A640E8 00000008 
+201 0x818A44000  -0x818A48000   sz=0x4000     prot=0x3   fl=0x0    libSceNet.sprx           18A44000 00000008 3A552084 00000008 
+202 0x818A48000  -0x818BE8000   sz=0x1A0000   prot=0x3   fl=0x0    libSceNet.sprx           00000000 00000000 00000000 00000000 
+203 0x819B78000  -0x819B7C000   sz=0x4000     prot=0x4   fl=0x0    libSceMsgDialog.sprx     (prot 0x4, not read)
+204 0x819B7C000  -0x819B80000   sz=0x4000     prot=0x1   fl=0x0    libSceMsgDialog.sprx     3B031B01 00000104 0000001F FFFFC0D0 
+205 0x819B80000  -0x819B84000   sz=0x4000     prot=0x1   fl=0x0    libSceMsgDialog.sprx     00000000 00000000 00000000 00000000 
+206 0x819B84000  -0x819B88000   sz=0x4000     prot=0x3   fl=0x0    libSceMsgDialog.sprx     19B84000 00000008 3A552084 00000008 
+207 0x81BB98000  -0x81BB9C000   sz=0x4000     prot=0x4   fl=0x0    libSceSysUtil.sprx       (prot 0x4, not read)
+208 0x81BB9C000  -0x81BBA0000   sz=0x4000     prot=0x1   fl=0x0    libSceSysUtil.sprx       3B031B01 000000D4 00000019 FFFFC0D0 
+209 0x81BBA0000  -0x81BBA4000   sz=0x4000     prot=0x1   fl=0x0    libSceSysUtil.sprx       00000000 00000000 3A3FA830 00000008 
+210 0x81BBA4000  -0x81BBA8000   sz=0x4000     prot=0x3   fl=0x0    libSceSysUtil.sprx       1BBA4000 00000008 00000000 00000000 
+211 0x81CC74000  -0x81CC90000   sz=0x1C000    prot=0x4   fl=0x0    libScePad.sprx           (prot 0x4, not read)
+212 0x81CC90000  -0x81CC94000   sz=0x4000     prot=0x1   fl=0x0    libScePad.sprx           3B031B01 0000086C 0000010C FFFE40D0 
+213 0x81CC94000  -0x81CC98000   sz=0x4000     prot=0x1   fl=0x0    libScePad.sprx           00000000 00000000 3A3FA830 00000008 
+214 0x81CC98000  -0x81CCA8000   sz=0x10000    prot=0x3   fl=0x0    libScePad.sprx           1CC98000 00000008 3A552084 00000008 
+215 0x81DE94000  -0x81DEAC000   sz=0x18000    prot=0x4   fl=0x0    libSceIme.sprx           (prot 0x4, not read)
+216 0x81DEAC000  -0x81DED0000   sz=0x24000    prot=0x1   fl=0x0    libSceIme.sprx           3B031B01 0000089C 00000112 FFFE80D0 
+217 0x81DED0000  -0x81DED4000   sz=0x4000     prot=0x1   fl=0x0    libSceIme.sprx           04420000 00000000 1DEA3F30 00000008 
+218 0x81DED4000  -0x81DED8000   sz=0x4000     prot=0x3   fl=0x0    libSceIme.sprx           1DED4000 00000008 3A552084 00000008 
+219 0x81E370000  -0x81E380000   sz=0x10000    prot=0x4   fl=0x0    libSceUserService.sprx   (prot 0x4, not read)
+220 0x81E380000  -0x81E388000   sz=0x8000     prot=0x1   fl=0x0    libSceUserService.sprx   3B031B01 0000198C 00000330 FFFF00D0 
+221 0x81E388000  -0x81E38C000   sz=0x4000     prot=0x1   fl=0x0    libSceUserService.sprx   1E373DB0 00000008 1E373DE0 00000008 
+222 0x81E38C000  -0x81E390000   sz=0x4000     prot=0x3   fl=0x0    libSceUserService.sprx   1E38C000 00000008 3A552084 00000008 
+223 0x8221F8000  -0x8221FC000   sz=0x4000     prot=0x4   fl=0x0    libSceNpGameIntent.sprx  (prot 0x4, not read)
+224 0x8221FC000  -0x822200000   sz=0x4000     prot=0x1   fl=0x0    libSceNpGameIntent.sprx  3B031B01 000003F4 0000007D FFFFC0D0 
+225 0x822200000  -0x822204000   sz=0x4000     prot=0x1   fl=0x0    libSceNpGameIntent.sprx  00000000 00000000 00000000 00000000 
+226 0x822204000  -0x822208000   sz=0x4000     prot=0x3   fl=0x0    libSceNpGameIntent.sprx  22204000 00000008 3A552084 00000008 
+227 0x823404000  -0x823410000   sz=0xC000     prot=0x4   fl=0x0    libSceSysmodule.sprx     (prot 0x4, not read)
+228 0x823410000  -0x823418000   sz=0x8000     prot=0x1   fl=0x0    libSceSysmodule.sprx     3B031B01 0000087C 0000010E FFFF40D0 
+229 0x823418000  -0x82341C000   sz=0x4000     prot=0x1   fl=0x0    libSceSysmodule.sprx     23404F70 00000008 3A3FA830 00000008 
+230 0x82341C000  -0x823430000   sz=0x14000    prot=0x3   fl=0x0    libSceSysmodule.sprx     2341C000 00000008 3A552084 00000008 
+231 0x8236C0000  -0x8236C8000   sz=0x8000     prot=0x4   fl=0x0    libSceIpmi.sprx          (prot 0x4, not read)
+232 0x8236C8000  -0x8236CC000   sz=0x4000     prot=0x1   fl=0x0    libSceIpmi.sprx          3B031B01 00000664 000000CB FFFF80D0 
+233 0x8236CC000  -0x8236D0000   sz=0x4000     prot=0x1   fl=0x0    libSceIpmi.sprx          00000000 00000000 00000000 00000000 
+234 0x8236D0000  -0x8236D4000   sz=0x4000     prot=0x3   fl=0x0    libSceIpmi.sprx          236D0000 00000008 3A552084 00000008 
+235 0x8236D4000  -0x8236E4000   sz=0x10000    prot=0x3   fl=0x0    libSceIpmi.sprx          00000000 00000000 00000000 00000000 
+236 0x8236EC000  -0x823720000   sz=0x34000    prot=0x4   fl=0x0    libSceNpCommon.sprx      (prot 0x4, not read)
+237 0x823720000  -0x823734000   sz=0x14000    prot=0x1   fl=0x0    libSceNpCommon.sprx      3B031B01 00002CE4 0000059B FFFCC0D0 
+238 0x823734000  -0x823738000   sz=0x4000     prot=0x1   fl=0x0    libSceNpCommon.sprx      00000000 00000000 00000000 00000000 
+239 0x823738000  -0x82373C000   sz=0x4000     prot=0x3   fl=0x0    libSceNpCommon.sprx      23738000 00000008 3A552084 00000008 
+240 0x8238B0000  -0x8238B8000   sz=0x8000     prot=0x4   fl=0x0    libSceAudioIn.sprx       (prot 0x4, not read)
+241 0x8238B8000  -0x8238BC000   sz=0x4000     prot=0x1   fl=0x0    libSceAudioIn.sprx       3B031B01 000004A4 00000093 FFFF80D0 
+242 0x8238BC000  -0x8238C0000   sz=0x4000     prot=0x1   fl=0x0    libSceAudioIn.sprx       00000000 00000000 3A3FA830 00000008 
+243 0x8238C0000  -0x8238C4000   sz=0x4000     prot=0x3   fl=0x0    libSceAudioIn.sprx       238C0000 00000008 3A552084 00000008 
+244 0x827384000  -0x8273C4000   sz=0x40000    prot=0x4   fl=0x0    libSceAvPlayer.sprx      (prot 0x4, not read)
+245 0x8273C4000  -0x8273D4000   sz=0x10000    prot=0x1   fl=0x0    libSceAvPlayer.sprx      3B031B01 000016B4 000002D5 FFFC00D0 
+246 0x8273D4000  -0x8273D8000   sz=0x4000     prot=0x1   fl=0x0    libSceAvPlayer.sprx      00000000 00000000 00000000 00000000 
+247 0x8273D8000  -0x8273DC000   sz=0x4000     prot=0x3   fl=0x0    libSceAvPlayer.sprx      273D8000 00000008 3A552084 00000008 
+248 0x829780000  -0x829788000   sz=0x8000     prot=0x4   fl=0x0    libSceNetCtl.sprx        (prot 0x4, not read)
+249 0x829788000  -0x82978C000   sz=0x4000     prot=0x1   fl=0x0    libSceNetCtl.sprx        3B031B01 000005BC 000000B6 FFFF80D0 
+250 0x82978C000  -0x829790000   sz=0x4000     prot=0x1   fl=0x0    libSceNetCtl.sprx        29781CC0 00000008 3A3FA830 00000008 
+251 0x829790000  -0x829794000   sz=0x4000     prot=0x3   fl=0x0    libSceNetCtl.sprx        29790000 00000008 3A552084 00000008 
+252 0x829CC4000  -0x829CC8000   sz=0x4000     prot=0x4   fl=0x0    libSceRegMgr.sprx        (prot 0x4, not read)
+253 0x829CC8000  -0x829CCC000   sz=0x4000     prot=0x1   fl=0x0    libSceRegMgr.sprx        3B031B01 000002BC 00000056 FFFFC0D0 
+254 0x829CCC000  -0x829CD0000   sz=0x4000     prot=0x1   fl=0x0    libSceRegMgr.sprx        00000000 00000000 3A3FA830 00000008 
+255 0x829CD0000  -0x829CD4000   sz=0x4000     prot=0x3   fl=0x0    libSceRegMgr.sprx        29CD0000 00000008 3A552084 00000008 
+256 0x82A958000  -0x82A978000   sz=0x20000    prot=0x4   fl=0x0    libSceVideoOut.sprx      (prot 0x4, not read)
+257 0x82A978000  -0x82A984000   sz=0xC000     prot=0x1   fl=0x0    libSceVideoOut.sprx      3B031B01 00001174 0000022D FFFE00D0 
+258 0x82A984000  -0x82A988000   sz=0x4000     prot=0x1   fl=0x0    libSceVideoOut.sprx      2A9580D0 00000008 2A958AF0 00000008 
+259 0x82A988000  -0x82A98C000   sz=0x4000     prot=0x3   fl=0x0    libSceVideoOut.sprx      2A988000 00000008 3A552084 00000008 
+260 0x82A98C000  -0x82A990000   sz=0x4000     prot=0x3   fl=0x0    libSceVideoOut.sprx      00000000 00000000 00000000 00000000 
+261 0x82AE34000  -0x82AE64000   sz=0x30000    prot=0x4   fl=0x0    libSceHttp.sprx          (prot 0x4, not read)
+262 0x82AE64000  -0x82AE70000   sz=0xC000     prot=0x1   fl=0x0    libSceHttp.sprx          3B031B01 000010F4 0000021D FFFD00D0 
+263 0x82AE70000  -0x82AE74000   sz=0x4000     prot=0x1   fl=0x0    libSceHttp.sprx          2AE6B09F 00000008 2AE6AE79 00000008 
+264 0x82AE74000  -0x82AE78000   sz=0x4000     prot=0x3   fl=0x0    libSceHttp.sprx          2AE74000 00000008 3A552084 00000008 
+265 0x82AE78000  -0x82AE7C000   sz=0x4000     prot=0x3   fl=0x0    libSceHttp.sprx          00000000 00000000 00000000 00000000 
+266 0x82F8DC000  -0x82F8F0000   sz=0x14000    prot=0x4   fl=0x0    libSceAvSetting.sprx     (prot 0x4, not read)
+267 0x82F8F0000  -0x82F8F8000   sz=0x8000     prot=0x1   fl=0x0    libSceAvSetting.sprx     3B031B01 00001064 0000020B FFFEC0D0 
+268 0x82F8F8000  -0x82F8FC000   sz=0x4000     prot=0x1   fl=0x0    libSceAvSetting.sprx     00000000 00000000 3A3FA830 00000008 
+269 0x82F8FC000  -0x82F900000   sz=0x4000     prot=0x3   fl=0x0    libSceAvSetting.sprx     2F8FC000 00000008 3A552084 00000008 
+270 0x830408000  -0x830450000   sz=0x48000    prot=0x4   fl=0x0    libSceSaveData.sprx      (prot 0x4, not read)
+271 0x830450000  -0x830468000   sz=0x18000    prot=0x1   fl=0x0    libSceSaveData.sprx      3B031B01 000033B4 00000675 FFFB80D0 
+272 0x830468000  -0x83046C000   sz=0x4000     prot=0x1   fl=0x0    libSceSaveData.sprx      00000000 00000000 00000000 00000000 
+273 0x83046C000  -0x830470000   sz=0x4000     prot=0x3   fl=0x0    libSceSaveData.sprx      3046C000 00000008 3A552084 00000008 
+274 0x8311E4000  -0x8311F0000   sz=0xC000     prot=0x4   fl=0x0    libSceRazorCpu.sprx      (prot 0x4, not read)
+275 0x8311F0000  -0x8311F4000   sz=0x4000     prot=0x1   fl=0x0    libSceRazorCpu.sprx      3B031B01 0000032C 00000064 FFFF40D0 
+276 0x8311F4000  -0x8311F8000   sz=0x4000     prot=0x1   fl=0x0    libSceRazorCpu.sprx      311EDCC0 00000008 3A3FA830 00000008 
+277 0x8311F8000  -0x8311FC000   sz=0x4000     prot=0x3   fl=0x0    libSceRazorCpu.sprx      311F8000 00000008 3A552084 00000008 
+278 0x8311FC000  -0x831200000   sz=0x4000     prot=0x3   fl=0x0    libSceRazorCpu.sprx      00000000 00000000 00000000 00000000 
+279 0x832268000  -0x832294000   sz=0x2C000    prot=0x4   fl=0x0    libSceHttp2.sprx         (prot 0x4, not read)
+280 0x832294000  -0x8322A0000   sz=0xC000     prot=0x1   fl=0x0    libSceHttp2.sprx         3B031B01 00000E8C 000001D0 FFFD40D0 
+281 0x8322A0000  -0x8322A4000   sz=0x4000     prot=0x1   fl=0x0    libSceHttp2.sprx         322A4028 00000008 322A4048 00000008 
+282 0x8322A4000  -0x8322A8000   sz=0x4000     prot=0x3   fl=0x0    libSceHttp2.sprx         322A4000 00000008 3A552084 00000008 
+283 0x832A5C000  -0x832A64000   sz=0x8000     prot=0x4   fl=0x0    libSceMbus.sprx          (prot 0x4, not read)
+284 0x832A64000  -0x832A68000   sz=0x4000     prot=0x1   fl=0x0    libSceMbus.sprx          3B031B01 00000884 0000010F FFFF80D0 
+285 0x832A68000  -0x832A6C000   sz=0x4000     prot=0x1   fl=0x0    libSceMbus.sprx          00000000 00000000 3A3FA830 00000008 
+286 0x832A6C000  -0x832A70000   sz=0x4000     prot=0x3   fl=0x0    libSceMbus.sprx          32A6C000 00000008 3A552084 00000008 
+287 0x836340000  -0x83636C000   sz=0x2C000    prot=0x4   fl=0x0    libSceSystemService.sprx (prot 0x4, not read)
+288 0x83636C000  -0x836380000   sz=0x14000    prot=0x1   fl=0x0    libSceSystemService.sprx 3B031B01 000026EC 000004DC FFFD40D0 
+289 0x836380000  -0x836384000   sz=0x4000     prot=0x1   fl=0x0    libSceSystemService.sprx 36378D50 00000008 36378D5C 00000008 
+290 0x836384000  -0x83638C000   sz=0x8000     prot=0x3   fl=0x0    libSceSystemService.sprx 36384000 00000008 3A552084 00000008 
+291 0x83638C000  -0x836394000   sz=0x8000     prot=0x3   fl=0x0    libSceSystemService.sprx 00000000 00000000 00000000 00000000 
+292 0x839D6C000  -0x839D80000   sz=0x14000    prot=0x4   fl=0x0    libSceNpWebApi.sprx      (prot 0x4, not read)
+293 0x839D80000  -0x839D88000   sz=0x8000     prot=0x1   fl=0x0    libSceNpWebApi.sprx      3B031B01 00000FFC 000001FE FFFEC0D0 
+294 0x839D88000  -0x839D8C000   sz=0x4000     prot=0x1   fl=0x0    libSceNpWebApi.sprx      00000000 00000000 00000000 00000000 
+295 0x839D8C000  -0x839D90000   sz=0x4000     prot=0x3   fl=0x0    libSceNpWebApi.sprx      39D8C000 00000008 3A552084 00000008 
+296 0x83A3E4000  -0x83A50C000   sz=0x128000   prot=0x4   fl=0x0    libSceLibcInternal.sprx  (prot 0x4, not read)
+297 0x83A50C000  -0x83A590000   sz=0x84000    prot=0x1   fl=0x0    libSceLibcInternal.sprx  3B031B01 00013C4C 00001510 FFED8100 
+298 0x83A590000  -0x83A598000   sz=0x8000     prot=0x1   fl=0x0    libSceLibcInternal.sprx  3A553072 00000008 3A5553DC 00000008 
+299 0x83A598000  -0x83A59C000   sz=0x4000     prot=0x3   fl=0x0    libSceLibcInternal.sprx  3A598000 00000008 3A552084 00000008 
+300 0x83A59C000  -0x83A5AC000   sz=0x10000    prot=0x3   fl=0x0    libSceLibcInternal.sprx  00000000 00000000 00000000 00000000 
+301 0x83F390000  -0x83F39C000   sz=0xC000     prot=0x4   fl=0x0    libSceGnmDriverForNeoMod (prot 0x4, not read)
+302 0x83F39C000  -0x83F3A4000   sz=0x8000     prot=0x1   fl=0x0    libSceGnmDriverForNeoMod 3B031B01 00000A5C 0000014A FFFF40D0 
+303 0x83F3A4000  -0x83F3A8000   sz=0x4000     prot=0x1   fl=0x0    libSceGnmDriverForNeoMod 3F3AC000 00000008 3F3AE63C 00000008 
+304 0x83F3A8000  -0x83F3B4000   sz=0xC000     prot=0x3   fl=0x0    libSceGnmDriverForNeoMod 72646853 00020007 01000A04 00000000 
+305 0x83FF48000  -0x83FF90000   sz=0x48000    prot=0x4   fl=0x0    libkernel.sprx           (prot 0x4, not read)
+306 0x83FF90000  -0x83FFB0000   sz=0x20000    prot=0x1   fl=0x0    libkernel.sprx           3B031B01 000042CC 00000858 FFFB80D0 
+307 0x83FFB0000  -0x83FFB4000   sz=0x4000     prot=0x1   fl=0x0    libkernel.sprx           3FFAADD8 00000008 3FFA8F44 00000008 
+308 0x83FFB4000  -0x83FFB8000   sz=0x4000     prot=0x3   fl=0x0    libkernel.sprx           3FFB4000 00000008 3A552084 00000008 
+309 0x83FFB8000  -0x83FFEC000   sz=0x34000    prot=0x3   fl=0x0    libkernel.sprx           00000000 00000000 00000000 00000000 
+310 0x880AD0000  -0x881AD0000   sz=0x1000000  prot=0x3   fl=0x0    SceKernelInternalMemory  00000000 00000000 00000000 00000000 
+311 0x881AD0000  -0x881AD4000   sz=0x4000     prot=0x3   fl=0x0    SceKernelPrimaryTcbTls   00000000 00000000 00000000 00000000 
+312 0x881AD4000  -0x881B54000   sz=0x80000    prot=0x3   fl=0x0    SceNpGlobalHeap          00000000 00000000 00000000 00000000 
+313 0x881B54000  -0x881B64000   sz=0x10000    prot=0x3   fl=0x0    SceNpMgrPRX              00000000 00000000 00000000 00000000 
+314 0x881B64000  -0x881B6C000   sz=0x8000     prot=0x3   fl=0x0    SceNpMgrIpcClient        00000000 00000000 00000000 00000000 
+315 0x881B6C000  -0x881B7C000   sz=0x10000    prot=0x3   fl=0x0    SceNpIpc2ClientHeap      00000000 00000000 00000000 00000000 
+316 0x881B7C000  -0x881B80000   sz=0x4000     prot=0x3   fl=0x0    SceNpSdkClient           00000000 00000000 00000000 00000000 
+317 0x881B80000  -0x881BC0000   sz=0x40000    prot=0x3   fl=0x0    SceLibSsl                00000000 00000000 00000000 00000000 
+318 0x881BC0000  -0x881BCC000   sz=0xC000     prot=0x3   fl=0x0    SceLibHttp               00000000 00000000 00000000 00000000 
+319 0x881BCC000  -0x881BDC000   sz=0x10000    prot=0x3   fl=0x0    anon:0008049d2fdd        11545EEC 00000000 00000000 00000000 
+320 0x881BDC000  -0x881C1C000   sz=0x40000    prot=0x3   fl=0x0    SceNpWebApi2Push2        00000000 00000000 00000000 00000000 
+321 0x881C1C000  -0x881C5C000   sz=0x40000    prot=0x3   fl=0x0    SceNpWebApi2Push2        00000000 00000000 00000000 00000000 
+322 0x881C5C000  -0x881C7C000   sz=0x20000    prot=0x3   fl=0x0    SceSaveDataHeap          00000000 00000000 00000000 00000000 
+323 0xC80000000  -0xC80010000   sz=0x10000    prot=0x3   fl=0x0    (NoName)eboot.bin        00000000 00000000 00000000 00000000 
+324 0xC80010000  -0xC80048000   sz=0x38000    prot=0x33  fl=0x0    (NoName)eboot.bin        (prot 0x33, not read)
+325 0xF00000000  -0xF00004000   sz=0x4000     prot=0x3   fl=0x0    SceGnmTrapCode           BF800001 BF800001 B9720002 8F729F72 
+326 0xF00004000  -0xF00008000   sz=0x4000     prot=0x3   fl=0x0    SceGnmTrapData           00144000 0000000F 00144000 0000000F 
+327 0xF00008000  -0xF00104000   sz=0xFC000    prot=0x3   fl=0x0    SceAgcDdid               00000000 00000000 00000000 00000000 
+328 0xF00104000  -0xF00140000   sz=0x3C000    prot=0x3   fl=0x0    SceGnmEopFifo            00000000 00000000 00000000 00000000 
+329 0xF00140000  -0xF00144000   sz=0x4000     prot=0x3   fl=0x0    SceGnmShadowRegInfo      00000000 00000000 00000000 00000000 
+330 0xF00144000  -0xF01144000   sz=0x1000000  prot=0x3   fl=0x0    SceGnmCwsr               00000000 00000000 00000000 00000000 
+331 0xF01144000  -0xF01148000   sz=0x4000     prot=0x3   fl=0x0    SceGnmMisc               00000000 00000000 00000000 00000000 
+332 0xF01148000  -0xF01328000   sz=0x1E0000   prot=0x3   fl=0x0    SceGnmACQRB              00000000 00000000 00000000 00000000 
+333 0xFE0000000  -0xFE0010000   sz=0x10000    prot=0x3   fl=0x3    SceGnmDriver             C0012800 80000000 80000000 C0001200 
+334 0xFE0200000  -0xFE0204000   sz=0x4000     prot=0x3   fl=0x0    SceGnmDingDong           FFFFFFFF FFFFFFFF FFFFFFFF FFFFFFFF 
+335 0xFE0300000  -0xFE0400000   sz=0x100000   prot=0x3   fl=0x0    SceGnmDumpArea           00000000 00000000 00000000 00000000 
+
+[A] 279 readable, 57 not readable of 336
+final canary: pid=87 (started 87)
+=== PROBE 1481f COMPLETE ===

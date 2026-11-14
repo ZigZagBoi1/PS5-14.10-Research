@@ -1,0 +1,42 @@
+=== PROBE 1411a: DMEM RANGE CHECK ===
+[0] pid=378
+[0] dmem0 fd=24
+
+[A] exact end of the low window, 0x100000000 .. 0x180000000 at 256 MiB
+  off=0x100000000    MAP
+  off=0x110000000    MAP
+  off=0x120000000    13 Permission denied
+  off=0x130000000    13 Permission denied
+  off=0x140000000    13 Permission denied
+  off=0x150000000    13 Permission denied
+  off=0x160000000    13 Permission denied
+  off=0x170000000    13 Permission denied
+  off=0x180000000    13 Permission denied
+  first refused = 0x120000000
+
+[B] the 64 GiB rung neighbourhood, 64 MiB steps around 0x1000000000
+  off=0xFF8000000      13 Permission denied
+  off=0xFFC000000      13 Permission denied
+  off=0x1000000000     MAP
+  off=0x1004000000     13 Permission denied
+  off=0x1008000000     13 Permission denied
+  off=0x100C000000     13 Permission denied
+  off=0x1010000000     13 Permission denied
+
+[C] 64 GiB region: how much can one mapping cover, and is it writable
+  len=0x1000       13 Permission denied
+  len=0x40000000   13 Permission denied
+  len=0x100000000  13 Permission denied
+
+[D] cross the low-window end with one mapping that STARTS inside it
+    (a page installed past the window end would be an ACL escape)
+  off=0 len=0x140000000  13 Permission denied
+  off=0 len=0x180000000  13 Permission denied
+  off=0 len=0x200000000  22 Invalid argument
+
+[E] start inside the window and let the length run past the top into 64 GiB
+  off=0x100000000 len=0x40000000 13 Permission denied
+  off=0x100000000 len=0x1000000000 22 Invalid argument
+  off=0x13F000000 len=0x2000000 13 Permission denied
+
+=== 1411a DONE ===

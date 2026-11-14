@@ -1,0 +1,8 @@
+=== PROBE 1426a: RANGE PREDICATE WRAP ===
+
+[0] socketpair fds 39 / 40 (non-blocking)
+    control page 0x3113D0000 filled 0x41414141
+[A] write(fd, ptr, len) with overflowing lengths
+    control user len 0x40    ptr=0x3113D0000      len=0x40        rv=64     errno=13 Permission denied
+      >>> LANDED rv=64: draining socket
+      first 16 bytes: 41414141 41414141 41414141 41414141

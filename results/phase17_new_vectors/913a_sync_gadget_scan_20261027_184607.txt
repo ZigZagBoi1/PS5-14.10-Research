@@ -1,0 +1,22 @@
+=== PROBE 913a: sync gadget scan ===
+[0] eboot base=1DE5C000
+  cmp_dword_rdi_0_je @ 1DE6B6C8 : 83 3F 00 74 4E 48 8B 1F 
+  cmp_dword_rdi_0_je @ 1DEA342D : 83 3F 00 74 44 49 8B BC 
+  cmp_dword_rdi_0_je @ 1DF7E0A2 : 83 3F 00 74 2F 4C 8B 6D 
+  cmp_dword_rdi_0_je @ 1DFBEA56 : 83 3F 00 74 1E 83 BF 70 
+  cmp_dword_rdi_0_jne @ 1DE6B6B0 : 83 3F 00 75 18 EB 64 66 
+  cmp_dword_rdi_0_jne @ 1DE913F5 : 83 3F 00 75 02 5D C3 E8 
+  cmp_dword_rdi_0_jne @ 1DFB96E0 : 83 3F 00 75 10 48 8B 7D 
+  cmp_dword_rdi_0_jne @ 1DFB99E0 : 83 3F 00 75 10 48 8B 7D 
+  mov_eax_rdi_test_je @ 1DFC07E3 : 8B 07 85 C0 74 4B C5 FB 
+  mov_rax_rdi_test_je @ 1DE8647C : 48 8B 07 48 85 C0 74 AC 
+  mov_rax_rdi_test_je @ 1DEAAE0C : 48 8B 07 48 85 C0 74 AC 
+  mov_rax_rdi_test_je @ 1DEAB4E6 : 48 8B 07 48 85 C0 74 28 
+  mov_rax_rdi_test_je @ 1DEB9C5F : 48 8B 07 48 85 C0 74 0A 
+  cmp_qword_rdi_0_je @ 1DE6B6C7 : 48 83 3F 00 74 4E 48 8B 
+  cmp_qword_rdi_0_je @ 1DFBEA55 : 48 83 3F 00 74 1E 83 BF 
+  cmp_qword_rdi_0_je @ 1DFBEAB5 : 48 83 3F 00 74 1B 83 BF 
+  cmp_qword_rdi_0_je @ 1DFBEB0A : 48 83 3F 00 74 06 8B 87 
+  cmp_dword_rax_0_je @ 1DF81E66 : 83 38 00 74 07 8B 48 04 
+  cmp_dword_rax_0_je @ 1E00C7CB : 83 38 00 74 33 48 89 DF 
+  cmp_dword_rax_0_je @ 1E1049A9 : 83 38 00 74 36 48 8B 85 

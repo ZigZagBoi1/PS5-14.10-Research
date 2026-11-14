@@ -1,0 +1,10 @@
+=== PROBE 1043a: native chain concurrency gate ===
+[0] fn=83CA64B57 syscall_address=83CA64B57 ok=true
+[0] pid=145
+[0] eboot=79E68000 poprax=2045151634 poprdi=2045976062 store=2045750375 jmp=2045236353
+[A] block=3116B8000 res=311580000
+[B] chain words=60012 bytes=480096 head=3116BC000
+[S] spawn ok=true rv=0 tid=101888
+[P] lua ok=50000 err=0 dt=1.08
+[C] child res=145 (pid=145) alive=yes
+[Z] done

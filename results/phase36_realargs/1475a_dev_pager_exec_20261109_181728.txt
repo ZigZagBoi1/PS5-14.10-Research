@@ -1,0 +1,37 @@
+=== PROBE 1475a: DEVICE PAGER PROTECTION LADDER AND EXECUTION ===
+
+[0] pid=518
+[A] /dev/dmem0 offset 0x2000, every protection value
+   fd=22
+   prot=0
+     mmap -> va=0x310CFA000
+     (not read: execute-only or no access)
+   prot=1
+     mmap -> va=0x310CFA000
+     first dword=00000000
+   prot=2
+     mmap -> va=0x310CFA000
+     first dword=00000000
+   prot=3
+     mmap -> va=0x310CFA000
+     first dword=00000000
+   prot=4
+     mmap -> -1 13 Permission denied
+   prot=5
+     mmap -> -1 13 Permission denied
+   prot=6
+     mmap -> -1 13 Permission denied
+   prot=7
+     mmap -> -1 13 Permission denied
+
+[B] dual mapping of /dev/dmem0 offset 0x2000
+   X  mmap -> -1 13 Permission denied
+   RW va=0x310CFA000  X va=-
+   no dual mapping; skipping the execution test
+
+[C] /dev/gc offset 0x1000
+   gc RW=13166956544 X=-1
+
+[Z] alive pid=518 (was 518)
+
+=== PROBE 1475a COMPLETE ===

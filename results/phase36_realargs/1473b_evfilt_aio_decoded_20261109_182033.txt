@@ -1,0 +1,8 @@
+=== PROBE 1473b: EVFILT_AIO DECODED ===
+
+canary getpid=518
+[0] socketpair=0 read=27 write=28 kqueue=29
+
+[1] change-only on a live request
+   id=0x8205
+   live change-only -> -1 errno=1 Operation not permitted

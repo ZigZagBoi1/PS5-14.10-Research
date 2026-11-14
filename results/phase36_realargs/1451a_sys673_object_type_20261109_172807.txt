@@ -1,0 +1,1 @@
+error loading script: [string "-- CRASH_CLASS: MODERATE..."]:63: unexpected symbol near ')'

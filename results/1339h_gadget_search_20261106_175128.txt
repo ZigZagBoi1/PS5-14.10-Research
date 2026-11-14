@@ -1,0 +1,65 @@
+=== 1339h GADGET SEARCH ===
+pid=290
+ebase=56990000
+
+=== BASIC GADGETS ===
+  pop rax; ret                   FOUND at ebase+992 (56990992)
+  pop rdi; ret                   FOUND at ebase+C9DFE (56A59DFE)
+  pop rsi; ret                   FOUND at ebase+D77D (5699D77D)
+  pop rdx; ret                   FOUND at ebase+3B02D7 (56D402D7)
+  pop rcx; ret                   FOUND at ebase+E64 (56990E64)
+  store [rdi]=rax; ret           FOUND at ebase+92C67 (56A22C67)
+
+=== R8-SETTING GADGETS ===
+  pop r8; ret                    not found
+  xchg rax, r8; ret              not found
+  mov r8, rdi; ret               not found
+  mov r8, rax; ret               not found
+  mov r8, rsi; ret               not found
+  mov r8, rdx; ret               not found
+  mov r8, rcx; ret               not found
+  push rax; pop r8; ret          not found
+
+=== ALTERNATIVE APPROACHES ===
+  lea r8, [rdi]; ret             not found
+  mov r8, [rdi]; ret             not found
+  mov r8, [rsp+8]; ret           not found
+  pop r8; pop r9; ret            not found
+  xchg r8, rdi; ret              not found
+  xchg rdi, r8; ret (alt)        not found
+
+=== WIDER R8 PATTERNS (with trailing instructions) ===
+pop r8 (41 58) found 20 times (first 20):
+  ebase+0A60BB: 41 58 8D 00 48 C7 C1 FF FF FF 
+  ebase+0C7B2D: 41 58 4C 01 C0 48 39 C6 0F 85 
+  ebase+0DC8DB: 41 58 48 83 F8 FE 74 6F 48 85 
+  ebase+0DC9E5: 41 58 48 83 F8 FE 74 6B 48 85 
+  ebase+0DCA9B: 41 58 48 83 F8 FE 74 62 49 89 
+  ebase+0DE75D: 41 58 48 89 F9 48 89 C2 48 C1 
+  ebase+0DEB06: 41 58 00 00 00 00 48 8B 39 E8 
+  ebase+0E9494: 41 58 C5 FC 11 41 78 C5 FC 11 
+  ebase+1049D2: 41 58 00 00 00 00 80 B9 86 00 
+  ebase+104E2E: 41 58 80 B9 86 00 00 00 00 0F 
+  ebase+1327E5: 41 58 C6 C1 00 C4 43 59 21 E9 
+  ebase+1B110F: 41 58 21 00 48 89 DF 31 C0 45 
+  ebase+1D8423: 41 58 41 8B 51 34 41 8B 71 54 
+  ebase+1DAFCB: 41 58 44 89 F8 0F 44 C1 83 7D 
+  ebase+211B79: 41 58 48 85 DB 74 30 F0 FF 4B 
+  ebase+24747B: 41 58 0C 00 4D 39 FE 0F 93 C1 
+  ebase+2BC1A5: 41 58 01 49 8D B5 00 01 00 00 
+  ebase+2BC250: 41 58 00 48 8B 41 50 48 8B 51 
+  ebase+338264: 41 58 01 00 02 08 0C 05 45 49 
+  ebase+33B9B4: 41 58 01 00 02 08 0C 05 97 50 
+
+xchg rax, r8 (49 90) found 8 times:
+  ebase+003B03: 49 90 30 00 48 8B 8D C8 
+  ebase+1D77E9: 49 90 00 00 00 73 38 41 
+  ebase+1D7959: 49 90 00 00 00 41 8B 51 
+  ebase+21CF93: 49 90 DE FF 48 8B BD 48 
+  ebase+352470: 49 90 00 00 3E 90 00 00 
+  ebase+363634: 49 90 00 00 00 00 00 00 
+  ebase+36FBF8: 49 90 00 00 3E 90 00 00 
+  ebase+3C9890: 49 90 6A 09 B4 36 A7 7F 
+
+pid=290
+=== DONE ===

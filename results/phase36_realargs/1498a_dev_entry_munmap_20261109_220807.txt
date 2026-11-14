@@ -1,0 +1,27 @@
+=== PROBE 1498a: UNMAP A DEVICE WINDOW ===
+[0] pid=125
+
+--- [A] find and protect SceGnmTrapData ---
+  674 rv=0, 317 records
+  .SceGnmTrapData 0xF00004000 len 0x4000 prot 51
+  547 = 51
+  op2 prot 3 -> rv=0 processed=1, 547 now 3
+  content 00144000 0000000F 00144000 0000000F
+
+--- [B] munmap the entry ---
+  munmap rv=0 
+  547 after = -1
+
+--- [C] 674 after the unmap ---
+  the named entry is GONE
+
+--- [D] anonymous allocation, scanned for the device content ---
+  mmap 32 MiB -> 0x3107EC000 
+  2048 pages: 0 non-zero first dwords, 0 of them 0x00144000, 0 other
+  no device content in the fresh anonymous mapping
+
+--- [E] verdict ---
+  entry unmapped: yes
+  original content was 00144000 0000000F 00144000 0000000F
+  final canary live: true (pid 125)
+=== PROBE 1498a COMPLETE ===

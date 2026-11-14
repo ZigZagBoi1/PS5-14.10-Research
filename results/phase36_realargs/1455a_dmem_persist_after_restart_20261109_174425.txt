@@ -1,0 +1,12 @@
+=== PROBE 1455a: DMEM PERSISTENCE ACROSS A PROCESS CHANGE ===
+
+[0] pid=446  (1453a/1454a ran as pid 439; a DIFFERENT value is required here)
+
+[A] 0xF000+0x20 = 5362724F  (written 0F0F0F0F, original 5362724F)
+[C] page0+0xBF0  = 00000000  (written CAFEBABE, original 00000000)
+[D] page16+0xF00 = 00000000  (written DEAD1234, original 00000000)
+
+[VERDICT] pid=446 survived=0/3
+   PRIVATE: the populated block is regenerated per process
+
+=== PROBE 1455a COMPLETE ===

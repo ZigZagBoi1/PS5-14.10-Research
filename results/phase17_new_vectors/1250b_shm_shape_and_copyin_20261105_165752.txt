@@ -1,0 +1,38 @@
+=== PROBE 1250b: copyin fault-in + 629 argument shape ===
+[0] pid=124
+[A] copyin fault-in test on an anonymous mapping
+    mmap(0,0x8000,3,MAP_ANON|PRIVATE) -> 0x310DDC000 errno="22 Invalid argument"
+    socketpair -> rv=0 s1=22 s2=23 errno="22 Invalid argument"
+    [A1] cold page (never touched)             write=8 errno="22 Invalid argument"
+      -> recv=8 data=0000000000000000
+    userland read of the cold page -> 00
+    [A2] same page after 1 userland read       write=8 errno="22 Invalid argument"
+      -> recv=8 data=0000000000000000
+    [A3] second page, still cold               write=8 errno="22 Invalid argument"
+      -> recv=8 data=0000000000000000
+    [A4] second page after 1 user write        write=8 errno="22 Invalid argument"
+      -> recv=8 data=5A00000000000000
+    [A5] control: unmapped 0x10000000          write=-1 errno="14 Bad address"
+    [A6] control: NULL                         write=-1 errno="14 Bad address"
+    [A7] 0x2000 bytes from the last mapped page write=8192 errno="14 Bad address"
+      -> recv=64 data=00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+[B] 629 shm_open argument shape
+  [B1] 3-arg (name, oflag, mode); name=1 is the anon sentinel
+    629(1, 000000, 0)                  -> rv=-1 errno="22 Invalid argument"
+    629(1, 000001, 0)                  -> rv=-1 errno="22 Invalid argument"
+    629(1, 000002, 0)                  -> rv=22 errno="22 Invalid argument"
+    629(1, 000003, 0)                  -> rv=-1 errno="22 Invalid argument"
+    629(1, 000200, 0)                  -> rv=-1 errno="22 Invalid argument"
+    629(1, 000201, 0)                  -> rv=-1 errno="22 Invalid argument"
+    629(1, 000203, 0)                  -> rv=-1 errno="22 Invalid argument"
+    629(1, 020000, 0)                  -> rv=-1 errno="22 Invalid argument"
+    629(1, 200000, 0)                  -> rv=-1 errno="22 Invalid argument"
+  [B2] 4-arg with the size in slot 3
+    629(1, 1, 0x4000, 0)               -> rv=-1 errno="22 Invalid argument"
+    629(1, 0x200, 0x4000, 0)           -> rv=-1 errno="22 Invalid argument"
+  [B3] name pointer forms (arg1 = 0, not 1)
+    629("shm", 1, 0)                   -> rv=-1 errno="22 Invalid argument"
+    629("/shm", 1, 0)                  -> rv=-1 errno="22 Invalid argument"
+    629("/SceShm", 1, 0)               -> rv=-1 errno="22 Invalid argument"
+    629("/", 1, 0)                     -> rv=-1 errno="22 Invalid argument"
+=== DONE 1250b ===

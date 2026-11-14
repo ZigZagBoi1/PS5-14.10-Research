@@ -1,0 +1,46 @@
+=== PROBE 1502a: DMEM APERTURE EDGE ===
+[0] pid=125
+
+--- [A] open /dev/dmem0 ---
+  fd=25 
+
+--- [B] baseline: offset 0, prot 1 ---
+  va=0x310654000 547=0
+    phys 0: C0012800 80000000 80000000 C0001200 00000000 C0055800 2EC47FC0 FFFFFFFF 00000000 00000000 00000000 0000000A C0027600 00000008 00000000 00000000
+
+--- [C] which offsets above the cap map at prot 1 ---
+  off 0x11FFF0000 -> rv=-1 13 Permission denied
+  off 0x11FFC000 -> 0x310658000  547=0  d0=00000000
+  off 0x11FF0000 -> 0x310658000  547=0  d0=00000000
+  off 0x120000000 -> rv=-1 13 Permission denied
+  off 0x140000000 -> rv=-1 13 Permission denied
+  off 0x180000000 -> rv=-1 13 Permission denied
+  off 0x200000000 -> rv=-1 13 Permission denied
+  off 0x400000000 -> rv=-1 13 Permission denied
+  off 0x800000000 -> rv=-1 13 Permission denied
+
+--- [D] the 0x1000000000 rung ---
+  va=0x310658000 547=0
+    rung+0x00: 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000 00000000
+  dwords differing from phys 0: 10 of 16 (distinct page)
+  walking the rung upward (are we at the base of a second window?):
+    +0x1000 -> 0x31065D000 547=0 d0=00000000 d1=00000000
+    +0x2000 -> 0x31065E000 547=0 d0=00000000 d1=00000000
+    +0x3000 -> 0x31065F000 547=0 d0=00000000 d1=00000000
+    +0x4000 -> 0x31065C000 547=0 d0=00000000 d1=00000000
+    +0x5000 -> 0x31065D000 547=0 d0=00000000 d1=00000000
+    +0x6000 -> 0x31065E000 547=0 d0=00000000 d1=00000000
+    +0x7000 -> 0x31065F000 547=0 d0=00000000 d1=00000000
+
+--- [E] length that ends past the cap: off 0x11FFC000 len 0x10000 ---
+  va=0x312810000 (range 0x11FFC000..0x1200C000)
+    va+0x0 (phys 0x11FFC000) 547 rv=0 prot=1
+    va+0x4000 (phys 0x12000000) 547 rv=0 prot=1
+    va+0x8000 (phys 0x12004000) 547 rv=0 prot=1
+    va+0xC000 (phys 0x12008000) 547 rv=0 prot=1
+  a page past the cap is mapped (va 0x312814000) - reading it now
+  dwords: 00000000 00000000 00000000 00000000
+  *** ACL DID NOT BOUND THE RANGE ***
+
+final canary live: true (pid 125)
+=== PROBE 1502a COMPLETE ===

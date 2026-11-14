@@ -1,0 +1,66 @@
+=== PROBE 1415a: 601 SEQUENCE ===
+[0] pid=378
+[0] IN=0x310644000 OUT=0x310648000 KEYP=0x31073C000
+
+[A] baseline
+  baseline   0x12 -> rv=-1 errno=2 No such file or directory
+
+[B] for each command C: run C, then re-run 0x12
+  C=0x00 -> rv=0 errno=2 No such file or directory out0=A5A5A5A5
+  after 00   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x01 -> rv=-1 errno=22 Invalid argument out0=A5A5A5A5
+  after 01   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x02 -> rv=-1 errno=78 Function not implemented out0=A5A5A5A5
+  after 02   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x05 -> rv=-1 errno=78 Function not implemented out0=A5A5A5A5
+  after 05   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x06 -> rv=-1 errno=78 Function not implemented out0=A5A5A5A5
+  after 06   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x07 -> rv=0 errno=2 No such file or directory out0=A5A5A5A5
+  after 07   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x09 -> rv=0 errno=2 No such file or directory out0=A5A5A5A5
+  after 09   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x0A -> rv=-1 errno=1 Operation not permitted out0=A5A5A5A5
+  after 0A   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x0B -> rv=0 errno=2 No such file or directory out0=A5A5A5A5
+  after 0B   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x0D -> rv=0 errno=2 No such file or directory out0=A5A5A5A5
+  after 0D   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x0E -> rv=0 errno=2 No such file or directory out0=A5A5A5A5
+  after 0E   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x0F -> rv=-1 errno=1 Operation not permitted out0=A5A5A5A5
+  after 0F   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x10 -> rv=-1 errno=22 Invalid argument out0=A5A5A5A5
+  after 10   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x13 -> rv=0 errno=2 No such file or directory out0=A5A5A5A5
+  after 13   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x14 -> rv=0 errno=2 No such file or directory out0=A5A5A5A5
+  after 14   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x15 -> rv=-1 errno=22 Invalid argument out0=A5A5A5A5
+  after 15   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x16 -> rv=-1 errno=78 Function not implemented out0=A5A5A5A5
+  after 16   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x17 -> rv=-1 errno=78 Function not implemented out0=A5A5A5A5
+  after 17   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x18 -> rv=-1 errno=1 Operation not permitted out0=A5A5A5A5
+  after 18   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x19 -> rv=0 errno=2 No such file or directory out0=A5A5A5A5
+  after 19   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x1A -> rv=0 errno=2 No such file or directory out0=A5A5A5A5
+  after 1A   0x12 -> rv=-1 errno=2 No such file or directory
+
+[C] the same sequence with C given a null first argument
+  C=0x00(0,OUT) -> rv=-1 errno=14 Bad address
+  after 00   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x0E(0,OUT) -> rv=-1 errno=14 Bad address
+  after 0E   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x13(0,OUT) -> rv=0 errno=2 No such file or directory
+  after 13   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x14(0,OUT) -> rv=0 errno=2 No such file or directory
+  after 14   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x19(0,OUT) -> rv=0 errno=2 No such file or directory
+  after 19   0x12 -> rv=-1 errno=2 No such file or directory
+  C=0x1A(0,OUT) -> rv=-1 errno=14 Bad address
+  after 1A   0x12 -> rv=-1 errno=2 No such file or directory
+
+=== 1415a DONE ===

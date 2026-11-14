@@ -1,0 +1,12 @@
+=== 1339s R8 PERSIST TEST ===
+pid=395
+fd=7.9228162514264e+28
+initial tc=57005
+chain entries=38
+sp=148,149
+spawned
+released
+final tc=57005
+*** UNEXPECTED tc=57005 ***
+pid=395
+=== DONE ===

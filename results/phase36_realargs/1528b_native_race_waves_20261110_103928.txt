@@ -1,0 +1,36 @@
+=== PROBE 1528b: sustained munmap vs 548 op 3 ===
+
+fn_addr=0x000000082294CB57
+pid=108
+
+[A] eboot base + gadget scan
+eboot=0x0000000017FA8000
+  pop_rax=eboot+0x992 pop_rdi=eboot+0xC9DFE(+0) pop_rsi=eboot+0xD77D(+0) bare=eboot+0x42
+
+[B] victim window
+  mmap -> 0x000000031137C000
+  547 prot=3
+  canary=0x11223344
+
+[C] child chain
+  stack=0x000000031124CF60 rsp=0x0000000311250F58 iters=2000 qwords=6017
+
+[D] sustained race: child wave every 8 rounds
+  first spawn: ret=0 tid=101601
+  round 100: rv=0x000000031137C000 prot=-1 bad[place=0 prot=1] nz=0/3 collisions=7 spawned=13 fail=0
+  round 200: rv=0x000000031137C000 prot=-1 bad[place=0 prot=2] nz=0/6 collisions=14 spawned=26 fail=0
+  round 300: rv=0x000000031137C000 prot=-1 bad[place=0 prot=3] nz=0/8 collisions=22 spawned=38 fail=0
+  round 400: rv=0x000000031137C000 prot=-1 bad[place=0 prot=4] nz=0/11 collisions=29 spawned=51 fail=0
+  round 500: rv=0x000000031137C000 prot=-1 bad[place=0 prot=5] nz=0/14 collisions=36 spawned=63 fail=0
+  round 600: rv=0x000000031137C000 prot=-1 bad[place=0 prot=6] nz=0/17 collisions=43 spawned=76 fail=0
+  round 700: rv=0x000000031137C000 prot=-1 bad[place=0 prot=7] nz=0/19 collisions=51 spawned=88 fail=0
+  round 800: rv=0x000000031137C000 prot=-1 bad[place=0 prot=8] nz=0/24 collisions=56 spawned=101 fail=0
+  done: bad_place=0 bad_prot=8 nonzero_before_write=0/24 collisions=56 spawned=101 spawn_fail=0
+
+[E] verdict
+  547 final prot=-1
+  final mark=skipped (entry not present after the race)
+  munmap ok=true
+  alive=true pid=108
+
+=== PROBE 1528b COMPLETE ===

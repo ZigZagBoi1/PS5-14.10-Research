@@ -1,0 +1,33 @@
+=== PROBE 1466a: 673/654 ACROSS MAPPING FLAVOURS ===
+
+[0] pid=495
+[A] anonymous
+   va=0x3113A4000 lo=0x3113A0000 hi=0x3113E0000
+   673(0x3113A0000,0x3113E0000,0x3113A0000,0) -> -1 errno=22 Invalid argument
+   673(0x3113A0000,0x3113E0000,0x3113B0000,0) -> -1 errno=22 Invalid argument
+   654(0x3113A0000,0x10000,3,0,0) -> -1 errno=22 Invalid argument
+
+[B] GPU (prot 0x33, flags 0x1002, fd -1)
+   va=0x3113E4000 lo=0x3113E0000 hi=0x311420000
+   673(0x3113E0000,0x311420000,0x3113E0000,0) -> -1 errno=22 Invalid argument
+   673(0x3113E0000,0x311420000,0x3113F0000,0) -> -1 errno=22 Invalid argument
+   654(0x3113E0000,0x10000,3,0,0) -> -1 errno=22 Invalid argument
+
+[C] /dev/zero
+   va=0x311424000 lo=0x311420000 hi=0x311460000
+   673(0x311420000,0x311460000,0x311420000,0) -> -1 errno=22 Invalid argument
+   673(0x311420000,0x311460000,0x311430000,0) -> -1 errno=22 Invalid argument
+   654(0x311420000,0x10000,3,0,0) -> -1 errno=22 Invalid argument
+
+[D] /app0/eboot.bin (prot 1)
+   va=0x311464000 lo=0x311460000 hi=0x3114A0000
+   673(0x311460000,0x3114A0000,0x311460000,0) -> -1 errno=22 Invalid argument
+   673(0x311460000,0x3114A0000,0x311470000,0) -> -1 errno=22 Invalid argument
+   654(0x311460000,0x10000,3,0,0) -> -1 errno=22 Invalid argument
+
+[E] shm_open(482) + MAP_SHARED
+   shm_open -> nil
+
+[Z] alive pid=495 (was 495)
+
+=== PROBE 1466a COMPLETE ===

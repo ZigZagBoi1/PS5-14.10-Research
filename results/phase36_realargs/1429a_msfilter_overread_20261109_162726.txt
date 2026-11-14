@@ -1,0 +1,25 @@
+=== PROBE 1429a: MSFILTER OVER-READ TEST ===
+
+pid=402 src=0x3113C0000 dst=0x3113C8000 dstlen=0x800000
+
+[A] groom: many 1-source groups, each with a unique source tag
+  joined=64/64  filters set=64
+
+[B] baseline on group tag 0x10: claim=1
+  claim=1  rv=0 numsrc=1 wrote=32 past-entry0-nonzero=0
+
+[C] the same group, claim=128 -> 16 KiB copied out of a 128-byte array
+  claim=128 rv=0 numsrc=1 wrote=4096 past-entry0-nonzero=0 first=-1
+  -> nothing but the real entry: either zero-fill or zeroed neighbours
+
+[D] does the same over-read see a sibling group's source tag?
+  entries with a valid sockaddr header past entry0: 0 (first=-1)
+
+[E] is the claim itself bounded? (setsockopt stopped at 128 with ENOSPC)
+  claim=129    rv=0 numsrc=1 wrote=4096 (bytes=16384) errno=49 Can't assign requested address
+  claim=256    rv=0 numsrc=1 wrote=4096 (bytes=16384) errno=49 Can't assign requested address
+  claim=1024   rv=0 numsrc=1 wrote=4096 (bytes=16384) errno=49 Can't assign requested address
+  claim=4096   rv=0 numsrc=1 wrote=4096 (bytes=16384) errno=49 Can't assign requested address
+  claim=16384  rv=0 numsrc=1 wrote=4096 (bytes=16384) errno=49 Can't assign requested address
+
+=== PROBE 1429a COMPLETE ===

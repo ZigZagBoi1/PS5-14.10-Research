@@ -1,0 +1,33 @@
+=== PROBE 1481e: IS THE DEVICE WINDOW AN ALIAS OF CODE ===
+[0] pid=87
+
+--- [A] every eboot-named window and every executable mapping ---
+[A] 674 rv=0 records=336
+[A] eboot 0xF0000000-0xF0004000 prot=0x3 (NoName)eboot.bin
+      00000000 00000000 00000000 00000000 
+[A] eboot 0x7EEF38000-0x7EEF3C000 prot=0x3 (NoName)eboot.bin
+      00000000 00000000 00000000 00000000 
+[A] eboot 0xC80000000-0xC8000C000 prot=0x3 (NoName)eboot.bin
+      00000000 00000000 00000000 00000000 
+[A] eboot 0xC8000C000-0xC80048000 prot=0x33 (NoName)eboot.bin
+[A] largest exec region 0x69188000-0x6961C000 prot=0x5 executable
+      62696C2F 63657865 2D646C2F 2E666C65 
+
+--- [B] pick the device view and the executable view ---
+[B] device view 0xC8000C000-0xC80048000 prot=0x33
+[B] protect -> rv=0 prot now 3
+[B] code view   0x69188000-0x6961C000 prot=0x5
+      62696C2F 63657865 2D646C2F 2E666C65 
+
+--- [C] compare the two views at five offsets (read only) ---
+[C] +0x0      dev=00000000 code=62696C2F 
+[C] +0x1000   dev=00000000 code=0C76C42E 
+[C] +0x8000   dev=00000000 code=0002EB84 
+[C] +0x10000  dev=00000000 code=60627B35 
+[C] 0 of 5 offsets agree, 0 device dwords non-zero
+
+--- [D] write through the device view, read the code view ---
+[D] no offset where both views read zero; the write test was not run
+
+final canary: pid=87 (started 87)
+=== PROBE 1481e COMPLETE ===

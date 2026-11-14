@@ -1,0 +1,33 @@
+=== PROBE 1473a: EVFILT_AIO ON A LIVE AIO REQUEST ===
+
+canary getpid=518
+
+[0] socketpair rv=0 read=24 write=25
+[0] kqueue fd=26
+[A] EVFILT_AIO on a live pending request
+  request id=0x00004205 (no data in the socket, so it is pending)
+  EV_ADD -> rv=1
+  EV_ADD again (idempotent control) -> rv=1
+
+[B] complete, reap, delete, then trigger again
+  after feed: kevent rv=1 ident=0x00004205 filter=65533
+  664 poll -> rv=0 state=0x00000003
+  662 delete -> rv=0 state=0x00000000
+  after delete + feed: kevent rv=1 ident=0x00004205 filter=65533
+  *** an event arrived for the DELETED identifier ***
+  EV_DELETE on the deleted identifier -> rv=1
+
+[C] EVFILT_AIO on an identifier that never existed
+  EV_ADD ident=0x0FFF -> rv=1
+  EV_ADD ident=0 -> rv=1
+
+[D] request deleted, socket written eight more times
+  request id=0x00006205
+  EV_ADD -> rv=1
+  poll+delete -> rv=0 state=0x00000000
+  events after the delete: 8 of 8
+  *** stale knote fired ***
+
+[Z] alive pid=518 (was 518)
+
+=== PROBE 1473a COMPLETE ===

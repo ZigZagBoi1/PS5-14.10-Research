@@ -1,0 +1,10 @@
+=== PROBE 903a: alloc handle type ===
+[A] type=table tostring=0x311625380
+[B] tonumber ok=true val=nil
+[C] :tonumber() ok=true val=13176558464
+[D] .h ok=true = 3  .l ok=true = 291656576
+[E] write/read via handle ok=true/true val=0x1122334455667800
+[F] #handle ok=true val=0
+[G] handle + 8 ok=true
+[H] uint64(handle) attempt:
+    ok=true val=0x311625380

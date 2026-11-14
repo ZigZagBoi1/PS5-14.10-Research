@@ -1,0 +1,26 @@
+=== PROBE 1503a: MINCORE OVER THE DMEM APERTURE ===
+[0] pid=125
+
+--- [A] open /dev/dmem0 ---
+  fd=26 
+
+--- [B] mincore over phys 0 .. 0x40000 (64 pages) ---
+    known populated: page 0x00 (registers) and 0x0F-0x16 (the ONION block)
+  va=0x312820000 mincore rv=0 
+  00: 0B 0B 0B 0B 0B 0B 0B 0B 0B 0B 0B 0B 0B 0B 0B 0B
+  10: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  20: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  30: 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00 00
+  resident pages: 16 of 64
+  *** mincore DISCRIMINATES on the dmem pager - usable as a scan oracle ***
+
+--- [C] mincore over phys 0x100000000 (pool start) for 8 MiB ---
+  va=0x312860000 mincore rv=0 
+  resident pages: 512 of 512
+
+--- [D] sanity read of phys 0 (known populated) ---
+  phys 0: C0012800 80000000 80000000 C0001200
+  (expect C0012800 80000000 80000000 C0001200)
+
+final canary live: true (pid 125)
+=== PROBE 1503a COMPLETE ===

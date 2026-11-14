@@ -1,0 +1,45 @@
+=== PROBE 1194c: 601 STAGE-TWO TYPE-GATE DISCRIMINATION ===
+[01] A5struct: rv=-1  errno=22 Invalid argument          | T4struct: rv=-1  errno=22 Invalid argument          
+[02] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[05] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[06] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[07] A5struct: rv=0   errno=78 Function not implemented  | T4struct: rv=0   errno=78 Function not implemented  
+[09] A5struct: rv=0   errno=78 Function not implemented  | T4struct: rv=0   errno=78 Function not implemented  
+[0A] A5struct: rv=-1  errno=1 Operation not permitted    | T4struct: rv=-1  errno=1 Operation not permitted    
+[0B] A5struct: rv=0   errno=1 Operation not permitted    | T4struct: rv=0   errno=1 Operation not permitted    
+[0D] A5struct: rv=0   errno=1 Operation not permitted    | T4struct: rv=0   errno=1 Operation not permitted    
+[0E] A5struct: rv=0   errno=1 Operation not permitted    | T4struct: rv=0   errno=1 Operation not permitted    
+[0F] A5struct: rv=-1  errno=1 Operation not permitted    | T4struct: rv=-1  errno=1 Operation not permitted    
+[10] A5struct: rv=-1  errno=22 Invalid argument          | T4struct: rv=-1  errno=22 Invalid argument          
+[11] A5struct: rv=-1  errno=22 Invalid argument          | T4struct: rv=-1  errno=22 Invalid argument          
+[12] A5struct: rv=-1  errno=22 Invalid argument          | T4struct: rv=-1  errno=22 Invalid argument          
+[13] A5struct: rv=0   errno=22 Invalid argument          | T4struct: rv=0   errno=22 Invalid argument          
+[14] A5struct: rv=0   errno=22 Invalid argument          | T4struct: rv=0   errno=22 Invalid argument          
+[15] A5struct: rv=-1  errno=1 Operation not permitted    | T4struct: rv=-1  errno=1 Operation not permitted    
+[16] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[17] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[18] A5struct: rv=-1  errno=1 Operation not permitted    | T4struct: rv=-1  errno=1 Operation not permitted    
+[19] A5struct: rv=0   errno=1 Operation not permitted    | T4struct: rv=0   errno=1 Operation not permitted    
+[1A] A5struct: rv=0   errno=1 Operation not permitted    | T4struct: rv=0   errno=1 Operation not permitted    
+[1C] A5struct: rv=-1  errno=14 Bad address               | T4struct: rv=-1  errno=14 Bad address               
+[1D] A5struct: rv=0   errno=14 Bad address               | T4struct: rv=0   errno=14 Bad address               
+[1E] A5struct: rv=-1  errno=22 Invalid argument          | T4struct: rv=-1  errno=22 Invalid argument          
+[1F] A5struct: rv=-1  errno=14 Bad address               | T4struct: rv=-1  errno=14 Bad address               
+[20] A5struct: rv=0   errno=14 Bad address               | T4struct: rv=0   errno=14 Bad address               
+[21] A5struct: rv=-1  errno=22 Invalid argument          | T4struct: rv=-1  errno=22 Invalid argument          
+[22] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[23] A5struct: rv=-1  errno=22 Invalid argument          | T4struct: rv=-1  errno=22 Invalid argument          
+[24] A5struct: rv=-1  errno=1 Operation not permitted    | T4struct: rv=-1  errno=1 Operation not permitted    
+[25] A5struct: rv=-1  errno=1 Operation not permitted    | T4struct: rv=-1  errno=1 Operation not permitted    
+[26] A5struct: rv=-1  errno=1 Operation not permitted    | T4struct: rv=-1  errno=1 Operation not permitted    
+[28] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[29] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[2A] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[2B] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[2C] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[2D] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[2E] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[2F] A5struct: rv=-1  errno=78 Function not implemented  | T4struct: rv=-1  errno=78 Function not implemented  
+[SUM] flips = 
+[Z] alive
+=== DONE ===

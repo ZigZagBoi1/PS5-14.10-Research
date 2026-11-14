@@ -1,0 +1,6 @@
+=== PROBE 1054a: 622 0x302 with pointer-shaped input ===
+[S] pid=179
+[A] target=311458020 src=3111E9160 buf=3112634A0
+>A_ctl300 cmd=300 src[0]=311458020 len=0x40
+[A_ctl300] rv=0 reply=FFFFFFFF
+>B_302_zptr cmd=302 src[0]=311458020 len=0x40

@@ -1,0 +1,25 @@
+=== PROBE 1530a: shm read vs ftruncate ===
+
+fn_addr=0x000000082FF80B57 pid=186
+
+[A] gadget verification
+eboot=0x0000000040110000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] shm object
+  shm_open(SHM_ANON=1) -> 25
+  ftruncate(25, 0x8000) rv=0
+  shm mmap -> 0x0000000311570000
+  marker page readable and 0x41: true
+  destination mmap -> 0x00000003115A8000
+  leak channel mmap -> 0x00000003115AC000
+  shm filled with 0x41, both destinations zeroed
+
+[C] child chain
+  stack mmap -> 0x0000000311798000 need=3380568 alloc=3391488
+  building TCB
+  TCB at 0x311798000 fs_ptr at 0x311799000
+  concatenating 420012 qwords
+  chain qwords=420012 bytes=3360096 alloc=3391488 stack=0x0000000311798000
+  chain check first=1075682814 (want 1075682814) tail=804784983 (want 293191672)
+ABORT: chain damaged -- a zero qword rets into address 0

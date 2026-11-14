@@ -1,0 +1,22 @@
+=== 1340c PINNED ===
+fdlimit: 4096
+pid=424
+gadgets OK
+spray=22..71 (50)
+starting 2000 trials, 50 spray, 8 cpus
+t=351 tc=42 cpu-spray: no reclaim
+t=500 u=1 f=499 r=0
+t=523 tc=42 cpu-spray: no reclaim
+t=786 tc=42 cpu-spray: no reclaim
+t=1000 u=3 f=997 r=0
+t=1278 tc=42 cpu-spray: no reclaim
+t=1373 tc=42 cpu-spray: no reclaim
+t=1500 u=5 f=1495 r=0
+t=1508 tc=42 cpu-spray: no reclaim
+t=1564 tc=42 cpu-spray: no reclaim
+t=1714 tc=42 cpu-spray: no reclaim
+t=1929 tc=42 cpu-spray: no reclaim
+t=2000 u=9 f=1991 r=0
+=== RESULTS: use=9 free=1991 reclaim=0 ===
+pid=424
+=== DONE ===

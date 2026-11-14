@@ -1,0 +1,34 @@
+=== PROBE 1421a: UMTX 454 KERNEL ADDRESS ===
+[0] pid=383
+[0] user page 0x3113CC000
+[A] control on a user page
+  A op=4 obj=0x3113CC000 val=0x0 -> rv=0 errno=16 Device busy
+    word now = 00018C03
+  A op=6 obj=0x3113CC000 val=0x0 -> rv=0 errno=16 Device busy
+    word now = 00000000
+  A op=5 obj=0x3113CC000 val=0x0 -> rv=0 errno=16 Device busy
+    word now = 00018C03
+  A op=21 obj=0x3113CC000 val=0x0 -> rv=0 errno=16 Device busy
+    word now = 00018C03
+[B] MUTEX_TRYLOCK (op 4) on kernel addresses
+  stub  0xFFFFFFFFC0000000 op=4 obj=0xFFFFFFFFC0000000 val=0x0 -> rv=-1 errno=14 Bad address
+  stub+0x1000 op=4 obj=0xFFFFFFFFC0001000 val=0x0 -> rv=-1 errno=14 Bad address
+  image 0xFFFFFFFFC1000000 op=4 obj=0xFFFFFFFFC1000000 val=0x0 -> rv=-1 errno=14 Bad address
+  image+0x100000 op=4 obj=0xFFFFFFFFC1100000 val=0x0 -> rv=-1 errno=14 Bad address
+  image+0x4000000 op=4 obj=0xFFFFFFFFC5000000 val=0x0 -> rv=-1 errno=14 Bad address
+  absent 0xFFFFFFFFD0000000 op=4 obj=0xFFFFFFFFD0000000 val=0x0 -> rv=-1 errno=14 Bad address
+  unmapped user 0x1000 op=4 obj=0x1000 val=0x0 -> rv=-1 errno=14 Bad address
+[C] unlock every kernel address that took the lock
+  none
+[D] WAIT (op 2) with an unlikely value, non-blocking if the dword differs
+  stub  0xFFFFFFFFC0000000 op=2 obj=0xFFFFFFFFC0000000 val=0x5A5A5A5A -> rv=-1 errno=22 Invalid argument
+  stub+0x1000 op=2 obj=0xFFFFFFFFC0001000 val=0x5A5A5A5A -> rv=-1 errno=22 Invalid argument
+  image 0xFFFFFFFFC1000000 op=2 obj=0xFFFFFFFFC1000000 val=0x5A5A5A5A -> rv=-1 errno=22 Invalid argument
+  image+0x100000 op=2 obj=0xFFFFFFFFC1100000 val=0x5A5A5A5A -> rv=-1 errno=22 Invalid argument
+  image+0x4000000 op=2 obj=0xFFFFFFFFC5000000 val=0x5A5A5A5A -> rv=-1 errno=22 Invalid argument
+  absent 0xFFFFFFFFD0000000 op=2 obj=0xFFFFFFFFD0000000 val=0x5A5A5A5A -> rv=-1 errno=22 Invalid argument
+[E] MUTEX_LOCK (op 5) then UNLOCK on the stub page
+  E op=5 obj=0xFFFFFFFFC0000000 val=0x0 -> rv=-1 errno=14 Bad address
+  E op=6 obj=0xFFFFFFFFC0000000 val=0x0 -> rv=-1 errno=14 Bad address
+  user word still 00018C03
+=== PROBE 1421a COMPLETE ===

@@ -1,0 +1,41 @@
+=== PROBE 1449a: SYSARCH 165 CMD 132 LENGTH ===
+
+canary getpid=432
+
+[A] control: 165(128, buf)
+  165(128) rv=0    2 No such file or directory wrote 0 dwords first=+FFFFFFFFFFFFFFFF
+  165(128, NULL) rv=-1   14 Bad address   (ret value carried in rv)
+
+[B] shape B: 165(132, BUF) -- argument used directly as the destination
+  165(132, BUF) rv=-1   22 Invalid argument wrote 0 dwords first=+FFFFFFFFFFFFFFFF
+
+[C] shape A: 165(132, {BUF,len}) with a length sweep
+  len=0x00000040 rv=0    22 Invalid argument wrote 16/16 dwords first=+000 kptr=0
+      head: 0x00000007 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000
+  len=0x00000200 rv=0    22 Invalid argument wrote 128/128 dwords first=+000 kptr=0
+      head: 0x00000007 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000 0x00000000
+  len=0x00000240 rv=-1   22 Invalid argument wrote 0/144 dwords first=+FFFFFFFFFFFFFFFF kptr=0
+  len=0x00000280 rv=-1   22 Invalid argument wrote 0/160 dwords first=+FFFFFFFFFFFFFFFF kptr=0
+  len=0x000002C0 rv=-1   22 Invalid argument wrote 0/176 dwords first=+FFFFFFFFFFFFFFFF kptr=0
+  len=0x00000400 rv=-1   22 Invalid argument wrote 0/256 dwords first=+FFFFFFFFFFFFFFFF kptr=0
+  len=0x00000800 rv=-1   22 Invalid argument wrote 0/512 dwords first=+FFFFFFFFFFFFFFFF kptr=0
+  len=0x00001000 rv=-1   22 Invalid argument wrote 0/1024 dwords first=+FFFFFFFFFFFFFFFF kptr=0
+  len=0x00002000 rv=-1   22 Invalid argument wrote 0/2048 dwords first=+FFFFFFFFFFFFFFFF kptr=0
+
+[D] commands 133-140, {BUF,0x100}
+  165(133) rv=-1   22 Invalid argument wrote 0 dwords first=+FFFFFFFFFFFFFFFF head: 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC
+  165(134) rv=-1   22 Invalid argument wrote 0 dwords first=+FFFFFFFFFFFFFFFF head: 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC
+  165(135) rv=-1   22 Invalid argument wrote 0 dwords first=+FFFFFFFFFFFFFFFF head: 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC
+  165(136) rv=-1   22 Invalid argument wrote 0 dwords first=+FFFFFFFFFFFFFFFF head: 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC
+  165(137) rv=-1   22 Invalid argument wrote 0 dwords first=+FFFFFFFFFFFFFFFF head: 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC
+  165(138) rv=-1   22 Invalid argument wrote 0 dwords first=+FFFFFFFFFFFFFFFF head: 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC
+  165(139) rv=-1   22 Invalid argument wrote 0 dwords first=+FFFFFFFFFFFFFFFF head: 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC
+  165(140) rv=-1   22 Invalid argument wrote 0 dwords first=+FFFFFFFFFFFFFFFF head: 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC 0xCCCCCCCC
+
+[D2] 131 SET_GSBASE to a user page (last)
+  165(131, BUF) rv=0    22 Invalid argument
+  165(130) rv=0    22 Invalid argument arg=0x1085E000
+
+[E] survivor pid=432 (was 432)
+
+=== PROBE 1449a COMPLETE ===

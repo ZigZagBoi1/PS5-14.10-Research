@@ -1,0 +1,3 @@
+=== PROBE 941a: IN-FLIGHT DELETE RACE ===
+
+[0] pid=80 base=0x59614000 pop_rax=0x59614992 store_rdi=0x596A6C67

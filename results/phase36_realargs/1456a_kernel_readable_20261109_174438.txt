@@ -1,0 +1,8 @@
+=== PROBE 1456a: KERNEL READABILITY (DATA LOAD, CPL3) ===
+
+[0] pid=446
+[0] gadgets pop_rax=0x00000000629A8992 pop_rdi=0x0000000062A71DFE load=0x00000000629C6EBB store=0x0000000062A3AC67 ret=0x00000000629A8042
+[A] target 0x000000003114BABE0 (user-page control)
+[A] thr_new=0 marker=0x0000000041424344 (MARKER CHANGED: the load succeeded)
+
+[B1] target 0x00000000FFFFFFFFC0000000 (lone stub page, present in every 1331a sweep)

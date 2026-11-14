@@ -1,0 +1,4 @@
+=== PROBE 973a: SYSV IPC 220-231 ===
+
+[0] pid=210  IPC_PRIVATE=0 IPC_CREAT=0x200 IPC_RMID=0
+[A] semget

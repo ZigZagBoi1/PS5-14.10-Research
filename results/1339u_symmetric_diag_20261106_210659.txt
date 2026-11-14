@@ -1,0 +1,30 @@
+=== 1339u SYMMETRIC DIAG ===
+pid=400
+gadgets OK
+spray=58..89 pool=0x310A74000
+t=1 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=2 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=3 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=4 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=5 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=6 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=7 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=8 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=9 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=10 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=11 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=12 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=13 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=14 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=15 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=16 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=17 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=18 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=19 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=20 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=30 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=40 fd=90 pre=0 post=0 urv=0 frv=4294967295
+t=50 fd=91 pre=0 post=0 urv=0 frv=4294967295
+=== RESULTS: use=1 free=49 reclaim=0 ===
+pid=400
+=== DONE ===

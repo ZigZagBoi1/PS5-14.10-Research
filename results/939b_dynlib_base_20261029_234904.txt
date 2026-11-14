@@ -1,0 +1,8 @@
+=== 939b dynlib base probe ===
+h=0 ok=true rv=0x0 size=0 text=00000000:152E8000 name=00000005:00494000
+h=1 ok=true rv=0xffffffffffffffffffffffff size=352 text=00000000:00000000 name=00000000:00000000
+h=2 ok=true rv=0x0 size=0 text=00000008:2DBAC000 name=00000004:00128000
+h=3 ok=true rv=0xffffffffffffffffffffffff size=352 text=00000000:00000000 name=00000000:00000000
+h=4 ok=true rv=0xffffffffffffffffffffffff size=352 text=00000000:00000000 name=00000000:00000000
+pipe has fcall_stub: true
+=== 939b end ===

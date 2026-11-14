@@ -1,0 +1,7 @@
+=== PROBE 1400a: 601 CMD 0x11 WITH A BENIGN STRUCT ===
+[0] pid=357
+[0] page -> 0x00000003112C4000
+[0] buf  -> 0x000000031140C000
+
+[A] all-zero struct
+   calling 601(0x11, 0, page) ...

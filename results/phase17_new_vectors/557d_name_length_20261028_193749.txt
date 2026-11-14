@@ -1,0 +1,35 @@
+=== PROBE 557d: name length ===
+[0] pid=116
+[1] page=310D6C000
+--- length sweep: fill, create, delete ---
+  len=1     create=8710         delete=0    alive=116
+  len=8     create=16902        delete=0    alive=116
+  len=15    create=25094        delete=0    alive=116
+  len=16    create=33286        delete=0    alive=116
+  len=17    create=41478        delete=0    alive=116
+  len=31    create=49670        delete=0    alive=116
+  len=32    create=-1           delete=-999 alive=116
+  len=33    create=-1           delete=-999 alive=116
+  len=63    create=-1           delete=-999 alive=116
+  len=64    create=-1           delete=-999 alive=116
+  len=65    create=-1           delete=-999 alive=116
+  len=127   create=-1           delete=-999 alive=116
+  len=128   create=-1           delete=-999 alive=116
+  len=255   create=-1           delete=-999 alive=116
+  len=256   create=-1           delete=-999 alive=116
+  len=257   create=-1           delete=-999 alive=116
+  len=1023  create=-1           delete=-999 alive=116
+  len=1024  create=-1           delete=-999 alive=116
+  len=2047  create=-1           delete=-999 alive=116
+  len=2048  create=-1           delete=-999 alive=116
+  len=4095  create=-1           delete=-999 alive=116
+  len=4096  create=-1           delete=-999 alive=116
+  len=8191  create=-1           delete=-999 alive=116
+  len=16383 create=-1           delete=-999 alive=116
+
+--- no terminator inside the page (strlen would run over) ---
+  page is all 'B', last byte=65-ish
+  create(no NUL) ret=-1 alive=116
+  create again ret=-1 (same handle? true)
+[Z] alive=116
+=== PROBE 557d COMPLETE ===

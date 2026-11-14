@@ -1,0 +1,2 @@
+=== PROBE 1212a: r10 / argument-4 channel ===
+[0] libkernel_base=0x83CB38000 (true)

@@ -410,11 +410,21 @@ request ids** - and those can only come from a submission path, which on 14.10 i
 the number that kills before it returns. The batch calls are therefore working code
 guarded by an object this process cannot create.
 
-The two bounds questions were measured and both came back bounded: `count = 0x400`
-against a `0x1000` id page returned `-1` rather than reading out of the page, and
-`count = 4` with the output array ending four bytes before the page boundary returned
-`0` without faulting. Neither is a length the handler trusts past the memory it can
-reach, so there is no overrun to aim.
+**RETRACTED 2026-11-10 — neither test measured a bounds question.**
+
+- `count = 0x400` never reached a pointer check. The count gate is 1..128
+  (`docs/AIO_BATCH_14_10.md:28`; `486a` measured `1, 4, 16, 128 -> 0` and `129 -> -1`), so `0x400`
+  returns `-1` on the count alone. This says nothing about how much the handler reads.
+- `count = 4` with the output array "ending four bytes before the page boundary" used
+  `edge = out + 0x1000 - 4` where `out = memory.alloc(0x1000)` returned `0x310f95f60` — a 16-byte
+  aligned, **not** page-aligned heap address. `edge = 0x310f96f5c` and `edge + 0x10 = 0x310f96f6c`
+  lie inside the same 4 KiB block and `0x1FA4` bytes short of the 16 KiB page end, so the write
+  never approached a boundary under **either** page size (`1544a` measured the page as 0x4000).
+  `ret = 0` proves only that a 16-byte write fit inside one heap page.
+
+So the AIO batch calls remain unmeasured for overrun. Testing this properly needs a page-aligned
+buffer (`mmap(477)`, or `alloc(0x4000)` plus alignment), the buffer end on a `0x4000` boundary, and
+a count inside the 1..128 window — e.g. `count = 2` with an 8-byte tail.
 
 Captures: `results/phase17_new_vectors/301a_thread_state_calls_20261022_115421.txt`,
 `302a_thread_state_ids_20261022_115439.txt`,

@@ -1,0 +1,17 @@
+=== PROBE 1206a: 379 id space beyond 10, and does 547 see a prot change ===
+va=0x310C84000
+  547[before] pcall=true start=0000000310C84000 end=0000000310C94000 fl=0061002000000003
+-- A: 379 id sweep 0x00-0xFF, prot=3 --
+379 id=0x00 pcall=true err=45 Operation not supported
+379 id=0x0A pcall=true err=13 Permission denied
+379 id=0x0B pcall=true err=45 Operation not supported
+379 id=0x15 pcall=true err=22 Invalid argument
+-- B: 379 id=10 prot=3 after --
+  547[after379] pcall=true start=0000000310C84000 end=0000000310C94000 fl=0061002000000003
+-- C: id 0x100-0x104 prot=3 --
+379 id=0x100 pcall=true err=22 Invalid argument
+379 id=0x101 pcall=true err=22 Invalid argument
+379 id=0x102 pcall=true err=22 Invalid argument
+379 id=0x103 pcall=true err=22 Invalid argument
+379 id=0x104 pcall=true err=22 Invalid argument
+=== DONE

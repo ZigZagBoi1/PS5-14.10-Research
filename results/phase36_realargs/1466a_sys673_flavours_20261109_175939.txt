@@ -1,0 +1,21 @@
+=== PROBE 1466a: 673/654 ACROSS MAPPING FLAVOURS ===
+
+[0] pid=495
+[A] anonymous
+   mmap failed -1
+
+[B] GPU (prot 0x33, flags 0x1002, fd -1)
+   mmap failed -1
+
+[C] /dev/zero
+   mmap failed -1
+
+[D] /app0/eboot.bin (prot 1)
+   mmap failed -1
+
+[E] shm_open(482) + MAP_SHARED
+   shm_open -> nil
+
+[Z] alive pid=495 (was 495)
+
+=== PROBE 1466a COMPLETE ===

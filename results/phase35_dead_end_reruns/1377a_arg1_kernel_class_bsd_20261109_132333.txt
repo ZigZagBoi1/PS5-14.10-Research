@@ -1,0 +1,63 @@
+=== PROBE 1377a: ARG1 CLASS, THE 24 LIVE BSD SLOTS ===
+[0] pid=300 sigign=10/10
+[K] arg1 = kernel image base 0xFFFFFFFFC1000000
+k20
+  n=20 rv=300
+k24
+  n=24 rv=1
+k25
+  n=25 rv=1
+k36
+  n=36 rv=0
+k39
+  n=39 rv=54
+k42
+  n=42 rv=22
+k43
+  n=43 rv=1
+k44
+  n=44 rv=0
+k47
+  n=47 rv=1
+k65
+  n=65 rv=-1 errno=22 Invalid argument
+k75
+  n=75 rv=-1 errno=22 Invalid argument
+k78
+  n=78 rv=-1 errno=12 Cannot allocate memory
+k116
+  n=116 rv=-1 errno=14 Bad address  wrote=0
+k203
+  n=203 rv=0
+k209
+  n=209 rv=0
+k234
+  n=234 rv=0
+k253
+  n=253 rv=0
+k331
+  n=331 rv=0
+k340
+  n=340 rv=0
+k343
+  n=343 rv=-1 errno=14 Bad address  wrote=0
+k362
+  n=362 rv=24
+k404
+  n=404 rv=-1 errno=14 Bad address  wrote=0
+k405
+  n=405 rv=-1 errno=14 Bad address  wrote=0
+k421
+  n=421 rv=-1 errno=14 Bad address  wrote=0
+[U] the five writers with arg1 = user page, for the byte counts in one capture
+u116
+  n=116 rv=0 wrote=4 [ 6AF1C971 00000000 000CE242 00000000]
+u343
+  n=343 rv=0 wrote=4 [ 00000000 00000000 00000000 00000000]
+u404
+  n=404 rv=0 wrote=2 [ 00000019 00000000]
+u405
+  n=405 rv=0 wrote=2 [ 0000001A 00000000]
+u421
+  n=421 rv=0 wrote=260 [ 00000000 00000000 00000000 00000000 00000000 00000000 00000000]
+=== PROBE 1377a COMPLETE ===

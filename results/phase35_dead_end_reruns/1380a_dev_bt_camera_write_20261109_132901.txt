@@ -1,0 +1,28 @@
+=== PROBE 1380a: write() INTO /dev/bt AND /dev/camera ===
+[A] /dev/bt length ladder, payload 0xAA
+  /dev/bt fd=27
+    len=0x8 rv=8 ACCEPTED
+    accepted lengths: 1
+  [B] payload sensitivity at len=0x8
+    zeros  rv=8
+    0xFF   rv=8
+    0x41   rv=8
+    dword0=1 rv=8
+    dword0=0x100 rv=8
+  [C] read back after the writes
+    read(0x40) rv=-1 changed=0
+[D] /dev/camera length ladder
+  /dev/camera fd=27
+    len=0x1 rv=1 ACCEPTED
+    accepted lengths: 1
+    zeros  rv=1
+    0xFF   rv=1
+    0x41   rv=1
+  camera read(0x40) rv=-1 changed=0
+[E] four /dev/gc commands on a writable fd (the FWRITE gate question)
+  gc writable fd=27 read fd=28
+  cmd=0xC008811B W:rv=0 wrote=2[ 80000000 0000000C]  R:rv=0 wrote=2[ 80000000 0000000C]
+  cmd=0xC0048113 W:rv=0 wrote=1[ 00000004]  R:rv=0 wrote=1[ 00000004]
+  cmd=0x40048135 W:rv=0 wrote=1[ 00000101]  R:rv=0 wrote=1[ 00000101]
+  cmd=0xC010810B W:rv=0 wrote=4[ 00000010 00000010 00000010 00000010]  R:rv=0 wrote=4[ 00000010 00000010 00000010 00000010]
+=== PROBE 1380a COMPLETE ===

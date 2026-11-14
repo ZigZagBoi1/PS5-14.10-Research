@@ -1,0 +1,44 @@
+=== PROBE 1446a: SELECT FDSET BOUND ===
+
+pid=402 staging=0x311DCC000 len=0x10000
+
+[0] bitmaps zeroed; only the copy length is under test
+
+[A] select(93) control, nfds=8
+  nfds=8 -> rv=3  (13 Permission denied)  changed=6  first=0x0
+
+[B] select(93) nfds sweep (fd_set buffer is 0x10000 bytes, pattern-filled)
+  nfds=64      rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=512     rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=1020    rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=1024    rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=1028    rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=1088    rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=2048    rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=4096    rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=8192    rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=16384   rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=65536   rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=262144  rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+
+[C] bitmap role at nfds=65536
+  role=1 rv=-1 (9 Bad file descriptor) changed=4 first=0x8000
+  role=2 rv=-1 (9 Bad file descriptor) changed=4 first=0x8000
+  role=3 rv=-1 (9 Bad file descriptor) changed=4 first=0x8000
+
+[D] pselect(522) nfds sweep
+  nfds=8       rv=3  (9 Bad file descriptor     ) changed=6     first=0x00000
+  nfds=1024    rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=1028    rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=4096    rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=65536   rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+  nfds=262144  rv=-1 (9 Bad file descriptor     ) changed=4     first=0x08000
+
+[E] edge shapes
+  nfds=-1  rv=0 (9 Bad file descriptor) changed=4
+  null set rv=0 (9 Bad file descriptor) changed=4
+  null timeout rv=3 (9 Bad file descriptor)
+
+[F] survivor pid=402 (was 402)
+
+=== PROBE 1446a COMPLETE ===

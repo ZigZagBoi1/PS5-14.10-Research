@@ -1,0 +1,108 @@
+=== PROBE 1404a: 601 CMD 0x12 INDEX ===
+[0] pid=371
+  out=0x310CA8000 out2=0x310CAC000
+
+[A] determinism: repeat the same shape, interleaved with commands that set errno
+  12(0,out)              rv=-1         errno=2 No such file or directory ch=0  out0=0x5A5A5A5A
+  12(0,out) again        rv=-1         errno=2 No such file or directory ch=0  out0=0x5A5A5A5A
+  0x0A(0,0)          rv=-1 errno=1 Operation not permitted
+  12(0,out) after        rv=-1         errno=2 No such file or directory ch=0  out0=0x5A5A5A5A
+  12(0,out2)             rv=-1         errno=2 No such file or directory ch=0  out0=0x5A5A5A5A
+  12(0,out2) again       rv=-1         errno=2 No such file or directory ch=0  out0=0x5A5A5A5A
+
+[A2] does the destination CONTENT change the answer? (1401a used a zeroed page
+     and got EFAULT, 1403a used a canary page and got ENOENT)
+  12(0,out-zeroed)       rv=-1         errno=14 Bad address             ch=0  out0=0x00000000
+  12(0,out-canary)       rv=-1         errno=2 No such file or directory ch=0  out0=0x5A5A5A5A
+  12(0,out-zeroed)#2     rv=-1         errno=14 Bad address             ch=0  out0=0x00000000
+  12(0,out2-zeroed)      rv=-1         errno=14 Bad address             ch=0  out0=0x00000000
+  12(0,out-0x01s)        rv=-1         errno=2 No such file or directory ch=0  out0=0x01010101
+  12(0,out-0xFFs)        rv=-1         errno=2 No such file or directory ch=0  out0=0xFFFFFFFF
+
+[B] index sweep 0..0x40, destination = out
+  idx=0x00 rv=-1         errno=2 No such file or directory ch=0 out0=0x5A5A5A5A
+  idx=0x01 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x02 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x03 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x04 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x05 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x06 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x07 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x08 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x09 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x0A rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x0B rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x0C rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x0D rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x0E rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x0F rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x10 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x11 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x12 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x13 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x14 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x15 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x16 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x17 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x18 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x19 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x1A rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x1B rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x1C rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x1D rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x1E rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x1F rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x20 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x21 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x22 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x23 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x24 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x25 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x26 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x27 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x28 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x29 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x2A rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x2B rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x2C rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x2D rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x2E rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x2F rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x30 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x31 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x32 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x33 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x34 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x35 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x36 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x37 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x38 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x39 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x3A rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x3B rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x3C rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x3D rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x3E rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x3F rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  idx=0x40 rv=-1         errno=22 Invalid argument        ch=0 out0=0x5A5A5A5A
+  (non-ENOENT rows above: 65)
+
+[C] large indices (printed before each call in case one is lethal)
+  idx=0x41 ...
+rv=-1 errno=22 Invalid argument ch=0
+  idx=0x80 ...
+rv=-1 errno=22 Invalid argument ch=0
+  idx=0x100 ...
+rv=-1 errno=22 Invalid argument ch=0
+  idx=0x400 ...
+rv=-1 errno=22 Invalid argument ch=0
+  idx=0x1000 ...
+rv=-1 errno=22 Invalid argument ch=0
+  idx=0x10000 ...
+rv=-1 errno=22 Invalid argument ch=0
+  idx=0x100000 ...
+rv=-1 errno=22 Invalid argument ch=0
+  idx=0xFFFFFFFF ...
+rv=-1 errno=22 Invalid argument ch=0
+
+=== 1404a DONE ===

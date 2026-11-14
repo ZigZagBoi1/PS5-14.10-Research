@@ -1,0 +1,36 @@
+=== PROBE 1530a: shm read vs ftruncate ===
+
+fn_addr=0x000000082FF80B57 pid=186
+
+[A] gadget verification
+eboot=0x0000000040110000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] shm object
+  shm_open(SHM_ANON=1) -> 43
+  ftruncate(43, 0x8000) rv=0
+  shm mmap -> 0x0000000311BC8000
+  marker page readable and 0x41: true
+  destination mmap -> 0x0000000311BD0000
+  leak channel mmap -> 0x0000000311BD4000
+  shm filled with 0x41, both destinations zeroed
+
+[C] child chain
+  stack mmap -> 0x0000000315BE0000 need=2708568 alloc=2719744
+  building TCB
+  TCB at 0x315be0000 fs_ptr at 0x315be1000
+  concatenating 336012 qwords
+  chain qwords=336012 bytes=2688096 alloc=2719744 stack=0x0000000315BE0000
+  chain write head_ok=true tail_ok=true
+
+[D] race
+  thr_new rv=0 child_tid=102087
+  positive control: destination turned 0x41 = true
+[string "-- CRASH_CLASS: MODERATE..."]:366: attempt to call global 'rvtr' (a nil value)
+stack traceback:
+	[string "-- CRASH_CLASS: MODERATE..."]:366: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

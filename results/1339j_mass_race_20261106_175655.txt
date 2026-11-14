@@ -1,0 +1,18 @@
+=== 1339j MASS-SPAWN RACE ===
+pid=290
+ebase=56990000
+params: FREE=100 USE=100 TRIALS=10 SPRAY=128
+trial 1: tc_after=42 (USE won last, pktopts set by cmsg)
+trial 2: tc_after=42 (USE won last, pktopts set by cmsg)
+trial 3: tc_after=42 (USE won last, pktopts set by cmsg)
+trial 4: tc_after=42 (USE won last, pktopts set by cmsg)
+trial 5: tc_after=42 (USE won last, pktopts set by cmsg)
+trial 6: tc_after=42 (USE won last, pktopts set by cmsg)
+trial 7: tc_after=42 (USE won last, pktopts set by cmsg)
+trial 8: tc_after=42 (USE won last, pktopts set by cmsg)
+trial 9: tc_after=42 (USE won last, pktopts set by cmsg)
+trial 10: tc_after=42 (USE won last, pktopts set by cmsg)
+
+=== RESULTS: 0/10 trials reclaimed ===
+pid=290
+=== DONE ===

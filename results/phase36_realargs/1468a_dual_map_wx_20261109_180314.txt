@@ -1,0 +1,9 @@
+=== PROBE 1468a: DUAL-MAPPING W^X TEST ===
+
+[0] pid=495
+[A] shm_open(SHM_ANON, O_CREAT|O_RDWR, 0600)
+[A] EXC
+[A] retry shm_open(1, O_RDWR, 0600)
+[A] -> EXC
+[!] no shm fd, stopping
+=== PROBE 1468a COMPLETE ===

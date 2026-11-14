@@ -1,0 +1,29 @@
+=== PROBE 1161a: 638 TABLE DUMP ===
+[S] sentinel fill proved=true rec=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5
+[0] start input 0xC000000000000000 -> key FFFFFFFFFDC7BB70
+  first record key=FFFFFFFFFDC7BB70 (-37242000) off=3600 corr=0 nearest=3600 val=-4611686018427384320 rv=0
+  [2] key=000000000370C620 (57722400) off=0 corr=0 nearest=3600 rv=0
+  [3] key=0000000004295820 (69818400) off=0 corr=3600 nearest=3600 rv=0
+  [4] key=000000000550A820 (89172000) off=0 corr=0 nearest=3600 rv=0
+  [5] key=0000000006093A20 (101268000) off=0 corr=3600 nearest=3600 rv=0
+  [6] key=0000000007308A20 (120621600) off=0 corr=0 nearest=3600 rv=0
+  [7] key=0000000007E91C20 (132717600) off=0 corr=3600 nearest=3600 rv=0
+  [8] key=0000000009106C20 (152071200) off=0 corr=0 nearest=3600 rv=0
+  [9] key=0000000009C8FE20 (164167200) off=0 corr=3600 nearest=3600 rv=0
+  [10] key=000000000AF04E20 (183520800) off=0 corr=0 nearest=3600 rv=0
+  [11] key=000000000BB21AA0 (196221600) off=0 corr=3600 nearest=3600 rv=0
+  [12] key=000000000CD03020 (214970400) off=0 corr=0 nearest=3600 rv=0
+  [32] key=000000001FA16B10 (530672400) off=0 corr=0 nearest=3600 rv=0
+  [64] key=000000003DBB3A90 (1035680400) off=0 corr=0 nearest=3600 rv=0
+  [96] key=000000005BD50A10 (1540688400) off=0 corr=0 nearest=3600 rv=0
+  [128] key=0000000079EED990 (2045696400) off=0 corr=0 nearest=3600 rv=0
+  [160] key=000000009808A910 (2550704400) off=0 corr=0 nearest=3600 rv=0
+  [192] key=00000000B6227890 (3055712400) off=0 corr=0 nearest=3600 rv=0
+  [224] key=00000000D4330D90 (3560115600) off=0 corr=0 nearest=3600 rv=0
+  [256] key=00000000F24CDD10 (4065123600) off=0 corr=0 nearest=3600 rv=0
+[W] records=258 calls=12380 stop=past-2100 last_key=00000000F42CBF10
+[C] out-of-plausible-range=0 of 258 (key 1900..2100, offset +-14h, correction +-2h)
+[T] 512-slot window: records_gt_512=false
+[A] row1 value=-4611686018427384320  input+off+corr=-37238400  delta=-4611686018390146048
+[Z] alive pid=197
+=== DONE ===

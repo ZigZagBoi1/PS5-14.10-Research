@@ -1,0 +1,14 @@
+=== PROBE 1230a: blockpool handle type ===
+[0] pid=87
+[1] 653 = 0x18 (24) err=3 No such process
+  [fstat(handle)] ret=0x00000000_00000000 err=3 No such process
+    stat mode=0x0 links=2952790016 size=0x0
+  [read(handle,16)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=9 Bad file descriptor
+  [ioctl FIONBIO] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=25 Inappropriate ioctl for device
+[2] mmap with the handle before closing it
+    prot=0x3 flags=0x1 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    prot=0x3 flags=0x2 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+    prot=0x3 flags=0x1002 -> 0xFFFFFFFFFFFFFFFF err=22 Invalid argument
+  [close(handle)] ret=0x00000000_00000000 err=22 Invalid argument
+[Z] pid_end=87
+=== DONE ===

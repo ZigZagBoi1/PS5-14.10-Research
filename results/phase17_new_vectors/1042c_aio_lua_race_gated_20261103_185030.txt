@@ -1,0 +1,3 @@
+=== PROBE 1042c ===
+[A] socketpair ok=true rv=0 fd=24
+[S] thread 1 spawn ok=true

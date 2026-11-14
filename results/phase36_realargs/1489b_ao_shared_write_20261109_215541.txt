@@ -1,0 +1,25 @@
+=== PROBE 1489b: AO SHARED STATE WRITE ===
+[0] pid=106
+
+--- [A] 674: find ./AOSharedState ---
+  ./AOSharedState 0x310D80000 len 0x8000 prot=1
+  [A] prot 1 header: 00000000 C28C0000 0000003B 00000000 08020081 08020081 08000000 08000000 08000000 08000000 00000000 00000000 00000000 00000000 04000000 04000000
+  [A] +0x100 at prot 1 = 08000000 08000000 08000000 00000000
+
+--- [B] 548 op 2 prot 3 ---
+  rv=0 processed=1  -> 547 prot 3
+  [B] header after raise: 00000000 C28C0000 0000003B 00000000 08020081 08020081 08000000 08000000 08000000 08000000 00000000 00000000 00000000 00000000 04000000 04000000
+
+--- [C] store at +0x100 ---
+  +0x100 = DEAD1234 CAFEBABE 55667788 99AABBCC
+
+--- [D] restore prot 1 and read back ---
+  rv=0 processed=1 -> 547 prot 1
+  +0x100 after restore = DEAD1234 (store landed, now still there)
+  +0x108 after restore = 55667788
+
+--- [E] 674 after the round trip ---
+  547 at 0x310D80000: prot 1
+
+final canary live: true (pid 106)
+=== PROBE 1489b COMPLETE ===

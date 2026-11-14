@@ -1,0 +1,170 @@
+=== PROBE 1479e: SYS 548 PROTECTION MATRIX ===
+[0] pid=87
+[A] A=0x31141C000 B=0x311420000
+     [A before] 547 prot=3 start=000000031141C000 end=0000000311420000
+
+--- [B] op x prot on the page this probe owns ---
+  -> op=2 prot=0x00 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=0x01 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=0x10 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=0x40 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=0x11 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=0x41 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=0x51 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=0x51 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=0x02 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=0x03 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=0x05 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=0x07 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x00 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x01 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x10 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x40 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x11 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x41 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x51 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x51 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x02 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x03 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x05 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=0 prot=0x07 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x00 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x01 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x10 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x40 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x11 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x41 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x51 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x51 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x02 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x03 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x05 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=1 prot=0x07 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x00 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x01 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x10 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x40 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x11 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x41 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x51 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x51 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x02 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x03 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x05 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=3 prot=0x07 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x00 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x01 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x10 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x40 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x11 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x41 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x51 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x51 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x02 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x03 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x05 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+  -> op=4 prot=0x07 len=0x1000                   
+     rv=-1    22 Invalid argument      processed=0
+[B] rv=0 count=0 of 60
+
+--- [C] op=2 prot=1, length ladder on a page we own ---
+  -> op=2 prot=1 len=0x0                         
+     rv=0                              processed=1
+     [A after len=0x0] 547 prot=3 start=000000031141C000 end=0000000311420000
+  -> op=2 prot=1 len=0x1000                      
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=1 len=0x2000                      
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=1 len=0x4000                      
+     rv=0                              processed=1
+     [A after len=0x4000] 547 prot=1 start=000000031141C000 end=0000000311420000
+  -> op=2 prot=1 len=0x8000                      
+     rv=0                              processed=1
+     [A after len=0x8000] 547 prot=1 start=000000031141C000 end=0000000311420000
+
+--- [C2] op=2 prot=1 len=0x1000, offset field ---
+  -> op=2 prot=1 off=0x0                         
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=1 off=0x1000                      
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=1 off=0x100000                    
+     rv=-1    22 Invalid argument      processed=0
+  -> op=2 prot=1 off=0xFFFFFFFF                  
+     rv=-1    22 Invalid argument      processed=0
+
+--- [D] the same op=2 shapes on the second page ---
+  -> B op=2 prot=1 len=0x0                       
+     rv=0                              processed=1
+     [B after len=0x0] 547 prot=1 start=0000000311420000 end=0000000311424000
+  -> B op=2 prot=1 len=0x1000                    
+     rv=-1    22 Invalid argument      processed=0
+  -> B op=2 prot=1 len=0x2000                    
+     rv=-1    22 Invalid argument      processed=0
+  -> B op=2 prot=1 len=0x4000                    
+     rv=0                              processed=1
+     [B after len=0x4000] 547 prot=1 start=0000000311420000 end=0000000311424000
+  -> B op=2 prot=1 len=0x8000                    
+     rv=0                              processed=1
+     [B after len=0x8000] 547 prot=1 start=0000000311420000 end=0000000311424000
+
+final canary: pid=87 (started 87)
+=== PROBE 1479e COMPLETE ===

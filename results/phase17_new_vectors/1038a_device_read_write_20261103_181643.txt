@@ -1,0 +1,18 @@
+=== PROBE 1038a ===
+[S] shield ok=true rv=0 pid=94
+[R] /dev/rng fd=22 rv=-1 touched=0 kp=0
+[W] /dev/rng rdonly
+[R] /dev/random fd=22 rv=256 touched=32 kp=0
+[W] /dev/random rdonly
+[R] /dev/urandom fd=22 rv=256 touched=32 kp=0
+[W] /dev/urandom rdonly
+[R] /dev/null fd=22 rv=0 touched=0 kp=0
+[W] /dev/null rv=64
+[R] /dev/zero fd=22 rv=256 touched=32 kp=0
+[W] /dev/zero rv=64
+[R] /dev/hid fd=22 rv=0 touched=0 kp=0
+[W] /dev/hid rv=-1
+[R] /dev/camera fd=22 rv=-1 touched=0 kp=0
+[W] /dev/camera rv=-1
+[R] /dev/bt fd=22 rv=0 touched=0 kp=0
+[W] /dev/bt rv=-1

@@ -1,0 +1,10 @@
+=== PROBE 913b: self-loop gadget scan ===
+  cmp_d0_je_loop : none
+  cmp_d0_jne_loop : none
+  cmp_q0_je_loop : none
+  cmp_q0_jne_loop : none
+  mov_test_je_loop : none
+  mov_test_jne_loop : none
+  cmp_a0_je_loop : none
+  cmp_a0_jne_loop : none
+[Z] total hits=0

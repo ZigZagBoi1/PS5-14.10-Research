@@ -1,0 +1,11 @@
+=== PROBE 1356a: SYS 601 TABLE, WITH ERRNO ===
+[0] pid=164
+  buf=0x3111B8000
+
+[A] cmd 0x12 with errno
+  0x12 (arg1=0, arg2=buf)     : -1  errno=14 Bad address
+  0x12 (arg1=0, arg2=0x1000)  : -1  errno=14 Bad address
+  0x12 (arg1=0, arg2=0)       : -1  errno=14 Bad address
+  0x12 (arg1=buf, arg2=buf)   : -1  errno=22 Invalid argument
+
+[B] cmd 0x0C, the marker check (arg1 must be 0)

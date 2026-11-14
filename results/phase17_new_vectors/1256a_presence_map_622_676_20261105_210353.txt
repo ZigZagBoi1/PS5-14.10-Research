@@ -1,0 +1,4 @@
+=== PROBE 1256a: presence map 622-676, fault-proof args ===
+
+[0] pid=87 SIG_IGN ok=true rv=0
+[0] scratch buf=0x310C9AAE0

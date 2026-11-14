@@ -1,0 +1,15 @@
+=== PROBE 1427a: IPV6_MSFILTER READBACK ORACLE ===
+
+[A] reproduce 50f on this pid
+  socket A = 23
+  join group A tag 1 -> 0
+  set INCLUDE 0src  -> 0
+  set EXCLUDE 0src  -> 0
+  set INCLUDE 1src  -> 0
+[B] getsockopt(the oracle)
+  getsockopt -> rv=0 numsrc=1 len=152 sources=[2001:00C0]
+[C] set 8 sources then read them back
+  set INCLUDE 8src  -> 0
+  getsockopt -> rv=0 numsrc=8 len=152 sources=[2001:00C0 2001:00C1 2001:00C2 2001:00C3]
+[D] source-count ceiling between 128 and 256
+  nsrc=128  set -> 0      errno=-

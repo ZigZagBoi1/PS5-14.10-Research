@@ -1,0 +1,31 @@
+=== PROBE 1432a: MSFILTER TAIL REUSE TEST ===
+
+pid=402 src=0x311BC8000 dst=0x311BD8000
+
+[A] pattern self-check (no syscall between fill and read)
+  mismatched dwords immediately after fill: 0 of 16384
+
+[B] arm the 16 KiB block: one group, 128 sources tagged 0xA0
+  socket=32 join=0 set(128 src)=0
+  claim=128 rv=0 numsrc=128 entries with headers=127 nonzero-slots=127
+  generation tags seen: A0@1 A0@2 A0@3 A0@4 A0@5 A0@6 A0@7 A0@8 
+    entry0=00001C1C entry1=00001C1C entry127=00001C1C
+
+[C] shrink to 1 source -- this should free the 16 KiB block with 0xA0 in it
+  set(1 src)=0
+  claim=128 rv=0 numsrc=1 entries with headers=0 nonzero-slots=0
+  generation tags seen: 
+    entry0=00001C1C entry1=00000000 entry2=00000000
+  -> reply tail is zero even right after a 16 KiB block was freed
+
+[D] churn the 16 KiB bucket with tagged data, then re-test
+  armed 32 groups with 128 tagged sources (16 KiB each)
+  left them all -- 16 KiB blocks returned to the allocator holding 0xB0+i tags
+  claim=128 rv=0 numsrc=1 headers=0 nonzero-slots=0
+  tags seen: 
+  -> still zero: the reply is zero-initialised, not recycled
+
+[E] control: claim=1 on the same group must show exactly one entry
+  claim=1 rv=0 numsrc=1 changed-dwords=32 (expect 32)
+
+=== PROBE 1432a COMPLETE ===

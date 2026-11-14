@@ -1,0 +1,29 @@
+=== PROBE 1507a: IS THE profil TICK A RAW KERNEL STORE? ===
+[0] pid=125  KIMG=0xFFFFFFFFCC800000 (re-measure if this boot differs)
+
+--- [A] sanity: user buffer must collect ticks ---
+  mmap -> 0x316490000 
+  arm(user) rv=0 
+  ticks landed: 2 bytes, first index 0x4D9 (tick offset +0x9B2)
+
+--- [B] THE TEST: pr_base = 0x1000, an unmapped user VA ---
+  a raw store would write at 0x19B2
+  a PANIC from here means pr_base is unchecked and this is a kernel write primitive
+  if we return, the store is validated or masked - lead dead
+  arm(unmapped) rv=0 
+  *** SURVIVED the unmapped arm ***
+
+--- [C] pr_base = kernel image base (mapped, read-only text) ---
+  target 0xFFFFFFFFCC800800
+  arm(KIMG) rv=0 
+  *** SURVIVED the KIMG arm ***
+
+--- [D] pr_base = KIMG + 0x1000000 (kernel data segment) ---
+  target 0xFFFFFFFFCD800800
+  arm(KIMG+16M) rv=0 
+  *** SURVIVED the kernel-data arm ***
+
+  Every arm returned. Either the tick store is validated (useracc-style) or it is
+  copyout-masked. Either way profil is not a write primitive from here.
+final canary pid 125
+=== PROBE 1507a COMPLETE ===

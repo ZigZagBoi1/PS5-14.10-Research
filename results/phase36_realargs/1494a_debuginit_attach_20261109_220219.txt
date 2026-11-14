@@ -1,0 +1,42 @@
+=== PROBE 1494a: 560 DEBUG_INIT AND 601 ATTACH ===
+[0] pid=111
+
+--- [A] 601(0x00) control ---
+  out before: 00000000 00000000
+  601(0x00) arg1=out                 rv=0    
+  out after : 00000100 00000000
+
+--- [B] 601(0x01) before debug_init ---
+  opt1 (0,0,0)                       rv=-1   14 Bad address
+  opt2 (buf,0,0x100)                 rv=-1   22 Invalid argument
+  opt3 (0,buf,0x100)                 rv=-1   14 Bad address
+  opt4 (buf,buf,0x100)               rv=-1   22 Invalid argument
+
+--- [C] 560(1) then the same four ---
+  560(1) rv=0 
+  opt1 after debug_init              rv=-1   14 Bad address
+  opt2 after debug_init              rv=-1   22 Invalid argument
+  opt3 after debug_init              rv=-1   14 Bad address
+  opt4 after debug_init              rv=-1   22 Invalid argument
+
+--- [D] 643 then attach again ---
+  643(0) rv=0 
+  opt2 after 643                     rv=-1   22 Invalid argument
+  opt3 after 643                     rv=-1   14 Bad address
+
+--- [E] the commands that need the context ---
+  601(0x02) arg1=out                 rv=-1   78 Function not implemented
+  601(0x05) arg1=out                 rv=-1   78 Function not implemented
+  601(0x06) arg1=out                 rv=-1   78 Function not implemented
+  601(0x07) arg1=out                 rv=0    
+  601(0x09) arg1=out                 rv=0    
+  601(0x0A) arg1=out                 rv=-1   1 Operation not permitted
+  601(0x0B) arg1=out                 rv=0    
+  601(0x0D) arg1=out                 rv=0    
+
+--- [F] verdict ---
+  attach succeeded before debug_init: false
+  attach succeeded after  debug_init/643: false
+  601(0x00) final control            rv=0    
+  final canary live: true (pid 111)
+=== PROBE 1494a COMPLETE ===

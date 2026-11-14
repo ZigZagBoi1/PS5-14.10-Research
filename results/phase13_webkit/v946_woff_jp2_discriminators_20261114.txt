@@ -1,0 +1,33 @@
+V946 14.22 ROW - pre-registered discriminators resolved: WOFF2 SUPPORTED (probe-ON branch - brotli surface reachable), JP2/JPX dead (OpenJPEG-empty prediction confirmed)
+================================================================================
+Date:    2026-11-14
+Log:     tools/browser_runner/beacon_logs/beacons_20261114_*.log (12:47:54 window)
+Probe:   probes/phase13_webkit/v946_woff_jp2_discriminators.html
+
+F - WOFF DISCRIMINATOR (cobrajet pre-registration, WK-1400 tree):
+- g00_valid_woff1.woff (fonttools, zlib): status=loaded, metrics a=7 WWW=33
+- g01_valid_woff2.woff2 (fonttools, brotli): status=loaded, metrics a=7 WWW=33
+- BRANCH: BOTH LAND = probe-ON build => HAVE(WOFF_SUPPORT) is ON:
+  FreeType >= 2.10.2 compiled with FT_CONFIG_OPTION_USE_BROTLI on this port.
+- CONSEQUENCES:
+  (1) v939's f12/f13/f14 WOFF errors are OUR BUILDER's fault, not the port -
+      the "support unproven" flag resolves in favor of support.
+  (2) NEW REACHABLE SURFACE: the WOFF2 pipeline (WOFF2::convertWOFF2... /
+      brotli decode of transformed tables in FreeType) is live on 14.22 -
+      malformed-WOFF2 and brotli-stream batteries are now a real lane,
+      not blocked by the gate. Known-good controls (g01) exist in-tree.
+  (3) format='woff2-variations' decls remain inert (ENABLE_VARIATION_FONTS
+      OFF per the WK-1400 config - prediction stands, untested here).
+- Metrics identical across all wrappers (same TTF body): format sniffing
+  feeds one decoder path.
+
+I - JPEG2000 (cobrajet pre-registration):
+- j00_jp2_magic.bin: ERROR
+- j01_jpx_codestream.bin: ERROR
+- Prediction CONFIRMED: decoder source unconditional but body
+  #if USE(OPENJPEG), port never calls find_package(OpenJPEG) => compiles
+  empty => both die at sniff alongside TIFF/AVIF/JXL. EIGHTH decoder row;
+  config matrix == device observation on 14.22 (no port-line drift).
+
+GRADE: M - two pre-registered branches resolved + one lane reopened
+  (malformed WOFF2 / brotli battery queued as follow-up).

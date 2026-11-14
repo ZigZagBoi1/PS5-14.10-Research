@@ -1,0 +1,45 @@
+V948 14.22 ROW - WOFF2 content-level discriminators: semantic content corruption is REJECTED while coordinate-level corruption passed (v947 w11) - the validator position is now localized
+================================================================================
+Date:    2026-11-14
+Log:     tools/browser_runner/beacon_logs/beacons_20261114_131647.log
+Probe:   probes/phase13_webkit/v948_woff2_content_aimed.html
+Payloads: tools/gen_v948_payloads.py (byte-exact aim via directory cumulative
+         offsets; all rebuilt with totalCompressedSize+length consistent,
+         brotli MODE_FONT recompress - the same rebuild that v947-w11
+         proved loads on this port)
+
+CASES (all status=error, zero crashes):
+- x12 hmtx advances -> 0xFFFF  (untransformed table, feeds metrics;
+  fontTools round-trip locally reads advances 65535 - i.e. the payload is
+  structurally valid WOFF2 with semantically corrupted metric content)
+- x13 hmtx advances -> 0
+- x14 transformed-glyf HEADER -> 0xFF (numGlyphs=65535 / indexFormat garbage
+  - aims at the reconstruction path directly)
+- x15 combined (x12+x14)
+
+ANALYSIS - the trim between v947-w11 (LOADED) and x12-x15 (REJECTED):
+- w11's 0xFF quadruples landed at generic offsets inside the decompressed
+  buffer; the face loaded with correct metrics and survived
+  measureText+fillText - coordinate/outline-level corruption tolerated.
+- x12-x15 corrupt SEMANTIC structures (metric semantics, numGlyphs,
+  indexFormat) and the whole face is rejected before any JS state exists.
+- WHERE the validator sits: after brotli decompression, before any
+  reconstructed-table consumption - the reconstruction path (glyf/loca
+  transform, hmtx coupling with maxp.numGlyphs) is validated, and a
+  failure poisons the whole face load (not a per-glyph soft path).
+- CONSEQUENCE for the lane: the reachable WOFF2 surface tolerates only
+  corruption that is invisible to the semantic validator - buffer-level
+  manufacturing is dead at second order too; the accidental-vuln window
+  would need a validator bug (upstream FreeType brotli/woff2 CVE class),
+  which is upstream-hunting, not build-specific.
+
+NOTE on the v947 w11 reading upgrade: the w11 row's "corrupted content
+survives" is now bounded by this row - what survives is content outside
+the semantic validator's view; the validator itself is strict.
+
+COMPLETE WOFF2 LANE VERDICT (v946-v948): supported ([S]-predicted gate ON,
+device-confirmed), header/directory/stream/semantic-content hardened at
+first and second order, one tolerated hint-field lie (totalSfntSize, v947),
+coordinate-level tolerance bounded by semantic validation. The lane goes
+back to sleep unless a new brotli/FreeType CVE lands upstream.
+GRADE:  M - second-order battery + the validator-position localization.

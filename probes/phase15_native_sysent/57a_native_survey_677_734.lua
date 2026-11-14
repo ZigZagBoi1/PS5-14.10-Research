@@ -6,6 +6,20 @@
 -- apr_*, mmap2, virtual_query_by_pid, cffmgr_call, trace_ctrl and more.
 -- This probe does a basic accessibility scan of all 58 new syscalls.
 
+-- WITHDRAWN 2026-11-04. The 14.10 dispatch table ends at 677 entries: syscalls 677
+-- and 678 terminate the process AND panic the console, and every accounted number at or
+-- below 676 answers. A sweep of 677-734 therefore costs one console reset per number and
+-- can only reproduce a panic already measured. 726/727 turn out to be the AIO debug
+-- pointer-export calls (docs/AIO_DEBUG_726_727_13_60.md), which are out of range on this
+-- firmware. The file is kept as a record of the original survey plan and stops here.
+if true then
+    print("=== PROBE 57a: WITHDRAWN - NOT RUNNABLE ON 14.10 ===")
+    print("677-734 are outside the live dispatch table; 677/678 panic the console.")
+    print("See docs/AIO_DEBUG_726_727_13_60.md")
+    print("=== PROBE 57a DONE ===")
+    return
+end
+
 print("=== PROBE 57a: NATIVE SYSENT SURVEY 677-734 ===")
 print("")
 

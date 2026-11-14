@@ -1,0 +1,15 @@
+=== PROBE 1224a: 653 determinism ===
+[0] pid=80
+  [653 #1] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=24 Too many open files
+  [653 #2] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=24 Too many open files
+[1] now map one anonymous page
+    mmap -> 0x3109FC000 err=24 Too many open files
+  [653 #3] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=24 Too many open files
+  [653 #4] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=24 Too many open files
+[2] and one with flags/word2 variants
+  [653 flags=0x1] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument
+  [653 flags=0x10] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument
+  [653 flags=0x100] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument
+  [653 flags=0x10000000] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument
+[Z] pid_end=80
+=== DONE ===

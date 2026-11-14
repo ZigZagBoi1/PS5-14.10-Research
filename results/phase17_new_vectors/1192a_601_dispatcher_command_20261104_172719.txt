@@ -1,0 +1,3 @@
+=== PROBE 1192a: 601 DISPATCHER COMMAND HUNT ===
+[A] struct=0x0000000310B9C600 out=0x0000000310B9CDE0
+-- phase A: type 0 (invalid: bit0 of 0xb8 is clear) --

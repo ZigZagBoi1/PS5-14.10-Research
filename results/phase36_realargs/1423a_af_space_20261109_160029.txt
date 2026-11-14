@@ -1,0 +1,66 @@
+=== PROBE 1423a: ADDRESS FAMILY SPACE ===
+
+[A] every family 0..45, type SOCK_STREAM(1)/DGRAM(2)/RAW(3), proto 0
+   0                t1=-1  t2=-1  t3=-1
+   1 AF_UNIX        t1=fd23  t2=fd24  t3=-1
+   2 AF_INET        t1=fd25  t2=fd26  t3=fd27
+   3 AF_IMPLINK     t1=-1  t2=-1  t3=-1
+   4 AF_PUP         t1=-1  t2=-1  t3=-1
+   5 AF_CHAOS       t1=-1  t2=-1  t3=-1
+   6 AF_NS          t1=-1  t2=-1  t3=-1
+   7 AF_ISO         t1=-1  t2=-1  t3=-1
+   8 AF_ECMA        t1=-1  t2=-1  t3=-1
+   9 AF_DATAKIT     t1=-1  t2=-1  t3=-1
+  10 AF_CCITT       t1=-1  t2=-1  t3=-1
+  11 AF_SNA         t1=-1  t2=-1  t3=-1
+  12 AF_DECnet      t1=-1  t2=-1  t3=-1
+  13 AF_DLI         t1=-1  t2=-1  t3=-1
+  14 AF_LAT         t1=-1  t2=-1  t3=-1
+  15 AF_HYLINK      t1=-1  t2=-1  t3=-1
+  16 AF_APPLETALK   t1=-1  t2=-1  t3=-1
+  17 AF_ROUTE       t1=-1  t2=-1  t3=fd28
+  18 AF_LINK        t1=-1  t2=-1  t3=-1
+  19 AF_COIP        t1=-1  t2=-1  t3=-1
+  20 AF_CNT         t1=-1  t2=-1  t3=-1
+  21                t1=-1  t2=-1  t3=-1
+  22                t1=-1  t2=-1  t3=-1
+  23 AF_IPX         t1=-1  t2=-1  t3=-1
+  24 AF_SIP         t1=-1  t2=-1  t3=-1
+  25                t1=-1  t2=-1  t3=-1
+  26                t1=-1  t2=-1  t3=-1
+  27                t1=-1  t2=-1  t3=-1
+  28 AF_NATM        t1=fd29  t2=fd30  t3=fd31
+  29                t1=-1  t2=-1  t3=-1
+  30 AF_NETGRAPH    t1=-1  t2=-1  t3=-1
+  31                t1=-1  t2=-1  t3=-1
+  32 AF_SYSTEM      t1=-1  t2=-1  t3=-1
+  33                t1=-1  t2=-1  t3=-1
+  34                t1=-1  t2=-1  t3=-1
+  35 AF_BLUETOOTH   t1=-1  t2=-1  t3=-1
+  36                t1=-1  t2=-1  t3=-1
+  37                t1=-1  t2=-1  t3=-1
+  38                t1=-1  t2=-1  t3=-1
+  39                t1=-1  t2=-1  t3=-1
+  40                t1=-1  t2=-1  t3=-1
+  41                t1=-1  t2=-1  t3=-1
+  42                t1=-1  t2=-1  t3=-1
+  43                t1=-1  t2=-1  t3=-1
+  44 AF_INET6       t1=-1  t2=-1  t3=-1
+  45                t1=-1  t2=-1  t3=-1
+
+[B] family-specific protocol values
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+fd=32
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+-1  47 Address family not supported by protocol family
+fd=33
+-1  43 Protocol not supported
+-1  47 Address family not supported by protocol family
+
+=== PROBE 1423a COMPLETE ===

@@ -1,0 +1,9 @@
+=== PROBE 1170a: MDBG LOG DRAIN SWEEP ===
+[S] buffer=0x310d034a0 len=16384
+[S] sentinel_proved=true (4096/4096 dwords)
+[00] rv=0 changed=8 first=0  ascii="................................................"
+[01] rv=-1 changed=0 first=-1
+[02] rv=-1 changed=0 first=-1
+[05] rv=-1 changed=0 first=-1
+[06] rv=-1 changed=0 first=-1
+[07] rv=0 changed=0 first=-1

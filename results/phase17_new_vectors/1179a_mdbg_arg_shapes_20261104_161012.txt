@@ -1,0 +1,26 @@
+=== PROBE 1179a: 601 ARGUMENT-SHAPE MATRIX ===
+[F] buf=0x1065BD60
+[00/A buf,0x200] rv=0 changed=2 first=0 @0=00000100 @4=00000000 
+[00/B buf,0x4000] rv=0 changed=2 first=0 @0=00000100 @4=00000000 
+[00/C 0x200,buf] rv=-1 changed=0 first=-1 
+[00/D 0x4000,buf] rv=-1 changed=0 first=-1 
+[00/E 0,buf,0x4000] rv=-1 changed=0 first=-1 
+[00/F buf,0x4000,1] rv=0 changed=2 first=0 @0=00000100 @4=00000000 
+[00/G buf,0x4000,,1] rv=0 changed=2 first=0 @0=00000100 @4=00000000 
+[0E/A buf,0x200] rv=0 changed=2 first=0 @0=00000000 @4=00000000 
+[0E/B buf,0x4000] rv=0 changed=2 first=0 @0=00000000 @4=00000000 
+[0E/C 0x200,buf] rv=-1 changed=0 first=-1 
+[0E/D 0x4000,buf] rv=-1 changed=0 first=-1 
+[0E/E 0,buf,0x4000] rv=-1 changed=0 first=-1 
+[0E/F buf,0x4000,1] rv=0 changed=2 first=0 @0=00000000 @4=00000000 
+[0E/G buf,0x4000,,1] rv=0 changed=2 first=0 @0=00000000 @4=00000000 
+[1A/A buf,0x200] rv=0 changed=1 first=0 @0=00000000 
+[1A/B buf,0x4000] rv=0 changed=1 first=0 @0=00000000 
+[1A/C 0x200,buf] rv=-1 changed=0 first=-1 
+[1A/D 0x4000,buf] rv=-1 changed=0 first=-1 
+[1A/E 0,buf,0x4000] rv=-1 changed=0 first=-1 
+[1A/F buf,0x4000,1] rv=0 changed=1 first=0 @0=00000000 
+[1A/G buf,0x4000,,1] rv=0 changed=1 first=0 @0=00000000 
+[SUM] shapes=7 commands=10 big_writes=0
+[Z] alive
+=== DONE ===

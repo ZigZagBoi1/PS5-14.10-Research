@@ -1,0 +1,16 @@
+=== PROBE 1559a: 64-bit value paths ===
+
+[0] pid=298
+[0] P=0x3107BC000
+
+[A] store BIG from a Lua number
+[string "-- CRASH_CLASS: LOW..."]:70: bad argument #3 to 'format' (number expected, got table)
+stack traceback:
+	[C]: in function 'format'
+	[string "-- CRASH_CLASS: LOW..."]:70: in function 'show'
+	[string "-- CRASH_CLASS: LOW..."]:78: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

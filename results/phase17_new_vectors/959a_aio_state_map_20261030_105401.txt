@@ -1,0 +1,21 @@
+=== PROBE 944a: AIO STATE MAP ===
+
+[0] pid=80 fds=30,31
+    id[0]=0x00000245
+    id[1]=0x00010245
+    id[2]=0x00020245
+    id[3]=0x00030245
+  [submit] states 1 1 1 1
+  [send4k] sent=4096
+  [after4k] states 1 1 1 1
+  [send8k] sent=4096
+  [after8k] states 1 1 1 1
+  [send16k] sent=4294967295
+  [after16k] states 1 1 1 1
+    del[0] ret=0x00000000 elem=0x80020010
+    del[1] ret=0x00000000 elem=0x80020010
+    del[2] ret=0x00000000 elem=0x80020010
+    del[3] ret=0x00000000 elem=0x80020010
+  [afterdelete] states 1 1 1 1
+[Z] alive pid=80
+=== COMPLETE ===

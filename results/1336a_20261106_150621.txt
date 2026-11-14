@@ -1,0 +1,2 @@
+=== PROBE 1336a: 622 KILLER ARGUMENT TEST ===
+[A] 0x201 with sub 1

@@ -1,0 +1,17 @@
+=== PROBE 1351a: 622 KILL MECHANISM ===
+[0] pid=136
+[1] sigaction(sig, SIG_IGN)
+  sig 5 -> 0x0_00000000
+  sig 6 -> 0x0_00000000
+  sig 7 -> 0x0_00000000
+  sig 8 -> 0x0_00000000
+  sig 12 -> 0x0_00000000
+  sig 24 -> 0x0_00000000
+  sig 25 -> 0x0_00000000
+  sig 26 -> 0x0_00000000
+  sig 30 -> 0x0_00000000
+  sig 31 -> 0x0_00000000
+  readback sig 12 handler=0x1 (1 = SIG_IGN)
+  page=0x3107B4000 buf=0x310606BC0
+
+[2] 622(0x01, 0, buf, page, 0x40) with fatal signals ignored

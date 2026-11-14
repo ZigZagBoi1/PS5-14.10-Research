@@ -1,0 +1,10 @@
+=== PROBE 1223d: what is 653's return value ===
+[1] 653 = 0xFFFFFFFFFFFFFFFF (-1)
+  [fstat(653ret)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=9 Bad file descriptor
+    stat mode=0x0 size=0x0
+  [fstat(0)] ret=0x00000000_00000000 err=9 Bad file descriptor
+  [fstat(1)] ret=0x00000000_00000000 err=9 Bad file descriptor
+  [fstat(9999)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=9 Bad file descriptor
+  [close(653ret)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=9 Bad file descriptor
+[Z] pid_end=80
+=== DONE ===

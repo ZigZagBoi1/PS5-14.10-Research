@@ -1,0 +1,5 @@
+=== PROBE 1203a: LOCALISE THE SWEEP DEATH ===
+buf=0x310E3AD00
+try 17
+ok  17 pcall=TRUE err=78 Function not implemented
+try 18

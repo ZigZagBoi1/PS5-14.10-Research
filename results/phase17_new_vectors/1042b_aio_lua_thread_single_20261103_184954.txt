@@ -1,0 +1,9 @@
+=== PROBE 1042b ===
+[A] socketpair ok=true rv=0 fd=22
+[S] thread 1 spawn ok=true
+[P] t1=0/0 pid0ok=0 pid0=0
+[P] t1=1000/0 pid0ok=0 pid0=0
+[P] t1=2000/1 pid0ok=0 pid0=0
+[P] t1=2000/1 ALL-DONE
+[C] rounds=2000 del=2000 del_nz=0 poll=2000 crerr=0 miss=0
+[Z] alive pid=101

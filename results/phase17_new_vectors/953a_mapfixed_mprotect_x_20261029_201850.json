@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.047,
+  "ended_at": "2026-10-29T20:18:50+00:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\953a_mapfixed_mprotect_x_20261029_201850.json",
+  "output_path": "results\\phase17_new_vectors\\953a_mapfixed_mprotect_x_20261029_201850.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\953a_mapfixed_mprotect_x.lua",
+  "probe_bytes": 7484,
+  "probe_sha256": "90f65f522e5bc34a303a042049609ba4705b1bbd48064bf14e0a5d46d5d295a0",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1122,
+  "started_at": "2026-10-29T20:18:50+00:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

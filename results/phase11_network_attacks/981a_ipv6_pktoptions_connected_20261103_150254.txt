@@ -1,0 +1,19 @@
+=== PROBE 981a: IPV6_PKTOPTIONS ON A CONNECTED SOCKET ===
+
+[A] pid=90
+  [socket6] ret=0x00000000_0000001A
+  [setsockopt PKTINFO] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+[B] unconnected readback
+  [getopt 25 (2292PKTOPTIONS)] ret=0x00000000_00000000
+      len=0
+  [getopt 60] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+      len=512
+[C] connect ::1:9
+  [connect] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+[D] connected readback
+  [getopt 25 (2292PKTOPTIONS)] ret=0x00000000_00000000
+      len=0
+  [getopt 60] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF
+      len=512
+[Z] alive pid=90
+=== COMPLETE ===

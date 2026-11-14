@@ -1,0 +1,13 @@
+=== PROBE 943a: AIO DOUBLE-DELETE HUNT ===
+
+[0] pid=80
+  fds=28,29
+      sent=8192 of 16384
+      states=1,1,1,1 cerrs=0x80020010,0x80020010
+  [r1] freed=0 child_zero=0 dbl=0
+  [r2] freed=0 child_zero=0 dbl=0
+  [r3] freed=0 child_zero=0 dbl=0
+  [r4] freed=0 child_zero=0 dbl=0
+  [r5] freed=0 child_zero=0 dbl=0
+[Z] freed_total=0 double=0 alive pid=80
+=== COMPLETE ===

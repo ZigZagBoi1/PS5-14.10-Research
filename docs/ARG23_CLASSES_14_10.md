@@ -71,7 +71,7 @@ handler table, so the value here is the argument position, not the existence:
 
 | sys | name | return | page | dwords changed | first bytes (offset = value) |
 |---|---|---|---|---|---|
-| 547 | region record | 0 | arg2 | 6 | `0=U1 4=3 8=U2 c=3` — start, prot, end, prot of the containing mapping |
+| 547 | region record | 0 | arg2 | 6 | `{start_lo, start_hi, end_lo, end_hi, prot, flags}` — the protection is dword 4 (+0x10), corrected 2026-11-09 from a whole-record dump (1362a); the earlier `0=U1 4=3 8=U2 c=3` reading (start, prot, end, prot of the containing mapping) mistook the high dwords of the two 64-bit addresses for protections |
 | 592 | `dynlib_get_list` | 0 | arg1 | 39 | `0=0 4=0x2001 8=2 c=0x11` — the handle list |
 | 592 | | 0 | arg3 | 2 | `0=0x27 4=0` — the count, 39 |
 | 598 | `dynlib_get_proc_param` | 0 | arg1 | 2 | `0=0xCFE8000 4=0` |
@@ -91,8 +91,8 @@ dwords (its documented 0x18-byte record), 592 writes the 39-dword list its dword
 count agrees with, and the end checkpoint at 0x3FF8 was intact in every case, so
 no write ran off the page.
 
-547 is the one that gains a shape from this: its record is `{start, prot, end,
-prot}` for the mapping containing arg1, written into arg2, and an absent arg2
+547 is the one that gains a shape from this: its record is `{start_lo, start_hi, end_lo,
+end_hi, prot, flags}` for the mapping containing arg1, written into arg2, and an absent arg2
 gives EFAULT. That is a region reporter, and it is why 547 works as the read-back
 oracle in `docs/ATTACK_SURFACE.md`'s W^X section.
 

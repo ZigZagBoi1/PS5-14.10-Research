@@ -1,0 +1,5 @@
+=== PROBE 1172a: MDBG MID-SWEEP 0x09..0x26 ===
+[S] buf=0x3115192a0 proved=true (4096/4096)
+[09] rv=0 changed=0 first=-1
+[0A] rv=-1 changed=0 first=-1
+[0B] rv=0 changed=0 first=-1

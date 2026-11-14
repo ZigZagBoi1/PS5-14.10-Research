@@ -1,0 +1,25 @@
+=== PROBE 1493a: MAP_FIXED SCOPE IN 548 ===
+[0] pid=111
+
+--- [A] a 64 MiB anonymous mapping ---
+  mmap 64 MiB -> 0x3109C8000 
+  A=0x3109C8000 MID=0x3129C8000 END=0x3149C4000
+  547 A=3 MID=3 END=3
+
+--- [B] op 3 flags=0x10 (MAP_FIXED|MAP_ANON) at MID, one 16 KiB page ---
+  rv=0x3149C8000 processed=1 
+
+--- [C] 547 at the start, the middle and the end ---
+  A=3 MID=3 END=3
+  >>> RANGE SCOPED: the rest of the entry survived
+  markers now: A=1111AAAA MID=2222BBBB END=3333CCCC
+
+--- [D] a 16-page /dev/dmem0 mapping, MAP_FIXED in its middle ---
+  skipped: the anon target showed range scope, so there is nothing to escalate
+
+--- [E] control: op 3 without MAP_FIXED at the same place ---
+  fresh 64 MiB at 0x3149CC000, op3 flags=0 at 0x3149CD000 -> rv=0xFFFFFFFFFFFFFFFF (hint ignored when occupied: true)
+  547 3/3/-1
+
+final canary live: true (pid 111)
+=== PROBE 1493a COMPLETE ===

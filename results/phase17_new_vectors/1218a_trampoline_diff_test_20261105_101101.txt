@@ -1,0 +1,5 @@
+=== PROBE 1218a: differential trampoline search ===
+[0] pid=80 libkernel=0x817E1C000
+   0x03B0 A=0x80020003(60 Operation timed out) B=0xAAAAAAAA(22 Invalid argument) **TRAMPOLINE**
+[1] trampoline = libkernel+0x3B0+7
+=== DONE ===

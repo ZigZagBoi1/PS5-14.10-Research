@@ -1,0 +1,17 @@
+=== PROBE 1209a: sys 636 timezone table load ===
+[P0] 636(1, tab)
+  636 count=1                        rv=00000000   err=1 Operation not permitted
+[P1] 636(0x200, tab) full load
+  636 count=0x200                    rv=00000000   err=1 Operation not permitted
+[P2] 636(0x201, tab) expect EINVAL
+  636 count=0x201                    rv=00000000   err=1 Operation not permitted
+[P3] 636(0, tab) expect EINVAL
+  636 count=0                        rv=00000000   err=1 Operation not permitted
+[P4] 638 read-back key=3
+  638 key=3                          rv=00000000   err=1 Operation not permitted
+  o8=0000000000000E13 o16[0]=FFFFFFFFFDC7BB70 o16[1]=0000000000000E10 o4=00000E10
+[P5] 638 key=0x100
+  638 key=0x100                      rv=00000000   err=1 Operation not permitted
+  o8=0000000000000F10 o16[0]=FFFFFFFFFDC7BB70 o16[1]=0000000000000E10 o4=00000E10
+[Z] alive
+=== DONE

@@ -1,0 +1,12 @@
+=== PROBE 1160a: 638 TABLE WALK ===
+[S] sentinel fill proved=true rec=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5
+  [1] key=0xFFFFFFFFFDC7BB70 (-37242000) off=3600 corr=-6510615558205992960 val=-4611686018427384320 rv=0
+  [2] key=0xFFFFFFFFFDC7BB70 (-37242000) off=3600 corr=-6510615558205992960 val=-37238399 rv=0
+[W] records=2 first=0xFFFFFFFFFDC7BB70 last=0xFFFFFFFFFDC7BB70 stopped=record-repeated
+  [!] 1 key=0xFFFFFFFFFDC7BB70 (-37242000) off=3600 corr=-6510615558205992960 val=-4611686018427384320 raw_corr=A5A5A5A500000E10
+  [!] 2 key=0xFFFFFFFFFDC7BB70 (-37242000) off=3600 corr=-6510615558205992960 val=-37238399 raw_corr=A5A5A5A500000E10
+[C] out-of-range records=2 negative_keys=2 (epoch window 1900..2100, offsets +-14h)
+[T] table window is 512 slots (count global at table+0x2000): count_gt_512=false
+[A] row1 key=-37242000 off=3600 corr=-6510615558205992960 -> value -4611686018427384320, arithmetic expects -6510615558243231744 (delta 1898929539815847424)
+[Z] alive pid=197
+=== DONE ===

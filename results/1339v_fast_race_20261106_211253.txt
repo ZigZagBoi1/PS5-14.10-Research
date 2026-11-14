@@ -1,0 +1,6 @@
+=== 1339v FAST RACE ===
+pid=400
+spray=91..122
+free_chain: 369 entries
+use_chain: 17 entries
+setup complete, starting 2000 trials

@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.031,
+  "ended_at": "2026-10-29T20:10:25+00:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\114a_gpu_mmap_alias_race_20261029_201025.json",
+  "output_path": "results\\phase17_new_vectors\\114a_gpu_mmap_alias_race_20261029_201025.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\114a_gpu_mmap_alias_race.lua",
+  "probe_bytes": 21306,
+  "probe_sha256": "6e04d0b798944102fc3f2bb1a1f0804c4977121a0cb2102506403632f944c807",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 1108,
+  "started_at": "2026-10-29T20:10:25+00:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

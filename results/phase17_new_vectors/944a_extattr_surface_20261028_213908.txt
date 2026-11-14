@@ -1,0 +1,9 @@
+=== PROBE 944a: EXTATTR SURFACE ===
+
+[0] pid=148
+[0] open(O_RDWR|O_CREAT) = 22
+[0] write = 5
+[A] syscall numbers on a valid fd, small arguments
+  set_file(path,name,val,len,0)      ret=-1           out0=0x00000000
+  get_file(path,name,buf,len,0)      ret=-1           out0=0x00000000
+  delete_file(path,name,0)           ret=-1           out0=0x00000000

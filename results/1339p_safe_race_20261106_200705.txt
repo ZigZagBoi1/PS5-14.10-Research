@@ -1,0 +1,4 @@
+=== 1339p SAFE RACE ===
+pid=367
+ebase=2D144000
+params: TRIALS=1000 SPRAY=256 OPTLEN=24

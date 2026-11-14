@@ -1,0 +1,2 @@
+=== PROBE 1042e ===
+[S] child spawn ok=true

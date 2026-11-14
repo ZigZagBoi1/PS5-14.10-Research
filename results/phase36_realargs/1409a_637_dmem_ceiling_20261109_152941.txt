@@ -1,0 +1,39 @@
+=== PROBE 1409a: 637 -> DMEM CEILING ===
+[0] pid=378
+[0] dmem0 fd=22
+[!] unexpected fd, continuing anyway
+
+[A] control, before any 637 call
+  off=0x100000000      map=0x3107D4000
+    about to read 0x3107D4000
+    [0]=00000000
+  off=0x200000000      map=-1 errno=13 Permission denied
+  off=0x400000000      map=-1 errno=13 Permission denied
+  off=0x1000000000     map=0x3107D8000
+    about to read 0x3107D8000
+    [0]=00000000
+  off=0x10000000000    map=-1 errno=13 Permission denied
+
+[B] 637(0, 0xFFFFFFFFFFFFF000) - raise the physical memory limit to the maximum
+  637 = 0xffffffffffffffffffffffff errno=22 Invalid argument
+
+[C] the same offsets after the 637 call
+  off=0x100000000      map=0x3107DC000
+    about to read 0x3107DC000
+    [0]=00000000
+  off=0x200000000      map=-1 errno=13 Permission denied
+  off=0x400000000      map=-1 errno=13 Permission denied
+  off=0x1000000000     map=0x3107E0000
+    about to read 0x3107E0000
+    [0]=00000000
+  off=0x10000000000    map=-1 errno=13 Permission denied
+
+[D] 628 mmap_dmem with a physical address above 4 GiB
+  628(0x100000000, 0x4000) = 0xffffffffffffffffffffffff errno=16 Device busy
+  628(0x200000000, 0x4000) = 0xffffffffffffffffffffffff errno=16 Device busy
+  628(0x1000000000, 0x4000) = 0xffffffffffffffffffffffff errno=16 Device busy
+
+[E] control: the window at a known-good offset still reads
+  off=0x1000 map=0x3107E5000 [0]=00000000
+
+=== 1409a DONE ===

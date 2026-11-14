@@ -1,0 +1,39 @@
+=== PROBE 1383a: 601 COMMAND x SHAPE MATRIX ===
+[0] pid=300
+[A] shapes: 0/0, arg1=B, arg2=B, both=B
+  0x00 0/0               rv=-1     errno=14 Bad address         wrote=0
+  0x00 a1                rv=0      errno=14 Bad address         wrote=2[ 00000100 00000000]
+  0x00 a2                rv=-1     errno=14 Bad address         wrote=0
+  0x00 a1a2              rv=0      errno=14 Bad address         wrote=2[ 00000100 00000000]
+  0x01 0/0               rv=-1     errno=14 Bad address         wrote=0
+  0x01 a1                rv=-1     errno=22 Invalid argument    wrote=0
+  0x01 a2                rv=-1     errno=14 Bad address         wrote=0
+  0x01 a1a2              rv=-1     errno=22 Invalid argument    wrote=0
+  0x02 0/0               rv=-1     errno=78 Function not implemented wrote=0
+  0x02 a1                rv=-1     errno=78 Function not implemented wrote=0
+  0x02 a2                rv=-1     errno=78 Function not implemented wrote=0
+  0x02 a1a2              rv=-1     errno=78 Function not implemented wrote=0
+  0x05 0/0               rv=-1     errno=78 Function not implemented wrote=0
+  0x05 a1                rv=-1     errno=78 Function not implemented wrote=0
+  0x05 a2                rv=-1     errno=78 Function not implemented wrote=0
+  0x05 a1a2              rv=-1     errno=78 Function not implemented wrote=0
+  0x06 0/0               rv=-1     errno=78 Function not implemented wrote=0
+  0x06 a1                rv=-1     errno=78 Function not implemented wrote=0
+  0x06 a2                rv=-1     errno=78 Function not implemented wrote=0
+  0x06 a1a2              rv=-1     errno=78 Function not implemented wrote=0
+  0x07 0/0               rv=0      errno=78 Function not implemented wrote=0
+  0x07 a1                rv=0      errno=78 Function not implemented wrote=0
+  0x07 a2                rv=0      errno=78 Function not implemented wrote=0
+  0x07 a1a2              rv=0      errno=78 Function not implemented wrote=0
+  0x09 0/0               rv=0      errno=78 Function not implemented wrote=0
+  0x09 a1                rv=0      errno=78 Function not implemented wrote=0
+  0x09 a2                rv=0      errno=78 Function not implemented wrote=0
+  0x09 a1a2              rv=0      errno=78 Function not implemented wrote=0
+  0x0A 0/0               rv=-1     errno=1 Operation not permitted wrote=0
+  0x0A a1                rv=-1     errno=1 Operation not permitted wrote=0
+  0x0A a2                rv=-1     errno=1 Operation not permitted wrote=0
+  0x0A a1a2              rv=-1     errno=1 Operation not permitted wrote=0
+  0x0B 0/0               rv=0      errno=1 Operation not permitted wrote=0
+  0x0B a1                rv=0      errno=1 Operation not permitted wrote=0
+  0x0B a2                rv=0      errno=1 Operation not permitted wrote=0
+  0x0B a1a2              rv=0      errno=1 Operation not permitted wrote=0

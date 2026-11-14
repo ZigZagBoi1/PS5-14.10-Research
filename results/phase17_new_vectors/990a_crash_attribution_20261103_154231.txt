@@ -1,0 +1,5 @@
+=== PROBE 990a: CRASH ATTRIBUTION ===
+
+[A] 593(handle 0) -> PCALL-FAIL
+[B] pid=87  about to call 221 semget(0,1,0666)
+[C] MARKER-BEFORE-SEMGET

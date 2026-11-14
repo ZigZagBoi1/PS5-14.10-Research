@@ -1,0 +1,10 @@
+=== 1340e DIAG ===
+fdlimit: 4096
+pid=424
+gadgets OK
+spray=22..130 (100)
+starting 20000 trials (DIAGNOSTIC: close master on tc=42)
+EXHAUSTED t=1
+=== RESULTS: use=0 free=0 reclaim=0 ===
+pid=424
+=== DONE ===

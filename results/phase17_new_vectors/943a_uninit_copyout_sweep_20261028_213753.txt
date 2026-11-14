@@ -1,0 +1,54 @@
+=== PROBE 943a: UNINITIALISED COPYOUT SWEEP ===
+
+[0] pid=148
+[596]
+  buf,size                     ret=0            untouched=  0/512 ptrs=0 
+  buf                          ret=0            untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=0            untouched=  0/512 ptrs=0 
+[606]
+  buf,size                     ret=0            untouched=  0/512 ptrs=0 
+  buf                          ret=0            untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=0            untouched=  0/512 ptrs=0 
+[640]
+  buf,size                     ret=0            untouched=  0/512 ptrs=0 
+  buf                          ret=0            untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=0            untouched=  0/512 ptrs=0 
+[649]
+  buf,size                     ret=-1           untouched=  0/512 ptrs=0 
+  buf                          ret=-1           untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=-1           untouched=  0/512 ptrs=0 
+[572]
+  buf,size                     ret=0            untouched=  0/512 ptrs=0 
+  buf                          ret=0            untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=-1           untouched=  0/512 ptrs=0 
+[563]
+  buf,size                     ret=-1           untouched=  0/512 ptrs=0 
+  buf                          ret=-1           untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=0            untouched=  0/512 ptrs=0 
+[564]
+  buf,size                     ret=-1           untouched=  0/512 ptrs=0 
+  buf                          ret=-1           untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=0            untouched=  0/512 ptrs=0 
+[565]
+  buf,size                     ret=-1           untouched=  0/512 ptrs=0 
+  buf                          ret=-1           untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=-1           untouched=  0/512 ptrs=0 
+[566]
+  buf,size                     ret=-1           untouched=  0/512 ptrs=0 
+  buf                          ret=-1           untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=-1           untouched=  0/512 ptrs=0 
+[671]
+  buf,size                     ret=-1           untouched=  0/512 ptrs=0 
+  buf                          ret=-1           untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=-1           untouched=  0/512 ptrs=0 
+[585]
+  buf,size                     ret=1            untouched=  0/512 ptrs=0 
+  buf                          ret=1            untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=1            untouched=  0/512 ptrs=0 
+[648]
+  buf,size                     ret=-1           untouched=  0/512 ptrs=0 
+  buf                          ret=-1           untouched=  0/512 ptrs=0 
+  0,buf,size                   ret=-1           untouched=  0/512 ptrs=0 
+
+[Z] worst_untouched=0/512 pointer_shaped_total=0
+=== PROBE 943a COMPLETE ===

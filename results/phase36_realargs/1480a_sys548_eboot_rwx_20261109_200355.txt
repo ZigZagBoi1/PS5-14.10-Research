@@ -1,0 +1,41 @@
+=== PROBE 1480a: SYS 548 OP 2, DOES IT REACH FOREIGN PAGES ===
+[0] pid=87
+
+--- [A] a page we own, 3 -> 1 -> 3, then 5 and 7 ---
+[A] A=0x311330000
+     [before] 547 prot=3 flags=6357024 start=0000000311330000 end=0000000311338000
+[A] store calibration at prot 3: wrote 5A5A1234, read 5A5A1234 -> store lands
+  -> A -> prot 1, len 0x4000                       
+     rv=0                              processed=1
+     [after prot 1] 547 prot=1 flags=6357024 start=0000000311330000 end=0000000311334000
+  -> A -> prot 3, len 0x4000                       
+     rv=0                              processed=1
+     [after prot 3] 547 prot=3 flags=6357024 start=0000000311330000 end=0000000311338000
+  -> A -> prot 5 (RX), len 0x4000                  
+     rv=-1    13 Permission denied     processed=0
+     [after prot 5] 547 prot=3 flags=6357024 start=0000000311330000 end=0000000311338000
+[A] at prot 5: wrote 5A5A5678, read 5A5A5678 -> W is NOT enforced at prot 5
+[A] *** a page the vm_map calls RX accepted a store ***
+  -> A -> prot 3 again, len 0x4000                 
+     rv=0                              processed=1
+     [after prot 3] 547 prot=3 flags=6357024 start=0000000311330000 end=0000000311338000
+  -> A -> prot 7 (RWX), len 0x8000                 
+     rv=-1    13 Permission denied     processed=0
+     [after prot 7] 547 prot=3 flags=6357024 start=0000000311330000 end=0000000311338000
+  -> A restore prot 3, len 0x8000                  
+     rv=0                              processed=1
+     [restored] 547 prot=3 flags=6357024 start=0000000311330000 end=0000000311338000
+[A] done
+
+--- [B] locate executable mappings with 674 ---
+[B] 674 rv=0 records=323
+[B] executable: 0x69188000 - 0x6961C000 (4688 KB) name=executable
+
+--- [C] protect an executable page of that region ---
+[C] target=0x69288000
+     [eboot before] 547 prot=5 flags=6358060 start=0000000069188000 end=000000006961C000
+[C] bytes before: 7D63C4C9 0F01C118
+  -> PROTECT eboot text -> prot 7 (RWX)            
+     rv=-1    13 Permission denied     processed=0
+[C] the call refused; nothing was written
+=== PROBE 1480a COMPLETE ===

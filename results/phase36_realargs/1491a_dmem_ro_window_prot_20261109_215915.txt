@@ -1,0 +1,27 @@
+=== PROBE 1491a: DMEM READ-ONLY WINDOW UNDER 548 ===
+[0] pid=111
+
+--- [A] open /dev/dmem0 ---
+  fd=22 
+
+--- [B] mmap prot 1 at the read-only offsets ---
+  off 0x120000000   prot 1 -> 0xFFFFFFFFFFFFFFFF 13 Permission denied
+  off 0x120000000   prot 3 -> 0xFFFFFFFFFFFFFFFF 13 Permission denied
+  off 0x140000000   prot 1 -> 0xFFFFFFFFFFFFFFFF 13 Permission denied
+  off 0x140000000   prot 3 -> 0xFFFFFFFFFFFFFFFF 13 Permission denied
+  off 0x1000000000  prot 1 -> 0x3106DC000 
+  off 0x1000000000  prot 3 -> 0xFFFFFFFFFFFFFFFF 13 Permission denied
+
+--- [C] 547 record for each mapping ---
+  0x3106DC000 (off 0x1000000000, asked prot 1): 547 prot 1
+
+--- [D] 548 op 2 -> prot 3, then restore ---
+  off 0x1000000000  prot 1 -> op2(3) rv=-1  processed=0  13 Permission denied   -> 1 
+      restore -> rv=0 prot now 1
+[D] entries that became writable: 0 of 1
+
+--- [E] guarded read of the first writable entry ---
+  none became writable; nothing to read
+
+final canary live: true (pid 111)
+=== PROBE 1491a COMPLETE ===

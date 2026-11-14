@@ -1,0 +1,33 @@
+=== PROBE 1481g: 548 OP-2 PROTECTION MATRIX ===
+[0] pid=87
+
+[A] mmap prot 3 FAILED
+
+[B] mmap prot 7 FAILED
+
+[C] device window SceGnmTrapData prot before = 3
+--- [C] device SceGnmTrapData at 0xF00004000 ---
+    prot before = 3
+    prot 0x0   -> rv=0    processed=1    547=0  <<< TAKEN
+    prot 0x1   -> rv=0    processed=1    547=1  <<< TAKEN
+    prot 0x2   -> rv=0    processed=1    547=3  (rv 0, prot unchanged)
+    prot 0x3   -> rv=0    processed=1    547=3  <<< TAKEN
+    prot 0x4   -> rv=-1   processed=0    547=3
+    prot 0x5   -> rv=-1   processed=0    547=3
+    prot 0x6   -> rv=-1   processed=0    547=3
+    prot 0x7   -> rv=-1   processed=0    547=3
+    prot 0x8   -> rv=-1   processed=0    547=3
+    prot 0x9   -> rv=-1   processed=0    547=3
+    prot 0xA   -> rv=-1   processed=0    547=3
+    prot 0xC   -> rv=-1   processed=0    547=3
+    prot 0xF   -> rv=-1   processed=0    547=3
+    prot 0x10  -> rv=0    processed=1    547=16  <<< TAKEN
+    prot 0x20  -> rv=0    processed=1    547=32  <<< TAKEN
+    prot 0x33  -> rv=0    processed=1    547=51  <<< TAKEN
+    accepted: 0x0 0x1 0x3 0x10 0x20 0x33 
+
+--- [D] the same refusals through 548 with a bad size, for the errno text ---
+[D] len 0x1000 (unaligned) -> rv=-1 22 Invalid argument
+
+final canary: pid=87 (started 87)
+=== PROBE 1481g COMPLETE ===

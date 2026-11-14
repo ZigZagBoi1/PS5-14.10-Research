@@ -1,0 +1,18 @@
+=== PROBE 1009a: SIGSYS CATCH ===
+
+[0] pid=80 fd=0x15 ready=true
+[G] pivot_base = 0xfb000000
+[G] pivot_addr = 0xfb0000bd
+[G] gadget_addr = 0x8d318f4
+[G] handler gadget = 0x8D318F4
+[1] sa=0x31133A560 handler=0x8D318F4
+[2] sigaction(12) ok=true rv=0
+[C1] calling 306 (kldstat)
+[C1] ok=false rv= buf0=0x0 alive pid=80
+[C2] calling 189 (fstat)
+[C2] ok=false rv= buf0=0x0 alive pid=80
+[C3] calling 337 (kldsym)
+[C3] ok=false rv= buf0=0x0 alive pid=80
+[C4] calling 570 (sysctlbyname)
+[C4] ok=false rv= buf0=0x0 alive pid=80
+=== COMPLETE ===

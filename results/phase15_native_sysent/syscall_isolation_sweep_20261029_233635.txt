@@ -1,0 +1,64 @@
+syscall  status           detail
+------------------------------------------------------------
+208      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+209      RETURNED         ret=0x0 (num=0)
+210      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+211      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+212      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+213      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+214      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+215      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+216      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+217      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+218      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+219      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+220      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+221      KILLED_IN_CALL   
+222      KILLED_IN_CALL   
+223      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+224      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+225      KILLED_IN_CALL   
+226      KILLED_IN_CALL   
+227      KILLED_IN_CALL   
+228      KILLED_IN_CALL   
+229      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+230      KILLED_IN_CALL   
+231      KILLED_IN_CALL   
+232      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+233      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+234      RETURNED         ret=0x0 (num=0)
+235      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+236      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+237      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+238      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+239      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+240      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+241      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+242      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+243      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+244      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+245      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+246      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+247      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+248      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+249      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+250      KILLED_IN_CALL   
+251      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+252      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+253      RETURNED         ret=0x0 (num=0)
+254      KILLED_IN_CALL   
+255      KILLED_IN_CALL   
+256      KILLED_IN_CALL   
+257      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+258      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+259      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+260      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+261      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+262      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+263      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+264      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+265      RETURNED         ret=0xffffffffffffffffffffffff (num=-1)
+
+SUMMARY: 58 numbers, KILLED_IN_CALL=12, RETURNED=46
+Returned values from: 208, 209, 210, 211, 212, 213, 214, 215, 216, 217, 218, 219, 220, 223, 224, 229, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 242, 243, 244, 245, 246, 247, 248, 249, 251, 252, 253, 257, 258, 259, 260, 261, 262, 263, 264, 265
+Process terminated inside: 221, 222, 225, 226, 227, 228, 230, 231, 250, 254, 255, 256

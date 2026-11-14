@@ -1,0 +1,11 @@
+=== PROBE 1227b: thr_self pointer form, then 634 ===
+[0] pid=87
+  [432(&tid)] ret=0x00000000_00000000 err=14 Bad address
+    tid = 0x18D99 (101785)
+  [634(tid)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument
+    first 0x40: A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5
+    634: 0 supervisor qwords 
+  [634(pid)] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=3 No such process
+    634 pid: 0 supervisor qwords 
+[Z] pid_end=87
+=== DONE ===

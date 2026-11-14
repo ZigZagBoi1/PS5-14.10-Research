@@ -1,0 +1,7 @@
+=== PROBE 1549a: 601 cmd 0x03, pre-printed, one shape ===
+
+[0] pid=249
+[0] SIG_IGN accepted on 10/10 signals
+[0] page=310A439E0 first=B5B6B800
+[A] the 323a shape: cmd 0x03, pointer in arg2, 0x100 in arg3
+  [A] CALL 601(0x03, 310A439E0, 100)

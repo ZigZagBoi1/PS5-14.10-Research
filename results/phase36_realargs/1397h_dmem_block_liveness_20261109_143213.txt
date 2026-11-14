@@ -1,0 +1,27 @@
+=== PROBE 1397h: dmem 0xF000 BLOCK LIVENESS ===
+[0] pid=357
+[0] dmem0 fd=22
+[0] mapped 8 pages
+
+[A] first snapshot
+   page 0x0F checksum AC401F79
+   page 0x10 checksum 38D96F06
+   page 0x11 checksum D4EFC18A
+   page 0x12 checksum F93337CD
+   page 0x13 checksum FBF43C8B
+   page 0x14 checksum D5305EA5
+   page 0x15 checksum F972588C
+   page 0x16 checksum 00FE6DA3
+
+[B] sleep 1200 ms (nanosleep 240)
+   nanosleep -> 0 2 No such file or directory
+
+[C] second snapshot and diff
+[string "-- CRASH_CLASS: LOW -- read-only, and every..."]:101: attempt to index field '?' (a number value)
+stack traceback:
+	[string "-- CRASH_CLASS: LOW -- read-only, and every..."]:101: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

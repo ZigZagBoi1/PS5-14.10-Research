@@ -1,0 +1,27 @@
+=== PROBE 1200a: IOCTL MAGIC DIFFERENTIAL ===
+[/dev/dmem0] fd=22
+  .. 00
+  .. 40
+  .. 80
+  .. C0
+[/dev/dmem0] differing-or-writing commands=0
+[/dev/gc] fd=22
+  .. 00
+  .. 40
+  .. 80
+  .. C0
+[/dev/gc] differing-or-writing commands=0
+[/dev/dce] fd=22
+  .. 00
+  .. 40
+  .. 80
+  .. C0
+[/dev/dce] differing-or-writing commands=0
+[/dev/hid] fd=22
+  .. 00
+  .. 40
+  .. 80
+  .. C0
+[/dev/hid] differing-or-writing commands=0
+[Z] alive=99
+=== DONE

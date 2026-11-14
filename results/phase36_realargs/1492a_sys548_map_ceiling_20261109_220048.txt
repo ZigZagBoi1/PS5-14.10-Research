@@ -1,0 +1,34 @@
+=== PROBE 1492a: SYS 548 MAP CEILING ===
+[0] pid=111
+
+--- [A] mmap MAP_FIXED|MAP_ANON at the same addresses (1395a baseline) ---
+  0x7FFFFFFF0000       mmap -> 0xFFFFFFFFFFFFFFFF 22 Invalid argument
+  0x7FFFFFFFFFF000     mmap -> 0xFFFFFFFFFFFFFFFF 22 Invalid argument
+  0xFFFFFFFFC0000000   mmap -> 0xFFFFFFFFFFFFFFFF 22 Invalid argument
+  0x10000000000        mmap -> 0xFFFFFFFFFFFFFFFF 22 Invalid argument
+  0x400000000000       mmap -> 0xFFFFFFFFFFFFFFFF 22 Invalid argument
+
+--- [D] 548 controls ---
+  op3 start=0 -> rv=0x3106E0000 processed=1
+      547 prot 3
+  op2 on anon 0x3106E4000 -> rv=0 processed=1 -> prot 1
+[D] control usable: true
+
+--- [B] op 3 at the addresses mmap refused ---
+  0x7FFFFFFF0000       op3 rv=-1             processed=0  547=-1 12 Cannot allocate memory
+  0x7FFFFFFFFFF000     op3 rv=-1             processed=0  547=-1 22 Invalid argument
+  0xFFFFFFFFC0000000   op3 rv=-1             processed=0  547=-1 12 Cannot allocate memory
+  0x10000000000        op3 rv=-1             processed=0  547=-1 12 Cannot allocate memory
+  0x400000000000       op3 rv=-1             processed=0  547=-1 12 Cannot allocate memory
+
+--- [C] op 3 onto an address that is already mapped ---
+  dmem0 fd=23 va=0x3106EC000
+  anon with marker   0x3106E8000 prot 3 -> op3 rv=13160611840  processed=1  -> 547 3
+      marker at the original address reads AABBCCDD (expected AABBCCDD)
+  dmem0 page         0x3106EC000 prot 3 -> op3 rv=13160628224  processed=1  -> 547 3
+
+--- [E] guarded read of the first high address that mapped ---
+  none of the high addresses mapped
+
+final canary live: true (pid 111)
+=== PROBE 1492a COMPLETE ===

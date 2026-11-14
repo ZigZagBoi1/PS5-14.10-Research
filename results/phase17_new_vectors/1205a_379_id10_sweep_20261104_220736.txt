@@ -1,0 +1,32 @@
+=== PROBE 1205a: 379 id=10 prot sweep, out-of-range va, 547 bound ===
+page va=0x310EB4000
+-- A: 379 id=10, own page, prot sweep --
+379 prot=0x00000 pcall=true err=45 Operation not supported
+379 prot=0x00001 pcall=true err=45 Operation not supported
+379 prot=0x00002 pcall=true err=13 Permission denied
+379 prot=0x00003 pcall=true err=13 Permission denied
+379 prot=0x00004 pcall=true err=13 Permission denied
+379 prot=0x00005 pcall=true err=13 Permission denied
+379 prot=0x00006 pcall=true err=13 Permission denied
+379 prot=0x00007 pcall=true err=13 Permission denied
+379 prot=0x00008 pcall=true err=22 Invalid argument
+379 prot=0x00010 pcall=true err=45 Operation not supported
+379 prot=0x00040 pcall=true err=45 Operation not supported
+379 prot=0x00080 pcall=true err=13 Permission denied
+379 prot=0x00100 pcall=true err=45 Operation not supported
+379 prot=0x00400 pcall=true err=13 Permission denied
+379 prot=0x00800 pcall=true err=13 Permission denied
+379 prot=0x01000 pcall=true err=13 Permission denied
+379 prot=0x08000 pcall=true err=13 Permission denied
+379 prot=0x10000 pcall=true err=45 Operation not supported
+-- B: 547 out-of-range vas --
+547 va=0x00007FFFFFFFF000 pcall=true err=13 Permission denied out=A5A5A5A5A5A5A5A5 A5A5A5A5A5A5A5A5 A5A5A5A5A5A5A5A5
+547 va=0xFFFFFFFF8A9C0000 pcall=true err=22 Invalid argument out=A5A5A5A5A5A5A5A5 A5A5A5A5A5A5A5A5 A5A5A5A5A5A5A5A5
+547 va=0xFFFFFFFFFF600000 pcall=true err=22 Invalid argument out=A5A5A5A5A5A5A5A5 A5A5A5A5A5A5A5A5 A5A5A5A5A5A5A5A5
+547 va=0x0000000350EB4000 pcall=true err=13 Permission denied out=A5A5A5A5A5A5A5A5 A5A5A5A5A5A5A5A5 A5A5A5A5A5A5A5A5
+-- C: 379 id=10, out-of-range va, prot=3 --
+379 va=0x00007FFFFFFFF000 pcall=true err=13 Permission denied
+379 va=0xFFFFFFFF8A9C0000 pcall=true err=13 Permission denied
+379 va=0xFFFFFFFFFF600000 pcall=true err=13 Permission denied
+379 va=0x0000000350EB4000 pcall=true err=13 Permission denied
+=== DONE

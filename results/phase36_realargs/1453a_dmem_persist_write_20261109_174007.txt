@@ -1,0 +1,52 @@
+=== PROBE 1453a: DMEM BLOCK PERSISTENCE (WRITE) ===
+
+[0] pid=439
+
+[A] offset 0xF000 -> 0x3109AB000
+   +0x000 = BEEB03FF
+   +0x004 = 00000003
+   +0x008 = 7E000280
+   +0x00C = 5E000100
+   +0x010 = BF800000
+   +0x014 = F8001C0F
+   +0x018 = 00000000
+   +0x01C = BF810000
+   +0x020 = 5362724F
+[A] wrote 0F0F0F0F at +0x20, read back 0F0F0F0F
+
+[B] offset 0x11000 -> 0x3109AD000
+   +0x000 = 00000002
+   +0x004 = 00000002
+   +0x008 = 00000002
+   +0x00C = 00000000
+   +0x010 = 00000010
+   +0x014 = 0000000F
+   +0x018 = 00000002
+   +0x01C = 03000000
+   +0x020 = 00080001
+   +0x02C = 03180200
+   +0x030 = 00200101
+   +0x034 = 00240201
+   +0x038 = 00280002
+   +0x03C = 0010000F
+   +0x040 = AFAFAFAF
+   +0x044 = AFAFAFAF
+[B] read only -- no store into the record array
+
+[C] offset 0x0 -> 0x3109B0000
+   +0x800 = C0038000
+   +0x804 = E0000C00
+   +0x808 = 0000000F
+   +0x80C = 00000100
+   +0xBF0 = 00000000
+[C] wrote CAFEBABE at page0+0xBF0, read back CAFEBABE
+
+[D] offset 0x16000 -> 0x3109B6000
+   +0xF00 = 00000000
+   +0xF04 = 00000000
+   +0xF08 = 00000000
+[D] wrote DEAD1234 at page16+0xF00, read back DEAD1234
+
+[E] survivor pid=439 -- 1454a must read page0+0xBF0 (= CAFEBABE), page16+0xF00 (= DEAD1234) and 0xF000+0x20 (unwritten control)
+
+=== PROBE 1453a COMPLETE ===

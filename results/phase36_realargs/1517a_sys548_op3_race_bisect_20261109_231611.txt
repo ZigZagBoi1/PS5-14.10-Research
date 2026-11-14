@@ -1,0 +1,15 @@
+=== PROBE 1517a: BISECT THE op 3 / copyin-FAULT RACE ===
+[0] pid=106
+
+[A] socketpair and pages
+   socketpair = 0 
+   fds = 22 / 23
+   V = 0x3112D8000   SH = 0x3112DC000
+   write from the mapped page = 4
+   write from an unmapped user address = -1 14 Bad address
+
+[B] CONTROL 1: main alone, 300 rounds of write then op3 replace
+   done, replacement_failures=0, pid alive
+
+[C] CONTROL 2: the writer thread alone, 200000 writes, no op 3 at all
+   spawn = OK

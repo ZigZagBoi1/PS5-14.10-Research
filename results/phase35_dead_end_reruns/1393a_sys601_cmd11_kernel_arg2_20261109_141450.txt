@@ -1,0 +1,31 @@
+=== PROBE 1393a: 601 0x11 USER vs KERNEL ARG2 ===
+[0] pid=343
+[0] SIG_IGN installed on 10/10 signals
+[0] canary ok
+
+[A] 601(0x11, arg1=buffer, arg2=...): the slot that killed on a user page
+  -> 601(0x11, buf, K1(image))
+  <- rv=-1 22 Invalid argument      changed=0 
+  -> 601(0x11, buf, K3(stub))
+  <- rv=-1 22 Invalid argument      changed=0 
+  -> 601(0x11, buf, ABS(absent))
+  <- rv=-1 22 Invalid argument      changed=0 
+  -> 601(0x11, 0, K1(image))
+  <- rv=-1 14 Bad address           changed=0 
+  -> 601(0x11, buf, U(page))
+  <- rv=-1 22 Invalid argument      changed=0 
+
+[B] control: the other non-lethal commands with K1 in both pointer slots
+  -> 601(0x0D, K1, K1)
+  <- rv=0 22 Invalid argument      changed=0 
+  -> 601(0x13, K1, K1)
+  <- rv=0 22 Invalid argument      changed=0 
+  -> 601(0x14, K1, K1)
+  <- rv=0 22 Invalid argument      changed=0 
+  -> 601(0x19, K1, K1)
+  <- rv=0 22 Invalid argument      changed=0 
+  -> 601(0x1A, K1, K1)
+  <- rv=-1 14 Bad address           changed=0 
+
+[C] canary at the end: ok
+=== PROBE 1393a COMPLETE ===

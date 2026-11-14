@@ -1,0 +1,51 @@
+=== PROBE 1389a: 601 cmd 0x12 IDENTIFIER FEED ===
+[0] pid=343 tid=0xFFFFFFFFFFFFFFFF
+[0] SIG_IGN installed on 10/10 signals
+
+[A] 601(0x12, 0, block) with identifiers in the 0x20-byte block
+  q0=pid             rv=-1       14 Bad address
+  q1=pid             rv=-1       2 No such file or directory
+  q0=tid             rv=-1       14 Bad address
+  q1=tid             rv=-1       2 No such file or directory
+  all zero           rv=-1       14 Bad address
+  q0=1               rv=-1       14 Bad address
+  q0=2               rv=-1       14 Bad address
+  q0=pid q1=1        rv=-1       2 No such file or directory
+  q0=pid q1=pid      rv=-1       2 No such file or directory
+  q0=pid q1=0x1000   rv=-1       2 No such file or directory
+  q0=pid ptr@q1      rv=-1       14 Bad address
+  q0=0x20 q1=ptr     rv=-1       14 Bad address
+
+[B] 601(0x12, 0, block) with a user pointer inside the block
+  q0=pid q1=pq0      rv=-1       2 No such file or directory
+  q0=pid q2=ptr      rv=-1       14 Bad address
+  q0=size q1=ptr     rv=-1       2 No such file or directory
+  q0=ptr             rv=-1       14 Bad address
+
+[C] slot check: identical block in arg1 and in arg3
+  0x12 a1=S a3=S      rv=-1       22 Invalid argument
+
+[D] consumer sweep (runs regardless; prints every non-lethal command with an output page)
+  0x00 a1  rv=0        22 Invalid argument        changed=2    00000100 00000000
+  0x01 a1  rv=-1       22 Invalid argument        changed=0    
+  0x02 a1  rv=-1       78 Function not implemented changed=0    
+  0x05 a1  rv=-1       78 Function not implemented changed=0    
+  0x06 a1  rv=-1       78 Function not implemented changed=0    
+  0x07 a1  rv=0        78 Function not implemented changed=0    
+  0x09 a1  rv=0        78 Function not implemented changed=0    
+  0x0A a1  rv=-1       1 Operation not permitted  changed=0    
+  0x0B a1  rv=0        1 Operation not permitted  changed=0    
+  0x0D a1  rv=0        1 Operation not permitted  changed=0    
+  0x0E a1  rv=0        1 Operation not permitted  changed=2    00000000 00000000
+  0x0F a1  rv=-1       1 Operation not permitted  changed=0    
+  0x10 a1  rv=-1       22 Invalid argument        changed=0    
+  0x12 a1  rv=-1       22 Invalid argument        changed=0    
+  0x13 a1  rv=0        22 Invalid argument        changed=0    
+  0x14 a1  rv=0        22 Invalid argument        changed=0    
+  0x15 a1  rv=-1       1 Operation not permitted  changed=0    
+  0x16 a1  rv=-1       78 Function not implemented changed=0    
+  0x17 a1  rv=-1       78 Function not implemented changed=0    
+  0x18 a1  rv=-1       1 Operation not permitted  changed=0    
+  0x19 a1  rv=0        1 Operation not permitted  changed=0    
+  0x1A a1  rv=0        1 Operation not permitted  changed=1    00000000
+=== PROBE 1389a COMPLETE ===

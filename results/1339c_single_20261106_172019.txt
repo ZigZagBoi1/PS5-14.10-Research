@@ -1,0 +1,18 @@
+=== 1339c SINGLE-CHILD setsockopt(25) TEST ===
+fn=82CA3CB57
+pid=283
+593 ok=true rv=0
+ebase=6FF98000
+gadgets: pop_rcx=6FF98E64 store=7002AC67
+fd=23
+baseline TCLASS=42 (expect 42)
+cmsg_buf=3122D4000 val=[00000014 00000029 0000003D 00000000 00000063 00000000]
+socketpair: rd=24 wr=25
+chain: 121 entries, 968 bytes (10 rounds)
+thr_create: ok=true rv=0 tid=101765
+release: ok=true
+done marker: BEEF01 (expect BEEF01)
+TCLASS after child: 0 (expect 99 if child worked)
+*** FAIL: TCLASS=0 - pktopts freed/NULLed ***
+pid=283
+=== DONE ===

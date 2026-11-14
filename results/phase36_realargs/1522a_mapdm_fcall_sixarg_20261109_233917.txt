@@ -1,0 +1,18 @@
+=== PROBE 1522a: MAPDIRECTMEMORY VIA 6-ARG FCALL ===
+
+pid=-1
+
+[A] environment
+  type(dlsym)                = function
+  type(native)               = table
+  type(native.fcall_with_rax)= function
+  type(fcall)                = table
+  type(memory.alloc)         = function
+  GetDirectMemorySize      = FAIL /savedata0/misc.lua:15: process is not jailbroken
+  AllocateDirectMemory     = FAIL /savedata0/misc.lua:15: process is not jailbroken
+  MapDirectMemory          = FAIL /savedata0/misc.lua:15: process is not jailbroken
+  MapDirectMemory2         = FAIL /savedata0/misc.lua:15: process is not jailbroken
+  MapNamedDirectMemory     = FAIL /savedata0/misc.lua:15: process is not jailbroken
+  ReleaseDirectMemory      = FAIL /savedata0/misc.lua:15: process is not jailbroken
+
+VERDICT: MapDirectMemory did not resolve; nothing else is meaningful.

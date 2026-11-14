@@ -1,0 +1,17 @@
+=== PROBE 1373a: SYS 601 BLOCK TRANSFER DIRECTION ===
+[0] pid=261 A=0x3110F2FE0 E=0x310F4E800 Etail=0x310F4F7F8
+  0x1C room=-1 tail=-1 unmapped=-1 errno=14 Bad address
+  0x10 room=-1 tail=-1 unmapped=-1 errno=22 Invalid argument
+  0x1D room=0 tail=0 unmapped=0 errno=22 Invalid argument
+  0x20 room=0 tail=0 unmapped=0 errno=22 Invalid argument
+  0x00 room=0 tail=0 unmapped=-1 errno=14 Bad address  <-- ARG1-DEPENDENT
+      E changed dwords after the tail call = 2
+  0x0E room=0 tail=0 unmapped=-1 errno=14 Bad address  <-- ARG1-DEPENDENT
+      E changed dwords after the tail call = 2
+  0x1A room=0 tail=0 unmapped=-1 errno=14 Bad address  <-- ARG1-DEPENDENT
+      E changed dwords after the tail call = 1
+  0x0D room=0 tail=0 unmapped=0 errno=14 Bad address
+  0x13 room=0 tail=0 unmapped=0 errno=14 Bad address
+  0x14 room=0 tail=0 unmapped=0 errno=14 Bad address
+  0x19 room=0 tail=0 unmapped=0 errno=14 Bad address
+=== PROBE 1373a COMPLETE ===

@@ -1,0 +1,164 @@
+=== PROBE 1479e: SYS 548 PROTECTION MATRIX ===
+[0] pid=87
+[A] A=0x311414000 B=0x311418000
+     [A before] 547 prot=3 start=0000000311414000 end=0000000311418000
+
+--- [B] op x prot on the page this probe owns ---
+  -> op=2 prot=0x00 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=0x01 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=0x10 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=0x40 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=0x11 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=0x41 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=0x51 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=0x51 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=0x02 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=0x03 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=0x05 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=0x07 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x00 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x01 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x10 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x40 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x11 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x41 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x51 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x51 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x02 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x03 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x05 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=0 prot=0x07 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x00 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x01 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x10 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x40 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x11 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x41 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x51 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x51 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x02 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x03 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x05 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=1 prot=0x07 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x00 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x01 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x10 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x40 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x11 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x41 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x51 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x51 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x02 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x03 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x05 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=3 prot=0x07 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x00 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x01 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x10 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x40 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x11 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x41 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x51 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x51 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x02 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x03 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x05 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+  -> op=4 prot=0x07 len=0x1000                   
+     rv=-1    14 Bad address           processed=0
+[B] rv=0 count=0 of 60
+
+--- [C] op=2 prot=1, length ladder on a page we own ---
+  -> op=2 prot=1 len=0x0                         
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=1 len=0x1000                      
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=1 len=0x2000                      
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=1 len=0x4000                      
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=1 len=0x8000                      
+     rv=-1    14 Bad address           processed=0
+
+--- [C2] op=2 prot=1 len=0x1000, offset field ---
+  -> op=2 prot=1 off=0x0                         
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=1 off=0x1000                      
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=1 off=0x100000                    
+     rv=-1    14 Bad address           processed=0
+  -> op=2 prot=1 off=0xFFFFFFFF                  
+     rv=-1    14 Bad address           processed=0
+
+--- [D] the same op=2 shapes on the second page ---
+  -> B op=2 prot=1 len=0x0                       
+     rv=-1    14 Bad address           processed=0
+  -> B op=2 prot=1 len=0x1000                    
+     rv=-1    14 Bad address           processed=0
+  -> B op=2 prot=1 len=0x2000                    
+     rv=-1    14 Bad address           processed=0
+  -> B op=2 prot=1 len=0x4000                    
+     rv=-1    14 Bad address           processed=0
+  -> B op=2 prot=1 len=0x8000                    
+     rv=-1    14 Bad address           processed=0
+
+final canary: pid=87 (started 87)
+=== PROBE 1479e COMPLETE ===

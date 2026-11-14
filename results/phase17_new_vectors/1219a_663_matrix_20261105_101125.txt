@@ -1,0 +1,16 @@
+=== PROBE 1219a: 663 matrix through the trampoline ===
+[0] pid=80 trampoline=0x817E1C3B7
+[A] invalid ids (0) - isolates count, mode and timeout from real objects
+  zero id, n=1, m=0      n=1 mode=0 tmo=0     ret=0x00000000_00000000 err=22 Invalid argument out=80020003 AAAAAAAA AAAAAAAA
+  zero ids, n=2, m=0     n=2 mode=0 tmo=0     ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument out=AAAAAAAA AAAAAAAA AAAAAAAA
+  zero ids, n=2, m=0, tmo n=2 mode=0 tmo=2000  ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument out=AAAAAAAA AAAAAAAA AAAAAAAA
+  zero ids, n=2, m=1     n=2 mode=1 tmo=0     ret=0x00000000_00000000 err=22 Invalid argument out=80020003 80020003 AAAAAAAA
+  zero ids, n=2, m=2     n=2 mode=2 tmo=0     ret=0x00000000_00000000 err=22 Invalid argument out=80020003 80020003 AAAAAAAA
+  zero ids, n=3, m=0     n=3 mode=0 tmo=0     ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument out=AAAAAAAA AAAAAAAA AAAAAAAA
+[B] two real pending aio reads
+  socketpair 24,25
+  id0=0x00000206 id1=0x00010206  (slot=0206 gens 0/1)
+  real ids n=2 m=0 tmo=0 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument out=AAAAAAAA AAAAAAAA
+  real ids n=2 m=0 tmo=2000 ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument out=AAAAAAAA AAAAAAAA
+[Z] pid_end=80
+=== DONE ===

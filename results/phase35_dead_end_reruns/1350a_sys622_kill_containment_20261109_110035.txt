@@ -1,0 +1,48 @@
+=== PROBE 1350a: 622 KILL CONTAINMENT ===
+[0] pid=150 fd=21 page=0x3114B8000 buf=0x3113FC380
+[A] spawn cmd=0x1
+[A] MAIN-1
+[string "        local function N(v) if type(v)=="ta..."]:6: attempt to index global 'G' (a nil value)
+[A] MAIN-2
+[A] MAIN-3
+[A] MAIN-4
+[A] MAIN-5
+[A] MAIN-6
+[A] MAIN-7
+[A] MAIN-8
+[A] MAIN-9
+[A] MAIN-10
+[A] MAIN-11
+[A] MAIN-12
+[A] MAIN-13
+[A] MAIN-14
+[A] MAIN-15
+[A] MAIN-16
+[A] MAIN-17
+[A] MAIN-18
+[A] MAIN-19
+[A] MAIN-20
+[A] MAIN-21
+[A] MAIN-22
+[A] MAIN-23
+[A] MAIN-24
+[A] MAIN-25
+[A] MAIN-26
+[A] MAIN-27
+[A] MAIN-28
+[A] MAIN-29
+[A] MAIN-30
+[A] MAIN-31
+[A] MAIN-32
+[A] MAIN-33
+[A] MAIN-34
+[A] MAIN-35
+[A] MAIN-36
+[A] MAIN-37
+[A] MAIN-38
+[A] MAIN-39
+[A] MAIN-40
+[A] marker=0x0 NO-MARKER
+[A] no marker - a 622 kill takes the process, threads do not contain it
+[Z] alive pid=150
+=== PROBE 1350a COMPLETE ===

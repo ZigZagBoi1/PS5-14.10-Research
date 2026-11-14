@@ -1,0 +1,41 @@
+=== PROBE 1177a: 601 SWEEP, 0x2F DOWN TO 0x1B ===
+[F] socket fd=21 buf=0x1132F180
+[L] 20 commands: 0x2F..0x1C then 0x1B
+T2F rv=-1
+[B2F] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T2E rv=-1
+[B2E] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T2D rv=-1
+[B2D] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T2C rv=-1
+[B2C] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T2B rv=-1
+[B2B] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T2A rv=-1
+[B2A] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T29 rv=-1
+[B29] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T28 rv=-1
+[B28] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T26 rv=-1
+[B26] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T25 rv=-1
+[B25] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T24 rv=-1
+[B24] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T23 rv=-1
+[B23] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T22 rv=-1
+[B22] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T21 rv=-1
+[B21] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T20 rv=0
+[B20] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T1F rv=-1
+[B1F] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T1E rv=-1
+[B1E] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T1D rv=0
+[B1D] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 
+T1C rv=-1
+[B1C] changed=1024 first=0 ascii="................................" dw=A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 A5A5A5A5 

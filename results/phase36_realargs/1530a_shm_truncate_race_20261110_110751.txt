@@ -1,0 +1,40 @@
+=== PROBE 1530a: shm read vs ftruncate ===
+
+fn_addr=0x0000000831D4CB57 pid=172
+
+[A] gadget verification
+eboot=0x0000000030414000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] shm object
+  shm_open(SHM_ANON=1) -> 22
+  ftruncate(22, 0x10000) rv=0
+  shm mmap -> 0x00000003114F8000
+  destination mmap -> 0x0000000311508000
+  shm filled with 0x41, destination zeroed
+
+[C] child chain
+  stack mmap -> 0x000000031150C000 need=244568 alloc=245760
+  building TCB
+  TCB at 0x31150c000 fs_ptr at 0x31150d000
+  concatenating 28011 qwords
+  chain qwords=28011 bytes=224088 alloc=245760 stack=0x000000031150C000
+  chain check first=0 tail=0
+
+[D] race
+  thr_new rv=0 child_tid=101746
+  positive control: destination turned 0x41 = true
+  round 500 sampled=500 stale=0 foreign_bytes=0
+  round 1000 sampled=1000 stale=1 foreign_bytes=0
+  round 1500 sampled=1500 stale=1 foreign_bytes=0
+  round 2000 sampled=2000 stale=1 foreign_bytes=0
+  round 2500 sampled=2500 stale=2 foreign_bytes=0
+  round 3000 sampled=3000 stale=3 foreign_bytes=0
+  rounds=3000 samples=3000 stale=3 foreign_bytes=0
+
+[E] verdict
+  clean: 3000 samples of 0x1000 bytes, 3 still holding our 0x42 stamp
+  (those rounds raced nothing); every other byte is 0x41 or 0x00
+  final pid=172 expected 172
+
+=== PROBE 1530a COMPLETE ===

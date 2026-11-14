@@ -1,0 +1,5 @@
+=== PROBE 1364a: EBOOT GADGET INVENTORY (547 range) ===
+[0] pid=205
+[0] eboot text base from 593 = 0x2ACC000
+[1] region 0x2ACC000-0x2F60000 prot=0 type=5 flags=0x61042C
+[!] range is not readable - aborting

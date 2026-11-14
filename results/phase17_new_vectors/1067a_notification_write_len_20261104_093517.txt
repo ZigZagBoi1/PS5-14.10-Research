@@ -1,0 +1,25 @@
+=== PROBE 1067a: /dev/notification0 write length ===
+[S] pid=80
+[A] buf=310998020 watch=3106EA580
+[O] fd=22
+>w64
+[W] len=64 rv=64 watch0=AAAAAAAA alive_pid=80
+>w128
+[W] len=128 rv=128 watch0=AAAAAAAA alive_pid=80
+>w256
+[W] len=256 rv=256 watch0=AAAAAAAA alive_pid=80
+>w512
+[W] len=512 rv=512 watch0=AAAAAAAA alive_pid=80
+>w1024
+[W] len=1024 rv=1024 watch0=AAAAAAAA alive_pid=80
+>w4096
+[W] len=4096 rv=4096 watch0=AAAAAAAA alive_pid=80
+>w16384
+[W] len=16384 rv=16384 watch0=AAAAAAAA alive_pid=80
+>w65536
+[W] len=65536 rv=-1 watch0=AAAAAAAA alive_pid=80
+>w262144
+[W] len=262144 rv=-1 watch0=AAAAAAAA alive_pid=80
+>w1048576
+[W] len=1048576 rv=-1 watch0=AAAAAAAA alive_pid=80
+[Z] done pid=80

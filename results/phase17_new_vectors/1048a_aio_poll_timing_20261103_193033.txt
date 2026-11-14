@@ -1,0 +1,14 @@
+=== PROBE 1048a: poll/delete timing and state ===
+[0] pid=163
+[A] id=0000221B poll=00000003 del=00000000
+[A] second del=80020003
+[B] id=0000421B poll=00000003 del_after_200ms=00000000
+[C] id=0000621B poll=00000003 del_after_2000ms=00000000
+[D] id=0000821B del_no_poll=80020010 del_again=80020010
+[E] id=0000021C poll1=00000003 poll2=00010003 del=00000000
+[F] batch poll ok=true rv=0 st=8002000300000000/8002000300000000/00000000/00000000
+[F] del id=0000221C st=00000000
+[F] del id=0000021D st=00000000
+[F] del id=0000021E st=80020010
+[F] del id=0000021F st=80020010
+[Z] alive pid=163

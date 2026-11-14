@@ -1,0 +1,57 @@
+=== 1339z SCATTER ===
+fdlimit: 4096
+pid=417
+gadgets OK
+spray=22..85 (64)
+test_socket: 86
+starting 1500 trials
+t=1 tc=42 → scatter-spray
+  spray_ok=64/64
+  tc2=42 (no scatter reclaim)
+  tc3=42 (no parent reclaim)
+t=49 tc=42 → scatter-spray
+  spray_ok=64/64
+  tc2=42 (no scatter reclaim)
+  tc3=42 (no parent reclaim)
+t=57 tc=42 → scatter-spray
+  spray_ok=64/64
+  tc2=42 (no scatter reclaim)
+  tc3=42 (no parent reclaim)
+t=151 tc=42 → scatter-spray
+  spray_ok=64/64
+  tc2=42 (no scatter reclaim)
+  tc3=42 (no parent reclaim)
+t=218 tc=42 → scatter-spray
+  spray_ok=64/64
+  tc2=42 (no scatter reclaim)
+  tc3=42 (no parent reclaim)
+t=269 tc=42 → scatter-spray
+  spray_ok=64/64
+  tc2=42 (no scatter reclaim)
+  tc3=42 (no parent reclaim)
+t=500 u=6 f=494 r=0
+t=687 tc=42 → scatter-spray
+  spray_ok=64/64
+  tc2=42 (no scatter reclaim)
+  tc3=42 (no parent reclaim)
+t=929 tc=42 → scatter-spray
+  spray_ok=64/64
+  tc2=42 (no scatter reclaim)
+  tc3=42 (no parent reclaim)
+t=1000 u=8 f=992 r=0
+t=1228 tc=42 → scatter-spray
+  spray_ok=64/64
+  tc2=42 (no scatter reclaim)
+  tc3=42 (no parent reclaim)
+t=1274 tc=42 → scatter-spray
+  spray_ok=64/64
+  tc2=42 (no scatter reclaim)
+  tc3=42 (no parent reclaim)
+t=1360 tc=42 → scatter-spray
+  spray_ok=64/64
+  tc2=42 (no scatter reclaim)
+  tc3=42 (no parent reclaim)
+t=1500 u=11 f=1489 r=0
+=== RESULTS: use=11 free=1489 reclaim=0 ===
+pid=417
+=== DONE ===

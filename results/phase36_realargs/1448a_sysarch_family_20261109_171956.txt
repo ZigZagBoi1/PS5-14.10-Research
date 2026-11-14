@@ -1,0 +1,5 @@
+=== PROBE 1448a: SYSARCH COMMANDS ===
+
+canary getpid=423
+
+[A] read-shaped commands, length argument sweep

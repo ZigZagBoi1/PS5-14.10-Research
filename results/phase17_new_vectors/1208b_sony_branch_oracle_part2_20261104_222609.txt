@@ -1,0 +1,11 @@
+=== PROBE 1208b: Sony-range branch oracle sweep, part 2 (609+) (error-string channel) ===
+S 610  | Z=78 Function not implemented | a0=78 Function not implemented | a1=78 Function not implemented | a2=78 Function not implemented | a3=78 Function not implemented | one=78 Function not implemented | 0x1_2=78 Function not implemented
+S 611  | Z=1 Operation not permitted | a0=1 Operation not permitted | a1=1 Operation not permitted | a2=1 Operation not permitted | a3=1 Operation not permitted | one=1 Operation not permitted | 0x1_2=1 Operation not permitted
+S 612  | Z=14 Bad address | a0=22 Invalid argument | a1=14 Bad address | a2=14 Bad address | a3=14 Bad address | one=14 Bad address | 0x1_2=14 Bad address  <<<
+S 613  | Z=1 Operation not permitted | a0=1 Operation not permitted | a1=1 Operation not permitted | a2=1 Operation not permitted | a3=1 Operation not permitted | one=1 Operation not permitted | 0x1_2=1 Operation not permitted
+S 615  | Z=14 Bad address | a0=1 Operation not permitted | a1=14 Bad address | a2=14 Bad address | a3=14 Bad address | one=1 Operation not permitted | 0x1_2=14 Bad address  <<<
+S 616  | Z=3 No such process | a0=3 No such process | a1=3 No such process | a2=3 No such process | a3=3 No such process | one=3 No such process | 0x1_2=3 No such process
+S 617  | Z=3 No such process | a0=3 No such process | a1=3 No such process | a2=3 No such process | a3=3 No such process | one=3 No such process | 0x1_2=3 No such process
+S 618  | Z=1 Operation not permitted | a0=1 Operation not permitted | a1=1 Operation not permitted | a2=1 Operation not permitted | a3=1 Operation not permitted | one=1 Operation not permitted | 0x1_2=1 Operation not permitted
+S 619  | Z=78 Function not implemented | a0=78 Function not implemented | a1=78 Function not implemented | a2=78 Function not implemented | a3=78 Function not implemented | one=78 Function not implemented | 0x1_2=78 Function not implemented
+S 620  | Z=78 Function not implemented | a0=78 Function not implemented | a1=78 Function not implemented | a2=78 Function not implemented | a3=78 Function not implemented | one=78 Function not implemented | 0x1_2=78 Function not implemented

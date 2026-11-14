@@ -1,0 +1,10 @@
+=== PROBE 1376c: ARG1 = USER PAGE, 342-531 ===
+[0] pid=290 sigign=10/10
+[U] arg1 = mapped user page
+n342
+  n=342 rv=-1 errno=78 Function not implemented
+n343
+  n=343 rv=0  wrote=4 [ 00000000 00000000 00000000 00000000]
+n344
+  n=344 rv=-1 errno=78 Function not implemented
+n345

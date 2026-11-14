@@ -1,0 +1,48 @@
+=== PROBE 1397k: IS THE 0x800 RECORD TABLE THE MAP? ===
+[0] pid=357
+[0] dmem0 fd=23
+
+[A] baseline page 0
+   map -> 0x03110D4000
+   checksum BE5D13BB
+   offset 0x000 : C0012800 80000000 80000000 C0001200
+   offset 0x400 : FFFFFFFF C0002F00 00000001 C0017600
+   offset 0xF00 : 00000000 00000000 00000000 00000000
+   offset 0xFC00 (page 0x0F, needs off 0xF000) - skipped here
+   records 0..3 at 0x800:
+     [0] C0038000 E0000C00 0000000F 00000100 00000000
+     [1] C0038000 E0000C00 0000000F 00000100 00000400
+     [2] C0038000 E0000C00 0000000F 00000100 00000800
+     [3] C0038000 E0000C00 0000000F 00000100 00000C00
+   records 61..63:
+     [61] 00000000 00000000 00000000 00000000 00000000
+     [62] 00000000 00000000 00000000 00000000 00000000
+     [63] 00000000 00000000 00000000 00000000 00000000
+
+[B] rewrite record[0].addr  C0038000 -> C0039000
+   before C0038000
+   after  C0039000 (write-back check)
+
+[C] munmap + remap page 0, look for a shift
+   munmap -> 0
+   remap -> 0x03110D4000
+   checksum C6A560EF (was BE5D13BB) CHANGED
+   offset 0x000 : C0012800 80000000 80000000 C0001200
+   record[0]    : C0039000
+   restored record[0] -> C0038000
+
+[D] same test on record[63], which should cover offset 0xFC00
+   page 0xF map -> 0x03112BB000, offset 0xFC00 reads 00000000 00000000 00000000 00000000
+   record[63] = 00000000 00000000 00000000 00000000 00000000
+   rewritten  = 00001000
+   after remap, offset 0xFC00 reads 00000000 00000000 00000000 00000000
+   record[63] restored -> 00000000
+
+[E] final consistency
+   page0 checksum BE5D13BB
+   record[0] C0038000   record[63] 00000000
+
+[Z] close
+   dmem0 -> 0
+
+=== PROBE 1397k COMPLETE ===

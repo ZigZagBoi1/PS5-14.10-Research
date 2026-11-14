@@ -1,0 +1,45 @@
+=== PROBE 50g: ancillary size boundary ===
+[0] socket=22 pid=116
+[1] connect=0
+
+--- cmsg_len sweep, controllen padded so the cmsg fits exactly ---
+  type            12  13  14  15  16  17  18  20  24
+  PKTINFO        4    -1   4    -1   4    -1   4    -1   4  
+  RTHDRDSTOPTS   -1   4    -1   4    -1   4    -1   4    -1 
+  NEXTHOP        4    -1   4    -1   4    -1   4    -1   4  
+  HOPOPTS        -1   4    -1   4    -1   4    -1   4    -1 
+  DSTOPTS        4    -1   4    -1   4    -1   4    -1   4  
+  RTHDR          -1   4    -1   4    -1   4    -1   4    -1 
+  TCLASS         4    -1   4    -1   4    -1   4    -1   4  
+
+--- underflow probes: sub-header cmsg_len with a longer controllen ---
+  PKTINFO         len=0   ctrl=0x1000 ret=-1     alive=116
+  PKTINFO         len=1   ctrl=0x1000 ret=-1     alive=116
+  PKTINFO         len=8   ctrl=0x1000 ret=-1     alive=116
+  PKTINFO         len=15  ctrl=0x1000 ret=-1     alive=116
+  RTHDRDSTOPTS    len=0   ctrl=0x1000 ret=-1     alive=116
+  RTHDRDSTOPTS    len=1   ctrl=0x1000 ret=-1     alive=116
+  RTHDRDSTOPTS    len=8   ctrl=0x1000 ret=-1     alive=116
+  RTHDRDSTOPTS    len=15  ctrl=0x1000 ret=-1     alive=116
+  NEXTHOP         len=0   ctrl=0x1000 ret=-1     alive=116
+  NEXTHOP         len=1   ctrl=0x1000 ret=-1     alive=116
+  NEXTHOP         len=8   ctrl=0x1000 ret=-1     alive=116
+  NEXTHOP         len=15  ctrl=0x1000 ret=-1     alive=116
+  HOPOPTS         len=0   ctrl=0x1000 ret=-1     alive=116
+  HOPOPTS         len=1   ctrl=0x1000 ret=-1     alive=116
+  HOPOPTS         len=8   ctrl=0x1000 ret=-1     alive=116
+  HOPOPTS         len=15  ctrl=0x1000 ret=-1     alive=116
+  DSTOPTS         len=0   ctrl=0x1000 ret=-1     alive=116
+  DSTOPTS         len=1   ctrl=0x1000 ret=-1     alive=116
+  DSTOPTS         len=8   ctrl=0x1000 ret=-1     alive=116
+  DSTOPTS         len=15  ctrl=0x1000 ret=-1     alive=116
+  RTHDR           len=0   ctrl=0x1000 ret=-1     alive=116
+  RTHDR           len=1   ctrl=0x1000 ret=-1     alive=116
+  RTHDR           len=8   ctrl=0x1000 ret=-1     alive=116
+  RTHDR           len=15  ctrl=0x1000 ret=-1     alive=116
+  TCLASS          len=0   ctrl=0x1000 ret=-1     alive=116
+  TCLASS          len=1   ctrl=0x1000 ret=-1     alive=116
+  TCLASS          len=8   ctrl=0x1000 ret=-1     alive=116
+  TCLASS          len=15  ctrl=0x1000 ret=-1     alive=116
+[Z] alive=116
+=== PROBE 50g COMPLETE ===

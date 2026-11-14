@@ -1,0 +1,54 @@
+=== PROBE 1480b: SYS 548 OPS 0 1 3 4 AT 16 KiB ===
+[0] pid=87
+[A] A=0x311338000 D=0x311370000
+     [A before] 547 prot=3 start=311338000 end=311340000
+     [D before] 547 prot=3 start=311370000 end=311378000
+
+--- [B] ops 0, 1, 3, 4 with len 0x4000 on a page we own ---
+  -> control op=2 prot=1                           
+     rv=0                              processed=1
+     [A after control] 547 prot=1 start=311338000 end=31133C000
+  -> control op=2 prot=3 (restore)                 
+     rv=0                              processed=1
+     [A restored] 547 prot=3 start=311338000 end=311340000
+  -> op=0 prot=3 len=0x4000 on A                   
+     rv=0                              processed=1
+     [A after op=0] 547 prot=3 start=311338000 end=311340000
+  -> op=3 prot=3 len=0x4000 on A                   
+     rv=0                              processed=1
+     [A after op=3] 547 prot=3 start=311338000 end=311340000
+  -> op=4 prot=3 len=0x4000 on A                   
+     rv=0                              processed=1
+     [A after op=4] 547 prot=3 start=311338000 end=311340000
+  -> op=1 prot=0 len=0x4000 on D                   
+     rv=0                              processed=1
+     [D after op=1] 547 prot=3 start=311370000 end=311378000
+[B] D reads 33334444 after op=1
+
+--- [C] op 0 at addresses mmap refuses ---
+   [pre ] 0x0 mapped=false prot=nil
+  -> op=0 MAP at 0x0 prot=3                        
+     rv=-1    16 Device busy           processed=0
+   [pre ] 0x1000 mapped=false prot=nil
+  -> op=0 MAP at 0x1000 prot=3                     
+     rv=-1    22 Invalid argument      processed=0
+   [pre ] 0x10000 mapped=false prot=nil
+  -> op=0 MAP at 0x10000 prot=3                    
+     rv=-1    16 Device busy           processed=0
+   [pre ] 0x40000 mapped=false prot=nil
+  -> op=0 MAP at 0x40000 prot=3                    
+     rv=-1    16 Device busy           processed=0
+   [pre ] 0x100000 mapped=false prot=nil
+  -> op=0 MAP at 0x100000 prot=3                   
+     rv=-1    16 Device busy           processed=0
+
+--- [C2] op 0 at 0x0 with the address in the offset field ---
+  -> op=0 start=0 offset=0x40000                   
+     rv=-1    16 Device busy           processed=0
+
+--- [C3] op 0 at a high address mmap will not give us ---
+  -> op=0 MAP at 0x310000000                       
+     rv=-1    16 Device busy           processed=0
+
+final canary: pid=87 (started 87)
+=== PROBE 1480b COMPLETE ===

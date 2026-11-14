@@ -1,0 +1,38 @@
+=== PROBE 1406a: 601 CMD 0x12 QWORD+8 ===
+[0] pid=371
+  in=0x310E48000 dst=0x310E4C000
+
+[A] is the qword a user pointer? (mapped pages first)
+  f8 = 0 (control)           rv=-1         errno=14 Bad address             out0=0x00000000
+  f8 = dst page              rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = dst+0x1000            rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = in page               rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = dst+0x10              rv=-1         errno=2 No such file or directory out0=0x00000000
+
+[B] scalar magnitudes
+  f8 = 0x1                   rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0x2                   rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0x3                   rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0x10                  rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0x16                  rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0x100                 rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0x1000                rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0x10000               rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0x100000              rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0x7FFFFFFF            rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0xFFFFFFFF            rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0x100000000           rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = 0xFFFF00000000        rv=-1         errno=2 No such file or directory out0=0x00000000
+
+[C] index 0 vs the +8 field together (does a second index value unlock anything?)
+  idx=1 f8=dst               rv=-1         errno=22 Invalid argument        out0=0x00000000
+  idx=0x16 f8=dst            rv=-1         errno=22 Invalid argument        out0=0x00000000
+  idx=0x100 f8=dst           rv=-1         errno=22 Invalid argument        out0=0x00000000
+
+[D] kernel addresses (last: an unmapped one would prove a raw deref)
+  f8 = stub page (k)         rv=-1         errno=2 No such file or directory out0=0x00000000
+  f8 = image base (k)        rv=-1         errno=2 No such file or directory out0=0x00000000
+  about to try an unmapped kernel VA - a kill here means a raw deref of +8
+  f8 = 0xFFFFFFFFD0000000    rv=-1         errno=2 No such file or directory out0=0x00000000
+
+=== 1406a DONE ===

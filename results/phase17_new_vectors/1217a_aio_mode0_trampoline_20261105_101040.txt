@@ -1,0 +1,24 @@
+=== PROBE 1217a: aio_multi_wait mode 0 through the trampoline ===
+[0] pid=80 libkernel=0x817E1C000 trampoline=0x817E1C3B7
+  [tramp_sanity] ret=0x00000000_00000000 err=2 No such file or directory
+    sanity out0=0x80020003 (0x80020003 = argument 4 delivered, mode 0 ran)
+[A] two pending reads on a socketpair
+  [socketpair] ret=0x00000000_00000000 err=2 No such file or directory
+    fds=22,23
+  [submit] ret=0x00000000_00000000 err=2 No such file or directory
+    id0=0x00004205 id1=0x00014205
+  [poll_before] ret=0x00000000_00000000 err=2 No such file or directory
+    state0=0x00000002 state1=0x00000002
+[B] mode 0, count 2, timeout 2000us through the trampoline
+  [wait_mode0] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=22 Invalid argument
+    out0=0xAAAAAAAA out1=0xAAAAAAAA
+  [poll_after] ret=0x00000000_00000000 err=22 Invalid argument
+    state0=0x00000002 state1=0x00000002
+[C] count 1 mode 0 control on the same pair (single node, no double link)
+  [wait_mode0_n1] ret=0xFFFFFFFFFFFFFFFF_FFFFFFFF err=60 Operation timed out
+    out=0xAAAAAAAA
+[D] delete both while still pending, then alive check
+  [delete] ret=0x00000000_00000000 err=60 Operation timed out
+    err0=0x80020010 err1=0x80020010 (0x80020010 = in flight)
+[Z] pid_end=80 (start 80)
+=== DONE ===

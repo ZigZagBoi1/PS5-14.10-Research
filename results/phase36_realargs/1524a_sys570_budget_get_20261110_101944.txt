@@ -1,0 +1,7 @@
+=== PROBE 1524a: SYS 570 budget_get ===
+
+pid=-1
+
+[A] entry gate + argument sanity (count = 1, safely inside the frame)
+  out=0x310DBA760 count_ptr=0x310D1F780
+  [A1] idx 0  idx=0 count=1 -> calling

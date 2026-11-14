@@ -1,0 +1,62 @@
+=== PROBE 1073a: HIDDEN DEVFS NODE MEMBERSHIP ===
+
+[S] sigsys-ignore ok=true rv=0 pid=106
+
+[O] mem            -
+[O] kmem           -
+[O] physmem        -
+[O] dmem0          fd=22
+[O] null           fd=22
+[O] zero           fd=22
+[O] gc             fd=22
+[O] gce            -
+[O] dce            fd=22
+[O] dcei           -
+[O] ajm            fd=22
+[O] ajmi           fd=22
+[O] gic            fd=22
+[O] usbctl         fd=22
+[O] usb            fd=22
+[O] xhci0          -
+[O] bpf            -
+[O] bpf0           -
+[O] pf             -
+[O] pflog0         -
+[O] divert0        -
+[O] enc0           -
+[O] tap0           -
+[O] tun0           -
+[O] audit          -
+[O] kaudit         -
+[O] console        -
+[O] ctty           -
+[O] klog           -
+[O] ttyv0          -
+[O] ttyu0          -
+[O] uart           -
+[O] ada0           -
+[O] da0            -
+[O] cd0            -
+[O] nvme0          -
+[O] nvme0ns1       -
+[O] mmcsd0         -
+[O] md0            -
+[O] pci            -
+[O] pcib0          -
+[O] smb0           -
+[O] iic0           -
+[O] spi0           -
+[O] gpio           -
+[O] cpuctl         -
+[O] msr            -
+[O] notification0  fd=22
+[O] notification1  -
+[O] camera         fd=22
+[O] dmass          -
+[O] sceKernel      -
+[O] scevfs         -
+[O] scezlib        -
+[O] sce_zlib       fd=22
+
+[F] openable: 13/55 -> dmem0,null,zero,gc,dce,ajm,ajmi,gic,usbctl,usb,notification0,camera,sce_zlib
+=== DONE 1073a ===

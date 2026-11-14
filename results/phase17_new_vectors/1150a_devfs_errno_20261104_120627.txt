@@ -1,0 +1,18 @@
+=== PROBE 1150a: DEVFS OPEN ERRNO ===
+
+[/dev/zero] rv=22 hex=0x16 errno=2 No such file or directory
+[/dev/no_such_node_1150a] rv=-1 hex=0xFFFFFFFF errno=2 No such file or directory
+[/dev/a53mm] rv=-1 hex=0xFFFFFFFF errno=16 Device busy
+[/dev/a53mmsys] rv=-1 hex=0xFFFFFFFF errno=1 Operation not permitted
+[/dev/dbggc] rv=-1 hex=0xFFFFFFFF errno=1 Operation not permitted
+[/dev/sbl_srv] rv=-1 hex=0xFFFFFFFF errno=13 Permission denied
+[/dev/encdec] rv=-1 hex=0xFFFFFFFF errno=13 Permission denied
+[/dev/fttrm] rv=-1 hex=0xFFFFFFFF errno=1 Operation not permitted
+[/dev/duid] rv=-1 hex=0xFFFFFFFF errno=1 Operation not permitted
+[/dev/mp3] rv=-1 hex=0xFFFFFFFF errno=1 Operation not permitted
+[/dev/acm] rv=-1 hex=0xFFFFFFFF errno=19 Operation not supported by device
+[/dev/lvd3] rv=-1 hex=0xFFFFFFFF errno=13 Permission denied
+[/dev/hmd2_image] rv=-1 hex=0xFFFFFFFF errno=2322731011 error_code=0x8a721003
+[/dev/hmd2_slam_trace] rv=-1 hex=0xFFFFFFFF errno=2322731011 error_code=0x8a721003
+
+=== DONE ===

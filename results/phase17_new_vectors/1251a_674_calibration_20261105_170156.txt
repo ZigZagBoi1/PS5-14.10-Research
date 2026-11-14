@@ -1,0 +1,12 @@
+=== PROBE 1251a: 674 EXEC-ORACLE CALIBRATION ===
+
+[A] argument-shape calibration
+[string "-- CRASH_CLASS: SAFE (reads the VM map only..."]:73: attempt to compare table with number
+stack traceback:
+	[string "-- CRASH_CLASS: SAFE (reads the VM map only..."]:73: in function 'snapshot'
+	[string "-- CRASH_CLASS: SAFE (reads the VM map only..."]:90: in main chunk
+	/savedata0/misc.lua:92: in function 'run_with_coroutine'
+	/savedata0/main.lua:85: in function 'run_lua_code'
+	/savedata0/main.lua:216: in function 'remote_lua_loader'
+	/savedata0/main.lua:315: in function 'run_loader'
+	/savedata0/main.lua:321: in function </savedata0/main.lua:259>

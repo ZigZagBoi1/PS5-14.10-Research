@@ -1,0 +1,15 @@
+{
+  "elapsed_seconds": 0.015,
+  "ended_at": "2026-10-29T20:16:05+00:00",
+  "idle_timeout_seconds": 30.0,
+  "metadata_path": "results\\phase17_new_vectors\\952a_mapfixed_exec_spawn_20261029_201605.json",
+  "output_path": "results\\phase17_new_vectors\\952a_mapfixed_exec_spawn_20261029_201605.txt",
+  "probe": "C:\\PS5contrib\\probes\\phase17_new_vectors\\952a_mapfixed_exec_spawn.lua",
+  "probe_bytes": 7679,
+  "probe_sha256": "feb2884484d3d08e833dad4804b16744e77f251a85340c03a761d3ecd93cd088",
+  "remote": "192.168.1.121:9026",
+  "response_bytes": 353,
+  "started_at": "2026-10-29T20:16:05+00:00",
+  "status": "COMPLETE",
+  "total_timeout_seconds": null
+}

@@ -1,0 +1,32 @@
+=== PROBE 1426a: RANGE PREDICATE WRAP ===
+
+[0] socketpair fds 22 / 23 (non-blocking)
+    control page 0x310C2C000 filled 0x41414141
+    [!] /system_tmp/rw1 open failed: 13 Permission denied -- falling back to /app0/rw1
+[A] write(fd, ptr, len) with overflowing lengths
+    control user len 0x40    ptr=0x310C2C000      len=0x40        rv=64     errno=30 Read-only filesystem
+      >>> LANDED rv=64 bytes copied out of the kernel
+    control kernel len 0x40  ptr=0xFFFFFFFFC1000000 len=0x40        rv=-1     errno=14 Bad address
+    wrap base sum 0          ptr=0xFFFFFFFFC1000000 len=0x3F000000  rv=-1     errno=14 Bad address
+    wrap base sum 0x1000     ptr=0xFFFFFFFFC1000000 len=0x3F001000  rv=-1     errno=14 Bad address
+    wrap stub sum 0          ptr=0xFFFFFFFFC0000000 len=0x40000000  rv=-1     errno=14 Bad address
+[B] sendto(fd, ptr, len, flags, dst, dstlen) - second copyin shape
+    user 0x40      ptr=0x310C2C000      len=0x40        rv=64     errno=14 Bad address
+    kernel 0x40    ptr=0xFFFFFFFFC1000000 len=0x40        rv=-1     errno=14 Bad address
+    wrap sum 0     ptr=0xFFFFFFFFC1000000 len=0x3F000000  rv=-1     errno=14 Bad address
+[C] getsockopt destination sweep (SOL_SOCKET 0xFFFF / SO_TYPE 0x1008)
+    valptr 0x310C2C000      rv=0      errno=14 Bad address
+    valptr 0xFFFFFFFFC1000000 rv=-1     errno=14 Bad address
+    valptr 0xFFFFFFFFC0000000 rv=-1     errno=14 Bad address
+[D] kevent with a kernel changelist (length computed kernel-side)
+    changelist kernel base n=4          rv=-1     errno=14 Bad address
+    changelist kernel base n=0x400      rv=-1     errno=14 Bad address
+    changelist kernel base n=0x4000000  rv=-1     errno=14 Bad address
+[E] reading
+    rv=-1 errno=14 on every wrap row = the carry check fires; no other
+    shape explains a refusal for lengths that overflow 2^64.
+    A rv>=0 or an errno other than 14 on a wrap row means the handler
+    carries its own check and the copy started at a kernel address.
+    kernel image base used: 0xFFFFFFFFC1000000 (measured this boot)
+
+=== PROBE 1426a COMPLETE ===

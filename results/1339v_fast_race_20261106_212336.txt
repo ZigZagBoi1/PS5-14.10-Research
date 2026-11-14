@@ -1,0 +1,23 @@
+=== 1339v FAST RACE v2 ===
+fdlimit: cur=1024 max=1024
+pid=412
+gadgets OK
+spray=22..69
+setup complete, 2000 trials, 48 spray
+t=200 u=0 f=200 r=0 o=0
+t=276 tc=42 (UAF?)
+t=400 u=1 f=399 r=0 o=0
+t=600 u=1 f=599 r=0 o=0
+t=800 u=1 f=799 r=0 o=0
+t=854 tc=42 (UAF?)
+t=1000 u=2 f=998 r=0 o=0
+t=1200 u=2 f=1198 r=0 o=0
+t=1278 tc=42 (UAF?)
+t=1400 u=3 f=1397 r=0 o=0
+t=1600 u=3 f=1597 r=0 o=0
+t=1800 u=3 f=1797 r=0 o=0
+t=1831 tc=42 (UAF?)
+t=2000 u=4 f=1996 r=0 o=0
+=== RESULTS: use=4 free=1996 reclaim=0 other=0 1st42=276 ===
+pid=412
+=== DONE ===

@@ -1,0 +1,8 @@
+=== PROBE 1543a: 601 cmd 0x1B, arg3 = 0 ===
+
+[0] pid=228  (a new pid here means the previous connection's process died)
+[0] SIG_IGN installed on 10/10 signals
+[0] struct=13176418752 name at +0x28 = Sce.Debug:Gnm
+
+[A] arg3 = 0, arg2 = the mapped struct. The only argument value never presented.
+  buf, arg3=0                601(0x1B, 0x3116031c0, 0x0) ...

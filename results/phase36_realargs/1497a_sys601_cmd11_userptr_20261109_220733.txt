@@ -1,0 +1,13 @@
+=== PROBE 1497a: 601 CMD 0x11 WITH A VALID USER POINTER ===
+[0] pid=118
+
+--- [A] the page and the marker ---
+  marker 0x310C08000 page 0x310C3C000
+  page[0..7] = 10C08000 00000003 10C08000 00000003
+  marker[0]  = A5A5A5A5 (sentinel)
+
+--- [B] control: 601(0x00) onto an output buffer ---
+  601(0x00) rv=0 out=00000100 00000000
+
+--- [C] 601(0x11, arg1=0, arg2=page filled with a valid user pointer) ---
+  (if the capture ends here, the body dereferenced the field and died)

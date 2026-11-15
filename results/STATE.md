@@ -12,12 +12,12 @@ were measured; they are measurements, not truths.
 - allproc: 0xFFFFFFFFD85B9EA0
 - security_flags: 0xFFFFFFFFD6A84064
 - rootvnode: 0xFFFFFFFFD8E3B510
-- last_probe: p691-walk-forge-fixed
+- last_probe: p691-forgeread-self-scan
 - active_question: BROWSER PATH EXHAUSTED. 22 probes tested (p635b-n, p636, p691-d, p801-p803). FontFace read=DEAD(backing null), Canvas2D=same-type only, GC destructor=DEAD, RAB OOB=solid, advanced APIs=absent, localhost=sandboxed. The ONLY remaining path: (1) PSN sign-in to launch game for Lua loader, (2) new WebKit 0-day, (3) wait for public exploit. User needs to sign in to PSN when they return.
 - race_assessment: ALL DEAD: PKTINFO=embedded struct, SNDBUF=mbuf logical overflow, close+setsockopt=fget blocks, 16 CVEs blocked. See docs/KERNEL_RACE_OFFLINE_ASSESSMENT_2026-11-10.md
 - cve_assessment: 16 FreeBSD kernel CVEs (2019-2026) checked; ALL blocked on 14.10 (feature removal, missing prereqs, zone isolation, existing locks). See docs/CVE_KERNEL_RW_ASSESSMENT_2026-11-10.md
 - cve_2020_7457: SA-20:20 patch adds INP_WLOCK only around ip6_pcbopts (2292 path). PKTINFO already locked in ip6_ctloutput. Sony blocked 2292 entirely. 91d/92c tested PKTINFO race to 11K+ calls = clean.
-- next_action: find_stack_pivot_gadget_for_rop_chain
+- next_action: debug_forgeread_self_scan_matching
 - queued_probes: p635k-slim(active index), p635l-slim(in probes/), 1407a, 1408a, 1409a
 - notes: all kernel addresses valid this boot only; if rebooted re-measure with fault oracle first
 - ipv6_options: 2292PKTOPTIONS(6)=BLOCKED, PKTINFO(46)=OK, TCLASS(61)=OK, RTHDR(51)=partial, DSTOPTS/HOPOPTS=BLOCKED

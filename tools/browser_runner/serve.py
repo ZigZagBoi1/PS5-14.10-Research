@@ -317,16 +317,88 @@ class CaptureHTTPServer(http.server.HTTPServer):
         _safe_print('Request failed; capture will remain unclosed.', file=sys.stderr)
 
 
+class _HeaderDeadlineReader:
+    """Bound header readline calls while retaining the original buffered stream.
+
+    peek() lets socket-backed readers consume available bytes in chunks without
+    waiting for a whole header line. BytesIO fixtures use a one-byte fallback.
+    No bytes beyond the requested line are consumed, including buffered bodies.
+    """
+    def __init__(self, source, connection, seconds):
+        self.source = source
+        self.connection = connection
+        self.previous_timeout = connection.gettimeout()
+        self.deadline = time.monotonic() + seconds
+        self.active = True
+
+    def finish(self):
+        self.active = False
+        self.connection.settimeout(self.previous_timeout)
+
+    def _check(self):
+        remaining = self.deadline - time.monotonic()
+        if remaining <= 0:
+            raise TimeoutError('overall request header deadline')
+        idle = self.previous_timeout
+        self.connection.settimeout(remaining if idle is None else min(idle, remaining))
+
+    def readline(self, limit=-1):
+        if not self.active:
+            return self.source.readline(limit)
+        chunks = bytearray()
+        while limit < 0 or len(chunks) < limit:
+            self._check()
+            if hasattr(self.source, 'peek'):
+                available = self.source.peek(1)
+                self._check()
+                if not available:
+                    break
+                newline = available.find(b'\n')
+                size = newline + 1 if newline >= 0 else len(available)
+                if limit >= 0:
+                    size = min(size, limit - len(chunks))
+            else:
+                size = 1
+            chunk = self.source.read(size)
+            self._check()
+            if not chunk:
+                break
+            chunks.extend(chunk)
+            if chunk.endswith(b'\n'):
+                break
+        return bytes(chunks)
+
+    def __getattr__(self, name):
+        return getattr(self.source, name)
+
+
 class ProbeHandler(http.server.BaseHTTPRequestHandler):
     server_version = 'PS5Probe/1.0'
-    timeout = 5.0  # socket/header idle timeout; not an overall header deadline
+    timeout = 5.0  # socket/header idle timeout
+    header_deadline = 10.0  # request line and all headers share one budget
     body_read_timeout = 5.0
     body_deadline = 10.0
     log_file = None  # retained for compatibility with standalone display consumers
     log_lock = threading.Lock()
 
+    def handle_one_request(self):
+        original = self.rfile
+        reader = _HeaderDeadlineReader(original, self.connection, self.header_deadline)
+        self.rfile = reader
+        try:
+            super().handle_one_request()
+        finally:
+            self.rfile = original
+            try:
+                reader.finish()
+            except OSError:
+                pass  # a timed-out or disconnected client must not poison capture
+
     def parse_request(self):
-        parsed = super().parse_request()
+        try:
+            parsed = super().parse_request()
+        finally:
+            self.rfile.finish()  # body reads use their separate deadline
         if parsed:
             if self.request_version == 'HTTP/0.9':
                 self.request_version = 'HTTP/1.0'  # send an explicit error response

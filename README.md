@@ -58,7 +58,7 @@ The PS5 security stack has multiple layers. This project researches all of them:
 
 ![PS5 Security Architecture](docs/images/architecture.svg)
 
-### Entry Vector 1: Lua 5.1 Loader (Primary)
+### Entry Vector 1: Lua 5.1 Loader (Research Foothold / Syscall Lane)
 
 The game **Hamidashi Creative** (Artemis/Lua engine) loads a modified save file that starts a TCP listener on port 9026. We send Lua probe scripts over the network. This gives us:
 

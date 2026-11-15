@@ -55,6 +55,46 @@ class JscBuildTest(unittest.TestCase):
         self.assertNotIn("load(", body)
         self.assertIn("var a = 1;", body)
 
+    def test_configuration_requests_survive_in_separate_audit(self):
+        source = '//@ requireOptions("--useDFGJIT=true")\nshouldBe(1, 1);\n'
+        self._write_source("jit.js", source)
+        self._write_index([("JSTests/stress/jit.js", "jit.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "preconditions-jsc.json")) as handle:
+            audit = json.load(handle)["tests"][0]
+        self.assertEqual(audit["path"], "JSTests/stress/jit.js")
+        self.assertEqual(audit["unavailable_option_requests"],
+                         [{"line": 1, "option": "--useDFGJIT=true"}])
+        self.assertEqual(audit["review_status"], "configuration_review_required")
+        self.assertEqual(audit["vulnerability_status"], "unknown")
+        import hashlib
+        self.assertEqual(audit["decoded_source_sha256"], hashlib.sha256(source.encode()).hexdigest())
+        with open(os.path.join(self.root, "jsc.json")) as handle:
+            page = json.load(handle)[0]["file"]
+        with open(os.path.join(self.root, page)) as handle:
+            self.assertNotIn("requireOptions", handle.read())
+
+    def test_audit_does_not_infer_requirements_from_body_or_disabled_options(self):
+        source = '// --useJIT=true\nvar text="--useDFGJIT=true";\n//@ requireOptions("--useFTLJIT=false")\n'
+        audit = corpus.jsc_preconditions(source)
+        self.assertEqual(audit["unavailable_option_requests"], [])
+        self.assertEqual(audit["review_status"], "unassessed")
+
+    def test_audit_retains_conditionals_without_evaluating_them(self):
+        source = '//@ runDefault("--useJIT=true", "--useWebAssembly=true") if $architecture == "arm64"\n'
+        audit = corpus.jsc_preconditions(source)
+        self.assertEqual(len(audit["unavailable_option_requests"]), 2)
+        self.assertEqual(audit["directives"][0]["text"], source.strip())
+
+    def test_audit_also_retains_sources_dropped_by_browser_filter(self):
+        self._write_source("vm.js", '//@ requireOptions("--useFTLJIT=true")\n$vm.foo();')
+        self._write_index([("JSTests/stress/vm.js", "vm.js")])
+        corpus.jsc_build()
+        with open(os.path.join(self.root, "jsc.json")) as handle:
+            self.assertEqual(json.load(handle), [])
+        with open(os.path.join(self.root, "preconditions-jsc.json")) as handle:
+            self.assertEqual(len(json.load(handle)["tests"]), 1)
+
     def test_page_carries_shim_and_body(self):
         self._write_source("case.js", "shouldBe(1 + 1, 2);\n")
         self._write_index([("JSTests/stress/case.js", "case.js")])

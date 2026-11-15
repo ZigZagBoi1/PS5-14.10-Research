@@ -2,7 +2,7 @@
 
 Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 3326 probe scripts (2931 Lua, 66 JS, 329 HTML), 3472 result captures, 264 technical documents, 235+ merged PRs, 180+ documented dead ends, 58 research phases.
 
-> **Goal:** Userland code execution → kernel R/W → hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated**. The Lua loader kernel attack surface is **exhausted** — zero kernel pointers across ~400 syscalls, ~32M ioctl calls, and every known info-leak technique. **WebKit FontFaceSet UAF (CVE-2026-43715 variant) is the only live kernel path**: heap pointer leak confirmed on 14.10, three upstream fixes absent from WebKit 605.1.15.
+> **Goal:** Userland code execution → kernel R/W → hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated yet**. The Lua loader kernel attack surface is **exhausted** — zero kernel pointers across ~400 syscalls, ~32M ioctl calls, and every known info-leak technique. **WebKit FontFace UAF is the active exploit vector**: arbitrary WebProcess read primitive, KASLR defeat, WebProcess base address, ROP gadgets, and **RIP control confirmed on device** (instruction pointer redirect via forged vtable). ROP chain toward kernel R/W is in progress.
 
 ---
 
@@ -30,7 +30,7 @@ This work is licensed under [CC BY-NC 4.0](LICENSE). You are free to share and a
 These people believed in this research and put their money where their mouth is. It means the world <3
 
 ```
-Ivan Milinski  ·  Felix Dietz  ·  Brian Alejandro Camacho  ·  Jonathan Moreau  ·  Frank Munsche  ·  Mohammed Kazi  ·  Ismael Jesus  ·  Cassidy Poynter  ·  Mohammad Islam  ·  Flix Rely  ·  Paul E Fox  ·  K Lam  ·  Sean Verkempinck  ·  Jacob Maurer
+Ivan Milinski  ·  Felix Dietz  ·  Brian Alejandro Camacho  ·  Jonathan Moreau  ·  Frank Munsche  ·  Mohammed Kazi  ·  Ismael Jesus  ·  Cassidy Poynter  ·  Mohammad Islam  ·  Flix Rely  ·  Paul E Fox  ·  K Lam  ·  Sean Verkempinck  ·  Jacob Maurer  ·  Bastian Seelbinder  ·  Jose Lazaro Da Cruz Da Silva  ·  James Baldino  ·  Josue Acosta Rocha  ·  Arthur Bernrdo do Nascimento  ·  RamenWing  ·  Christian Knaub  ·  SARL Fabien Giordano  ·  Erez Naar  ·  Muhd Noor Aidil Safiee  ·  Vladislav Petrov  ·  Adrian Nowicki  ·  Erik Figueroa  ·  Sander Stolk
 ```
 
 ---

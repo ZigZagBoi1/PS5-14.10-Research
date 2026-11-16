@@ -37,9 +37,7 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': ROOT / 'redirect.html',
-    '/stop': ROOT / 'stop.html',
-    '/stop.html': ROOT / 'stop.html',
+    '/': ROOT / 'launcher.html',
     '/p809': PROJECT / 'probes' / 'phase13_webkit' / 'p809-elf-got-reader.html',
     '/p809v24b.html': PROJECT / 'probes' / 'phase13_webkit' / 'p809v24b.html',
     '/p809v24b': PROJECT / 'probes' / 'phase13_webkit' / 'p809v24b.html',
@@ -142,6 +140,7 @@ STATIC = {
     '/launcher.html': ROOT / 'launcher.html',
     '/p550.html': ROOT / 'p550.html',
     '/p550.js': PROJECT / 'probes' / 'phase13_webkit' / 'p550-canvas-uaf-transform-leak.js',
+    '/p553.html': ROOT / 'p553.html',
     '/p553.js': PROJECT / 'probes' / 'phase13_webkit' / 'p553-canvas-uaf-write-confirm.js',
     '/fuzz.html': ROOT / 'fuzz.html',
 }

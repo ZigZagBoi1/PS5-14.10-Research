@@ -339,6 +339,8 @@ def build_dns_response(query, redirect_ip):
     flags = b"\x81\x80"  # Standard response, no error
     questions = struct.unpack("!H", query[4:6])[0]
     answers = 0
+    if questions != 1:
+        return None  # this responder only answers a single-question query
 
     # Parse the question section to get the domain
     pos = 12
@@ -366,7 +368,7 @@ def build_dns_response(query, redirect_ip):
             should_redirect = True
             break
 
-    if should_redirect and qtype == 1:  # A record
+    if should_redirect and qtype == 1 and qclass == 1:  # IN A record
         print(f"\033[35m[DNS]\033[0m Redirecting {domain.decode()} -> {redirect_ip}")
         answers = 1
 

@@ -154,7 +154,7 @@ def main():
             if not path.exists() or path.read_text(encoding='utf-8') != content:
                 stale.append(str(path.relative_to(ROOT)))
         else:
-            path.write_text(content, encoding='utf-8')
+            path.write_text(content, encoding='utf-8', newline='\n')
     if stale:
         parser.error('Stale generated output: ' + ', '.join(stale))
     print('Progress artifacts verified' if args.check else 'Progress artifacts generated')

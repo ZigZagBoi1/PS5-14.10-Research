@@ -32,7 +32,7 @@
 <script>
 function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
 
-function main(){
+async function main(){
   b('P734-START:HISTORY-NAVIGATION-TIMING');
   var results = [];
 

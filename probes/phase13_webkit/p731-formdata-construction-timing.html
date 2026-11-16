@@ -37,7 +37,7 @@
 <script>
 function b(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/'+encodeURIComponent(m),false);x.send();}catch(e){}}
 
-function main(){
+async function main(){
   b('P731-START:FORMDATA-BLOB-FILE-TIMING');
   var results = [];
 

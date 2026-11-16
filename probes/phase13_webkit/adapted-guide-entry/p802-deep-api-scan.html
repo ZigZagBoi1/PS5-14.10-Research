@@ -101,7 +101,7 @@ try{
 }catch(e){bk('NAV-TIMING','ERR:'+e.message.slice(0,40));}
 
 // Import maps / dynamic import
-try{bk('DYN-IMPORT',typeof import);}catch(e){bk('DYN-IMPORT','absent or keyword');}
+try{new Function('return import("data:text/javascript,");');bk('DYN-IMPORT','present');}catch(e){bk('DYN-IMPORT','absent or keyword');}
 
 // window.crossOriginIsolated
 try{bk('COI',window.crossOriginIsolated);}catch(e){bk('COI','absent');}

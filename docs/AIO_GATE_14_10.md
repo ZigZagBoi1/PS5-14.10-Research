@@ -1,9 +1,6 @@
-# The aio delete window is gated off on 14.10, and the storm cannot be built
+# AIO 662 lock-drop gate on 14.10: branch condition and open reachability
 
-Status: **structural conclusion plus two harness results.** No kernel access is
-claimed. This note closes the 14.10 aio line: the delete path the 14.20 build
-patches does not open on this firmware, and the native chain that would have
-measured the race cannot be made to loop with the gadgets this eboot offers.
+Status: **verified branch condition in one original 14.10 image; runtime reachability unresolved.** No kernel access is claimed. The tested native chain did not complete a high-volume race measurement. The static condition below does not establish that the lock-drop path is disabled on this firmware.
 
 ---
 
@@ -38,24 +35,33 @@ of roughly 3,000 per call, so the per-round odds are ~1e-4 and the 4,000 rounds 
 three orders of magnitude short.
 
 
-### Why no storm could ever have won: the lock drop itself is gated (2026-10-27)
+### Lock-drop condition in the original 14.10 image
 
-The delete drops the table lock only when the work item is flagged as in flight. From
-`.local/del662.txt`:
+The original `kernel_1410.elf` has SHA-256
+`cc1572fcc91f27b7093a3a689b651c0cffeecbdd85dbf9a406a520fa8b945f0f`.
+Its file-backed `PT_LOAD` maps analyzed VA `x` to original file offset
+`x + 0x1000`. The relevant original bytes are:
 
-    8ad6fe4f  cmp dword ptr [rcx + 4], 0     ; the in-flight flag
-    8ad6fe54  jne 8ad6fe5d                   ; clear -> stay under the lock
-    8ad6fe59  cmp byte ptr [rcx + 0xc], 0    ; the poll flag
-    8ad6fe5d  je  ...                        ; not polled -> same
-    8ad6fe63  call 0x8ad59eb0                ; unlock, only on this path
-    8ad6fe6c  ... re-lookup at 0x8ad5a2a0
+| Analyzed VA | Original file offset | Bytes | Instruction |
+| --- | --- | --- | --- |
+| `0x3b8733` | `0x3b9733` | `83 79 04 00` | `cmp dword ptr [rcx+4], 0` |
+| `0x3b8737` | `0x3b9737` | `0f 85 3e fd ff ff` | `jne 0x3b847b` |
+| `0x3b873d` | `0x3b973d` | `80 79 0c 00` | `cmp byte ptr [rcx+0xc], 0` |
+| `0x3b8741` | `0x3b9741` | `0f 84 34 fd ff ff` | `je 0x3b847b` |
+| `0x3b874b` | `0x3b974b` | `e8 a0 9e fe ff` | `call 0x3a25f0` (lock release) |
 
-`664` sets `[W+0xc]` (poll), but nothing reachable sets `[W+4]`: the submit path that
-would is behind the boot tunable (`0x3b249c call 0x8b4c78d0`), and on 14.10 that gate
-reads a boot-time tunable that never equals 3 or 4. So on this firmware a delete is an
-under-lock teardown, and the TOCTOU window that 14.20 patches does not exist here at
-all - the race was not "hard to win", it was unreachable, which is why 817a, 817b,
-847a, 871a and 872a each produced exactly one winner and a set of first-lookup misses.
+Both branches bypass the release call: the `jne` is taken when `+4 != 0`,
+and the `je` is taken when `+0xc == 0`. This path reaches the lock release
+only when `+4 == 0` and `+0xc != 0`. The earlier excerpt from
+`.local/del662.txt` describes the first branch with the opposite polarity.
+That excerpt is not retained in this repository, so its image and branch
+targets cannot be checked here.
+
+This corrects the local branch interpretation. It does not establish that a
+work item reaches the required state on a console. The boot-tunable claim,
+work-item state producers, and the full handoff schedule require separate
+verification against the same 14.10 image. The recorded race probes did not
+observe a win; they do not establish that every possible handoff is unreachable.
 
 Supporting measurement (`probes/phase17_new_vectors/886a_suspend_process.lua`,
 capture `results/phase17_new_vectors/886a_suspend_process_20261027_134127.txt`): the
@@ -63,15 +69,17 @@ last candidate for forcing a second caller, `561 suspend_process`, kills the who
 process within milliseconds when called from a `thr_create` child (the parent never
 reaches its first marker), so it cannot be used as a selective thread stop.
 
-Consequence: the public 14.20 note describes a real pre-fix shape, but on 14.10 the
-shape is disabled by the same boot tunable that disables submit. Any 14.10 kernel
-exploit in the wild is therefore **not** this bug, and this file should not be cited as
-the 14.10 vector.
+Consequence: the checked 14.10 bytes contain a conditional lock-release and
+relookup path. They do not prove that the required state, timing, or shorter
+replacement object occurs on a console, or that the path causes memory
+corruption. The earlier conclusion that the boot tunable disables this entire
+path is unresolved until its producer and runtime state are verified against
+the same image.
 
 ## Live-thread measurements (2026-10-27)
 
-Four probes from `probes/phase17_new_vectors/` put the gate claim on measured ground
-and settle the one barrier the race would need.
+Four probes from `probes/phase17_new_vectors/` characterize the tested harness
+and inputs. They do not settle the reachability of every lock-release state.
 
 `910a_child_self_exit.lua` - a child chain that ends with `thr_exit` (`pop_rax; 431;
 fn`) returns cleanly: `[T1]..[T10] spawn ok rv=0 out=50`, `[Z] spawned=10 alive pid=80`,
@@ -96,19 +104,20 @@ returns instantly rather than blocking, and closing the socketpair does not comp
 operations either (delete after close still `80020010`). **Withdrawal:** the earlier
 reading that a waiter reaps the object before a delete can reach it (`915a`/`916a`/
 `917a`) rested on a `663` call that was failing immediately; those captures are void and
-are not cited here. What stands is the static gate plus 911a: no user-visible path holds
-a completed operation while two threads delete it.
+are not cited here. What stands is the 911a measurement: its 20 rounds did not show two
+successful deletes. It does not establish that no user-visible state can reach
+the lock-release path.
 
-## The subsystem is inert, not just race-free
+## Submitted I/O was not observed in these probes
 
 `926a`/`927a` point an aio read at `0xFFFFFFFF80000000` with the 4-byte payload
 pre-queued on the socketpair. The **userland control never receives the bytes either**
 (`[C2] poll st=1 buf0=0` with the write done before the submit), so no copyout happens
 at all - and the kernel-address destination is therefore never dereferenced (the run is
-COMPLETE, process alive). Taken with the static gate, the reading is that on 14.10 the
-aio submit path is disabled by the same boot tunable that would set `[W+4]`: objects are
-created, states move, deletes are refused or accepted, and no I/O is ever dispatched.
-The family is bookkeeping, which is why every race probe returned exactly one winner.
+COMPLETE, process alive). These runs show no copyout for the tested inputs. They do not establish that
+all 14.10 submit paths are disabled or that `[W+4]` must be nonzero for the
+lock release. The boot tunable and work-item state producers need
+image-bound verification before calling the subsystem inert.
 
 The aligned second result: `925a` frees an id, re-creates in the same slot and gets
 `21C -> 221C`, and the stale id is refused (`80020003`). Generation validation is

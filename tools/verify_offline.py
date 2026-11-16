@@ -39,6 +39,7 @@ SAFE_TEST_MODULES = (
     "tools.test_layout_pages",
     "tools.test_remaining_cve_triage",
     "tools.test_regen_archives",
+    "tools.test_render_progress",
     "tools.test_state",
     "tools.test_sys622_bitmap",
     "tools.test_sys622_prose",

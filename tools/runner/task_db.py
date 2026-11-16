@@ -130,11 +130,15 @@ class TaskDB:
                    ORDER BY priority ASC, created_at ASC LIMIT 1"""
             ).fetchone()
             if row:
+                started_at = time.time()
                 conn.execute(
                     "UPDATE tasks SET status='running', started_at=?, attempt=attempt+1 WHERE id=?",
-                    (time.time(), row["id"])
+                    (started_at, row["id"])
                 )
-                return dict(row)
+                updated = conn.execute(
+                    "SELECT * FROM tasks WHERE id=?", (row["id"],)
+                ).fetchone()
+                return dict(updated)
             return None
 
     def complete_task(self, task_id, result="", evidence_refs=None):

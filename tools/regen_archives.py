@@ -101,14 +101,17 @@ def main(argv: list[str] | None = None) -> int:
     if args.check:
         stale = False
         for path, content in ((all_probes, probes_out), (all_results, results_out)):
-            current = path.read_text(encoding="utf-8") if path.exists() else ""
+            # Compare bytes, not text: read_text() normalises CRLF away, which
+            # would call a Windows-written archive "current" while its bytes
+            # differ from what the generator produces.
+            current = path.read_bytes().decode("utf-8") if path.exists() else ""
             state = "current" if current == content else "STALE"
             stale = stale or state == "STALE"
             print(f"{path.relative_to(ROOT)}: {state}")
         return 1 if stale else 0
 
-    all_probes.write_text(probes_out, encoding="utf-8")
-    all_results.write_text(results_out, encoding="utf-8")
+    all_probes.write_text(probes_out, encoding="utf-8", newline="\n")
+    all_results.write_text(results_out, encoding="utf-8", newline="\n")
     print(f"{all_probes.relative_to(ROOT)}: {len(probe_files)} probe files, "
           f"{all_probes.stat().st_size} bytes")
     print(f"{all_results.relative_to(ROOT)}: {len(result_files)} result files, "

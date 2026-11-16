@@ -12,7 +12,7 @@ were measured; they are measurements, not truths.
 - allproc: 0xFFFFFFFFD85B9EA0
 - security_flags: 0xFFFFFFFFD6A84064
 - rootvnode: 0xFFFFFFFFD8E3B510
-- last_probe: WEBPROCESS_SYSCALL_RET_ABSENT_2026-11-15
+- last_probe: p817-magic-base-discovery
 - active_question: BROWSER PATH EXHAUSTED. 22 probes tested (p635b-n, p636, p691-d, p801-p803). FontFace read=DEAD(backing null), Canvas2D=same-type only, GC destructor=DEAD, RAB OOB=solid, advanced APIs=absent, localhost=sandboxed. The ONLY remaining path: (1) PSN sign-in to launch game for Lua loader, (2) new WebKit 0-day, (3) wait for public exploit. User needs to sign in to PSN when they return.
 - race_assessment: ALL DEAD: PKTINFO=embedded struct, SNDBUF=mbuf logical overflow, close+setsockopt=fget blocks, 16 CVEs blocked. See docs/KERNEL_RACE_OFFLINE_ASSESSMENT_2026-11-10.md
 - cve_assessment: 16 FreeBSD kernel CVEs (2019-2026) checked; ALL blocked on 14.10 (feature removal, missing prereqs, zone isolation, existing locks). See docs/CVE_KERNEL_RW_ASSESSMENT_2026-11-10.md

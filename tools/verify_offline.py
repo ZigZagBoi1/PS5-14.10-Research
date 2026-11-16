@@ -34,6 +34,7 @@ SAFE_TEST_MODULES = (
     "tools.test_fontface_abi_contracts",
     "tools.test_handler_claim_audit",
     "tools.test_handler_ptrfree",
+    "tools.test_jailbreak_dns",
     "tools.test_layout_pages",
     "tools.test_remaining_cve_triage",
     "tools.test_regen_archives",

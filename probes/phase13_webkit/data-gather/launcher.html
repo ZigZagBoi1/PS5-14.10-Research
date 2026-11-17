@@ -15,8 +15,30 @@ h1{color:#e94560;margin-bottom:5px}
 <h1>PS5 Research Hub</h1>
 <p class="sub">Firmware data collection for kernel security research<br>by <a href="https://github.com/ZigZagBoi1/PS5-14.10-Research" style="color:#e94560">ZigZagBoi1</a> | <a href="https://discord.gg/xdUZ7RpgC4" style="color:#e94560">Join Discord</a></p>
 
-<a class="btn btn-primary" href="probe-modules.html">Run Module Scanner</a>
-<p style="color:#888;font-size:12px">Scans WebProcess memory layout and reports module addresses.<br>Takes 30-60 seconds. Screen shows SUCCESS or status.</p>
+<div id="fwcheck" style="margin:15px auto;padding:10px;background:#16213e;border-radius:8px;max-width:400px;font-size:14px"></div>
+<a class="btn btn-primary" id="runbtn" href="probe-modules.html" style="display:none">Run Module Scanner</a>
+<p id="rundesc" style="color:#888;font-size:12px;display:none">Scans WebProcess memory layout and reports module addresses.<br>Takes 30-60 seconds. Screen shows SUCCESS or status.</p>
+<script>
+(function(){
+  var ua=navigator.userAgent;
+  var el=document.getElementById('fwcheck');
+  var btn=document.getElementById('runbtn');
+  var desc=document.getElementById('rundesc');
+  var m=ua.match(/PlayStation 5\/(\d+\.\d+)/);
+  if(!m){
+    el.innerHTML='<span style="color:#e94560">This page requires a PS5 console.</span><br><small style="color:#666">Detected: '+ua.slice(0,60)+'</small>';
+    return;
+  }
+  var ver=parseFloat(m[1]);
+  if(ver<14.0){
+    el.innerHTML='<span style="color:#ffd700">PS5 detected (FW '+m[1]+') but firmware 14.00+ is required for data collection.</span>';
+    return;
+  }
+  el.innerHTML='<span style="color:#4ade80">PS5 verified - Firmware '+m[1]+'</span>';
+  btn.style.display='block';
+  desc.style.display='block';
+})();
+</script>
 
 <div class="status">
 <strong>How to use:</strong><br>

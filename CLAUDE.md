@@ -1,8 +1,21 @@
 # PS5 14.10 Kernel Research — AI Guide
 
+## CRITICAL SECURITY RULES (November 2026)
+
+**DO NOT PUSH ANY OF THE FOLLOWING TO GITHUB — EVER:**
+- Kernel exploit code, ROP chains, or jailbreak payloads
+- Kernel offsets (allproc, prison0, ucred offsets, syscall table addresses)
+- Hypervisor analysis or bypass techniques
+- Any file in `probes/phase14_rop/` (except the safe tester-hub.html)
+- The CLAUDE.md file itself (do not push this file)
+
+**Disclosure intent:** This research may be submitted to Sony's bug bounty program. All exploit code must remain LOCAL ONLY. The public GitHub repo is for community coordination and safe data-collection probes ONLY.
+
+**Tester probes:** Data-collection probes served to community testers must NEVER contain exploit code. They only read memory offsets and beacon them back. No ROP chains, no kernel payloads, no syscall invocation.
+
 ## What This Project Is
 
-Systematic kernel exploit research on PlayStation 5 firmware 14.10. Goal: **userland code exec → kernel R/W → hypervisor bypass**. We have userland code execution via a Lua 5.1 loader on TCP 9026. We need kernel memory access.
+Systematic kernel exploit research on PlayStation 5 firmware 14.10+. Goal: **userland code exec → kernel R/W → jailbreak**. We have userland code execution via WebKit FontFace UAF. Kernel exploit chain is designed and awaiting live testing.
 
 ## Session Protocol
 

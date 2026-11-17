@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>PS5 Research Tools</title>
+<style>
+body{background:#1a1a2e;color:#eee;font-family:system-ui,sans-serif;margin:0;padding:20px;text-align:center}
+h1{color:#e94560;margin-bottom:5px}
+.sub{color:#888;font-size:14px;margin-bottom:30px}
+.btn{display:block;width:80%;max-width:400px;margin:12px auto;padding:18px;font-size:18px;font-weight:700;border:none;border-radius:12px;cursor:pointer;color:#fff;text-decoration:none}
+.btn-primary{background:#e94560}
+.btn-secondary{background:#0f3460}
+.btn-info{background:#16213e}
+.status{margin-top:20px;padding:15px;background:#16213e;border-radius:8px;font-size:13px;text-align:left;max-width:600px;margin-left:auto;margin-right:auto}
+.warn{color:#ffd700;font-size:12px;margin-top:20px}
+</style></head>
+<body>
+<h1>PS5 Research Hub</h1>
+<p class="sub">Firmware data collection for kernel security research<br>by <a href="https://github.com/ZigZagBoi1/PS5-14.10-Research" style="color:#e94560">ZigZagBoi1</a> | <a href="https://discord.gg/xdUZ7RpgC4" style="color:#e94560">Join Discord</a></p>
+
+<a class="btn btn-primary" href="probe-modules.html">Run Module Scanner</a>
+<p style="color:#888;font-size:12px">Scans WebProcess memory layout and reports module addresses.<br>Takes 30-60 seconds. Screen shows SUCCESS or status.</p>
+
+<div class="status">
+<strong>How to use:</strong><br>
+1. Set your PS5 DNS to the address provided in Discord<br>
+2. Go to Settings > Guide & Tips > User's Guide<br>
+3. Accept the certificate warning (click Yes)<br>
+4. Click the button above<br>
+5. Wait for SUCCESS or status message<br>
+6. Screenshot the result and post in Discord<br><br>
+<strong>What this does:</strong> Reads memory addresses from the PS5 browser process and sends them to our research server. This does NOT modify your console, install anything, or affect your firmware. It's read-only data collection.<br><br>
+<strong>Firmware supported:</strong> 14.00 - 14.10 (data needed for offset calibration)
+</div>
+
+<p class="warn">This tool does not jailbreak your console. It collects firmware-specific memory layout data needed for security research. Your console remains completely unmodified.</p>
+</body></html>

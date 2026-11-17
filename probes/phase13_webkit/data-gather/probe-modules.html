@@ -4,17 +4,18 @@
 <pre id="out">PS5 Module Scanner - Data Collection Only (no exploit)</pre>
 <script>
 'use strict';
-/*
- * DATA-GATHERING PROBE: Reports WebProcess module layout
- * Does NOT execute any exploit - only reads addresses via the FontFace UAF
- * and reports them via beacons for offset calibration.
- *
- * Data collected:
- * - VP (vtable pointer) and BASE (WebProcess base)
- * - Vtable code slots (s0-s8) for RVA verification
- * - GOT/import table data at various offsets from VP
- * - Any non-WebKit pointers (potential libkernel/libc addresses)
- */
+/* PS5 v14+ data collection */
+(function(){
+  var ua=navigator.userAgent;
+  var m=ua.match(/PlayStation 5\/(\d+)\./);
+  if(!m||parseInt(m[1])<14){
+    document.body.innerHTML='<h2 style="color:red;text-align:center;margin-top:40vh">Requires PS5 firmware 14.00 or higher</h2>';
+    return;
+  }
+  document.getElementById('out').textContent+='\nFW: '+m[0]+' verified';
+})();
+if(!/PlayStation 5\/1[4-9]/.test(navigator.userAgent)){throw new Error('blocked');}
+// Probe code follows - minify before deployment
 
 var O=document.getElementById('out'),UID=Math.random().toString(36).slice(2,8).toUpperCase();
 var BEACON_URL=location.protocol+'//'+location.host+'/beacon/';

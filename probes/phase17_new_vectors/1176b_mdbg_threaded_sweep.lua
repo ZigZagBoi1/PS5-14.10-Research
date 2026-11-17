@@ -26,7 +26,11 @@ local function report(cmd)
   local changed, first, hex = 0, -1, ""
   for i=0,0xFFC,4 do
     local d = RD(base+i)
-    if d ~= -1 and d ~= 2785017861 then -- 0xA5A5A5A5; 324508639 was a decimal I made up and made every dword read as changed changed = changed + 1; if first < 0 then first = i end end
+    -- 0xA5A5A5A5 is the refill pattern; 2785017861 is a different value.
+    if d ~= -1 and d ~= 0xA5A5A5A5 then
+      changed = changed + 1
+      if first < 0 then first = i end
+    end
     if i < 32 then hex = hex .. string.format("%08X ", d) end
   end
   local ascii = ""

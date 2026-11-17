@@ -74,9 +74,10 @@ The full WebProcess `text_size` (>= 42.87 MB measured on-device) is the sum of:
   text_size = JSC + WebCore + WebKit + PAL + bmalloc + WTF + ICU + support libs
 
 The JSC component measured here (**~11.4 MB .text**) is therefore a FLOOR for
-one part of that total — it accounts for roughly a quarter of the >= 42.87 MB
-on-device total, with WebCore (the largest component, ~830+ source objects)
-making up the bulk of the remainder.
+one part of that total. The WebCore component has now been measured on the
+companion build (see "WebCore component" below): **55.71 MB .text** — WebCore
+alone exceeds the 42.87 MB on-device lower bound, which shows how loose that
+bound is (it was measured from s2, not from base).
 
 This does NOT yield the RVA directly. `text_size` is a link-time fact that
 depends on Sony's exact link order, section packing, and ICF
@@ -88,9 +89,8 @@ differ from the PS5's. What this measurement provides:
 2. Confirmation that a JIT-off build shrinks JSC dramatically (a JIT-on x86-64
    build of the same tree would add DFG/FTL/B3/wasm codegen — several MB more).
    The on-device >= 42.87 MB total is consistent with an LLInt-only engine.
-3. A component anchor: if WebCore's .text is later measured on the companion
-   WebCore build, JSC + WebCore together bound `text_size` from below with two
-   real numbers instead of one inequality.
+3. A two-component anchor (completed 2026-11-15): JSC + WebCore = 11.36 +
+   55.71 = **67.07 MB .text** measured across the two builds. See below.
 
 ## Caveats
 
@@ -101,10 +101,51 @@ differ from the PS5's. What this measurement provides:
 - The 42.87 MB figure is a LOWER bound (measured from s2, not from base), so the
   true `text_size` is somewhat larger than 42.87 MB regardless.
 
-## Next step (companion measurement)
+## WebCore component (companion measurement, 2026-11-15)
 
-The WebCore-enabled build (same tree, same flags, `Build-wc`) is compiling the
-unified sources that contain CSSFontFace/CSSFontFaceSet/FontFace. When it
-finishes, measure libWebCore .text to complete the JSC + WebCore lower bound
-on `text_size`, and extract the FontFace::Client vtable layout to cross-check
-the slot identities in `WEBKIT_VTABLE_RVA_SOURCE_ANALYSIS_2026-11-12.md`.
+Build: `Build-wc`, same tree (WebKitGTK 2.42.0), same flags, same compiler.
+cmakeconfig.h verified identical on the relevant flags: ENABLE_JIT/DFG/FTL/
+WASM all 0, plus USE_ISO_MALLOC 0 and USE_SYSTEM_MALLOC 0 (the PlayStation
+port config values, matching the chain-plan corrections of 2026-11-14).
+
+Method: in this tree's GTK port, WebCore is statically linked into
+libwebkit2gtk (no libWebCore.so exists), so .text was measured per object
+file over the complete `WebCore.dir` object set and summed. All 860 objects
+on disk were complete (the earlier full build attempt died only at the
+WebKit-layer DMABuf sources — an unrelated upstream bug where SourcesGTK.txt
+compiles Accelerated{BackingStore,Surface}DMABuf.cpp unconditionally even
+with USE_GBM=OFF; those two files are not in the WebCore target). Object-set
+decomposition verified disjoint by construction: 547 unified-source objects
+(4,656 .cpp files) + 104 unscanned objects (@no-unify / generated); zero
+overlap. Section filter: PROGBITS + SHF_EXECINSTR (.text, .text.unlikely,
+etc.), parsed from `readelf -SW`.
+
+  WebCore .text total = 55,710,067 bytes = 55.71 MB
+    unified-source objects:   54.65 MB
+    unscanned objects:         1.06 MB
+    (209 objects carry 0 text — name tables, derived sources)
+
+Two-component anchor:
+
+  JSC (11.36 MB) + WebCore (55.71 MB) = 67.07 MB .text
+
+Interpretation and caveat. WebCore alone (55.71 MB) already exceeds the
+on-device >= 42.87 MB lower bound. This does not contradict the on-device
+measurement — that bound was taken from s2 (a mid-text function), not from
+base — but it does quantify how loose it is: the true on-device text_size is
+very likely tens of MB above 42.87 MB. Direction of the GTK-vs-PlayStation
+skew: the GTK build INCLUDES code the PlayStation port drops
+(cairo/freetype/harfbuzz font stack, gstreamer media, texmap/nicosia
+compositing, GTK accessibility), so the PlayStation WebCore component is
+likely SMALLER than 55.71 MB; both ports share the same DOM/CSS/layout/render
+core that dominates the number. Treat 55.71 MB as the WebCore share anchor
+(~80% of a Sony text plausibly in the 45-70 MB range), and note the
+consequence for the p809/p810 rodata-backwalk / gadget-scan probes: the
+address range to cover from a leaked .rodata pointer back to .text base is
+much larger than the 42.87 MB figure suggested.
+
+The FontFace::Client vtable layout cross-check mentioned in the original
+next-step was already resolved at source level (see
+WEBKIT_VTABLE_RVA_SOURCE_ANALYSIS_2026-11-12.md, "Measured confirmation"
+section — the two unified sources carrying these classes compiled fine in
+this build).

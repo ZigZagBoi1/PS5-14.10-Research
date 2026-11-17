@@ -54,6 +54,21 @@ class RegenArchivesCheckTests(unittest.TestCase):
         self.assertEqual(first, second)
         self.assertNotIn("Regenerated 20", first)
 
+    def test_written_archives_use_lf_endings(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(regen_archives.main([]), 0)
+        for name in ("ALL_PROBES.md", "ALL_RESULTS.md"):
+            self.assertNotIn(b"\r\n", (self.root / "docs" / name).read_bytes())
+
+    def test_a_crlf_copy_of_a_current_archive_is_stale(self):
+        with contextlib.redirect_stdout(io.StringIO()):
+            regen_archives.main([])
+        path = self.root / "docs" / "ALL_PROBES.md"
+        path.write_bytes(path.read_bytes().replace(b"\n", b"\r\n"))
+        code, out = self._check()
+        self.assertEqual(code, 1)
+        self.assertIn("ALL_PROBES.md: STALE", out)
+
     def test_write_then_check_is_current(self):
         with contextlib.redirect_stdout(io.StringIO()):
             self.assertEqual(regen_archives.main([]), 0)

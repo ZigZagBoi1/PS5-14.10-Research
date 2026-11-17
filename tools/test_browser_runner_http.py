@@ -5,6 +5,7 @@ import io
 import json
 import os
 from pathlib import Path
+import re
 import socket
 import shutil
 import ssl
@@ -15,6 +16,7 @@ import time
 from types import SimpleNamespace
 import unittest
 from unittest import mock
+from urllib.parse import urlsplit
 
 from tools.browser_runner import serve
 from tools.browser_runner.capture import CaptureError, CaptureWriter, decode_request
@@ -314,6 +316,22 @@ class HttpFixtureTests(unittest.TestCase):
         self.assertEqual(self.events()[0]['measurement'],'caf\u00e9\n\\n')
         self.assertEqual(len(self.server.log_file.getvalue().splitlines()),1)
         self.assertIn('caf\u00e9\\n\\n',self.server.log_file.getvalue())
+
+    def test_launcher_buttons_resolve(self):
+        text = (serve.ROOT / 'launcher.html').read_text(encoding='utf-8')
+        targets = sorted(set(re.findall(r"navigate\('([^']+)'\)", text)))
+        self.assertTrue(targets)
+        for target in targets:
+            with self.subTest(target=target):
+                path = urlsplit(target).path
+                self.assertNotEqual(self.request(path), 404, target)
+
+    def test_root_serves_the_launcher_and_every_static_target_exists(self):
+        for route, target in serve.STATIC.items():
+            with self.subTest(route=route):
+                self.assertTrue(target.is_file(), f'{route} -> {target}')
+        self.assertEqual(self.request('/'), 200)
+        self.assertIn(b'PS5 14.10 WebKit Probes', self.last_response)
 
     def test_static_alias_and_containment(self):
         with tempfile.TemporaryDirectory() as d:

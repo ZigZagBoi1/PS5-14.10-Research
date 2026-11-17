@@ -6,6 +6,28 @@ Open community kernel exploit research on PlayStation 5 firmware **14.10**. This
 
 ---
 
+## Community
+
+<a href="https://discord.gg/xdUZ7RpgC4">
+<img src="https://img.shields.io/badge/JOIN-Discord-5865F2?style=for-the-badge&logo=discord&logoColor=white" alt="Join Discord" height="60"/>
+</a>
+
+Join the Discord to follow progress, offer testing help, or discuss findings. **We need testers with PS5 consoles on firmware 14.00-14.10** to run data-collection probes (read-only, does not modify your console). Instructions are in the `#testing` channel.
+
+---
+
+## Help Wanted: 14.10 Testers
+
+We have **RIP control** (instruction pointer redirect) confirmed on PS5 14.10 via WebKit FontFace UAF. The full exploit chain needs firmware-specific module offsets that can only be gathered from consoles running 14.00-14.10. 
+
+**What testers do:** Change your DNS setting, open the User Guide browser, and run a data-collection probe. It reads memory addresses from the browser process and reports them. Takes 30-60 seconds. Your console is NOT modified in any way.
+
+**What we collect:** WebProcess module layout (base addresses, vtable pointers, RVAs). This data calibrates the ROP chain offsets for your firmware version.
+
+See `probes/phase13_webkit/data-gather/` for the probe tools, or join the Discord for step-by-step instructions.
+
+---
+
 ## License
 
 This work is licensed under [CC BY-NC 4.0](LICENSE). You are free to share and adapt it, but you **must give credit** (link to this repository and name the author) and you **may not use it commercially**. If you post findings from this research, credit [@ZiggyVall](https://x.com/ZiggyVall) and link back to this repo.

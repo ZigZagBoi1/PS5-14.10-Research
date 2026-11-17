@@ -48,7 +48,7 @@ function isPtr(hi){
   return hi!==0 && hi!==0xFFFFFFFF && (hi>>>0)<0x80000000 && hi>0x100;
 }
 
-window.onload=function(){
+window.onload=async function(){
 b('p771-START');
 
 // === Section A: AudioBuffer channel data residue ===

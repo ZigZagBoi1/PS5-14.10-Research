@@ -175,7 +175,7 @@
       "title": "Validated 14.10 kernel vulnerability",
       "weight": 10,
       "earned": 6,
-      "note": "FontFaceSet::load() UAF is a validated vulnerability on 14.10: heap pointer leak confirmed (p563-html/p564-html, 192B reclaim, +0x58/+0x68 readable), cross-firmware exploitability confirmed on 14.00 and 14.10 (issue #155). All three upstream fixes absent from WebKit 605.1.15. RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch \u2014 validates the exploitation path through WebProcess. V88 self-referential forge designed, 100% reclaim working on 14.10. UMTX orphaned waiter touches real kernel wait queue state (274e/274f). AIO double-free closed (70e: double-STATUS not double-free). Neither yet yields controlled kernel corruption on 14.10, hence 6 not 10.",
+      "note": "FontFaceSet::load() UAF is a validated vulnerability on 14.10: heap pointer leak confirmed (p563-html/p564-html, 192B reclaim, +0x58/+0x68 readable), cross-firmware exploitability confirmed on 14.00 and 14.10 (issue #155). All three upstream fixes absent from WebKit 605.1.15. RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch — validates the exploitation path through WebProcess. V88 self-referential forge designed, 100% reclaim working on 14.10. UMTX orphaned waiter touches real kernel wait queue state (274e/274f). AIO double-free closed (70e: double-STATUS not double-free). Neither yet yields controlled kernel corruption on 14.10, hence 6 not 10.",
       "evidence": [
         "docs/WEBKIT_FINDINGS.md",
         "docs/STRATEGY.md",
@@ -254,8 +254,8 @@
   "inventory": {
     "lua_probe_files": 3538,
     "js_probe_files": 81,
-    "html_probe_files": 333,
-    "text_result_files": 4362,
+    "html_probe_files": 388,
+    "text_result_files": 4363,
     "phase_dirs": 59
   },
   "retractions": [

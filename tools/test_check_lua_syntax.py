@@ -7,6 +7,8 @@ import tempfile
 import unittest
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parent.parent
+
 try:
     from tools import check_lua_syntax
 except ImportError:  # lupa is optional
@@ -29,6 +31,12 @@ class CheckLuaSyntaxTests(unittest.TestCase):
             text = out.getvalue()
             self.assertIn("Compiled 2 Lua 5.1 probe sources; failures=1", text)
             self.assertIn("bad.lua: probe source was not valid UTF-8", text)
+
+    def test_the_committed_probe_corpus_compiles(self):
+        out = io.StringIO()
+        with contextlib.redirect_stdout(out):
+            code = check_lua_syntax.main(ROOT)
+        self.assertFalse(code, out.getvalue())
 
 
 if __name__ == "__main__":

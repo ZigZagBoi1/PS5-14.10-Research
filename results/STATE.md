@@ -17,7 +17,7 @@ were measured; they are measurements, not truths.
 - race_assessment: ALL DEAD: PKTINFO=embedded struct, SNDBUF=mbuf logical overflow, close+setsockopt=fget blocks, 16 CVEs blocked. See docs/KERNEL_RACE_OFFLINE_ASSESSMENT_2026-11-10.md
 - cve_assessment: 16 FreeBSD kernel CVEs (2019-2026) checked; ALL blocked on 14.10 (feature removal, missing prereqs, zone isolation, existing locks). See docs/CVE_KERNEL_RW_ASSESSMENT_2026-11-10.md
 - cve_2020_7457: SA-20:20 patch adds INP_WLOCK only around ip6_pcbopts (2292 path). PKTINFO already locked in ip6_ctloutput. Sony blocked 2292 entirely. 91d/92c tested PKTINFO race to 11K+ calls = clean.
-- next_action: monitor upstream data-gather results/Discord for tester beacon dumps; on SUCCESS, recompute VP_RVA from absolute S-slots (cross-check deltas vs p691-run3 boot-stable set), update docs/ALL_RESULTS.md VP RVA candidates
+- next_action: monitor tester beacons; on first SUCCESS beacon log run: python tools/parse_beacons.py <log> --json
 - queued_probes: 1407a/1408a/1409a assessed DEAD offline 2026-11-17 (SA26_51_54_48_OFFLINE_ASSESSMENT doc); no queued probes remain
 - notes: all kernel addresses valid this boot only; if rebooted re-measure with fault oracle first
 - ipv6_options: 2292PKTOPTIONS(6)=BLOCKED, PKTINFO(46)=OK, TCLASS(61)=OK, RTHDR(51)=partial, DSTOPTS/HOPOPTS=BLOCKED

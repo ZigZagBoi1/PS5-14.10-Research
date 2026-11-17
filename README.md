@@ -39,9 +39,7 @@ This work is licensed under [CC BY-NC 4.0](LICENSE). You are free to share and a
 <a href="https://www.paypal.me/SalwanStudios">
 <img src="https://img.shields.io/badge/DONATE-PayPal-blue?style=for-the-badge&logo=paypal&logoColor=white" alt="Donate via PayPal" height="60"/>
 </a>
-<a href="https://ko-fi.com/ng643">
-<img src="https://img.shields.io/badge/BUY%20A%20COFFEE-Ko--fi-ff5f5f?style=for-the-badge&logo=kofi&logoColor=white" alt="Support on Ko-fi" height="60"/>
-</a>
+<!-- Ko-fi removed: link was swapped by a contributor without authorization -->
 
 > **When donating via PayPal, please send as Friends & Family** (not Goods & Services) to avoid payment holds and fees.
 

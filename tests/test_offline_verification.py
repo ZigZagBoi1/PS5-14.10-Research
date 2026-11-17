@@ -82,23 +82,33 @@ class OfflineVerificationCliTests(unittest.TestCase):
             "tools.test_browser_runner_http",
             "tools.test_browser_runner_paths",
             "tools.test_canvas_state_geometry",
+            "tools.test_check_lua_syntax",
             "tools.test_decode_fault_scan",
             "tools.test_deep_result_scanner",
             "tools.test_dns_tools",
             "tools.test_evidence_pins",
+            "tools.test_extract_ioctl_catalog",
             "tools.test_fault_oracle_boundary",
             "tools.test_fontface_abi_contracts",
             "tools.test_handler_claim_audit",
+            "tools.test_handler_ptrfree",
+            "tools.test_jailbreak_dns",
             "tools.test_layout_pages",
+            "tools.test_parse_beacons",
+            "tools.test_probe_js_syntax",
+            "tools.test_regen_archives",
             "tools.test_remaining_cve_triage",
+            "tools.test_render_progress",
             "tools.test_state",
             "tools.test_sys622_bitmap",
             "tools.test_sys622_prose",
             "tools.test_syscall_labels",
+            "tools.test_task_db",
             "tools.test_umtx454_correction",
             "tools.test_v88_forge_geometry",
             "tools.test_webkit_false_positive",
         ))
+
 
 
 if __name__ == "__main__":

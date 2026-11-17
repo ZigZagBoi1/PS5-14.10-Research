@@ -20,7 +20,6 @@ ROOT = Path(__file__).resolve().parents[1]
 SAFE_TEST_MODULES = (
     "tests.test_audit_research",
     "tools.test_analyze_result",
-    "tools.test_task_db",
     "tools.test_browser_runner_capture",
     "tools.test_browser_runner_http",
     "tools.test_browser_runner_paths",
@@ -37,17 +36,19 @@ SAFE_TEST_MODULES = (
     "tools.test_handler_ptrfree",
     "tools.test_jailbreak_dns",
     "tools.test_layout_pages",
-    "tools.test_remaining_cve_triage",
+    "tools.test_parse_beacons",
+    "tools.test_probe_js_syntax",
     "tools.test_regen_archives",
+    "tools.test_remaining_cve_triage",
     "tools.test_render_progress",
     "tools.test_state",
     "tools.test_sys622_bitmap",
     "tools.test_sys622_prose",
     "tools.test_syscall_labels",
+    "tools.test_task_db",
     "tools.test_umtx454_correction",
     "tools.test_v88_forge_geometry",
     "tools.test_webkit_false_positive",
-    "tools.test_probe_js_syntax",
 )
 
 

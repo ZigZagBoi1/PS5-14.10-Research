@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>PS5 Research Hub</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;color:#fff;font-family:system-ui,-apple-system,sans-serif;min-height:100vh;overflow-x:hidden}
+.hdr{padding:24px 20px 16px;text-align:center;border-bottom:1px solid #222}
+.hdr h1{font-size:22px;letter-spacing:1px;margin-bottom:4px}
+.hdr .sub{color:#888;font-size:13px}
+#fwcheck{margin:12px auto;padding:10px 16px;border:1px solid #333;border-radius:8px;max-width:420px;font-size:14px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:16px;max-width:720px;margin:0 auto}
+@media(max-width:600px){.grid{grid-template-columns:1fr}}
+.btn{background:#111;border:2px solid #333;border-radius:12px;padding:20px 12px;text-align:center;cursor:pointer;transition:all .2s}
+.btn:active{background:#1a1a2e;border-color:#fff}
+.btn .icon{font-size:28px;margin-bottom:8px}
+.btn .label{font-size:15px;font-weight:700}
+.btn .desc{font-size:11px;color:#888;margin-top:4px}
+.btn.disabled{opacity:.35;pointer-events:none}
+.btn.running{border-color:#f0c040;animation:pulse 1.5s infinite}
+.btn.done{border-color:#4ade80}
+@keyframes pulse{0%,100%{border-color:#f0c040}50%{border-color:#f0c04060}}
+.status{text-align:center;padding:16px;font-size:13px;color:#888}
+.footer{text-align:center;padding:16px;font-size:11px;color:#555;border-top:1px solid #222;margin-top:20px}
+/* Success screen */
+.success-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:#000;z-index:100;text-align:center;padding:20vh 20px 0}
+.success-overlay.show{display:block}
+.success-overlay h2{font-size:26px;margin-bottom:12px}
+.success-overlay .msg{font-size:16px;color:#ccc;line-height:1.6;max-width:400px;margin:0 auto}
+.success-overlay .heart{font-size:48px;margin:20px 0}
+.success-overlay .exit{margin-top:24px;font-size:13px;color:#666}
+.confetti{position:fixed;top:-10px;font-size:20px;animation:fall linear forwards;pointer-events:none;z-index:101}
+@keyframes fall{to{top:110vh;transform:rotate(720deg)}}
+</style></head>
+<body>
+
+<div class="hdr">
+  <h1>PS5 Research Hub</h1>
+  <p class="sub">by ZigZagBoi1 &middot; Firmware data collection for kernel security research</p>
+</div>
+
+<div id="fwcheck">Checking console...</div>
+
+<div class="grid" id="tests"></div>
+
+<div class="status" id="status">Select a test above to begin</div>
+
+<div class="footer">
+  Your console is NOT modified by these tests. They only read memory addresses.<br>
+  Use the circle button (O) to back out at any time.
+</div>
+
+<div class="success-overlay" id="success">
+  <div class="heart">&#129293;</div>
+  <h2>Thank you!</h2>
+  <p class="msg">Thank you so much for helping Ziggy with the research.<br>Your help greatly accelerates the progress! &#x1F49C;</p>
+  <p class="exit">Press the circle button (O) to exit this page.<br>Check Discord for the next test when it's ready!</p>
+</div>
+
+<script>
+'use strict';
+
+/* ============================================================
+   PS5 DETECTION + PROTECTION
+   ============================================================ */
+var PS5 = false, FW = '0', FW_NUM = 0;
+
+(function detect() {
+  var el = document.getElementById('fwcheck');
+  var ua = navigator.userAgent;
+
+  /* Layer 1: User-Agent check */
+  var m = ua.match(/PlayStation 5\/([\d.]+)/);
+  if (!m) {
+    el.innerHTML = '<span style="color:#e94560">This page requires a PS5 console.</span>';
+    el.innerHTML += '<br><small style="color:#555">Not a PS5 browser.</small>';
+    return;
+  }
+  FW = m[1]; FW_NUM = parseFloat(FW);
+
+  /* Layer 2: Block firmware below 14.00 */
+  if (FW_NUM < 14.0) {
+    el.innerHTML = '<span style="color:#f0c040">PS5 detected (FW ' + FW + ') &mdash; firmware 14.00+ required for these tests.</span>';
+    return;
+  }
+
+  /* Layer 3: PS5 WebKit fingerprint (can't be faked by UA spoofing) */
+  var dominated = true;
+  /* PS5 WebKit doesn't have SharedArrayBuffer */
+  if (typeof SharedArrayBuffer !== 'undefined') dominated = false;
+  /* PS5 doesn't have battery API */
+  if (navigator.getBattery) dominated = false;
+  /* PS5 doesn't expose performance.memory */
+  if (window.performance && window.performance.memory) dominated = false;
+
+  if (!dominated) {
+    el.innerHTML = '<span style="color:#e94560">Device verification failed.</span>';
+    return;
+  }
+
+  PS5 = true;
+  el.style.borderColor = '#4ade80';
+  el.innerHTML = '<span style="color:#4ade80">PS5 verified &mdash; Firmware ' + FW + '</span>';
+
+  /* Enable test buttons */
+  var btns = document.querySelectorAll('.btn');
+  for (var i = 0; i < btns.length; i++) btns[i].classList.remove('disabled');
+})();
+
+/* ============================================================
+   BEACON INFRASTRUCTURE
+   ============================================================ */
+var UID = Math.random().toString(36).slice(2, 8).toUpperCase();
+
+function beacon(tag, data) {
+  var url = '/beacon/T-' + tag + '-' + encodeURIComponent(data || '') +
+    '?t=' + Date.now() + '&u=' + UID + '&fw=' + FW;
+  try { navigator.sendBeacon(url); } catch(e) {}
+  try { new Image().src = url; } catch(e) {}
+}
+
+function beaconSync(tag, data) {
+  try {
+    var x = new XMLHttpRequest();
+    x.open('GET', '/beacon/T-' + tag + '-' + encodeURIComponent(data || '') +
+      '?t=' + Date.now() + '&u=' + UID + '&fw=' + FW, false);
+    x.send(null);
+  } catch(e) { beacon(tag, data); }
+}
+
+/* ============================================================
+   TEST DEFINITIONS
+   ============================================================ */
+var TESTS = [
+  {
+    id: 'vpwalk',
+    icon: '&#128270;',
+    label: 'VP + Base Scan',
+    desc: 'Finds vtable pointer and eboot base address',
+    run: function(cb) { runProbeStage('vpwalk', cb); }
+  },
+  {
+    id: 'gotread',
+    icon: '&#128209;',
+    label: 'Module Discovery',
+    desc: 'Reads import GOT for loaded module bases',
+    run: function(cb) { runProbeStage('gotread', cb); }
+  },
+  {
+    id: 'gadgets',
+    icon: '&#9881;',
+    label: 'Gadget Verify',
+    desc: 'Checks if known gadget offsets are valid',
+    run: function(cb) { runProbeStage('gadgets', cb); }
+  },
+  {
+    id: 'kslide',
+    icon: '&#128274;',
+    label: 'KASLR Slide',
+    desc: 'Measures kernel ASLR randomization',
+    run: function(cb) { runProbeStage('kslide', cb); }
+  },
+  {
+    id: 'heapinfo',
+    icon: '&#129518;',
+    label: 'Heap Layout',
+    desc: 'Maps kernel heap zone sizes and adjacency',
+    run: function(cb) { runProbeStage('heapinfo', cb); }
+  },
+  {
+    id: 'fullscan',
+    icon: '&#128640;',
+    label: 'Full Data Collect',
+    desc: 'Runs all scans in sequence (takes ~60s)',
+    run: function(cb) { runProbeStage('fullscan', cb); }
+  }
+];
+
+/* ============================================================
+   BUILD BUTTON GRID
+   ============================================================ */
+(function buildGrid() {
+  var grid = document.getElementById('tests');
+  for (var i = 0; i < TESTS.length; i++) {
+    var t = TESTS[i];
+    var div = document.createElement('div');
+    div.className = 'btn' + (PS5 ? '' : ' disabled');
+    div.id = 'btn-' + t.id;
+    div.innerHTML = '<div class="icon">' + t.icon + '</div>' +
+      '<div class="label">' + t.label + '</div>' +
+      '<div class="desc">' + t.desc + '</div>';
+    div.setAttribute('data-idx', i);
+    div.addEventListener('click', function() {
+      var idx = parseInt(this.getAttribute('data-idx'));
+      startTest(idx);
+    });
+    grid.appendChild(div);
+  }
+})();
+
+/* ============================================================
+   TEST RUNNER
+   ============================================================ */
+var running = false;
+
+function startTest(idx) {
+  if (running || !PS5) return;
+  running = true;
+  var t = TESTS[idx];
+  var btn = document.getElementById('btn-' + t.id);
+  btn.classList.add('running');
+  document.getElementById('status').textContent = 'Running: ' + t.label + '...';
+  beacon('START', t.id);
+
+  t.run(function(success) {
+    btn.classList.remove('running');
+    if (success) {
+      btn.classList.add('done');
+      document.getElementById('status').textContent = t.label + ' complete!';
+      beacon('DONE', t.id);
+      showSuccess();
+    } else {
+      document.getElementById('status').textContent = t.label + ' — no data (try again)';
+      beacon('FAIL', t.id);
+    }
+    running = false;
+  });
+}
+
+function runProbeStage(stage, cb) {
+  /* Fetch the actual probe code from the server.
+     The server ONLY sends the data-collection probe (never the exploit).
+     The server verifies the request came from a real PS5 session
+     by checking the UID + FW + prior beacon history. */
+  beacon('LOAD', stage);
+
+  /* For now: the probe code is embedded in a separate file per stage.
+     The server serves it only after validating the session. */
+  var script = document.createElement('script');
+  script.src = '/probes/' + stage + '.js?u=' + UID + '&fw=' + FW + '&t=' + Date.now();
+  script.onload = function() {
+    /* The loaded script calls window.__probeResult(success) when done */
+    window.__probeCB = cb;
+  };
+  script.onerror = function() {
+    beacon('LOADERR', stage);
+    cb(false);
+  };
+  document.body.appendChild(script);
+
+  /* Timeout: if probe doesn't finish in 90s, consider it failed */
+  setTimeout(function() {
+    if (running) { cb(false); running = false; }
+  }, 90000);
+}
+
+/* Called by the probe script when it finishes */
+window.__probeComplete = function(success) {
+  if (window.__probeCB) window.__probeCB(success);
+};
+
+/* ============================================================
+   SUCCESS SCREEN WITH CONFETTI
+   ============================================================ */
+function showSuccess() {
+  var el = document.getElementById('success');
+  el.classList.add('show');
+
+  var emojis = ['✨', '❤', '🚀', '🎉', '🌟', '💜', '⭐', '🎊'];
+  for (var i = 0; i < 30; i++) {
+    var c = document.createElement('div');
+    c.className = 'confetti';
+    c.textContent = emojis[Math.floor(Math.random() * emojis.length)];
+    c.style.left = (Math.random() * 100) + 'vw';
+    c.style.animationDuration = (2 + Math.random() * 3) + 's';
+    c.style.animationDelay = (Math.random() * 2) + 's';
+    document.body.appendChild(c);
+  }
+
+  /* Auto-hide after 10 seconds */
+  setTimeout(function() {
+    el.classList.remove('show');
+    var conf = document.querySelectorAll('.confetti');
+    for (var j = 0; j < conf.length; j++) conf[j].remove();
+  }, 10000);
+}
+</script>
+</body></html>

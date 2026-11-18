@@ -17,3 +17,4 @@ Thanks to everyone who has contributed to the PS5 14.10 kernel research project.
 - **pastawithpesto** — [@pastawithpesto](https://github.com/pastawithpesto) — upstream WebKit research, false-positive analysis
 - **wsjardijn** — [@wsjardijn](https://github.com/wsjardijn)
 - **Arjun Dhir** — [@ArjunD717](https://github.com/ArjunD717) — send_probe tooling parity, Lua 5.1 syntax gate in CI, probe-ID and count corrections, AIO double-free retraction
+- **hex0x42424242** — [@hex0x42424242](https://github.com/hex0x42424242) — independent 14.10 retail walk: Client vtable, slot0 delta, WebKit preference-key .rodata

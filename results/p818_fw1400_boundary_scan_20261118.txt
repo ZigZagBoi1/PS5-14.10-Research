@@ -47,6 +47,27 @@
 
 ## Vtable slot readings (3 XCHK slides)
 
+# Slide 14 (VP=0x811f01b28)
+00:04:19 | /beacon/P817-VT-ENTRY-0=0x8107f0fb0-dist=0x1710b78 |
+00:04:20 | /beacon/P817-VT-ENTRY-1=0x8107f0fe0-dist=0x1710b48 |
+00:04:20 | /beacon/P817-VT-ENTRY-2=0x80ecb5750-dist=0x324c3d8 |
+00:04:20 | /beacon/P817-VT-ENTRY-3=0x8107f16b0-dist=0x1710478 |
+00:04:20 | /beacon/P817-VT-ENTRY-4=0x80ecb5750-dist=0x324c3d8 |
+00:04:20 | /beacon/P817-VT-ENTRY-5=0x80ecb5750-dist=0x324c3d8 |
+00:04:20 | /beacon/P817-VT-ENTRY-6=0x810447400-dist=0x1aba728 |
+00:04:20 | /beacon/P817-VT-ENTRY-7=0x8107f1810-dist=0x1710318 |
+
+# Slide 15 (VP=0x82fb0db28)
+00:05:23 | /beacon/P817-VT-ENTRY-0=0x82e3fcfb0-dist=0x1710b78 |
+00:05:23 | /beacon/P817-VT-ENTRY-1=0x82e3fcfe0-dist=0x1710b48 |
+00:05:24 | /beacon/P817-VT-ENTRY-2=0x82c8c1750-dist=0x324c3d8 |
+00:05:24 | /beacon/P817-VT-ENTRY-3=0x82e3fd6b0-dist=0x1710478 |
+00:05:24 | /beacon/P817-VT-ENTRY-4=0x82c8c1750-dist=0x324c3d8 |
+00:05:24 | /beacon/P817-VT-ENTRY-5=0x82c8c1750-dist=0x324c3d8 |
+00:05:24 | /beacon/P817-VT-ENTRY-6=0x82e053400-dist=0x1aba728 |
+00:05:24 | /beacon/P817-VT-ENTRY-7=0x82e3fd810-dist=0x1710318 |
+
+# Slide 16 (VP=0x8352b9b28)
 00:06:33 | /beacon/P817-VT-ENTRY-0=0x833ba8fb0-dist=0x1710b78 |
 00:06:33 | /beacon/P817-VT-ENTRY-1=0x833ba8fe0-dist=0x1710b48 |
 00:06:33 | /beacon/P817-VT-ENTRY-2=0x83206d750-dist=0x324c3d8 |
@@ -55,4 +76,3 @@
 00:06:33 | /beacon/P817-VT-ENTRY-5=0x83206d750-dist=0x324c3d8 |
 00:06:33 | /beacon/P817-VT-ENTRY-6=0x8337ff400-dist=0x1aba728 |
 00:06:34 | /beacon/P817-VT-ENTRY-7=0x833ba9810-dist=0x1710318 |
-00:06:34 | /beacon/P817-VT-ENTRIES=24-minDist=0x1710318-maxDist=0x1672c8f8 |

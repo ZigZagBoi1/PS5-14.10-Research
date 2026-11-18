@@ -1,0 +1,78 @@
+# p818 FW 14.00 boundary scan capture
+# Date: 2026-11-18
+# Source: host-beacons.log (P817 probe ID)
+
+## 16 boundary measurements (all RVA = 0x7F00B28)
+
+00:01:46 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x807411000-RVA=0x7f00b28 |
+00:01:57 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x80b8dd000-RVA=0x7f00b28 |
+00:02:08 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x83599d000-RVA=0x7f00b28 |
+00:02:26 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x80aa0d000-RVA=0x7f00b28 |
+00:02:37 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x83230d000-RVA=0x7f00b28 |
+00:02:49 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x835b75000-RVA=0x7f00b28 |
+00:03:00 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x82d2e5000-RVA=0x7f00b28 |
+00:03:12 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x805409000-RVA=0x7f00b28 |
+00:03:23 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x822681000-RVA=0x7f00b28 |
+00:03:35 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x8255c5000-RVA=0x7f00b28 |
+00:03:46 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x8037e1000-RVA=0x7f00b28 |
+00:03:57 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x8296e1000-RVA=0x7f00b28 |
+00:04:09 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x836581000-RVA=0x7f00b28 |
+00:04:20 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x80a001000-RVA=0x7f00b28 |
+00:05:24 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x827c0d000-RVA=0x7f00b28 |
+00:06:34 | /beacon/P817-C-FINE-FOUND-crash=0x7f00000-base=0x82d3b9000-RVA=0x7f00b28 |
+
+## Cross-checks and final readings (last 3 slides)
+
+00:04:21 | /beacon/P817-XCHK-0:vpOff=0x0,ok=true |
+00:04:21 | /beacon/P817-XCHK-1:vpOff=0x100000,ok=true |
+00:04:21 | /beacon/P817-XCHK-2:vpOff=0x200000,ok=true |
+00:04:21 | /beacon/P817-XCHK-3:vpOff=0x400000,ok=true |
+00:04:21 | /beacon/P817-BASE-0x80a001000 |
+00:04:21 | /beacon/P817-VP-0x811f01b28 |
+00:04:21 | /beacon/P817-RVA-0x7f00b28 |
+00:05:24 | /beacon/P817-XCHK-0:vpOff=0x0,ok=true |
+00:05:25 | /beacon/P817-XCHK-1:vpOff=0x100000,ok=true |
+00:05:25 | /beacon/P817-XCHK-2:vpOff=0x200000,ok=true |
+00:05:25 | /beacon/P817-XCHK-3:vpOff=0x400000,ok=true |
+00:05:25 | /beacon/P817-BASE-0x827c0d000 |
+00:05:25 | /beacon/P817-VP-0x82fb0db28 |
+00:05:25 | /beacon/P817-RVA-0x7f00b28 |
+00:06:34 | /beacon/P817-XCHK-0:vpOff=0x0,ok=true |
+00:06:34 | /beacon/P817-XCHK-1:vpOff=0x100000,ok=true |
+00:06:34 | /beacon/P817-XCHK-2:vpOff=0x200000,ok=true |
+00:06:34 | /beacon/P817-XCHK-3:vpOff=0x400000,ok=true |
+00:06:34 | /beacon/P817-BASE-0x82d3b9000 |
+00:06:34 | /beacon/P817-VP-0x8352b9b28 |
+00:06:35 | /beacon/P817-RVA-0x7f00b28 |
+
+## Vtable slot readings (3 XCHK slides)
+
+# Slide 14 (VP=0x811f01b28)
+00:04:19 | /beacon/P817-VT-ENTRY-0=0x8107f0fb0-dist=0x1710b78 |
+00:04:20 | /beacon/P817-VT-ENTRY-1=0x8107f0fe0-dist=0x1710b48 |
+00:04:20 | /beacon/P817-VT-ENTRY-2=0x80ecb5750-dist=0x324c3d8 |
+00:04:20 | /beacon/P817-VT-ENTRY-3=0x8107f16b0-dist=0x1710478 |
+00:04:20 | /beacon/P817-VT-ENTRY-4=0x80ecb5750-dist=0x324c3d8 |
+00:04:20 | /beacon/P817-VT-ENTRY-5=0x80ecb5750-dist=0x324c3d8 |
+00:04:20 | /beacon/P817-VT-ENTRY-6=0x810447400-dist=0x1aba728 |
+00:04:20 | /beacon/P817-VT-ENTRY-7=0x8107f1810-dist=0x1710318 |
+
+# Slide 15 (VP=0x82fb0db28)
+00:05:23 | /beacon/P817-VT-ENTRY-0=0x82e3fcfb0-dist=0x1710b78 |
+00:05:23 | /beacon/P817-VT-ENTRY-1=0x82e3fcfe0-dist=0x1710b48 |
+00:05:24 | /beacon/P817-VT-ENTRY-2=0x82c8c1750-dist=0x324c3d8 |
+00:05:24 | /beacon/P817-VT-ENTRY-3=0x82e3fd6b0-dist=0x1710478 |
+00:05:24 | /beacon/P817-VT-ENTRY-4=0x82c8c1750-dist=0x324c3d8 |
+00:05:24 | /beacon/P817-VT-ENTRY-5=0x82c8c1750-dist=0x324c3d8 |
+00:05:24 | /beacon/P817-VT-ENTRY-6=0x82e053400-dist=0x1aba728 |
+00:05:24 | /beacon/P817-VT-ENTRY-7=0x82e3fd810-dist=0x1710318 |
+
+# Slide 16 (VP=0x8352b9b28)
+00:06:33 | /beacon/P817-VT-ENTRY-0=0x833ba8fb0-dist=0x1710b78 |
+00:06:33 | /beacon/P817-VT-ENTRY-1=0x833ba8fe0-dist=0x1710b48 |
+00:06:33 | /beacon/P817-VT-ENTRY-2=0x83206d750-dist=0x324c3d8 |
+00:06:33 | /beacon/P817-VT-ENTRY-3=0x833ba96b0-dist=0x1710478 |
+00:06:33 | /beacon/P817-VT-ENTRY-4=0x83206d750-dist=0x324c3d8 |
+00:06:33 | /beacon/P817-VT-ENTRY-5=0x83206d750-dist=0x324c3d8 |
+00:06:33 | /beacon/P817-VT-ENTRY-6=0x8337ff400-dist=0x1aba728 |
+00:06:34 | /beacon/P817-VT-ENTRY-7=0x833ba9810-dist=0x1710318 |

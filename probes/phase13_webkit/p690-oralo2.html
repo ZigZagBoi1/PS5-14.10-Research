@@ -124,6 +124,9 @@ var MODE = 'band';
   }
   var cursor = lsInt('p690c');
   if (!cursor && T_PREV > 0) cursor = Math.max(0, T_PREV - 0x8000) & ~(STEP - 1);
+  /* A stored cursor below 4GiB is a truncated leftover (seen 0x89c000).
+     Real T-tables on this bench are 0x10008xxxxx. Floor it. */
+  if (cursor < 0x100000000) cursor = 0x1000880000;
   if (cursor > 0) {
     CANDS[0] = cursor;
     CANDS[1] = cursor + STEP;

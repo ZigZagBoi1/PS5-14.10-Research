@@ -23,4 +23,8 @@ P689_ROUTES = {
     '/p689b': PROJECT / 'probes' / 'phase13_webkit' / 'p689-decider8294.html',
     '/p690':  PROJECT / 'probes' / 'phase13_webkit' / 'p690-oralo2.html',
     '/p690b': PROJECT / 'probes' / 'phase13_webkit' / 'p690-oralo2.html',
+    '/p692':  PROJECT / 'probes' / 'phase13_webkit' / 'p692-ranges20.html',
+    '/p691':  PROJECT / 'probes' / 'phase13_webkit' / 'p691-walk-forge-fixed.html',
+    '/p693':  PROJECT / 'probes' / 'phase13_webkit' / 'p693-coop-vp-dispatch.html',
+    '/p809':  PROJECT / 'probes' / 'phase13_webkit' / 'p809-elf-got-reader.html',
 }

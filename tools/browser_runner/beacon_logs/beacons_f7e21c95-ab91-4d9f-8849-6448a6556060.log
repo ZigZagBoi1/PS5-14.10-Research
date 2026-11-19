@@ -1,0 +1,2 @@
+[2026-11-12 09:31:47.385] BEACON 192.168.50.186: P676-ERR TypeError: undefined is not an object (evaluating 'W_PREV.toString')
+[2026-11-12 09:31:55.413] BEACON 192.168.50.186: P676-ERR TypeError: undefined is not an object (evaluating 'W_PREV.toString')

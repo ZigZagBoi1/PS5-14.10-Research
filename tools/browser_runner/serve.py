@@ -35,7 +35,43 @@ ROOT = pathlib.Path(__file__).resolve().parent
 PROJECT = ROOT.parent.parent
 
 STATIC = {
-    '/': PROJECT / 'probes' / 'phase13_webkit' / 'p663-groom-distance.html',
+    '/' : PROJECT / 'probes' / 'phase13_webkit' / 'p689-decider8294.html',
+    '/p688': PROJECT / 'probes' / 'phase13_webkit' / 'p688-wscan.html',
+    '/p687': PROJECT / 'probes' / 'phase13_webkit' / 'p687-tneighbors.html',
+    '/p686': PROJECT / 'probes' / 'phase13_webkit' / 'p686-heaporacle.html',
+    '/p685': PROJECT / 'probes' / 'phase13_webkit' / 'p685-variantseed.html',
+    '/p684': PROJECT / 'probes' / 'phase13_webkit' / 'p684-realfont.html',
+    '/p683': PROJECT / 'probes' / 'phase13_webkit' / 'p683-timerfire.html',
+    '/f.woff2': ROOT / 'p684.woff2',
+    '/p682': PROJECT / 'probes' / 'phase13_webkit' / 'p682-wvector.html',
+    '/p681': PROJECT / 'probes' / 'phase13_webkit' / 'p681-partialkeep.html',
+    '/p680': PROJECT / 'probes' / 'phase13_webkit' / 'p680-dyncorridor.html',
+    '/p679': PROJECT / 'probes' / 'phase13_webkit' / 'p679-doublecorridor.html',
+    '/p678b': PROJECT / 'probes' / 'phase13_webkit' / 'p678b-slowcadence.html',
+    '/p678': PROJECT / 'probes' / 'phase13_webkit' / 'p678-multihit.html',
+    '/h10': PROJECT / 'probes' / 'phase13_webkit' / 'p677-h10.html',
+    '/h12': PROJECT / 'probes' / 'phase13_webkit' / 'p677-h12.html',
+    '/h8': PROJECT / 'probes' / 'phase13_webkit' / 'p677-h8.html',
+    '/h16': PROJECT / 'probes' / 'phase13_webkit' / 'p677-h16.html',
+    '/p676b': PROJECT / 'probes' / 'phase13_webkit' / 'p676b-haze5.html',
+    '/p676': PROJECT / 'probes' / 'phase13_webkit' / 'p676-selective.html',
+    '/p675': PROJECT / 'probes' / 'phase13_webkit' / 'p675-status.html',
+    '/p674': PROJECT / 'probes' / 'phase13_webkit' / 'p674-rcseed.html',
+    '/p673': PROJECT / 'probes' / 'phase13_webkit' / 'p673-groom.html',
+    '/p672': PROJECT / 'probes' / 'phase13_webkit' / 'p672-rcsweep.html',
+    '/p671': PROJECT / 'probes' / 'phase13_webkit' / 'p671-rcinflate.html',
+    '/p670': PROJECT / 'probes' / 'phase13_webkit' / 'p670-nulltable.html',
+    '/p669': PROJECT / 'probes' / 'phase13_webkit' / 'p669-clamp.html',
+    '/zero': PROJECT / 'probes' / 'phase13_webkit' / 'p668v-zero.html',
+    '/size': PROJECT / 'probes' / 'phase13_webkit' / 'p668v-size.html',
+    '/skip': PROJECT / 'probes' / 'phase13_webkit' / 'p668v-skip.html',
+    '/p667': PROJECT / 'probes' / 'phase13_webkit' / 'p667-keepspray.html',
+    '/p666': PROJECT / 'probes' / 'phase13_webkit' / 'p666-batch-forensics.html',
+    '/nosp': PROJECT / 'probes' / 'phase13_webkit' / 'p666v-nosp.html',
+    '/sp12': PROJECT / 'probes' / 'phase13_webkit' / 'p666v-sp12.html',
+    '/p665': PROJECT / 'probes' / 'phase13_webkit' / 'p665-r1death-bisect.html',
+    '/p664': PROJECT / 'probes' / 'phase13_webkit' / 'p664-fullwindow-forensics.html',
+    '/p663': PROJECT / 'probes' / 'phase13_webkit' / 'p663-groom-distance.html',
     '/p656j2': PROJECT / 'probes' / 'phase13_webkit' / 'p656j2-landing-proof.html',
     '/p656j4': PROJECT / 'probes' / 'phase13_webkit' / 'p656j4-landing-proof.html',
     '/probe/p172-jsc-corpus-runner.js': ROOT / 'p172-runner-standalone.html',
@@ -88,10 +124,21 @@ STATIC = {
     '/p553.js': PROJECT / 'probes' / 'phase13_webkit' / 'p553-canvas-uaf-write-confirm.js',
     '/fuzz.html': ROOT / 'fuzz.html',
 }
+from routes_p689 import P689_ROUTES
+STATIC.update(P689_ROUTES)
 
 MIME = {'.html': 'text/html', '.js': 'application/javascript', '.css': 'text/css', '.json': 'application/json', '.webp': 'image/webp'}
 
 LOG_DIR = ROOT / 'beacon_logs'
+
+# Guide auto-reloads `/` every ~1.5s. A fast NOLEAK probe then saturates
+# the 192B lane and reclaim never lands. One-shot: first N homes go to the
+# live probe; later homes park on p676b.
+HOME_SHOT = '/p693?coop=2&ctl=0&k=1024&pf=12000&pw=250&rt=0&nl=1&rp=0&np=1'
+HOME_PARK = '/p676b'
+_home_lock = threading.Lock()
+_home_remaining = 0  # start parked; GET /arm-p693 before a single Guide open
+_p693_remaining = 0  # Guide reloads /p693?… directly after the first 302
 
 
 _LOG_ESCAPES = str.maketrans({
@@ -354,6 +401,7 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
         self._reply(204)
 
     def do_GET(self):
+        global _home_remaining, _p693_remaining
         try:
             parsed = urlsplit(self.raw_target)
         except ValueError:
@@ -367,6 +415,44 @@ class ProbeHandler(http.server.BaseHTTPRequestHandler):
         if path.startswith('/document/') and '/ps5/' in path:
             suffix = path.split('/ps5/', 1)[1]
             path = '/' + suffix
+
+        if path == '/arm-p693':
+            with _home_lock:
+                _home_remaining = 1
+                _p693_remaining = 1
+            _safe_print('[home] re-armed: next / and /p693 once, then park p676b')
+            self._reply(204)
+            return
+
+        if path in ('/', ''):
+            with _home_lock:
+                if _home_remaining > 0:
+                    _home_remaining -= 1
+                    loc = HOME_SHOT
+                    left = _home_remaining
+                else:
+                    loc = HOME_PARK
+                    left = 0
+            _safe_print(f'[home] 302 {loc} (shots left={left})')
+            with self._static_response_output():
+                self.send_response(302)
+                self.send_header('Location', loc)
+                self.send_header('Cache-Control', 'no-store')
+                self.end_headers()
+            return
+
+        if path == '/p693':
+            with _home_lock:
+                serve_p693 = _p693_remaining > 0
+                if serve_p693:
+                    _p693_remaining -= 1
+                    left = _p693_remaining
+            if not serve_p693:
+                # 204: do not navigate the in-flight p693 tab to p676b.
+                _safe_print('[home] 204 /p693 spent (hold tab)')
+                self._reply(204)
+                return
+            _safe_print(f'[home] serving /p693 (shots left={left})')
 
         target = STATIC.get(path)
         if target and target.is_file():

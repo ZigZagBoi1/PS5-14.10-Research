@@ -191,3 +191,7 @@ python tools/render_progress.py --check
 ```
 
 The renderer generates the README block and SVG. It reads local files only and never contacts or runs code on a console.
+
+### Inventory-only refresh (2026-11-20)
+
+Recounted the checked-out repository using the renderer's existing rules: 3539 Lua files, 81 JavaScript files, 391 HTML files, 4364 text result files, and 60 phase directories. Updated only the inventory in `docs/progress.json` and regenerated the SVG footer. The earlier counts above remain historical snapshots. Milestone weights, earned points (65/100), evidence hashes, evidence revision, and milestone audit date are unchanged. This refresh establishes file counts only, not new experiments or research success. The owner-restricted README is byte-for-byte unchanged.

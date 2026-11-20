@@ -20,6 +20,7 @@ ROOT = Path(__file__).resolve().parents[1]
 SAFE_TEST_MODULES = (
     "tests.test_audit_research",
     "tools.test_analyze_result",
+    "tools.test_beacon_validity",
     "tools.test_browser_runner_capture",
     "tools.test_browser_runner_http",
     "tools.test_browser_runner_paths",

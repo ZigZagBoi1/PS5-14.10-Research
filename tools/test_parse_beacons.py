@@ -54,7 +54,7 @@ class BeaconAnalyzerTests(unittest.TestCase):
         r = self.run_tool(path)
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("MATCH_1360_LAYOUT", r.stdout)
-        self.assertIn("VP_RVA CONFIRMED = 0xc6a1b28", r.stdout)
+        self.assertIn("VP_RVA ASSUMED = 0xc6a1b28", r.stdout)
 
     def test_uniform_shift_recompute(self):
         """Vtable moved vs .text: every VP-slot delta shifts by one constant."""
@@ -69,8 +69,8 @@ class BeaconAnalyzerTests(unittest.TestCase):
         r = self.run_tool(path)
         self.assertEqual(r.returncode, 0, r.stderr)
         self.assertIn("UNIFORM_SHIFT_RVA_RECOMPUTED", r.stdout)
-        self.assertIn("VP_RVA RECOMPUTED = 0xc6a9b28", r.stdout)  # 0xC6A1B28 + 0x8000
-        self.assertIn(f"base={hex(vp - (0xC6A1B28 + shift))}", r.stdout)
+        self.assertIn("VP_RVA CANDIDATE = 0xc6a9b28", r.stdout)  # 0xC6A1B28 + 0x8000
+        self.assertIn(f"base_candidate={hex(vp - (0xC6A1B28 + shift))}", r.stdout)
 
     def test_mismatch_garbage_slots(self):
         """Random slot values -> MISMATCH, not a false RVA."""
@@ -87,7 +87,7 @@ class BeaconAnalyzerTests(unittest.TestCase):
         path = self.make_log([self.beacon("DDDDDD", "UA-Mozilla%2F5.0")])
         r = self.run_tool(path)
         self.assertEqual(r.returncode, 1)
-        self.assertIn("INCOMPLETE", r.stdout)
+        self.assertIn("INVALID_RUN", r.stdout)
 
     def test_base_claim_disagreement_flagged(self):
         """Probe BASE claim inconsistent with its own VP -> agree=False."""
@@ -97,7 +97,8 @@ class BeaconAnalyzerTests(unittest.TestCase):
         wrong_base = vp - 0xC6A1B28 - 0x4000  # corrupted beacon
         path = self.make_log(self.full_run("EEEEEE", vp, slots, wrong_base))
         r = self.run_tool(path)
-        self.assertEqual(r.returncode, 0, r.stderr)
+        self.assertEqual(r.returncode, 1, r.stderr)
+        self.assertIn("INVALID_RUN", r.stdout)
         self.assertIn("agree=False", r.stdout)
         self.assertIn("MATCH_1360_LAYOUT", r.stdout)  # slots still decide
 

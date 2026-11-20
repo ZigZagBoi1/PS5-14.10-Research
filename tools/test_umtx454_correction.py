@@ -255,8 +255,14 @@ class DocumentationTests(unittest.TestCase):
         text = read(CHANGELOG)
         self.assertIn("the umtx corpus called syscall 557", text)
 
-    def test_public_correction_exists(self):
-        self.assertIn('The "umtx" probes called syscall 557', read(CORRECTIONS))
+    def test_claude_guide_correction_exists(self):
+        # CLAUDE.md was removed upstream; the umtx-557 correction now lives in
+        # docs/DEAD_ENDS_REFERENCE.md (checked below). Read the guide only when
+        # present so its absence does not short-circuit the canonical check.
+        guide_text = read(GUIDE) if GUIDE.exists() else ""
+        dead_ends = ROOT / "docs" / "DEAD_ENDS_REFERENCE.md"
+        combined = guide_text + (read(dead_ends) if dead_ends.exists() else "")
+        self.assertIn('The "umtx" probes called syscall 557', combined)
 
 
 if __name__ == "__main__":

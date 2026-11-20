@@ -9,11 +9,10 @@ beacon:
 
 This tool groups beacons by UID into runs, validates each run, and -- crucially
 -- does NOT trust the probe's hardcoded BASE = VP - 0xC6A1B28 (13.60 value).
-It recomputes the slide from the absolute S-slots: inter-slot deltas are
-ASLR-invariant within one firmware build, so if the 14.10 slot deltas match the
-13.60 p691-run3 boot-stable set, the same build is running and VP_RVA =
-0xC6A1B28 is confirmed; if deltas match but VP-si deltas all shift by the same
-amount, the build differs and the true RVA falls out of the shift.
+Relative deltas provide a layout fingerprint, not independent proof of build
+identity or an absolute module base. Address candidates below depend on the
+reference-layout assumption. Run validity is checked separately; incomplete,
+failed, malformed, or contradictory records cannot produce a successful exit.
 
 Usage:
     python tools/parse_beacons.py /var/log/nginx/ps5_beacons.log
@@ -97,7 +96,7 @@ def parse_log(path):
     return runs
 
 
-def analyze(run):
+def analyze_layout(run):
     """Return (verdict, details) for one run."""
     d = {"uid": run.uid, "vp": hex(run.vp), "walk_ok": run.walk_ok,
          "complete": run.complete}
@@ -148,9 +147,9 @@ def analyze(run):
     d["inter_slot_gaps_match_1360"] = gap_consistent
 
     if not nonzero_shifts and gap_consistent:
-        # Every VP-slot delta identical to 13.60 -> same build, pure slide.
-        d["vp_rva_confirmed"] = hex(ASSUMED_VP_RVA)
-        d["base_true"] = hex(base_implied)
+        # Matching relative deltas do not independently anchor an absolute RVA.
+        d["vp_rva_assumed"] = hex(ASSUMED_VP_RVA)
+        d["base_candidate"] = hex(base_implied)
         return "MATCH_1360_LAYOUT", d
 
     unique_shifts = set(nonzero_shifts)
@@ -158,12 +157,12 @@ def analyze(run):
             and gap_consistent):
         # Gaps identical but every slot offset from VP by the same constant:
         # vtable (.rodata) moved as a unit relative to .text — different link
-        # of the same code. True RVA = assumed + shift.
+        # of the same code, under the reference-layout assumption only.
         shift = nonzero_shifts[0]
         true_rva = ASSUMED_VP_RVA + shift
         d["uniform_shift"] = hex(shift)
-        d["vp_rva_recomputed"] = hex(true_rva)
-        d["base_true"] = hex(run.vp - true_rva)
+        d["vp_rva_candidate"] = hex(true_rva)
+        d["base_candidate"] = hex(run.vp - true_rva)
         return "UNIFORM_SHIFT_RVA_RECOMPUTED", d
 
     # 3. Structural fingerprint that survives ANY slide: slot-vs-slot deltas.
@@ -176,6 +175,44 @@ def analyze(run):
         structural[key + "_match"] = structural[key] == structural[key + "_ref"]
     d["structural_slot_pairs"] = structural
     return "MISMATCH_MANUAL_REVIEW", d
+
+
+def analyze(run):
+    """Keep diagnostic layout matching separate from evidence validity."""
+    layout_verdict, details = analyze_layout(run)
+    errors = []
+    seen = {}
+    numeric_keys = {"VP", "BASE", *SLOT_KEYS}
+    for message in run.messages:
+        key, value = parse_kv(message)
+        if key not in numeric_keys and key not in {"WALK", "COMPLETE"}:
+            continue
+        if (key in numeric_keys and not isinstance(value, int)
+                or key == "WALK" and value not in {"ok=true", "ok=false"}
+                or key == "COMPLETE" and value is not None):
+            errors.append(f"malformed {key}")
+        if key in seen and seen[key] != value:
+            errors.append(f"contradictory {key}")
+        seen[key] = value
+    if not run.walk_ok:
+        errors.append("walk not successful")
+    if not run.complete:
+        errors.append("completion missing")
+    if not run.vp:
+        errors.append("VP missing or zero")
+    if any(not run.slots.get(key) for key in SLOT_KEYS[:8]):
+        errors.append("required slots S0-S7 missing or zero")
+    if "BASE" not in seen or run.base_claimed != run.vp - ASSUMED_VP_RVA:
+        errors.append("BASE missing or inconsistent with probe assumption")
+    details["layout_verdict"] = layout_verdict
+    details["run_valid"] = not errors
+    details["validation_errors"] = sorted(set(errors))
+    if errors:
+        for key in ("vp_rva_assumed", "vp_rva_candidate", "base_candidate"):
+            details.pop(key, None)
+        return "INVALID_RUN", details
+    details["address_inference"] = "conditional on reference-layout assumption"
+    return layout_verdict, details
 
 
 def main():
@@ -208,15 +245,20 @@ def main():
         for r in results:
             print(f"UID {r['uid']}: {r['verdict']}")
             print(f"  VP={r['vp']} walk_ok={r['walk_ok']} complete={r['complete']}")
+            print(f"  run_valid={r['run_valid']} layout={r['layout_verdict']}")
+            if r["validation_errors"]:
+                print(f"  validation_errors={r['validation_errors']}")
             if "base_probe_claim" in r:
                 print(f"  BASE probe-claimed={r['base_probe_claim']} "
                       f"implied(0xC6A1B28)={r['base_implied_by_assumed_rva']} "
                       f"agree={r['probe_base_matches_assumption']}")
-            if "vp_rva_confirmed" in r:
-                print(f"  VP_RVA CONFIRMED = {r['vp_rva_confirmed']}  base={r['base_true']}")
-            if "vp_rva_recomputed" in r:
+            if "vp_rva_assumed" in r:
+                print(f"  VP_RVA ASSUMED = {r['vp_rva_assumed']}  base_candidate={r['base_candidate']}")
+            if "vp_rva_candidate" in r:
                 print(f"  uniform shift={r['uniform_shift']} -> "
-                      f"VP_RVA RECOMPUTED = {r['vp_rva_recomputed']}  base={r['base_true']}")
+                      f"VP_RVA CANDIDATE = {r['vp_rva_candidate']}  base_candidate={r['base_candidate']}")
+            if "address_inference" in r:
+                print(f"  {r['address_inference']}")
             if r["verdict"] == "MISMATCH_MANUAL_REVIEW":
                 for k in ("slot_deltas", "delta_shift_vs_1360"):
                     print(f"  {k}: {r[k]}")

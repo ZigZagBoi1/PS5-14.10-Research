@@ -21,7 +21,7 @@ CAPTURE = ROOT / "docs" / "sysent-names-13.60.csv"
 ATTACK = ROOT / "docs" / "ATTACK_SURFACE.md"
 INDEX = ROOT / "docs" / "PROBE_INDEX.md"
 CHANGELOG = ROOT / "CHANGELOG.md"
-GUIDE = ROOT / "CLAUDE.md"
+CORRECTIONS = ROOT / "docs" / "DEAD_ENDS_REFERENCE.md"
 
 PROBE_04 = ROOT / "probes" / "phase1_identity_layout" / "04_kernel_surface.lua"
 PROBE_10 = ROOT / "probes" / "phase2_kernel_objects" / "10_umtx_stress.lua"
@@ -255,11 +255,8 @@ class DocumentationTests(unittest.TestCase):
         text = read(CHANGELOG)
         self.assertIn("the umtx corpus called syscall 557", text)
 
-    def test_claude_guide_correction_exists(self):
-        guide_text = read(GUIDE)
-        dead_ends = ROOT / "docs" / "DEAD_ENDS_REFERENCE.md"
-        combined = guide_text + (read(dead_ends) if dead_ends.exists() else "")
-        self.assertIn('The "umtx" probes called syscall 557', combined)
+    def test_public_correction_exists(self):
+        self.assertIn('The "umtx" probes called syscall 557', read(CORRECTIONS))
 
 
 if __name__ == "__main__":

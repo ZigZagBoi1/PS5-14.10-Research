@@ -252,11 +252,11 @@
     }
   ],
   "inventory": {
-    "lua_probe_files": 3538,
+    "lua_probe_files": 3539,
     "js_probe_files": 81,
-    "html_probe_files": 390,
-    "text_result_files": 4363,
-    "phase_dirs": 59
+    "html_probe_files": 391,
+    "text_result_files": 4364,
+    "phase_dirs": 60
   },
   "retractions": [
     {

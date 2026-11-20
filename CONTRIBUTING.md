@@ -13,16 +13,17 @@ Chat is not the record. A finding still lands in this repository as a probe, a c
 ## What We Need
 
 ### High Priority
-- **Evidence review** — 43a–43p have saved records, including incomplete runs. Check the current probe index and existing audits before proposing a retest.
-- **KASLR evidence** — No kernel base is established. Review later AF_ROUTE/KLD records as well as the earlier incomplete 43o/43a captures; do not treat a missing result as a diagnosed kill cause.
-- **Kernel offset discovery for fw 14.10** — Existing offsets only cover 1.00-10.01. Once KASLR is defeated, we need to map 14.10 symbols.
-- **New exploit vectors** — Review the attack surface and dead ends in `docs/STRATEGY.md`. Fresh eyes catch things.
+- **WebKit FontFace chain review** — The FontFace UAF (CVE-2026-43720) is the only live exploit vector. PRs #300–#304 contain oracle semantics, vptr guard bypass, cross-firmware layout corrections, and an engine-driven free primitive. Reviewing beacon evidence, verifying claims against captures, and catching bugs in probe code is the most impactful work right now.
+- **Cross-firmware validation** — The chain is being developed on 14.10 and ported to 14.00. Contributors with either firmware can run data-gather probes and submit beacon captures. VP-relative vtable offsets transfer across firmwares; base-relative offsets do not. More landings strengthen the evidence.
+- **Alternative info leak** — `IPV6_2292PKTOPTIONS` is blocked on 14.10. The Canvas UAF write primitive exists but cannot be aimed without a heap pointer leak. Finding an alternative leak mechanism is the critical-path blocker. Fresh eyes on the WebKit attack surface (`docs/STRATEGY.md`) are welcome.
+- **KASLR / kernel offset discovery** — No kernel base is established on 14.10, and existing offsets only cover 1.00–10.01. This is blocked until the WebKit chain delivers a kernel read primitive, but offline source analysis of FreeBSD 11.0 kernel structures can start now.
 
 ### Always Welcome
-- **Analysis of probe results** — Cross-reference against FreeBSD source, find things we missed
-- **New probe scripts** — Follow the template in `CLAUDE.md`, test via `tools/send_probe.py`
-- **Documentation improvements** — Typos, clarity, missing details
-- **Tool improvements** — Better send/receive tooling, result parsers, automation
+- **Beacon evidence review** — Cross-reference beacon logs and JSONL captures against probe code and session docs. Check that claimed results match the raw data. Prior reviews on #303 and #304 include offline test harnesses as examples.
+- **WebKit probe development** — HTML/JS probes run in the PS5's User Guide browser via DNS redirect. See `probes/phase13_webkit/` for examples. Follow the beacon contract (server-timestamped HTTP POST) so results are independently verifiable.
+- **Lua probe development** — Lua probes run via the TCP loader on port 9026. See `CLAUDE.md` for the template and Lua 5.1 constraints. The kernel syscall surface is exhausted, but prepared probes in the index still need on-device runs.
+- **FreeBSD source analysis** — The PS5 kernel is a fork of FreeBSD 11.0. Offline analysis of kernel structures, allocator internals, and syscall handlers helps even without hardware.
+- **Tooling and documentation** — Better beacon parsers, capture analyzers, result cross-referencing tools. Typo and clarity fixes.
 
 ## How to Contribute
 
@@ -32,9 +33,24 @@ Chat is not the record. A finding still lands in this repository as a probe, a c
 4. Test if you can (see below)
 5. Open a PR with a clear description of what you're testing and why
 
+## Evidence Grades
+
+Claims in result docs and PR descriptions carry a grade tag:
+
+- **[M]** — Measured on device (beacon log, capture file)
+- **[I]** — Inferred (arithmetic, source analysis, interpretation of [M] data)
+- **[S]** — Source-derived (from published firmware source or WebKit code)
+- **[R]** — Referenced (from an external data source, not measured in this run)
+
+Grade your own claims honestly — overclaiming [M] on inferred results erodes trust. See [docs/RESEARCH_EVIDENCE.md](docs/RESEARCH_EVIDENCE.md) for the broader evidence and ledger rules.
+
 ## Writing Probes
 
-See the probe template and Lua 5.1 constraints in `CLAUDE.md`. Key rules:
+There are two probe paths, targeting different layers of the PS5 stack.
+
+### Kernel probes (Lua)
+
+Kernel probes run on the remote Lua loader (`tools/send_probe.py`). See the template and Lua 5.1 constraints in `CLAUDE.md`. Key rules:
 
 - **Use `make_syscall(N)`** for tested raw syscall invocation; it bypasses the Lua resolver filter, while kernel authorization still applies
 - **Always use `pcall()`** around risky operations
@@ -42,6 +58,22 @@ See the probe template and Lua 5.1 constraints in `CLAUDE.md`. Key rules:
 - **Never read XO (execute-only) pages** — kills the process past pcall
 - **Use `uint64()` for all 64-bit values** — Lua 5.1 numbers are doubles
 - **Print everything** — results go to the TCP socket, more output = better analysis
+
+### WebKit probes (HTML/JS)
+
+WebKit probes are single-page HTML files that run in the PS5's built-in browser (User Guide menu). This is the current active research front (FontFace UAF, oracle reads, vtable walks, COOP dispatch).
+
+1. Point the PS5's DNS at the host beacon server
+2. Open the User Guide on the console — the custom DNS routes it to the probe page
+3. The probe sends HTTP beacon POSTs back to the host as it runs
+4. Results land as server-timestamped `.log` and `.jsonl` capture files
+
+Key differences from kernel probes:
+- **No loader connection needed** — the browser is the execution environment
+- **Beacons are the evidence** — every observable state change should emit a beacon tag. Server timestamps and JSONL captures with SHA256 provenance are the audit trail
+- **One probe per page load** — the console's WebKit process can crash on UAF-dependent paths, requiring a reboot between runs
+
+Existing WebKit probes live in `probes/phase13_webkit/`. The data-gather crowdsourcing rig is in `probes/phase13_webkit/data-gather/`.
 
 ## Testing
 
@@ -122,9 +154,11 @@ wheels for the selected Python/platform. Do not suppress a failing or missing
 test: report the command, dependency state, and failure separately from the
 bounded CI result.
 
-### Console testing (optional, hardware required)
+### Console testing (hardware required)
 
-If you have the setup (PS5 fw 14.10 + userland exploit):
+There are two probe paths, depending on the exploit stage.
+
+**Lua probes (kernel-side)** — if you have the Lua loader endpoint running:
 
 ```bash
 # Send a probe
@@ -134,22 +168,31 @@ PYTHONIOENCODING=utf-8 python tools/send_probe.py --save probes/<phase>/<name>.l
 .\tools\send_probe.ps1 probes\<phase>\<name>.lua -Save
 ```
 
-If you don't have the hardware, you can still:
-- Write probes based on FreeBSD kernel source analysis
+**WebKit probes (browser-side)** — this is where most active work happens:
+
+1. Set up a beacon server — either a VPS (`tools/vps_setup.sh`) or locally via `tools/browser_runner/beacon_server.py`
+2. Point your PS5's DNS at the beacon server so `manuals.playstation.net` resolves to it (`tools/browser_runner/dns_hijack.py` handles this locally)
+3. Open the User Guide on the PS5 — the hijacked DNS serves the probe HTML
+4. Beacon logs land on the server. Parse with `tools/parse_beacons.py` or read the raw JSONL directly
+
+See `tools/browser_runner/README.md` for the capture API and JSONL schema.
+
+**If you don't have the hardware**, you can still:
+- Write probes based on FreeBSD kernel source or WebKit source analysis
+- Review beacon evidence and verify claims in open PRs
 - Analyze existing results in `results/`
-- Review the attack surface and suggest new approaches
 - Improve tooling
 
 ## Project Structure
 
 ```
-probes/     — Lua probe scripts organized by phase
-results/    — Raw output from probe runs
-tools/      — Send/receive scripts and session tools
-docs/       — Technical documentation and strategy
+probes/     — Probe scripts organized by phase (Lua kernel + HTML/JS WebKit)
+results/    — Raw captures, beacon logs, JSONL evidence, and results INDEX
+tools/      — Send/receive scripts, beacon parsers, offline verifiers
+docs/       — Technical documentation, strategy, and evidence ledger
 ```
 
-Read `docs/PROBE_INDEX.md` for what's been tested and `docs/STRATEGY.md` for the current game plan.
+Read `results/INDEX.md` for the evidence ledger, `docs/PROBE_INDEX.md` for what's been tested, and `docs/STRATEGY.md` for the current game plan.
 
 ## Code of Conduct
 
@@ -168,6 +211,15 @@ Thanks to everyone who has contributed research, probes, analysis and correction
 | **Unkown607** | [@Unkown607](https://github.com/Unkown607) | PR #9 — 13.60 syscall name maps, compat-table capture identification |
 | **Cruby** | [@cruby](https://github.com/cruby) | Live console testing — first confirmed thr_create(430) kernel panic on fw 14.10 (probes 58e/76c/76d/76e) |
 | **wsjardijn** | [@wsjardijn](https://github.com/wsjardijn) | Early research contributions |
+| **hex0x42424242** | [@hex0x42424242](https://github.com/hex0x42424242) | PRs #298, #302, #303 — Independent 14.10 walk, FontFace chain session, p693 yield killer + engine-driven free primitive |
+| **Rajkamal** (jsrkamal2002) | [@jsrkamal2002](https://github.com/jsrkamal2002) | PRs #285, #296, #304 — p817 magic-gated base discovery, parse_beacons analyzer, boundary() polarity fix |
+| **Arjun Dhir** (ArjunD717) | [@ArjunD717](https://github.com/ArjunD717) | PRs #252–260, #264, #287–292 — Browser runner, DNS resolver, capture collision safety, ioctl sweep |
+| **Siva** (sivatheja10) | [@sivatheja10](https://github.com/sivatheja10) | PR #299 — FW 14.00 VP-to-text distance measurement and vtable RVA |
+| **Mart** (mja00) | [@mja00](https://github.com/mja00) | PRs #300, #301 — 14.00 import-GOT transfer boundary, WeakHashSet layout correction |
+| **Couiz** | [@Couiz](https://github.com/Couiz) | PR #286 — AIO 14.10 lock-release predicate correction |
+| **TFujiwara** | [@TFujiwara](https://github.com/TFujiwara) | PR #250 — 14.22 FontFace/FontProxy campaign |
+| **cobrajet302gt** | [@cobrajet302gt](https://github.com/cobrajet302gt) | PR #280 — Chain plan corrections: IsoHeap blocker retirement, p600 observation scoping |
+| **Sayan Manna** (MannA-001) | [@MannA-001](https://github.com/MannA-001) | PRs #278, #279 — Browser runner header time bound, JSC regression config |
 
 ## Credits
 

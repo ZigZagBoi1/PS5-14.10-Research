@@ -273,7 +273,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-19 18:46 | 79a | - | - | ? | results/phase17_seg_hypothesis/79a_getmcontext_layout_20261019_184618.txt |
 | 2026-10-19 18:46 | 79a | - | - | ? | results/phase17_seg_hypothesis/79a_getmcontext_layout_20261019_184646.txt |
 | 2026-10-19 18:47 | 113a | - | - | ? | results/phase17_new_vectors/113a_untested_handler_trio_20261019_184749.txt |
-| 2026-10-19 18:48 | 110a | - | - | ? | results/phase19_umtx_454/110a_umtx_shm_reachability_20261019_184821.txt |
 | 2026-10-19 18:48 | 113a | - | - | ? | results/phase17_new_vectors/113a_untested_handler_trio_sectionB_20261019_184806.txt |
 | 2026-10-19 18:48 | 113a | - | - | ? | results/phase17_new_vectors/113a_untested_handler_trio_sectionC_20261019_184808.txt |
 | 2026-10-19 18:48 | 113a | - | - | ? | results/phase17_new_vectors/113a_untested_handler_trio_sectionD_20261019_184810.txt |
@@ -3502,3 +3501,4 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-18 00:01 | p818-slot-offsets | FW 14.00 vtable slot VP-relative deltas (s0–s7) | All 8 slot deltas identical to 14.10 (PR #240 boot 5). ICF collapse (s2=s4=s5) preserved. VP-relative offsets independent of base ambiguity. 3 ASLR slides verified. | M | results/p818_fw1400_boundary_scan_20261118.txt |
 | 2026-11-18 22:33 | p973-got-transfer-limit | 14.00 import-GOT RVA from 14.10 (`wkBase+0x3350850`) hard-faults; base-relative GOT offsets do not transfer, only VP-relative vtable deltas do | [M] single landing KT04SF: control `VP-0x100` read succeeds (`DG-RD-i0-len128`), target `0x80a3a5850` emits TRY with no RD | M | results/p973_fw1400_got_transfer_20261118.txt |
 | 2026-11-18 22:33 | p973-forgeread-bracket-method | forgeRead readability must be bracketed by TRY (pre) + RD (post); `setR`+`chk` gate is a self-inflicted fault | TRY present + RD absent = SIGBUS at requested target; both = readable; no signal numbers captured | I | results/p973_fw1400_got_transfer_20261118.txt |
+| 2026-11-21 10:53 | umtx-op26-robust-lists-presence | _umtx_op ROBUST_LISTS(26) on 454 was issued in 110a/541a/1065a (all predate 2026-11-04 triage doc), contradicting 'never issued': every shape returned -1 with caller alive, so handler present but no registration succeeded | PRESENT [M] — op 26 handler reachable, registration refused on all tested shapes; non-zero-list-head shape remains untested; S4 never-issued premise corrected | M | results/phase19_umtx_454/110a_umtx_shm_reachability_20261019_184821.txt |

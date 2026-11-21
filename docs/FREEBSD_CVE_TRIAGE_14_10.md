@@ -163,7 +163,10 @@ Ranking is (payoff x reachability) / cost, with crash risk as a tiebreak. Each s
 **Vulnerable vs patched.** Implemented-and-gated means the remaining work is the same as S2: find the flag. A stub means the only memory syscall in the table is 601's command set.
 
 ### S6 - 596 `dynlib_do_copy_relocations` with a real module  (possible 8-byte write)
-**Why it is new.** It returns 0 for six zeros, which is the shape of a loop that ran and found zero relocations to apply - not of an ENOSYS stub (`docs/SYSENT_PRESENCE_14_10.md:78`). A copy relocation writes a symbol's value into a module's data. If the target address is caller-supplied and not range-checked against the module, that is an arbitrary 8-byte write. The handler has only ever been called with zeros.
+
+**Correction (see `docs/SYS596_NONZERO_ARGS_14_10.md`):** the handler has **not** "only ever been called with zeros." Capture 548a (2026-10-26, before this doc) called 596(0/1/2/8193/147) and 596(buf,0x200); 501a (2026-10-24) ran pointer-follow shapes. All returned 0 with no observable write. The S6 conclusion is unchanged; the "only zeros" premise is void. The original rationale below is retained.
+
+**Why it was thought new.** It returns 0 for six zeros, which is the shape of a loop that ran and found zero relocations to apply - not of an ENOSYS stub (`docs/SYSENT_PRESENCE_14_10.md:78`). A copy relocation writes a symbol's value into a module's data. If the target address is caller-supplied and not range-checked against the module, that is an arbitrary 8-byte write. The handler had been thought to have only ever been called with zeros.
 **Precondition.** A module handle from 593 or 649, and a user buffer.
 **Probe.** `596(handle, buf, n, 0, 0, 0)` and one variant per argument position, pre-filling `buf` with a sentinel and diffing afterwards; also vary the handle to an invalid one to see whether the return changes from 0.
 **Vulnerable vs patched.** Sentinel changed = the handler wrote through a caller pointer; check whether the write address is taken from the buffer. All shapes 0 with no write = no-op, cut.

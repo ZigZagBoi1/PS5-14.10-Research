@@ -2769,7 +2769,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-26 14:10 | 547e | - | - | ? | results/phase30_mapdirect_loader/547e_pool_rest_20261026_141054.txt |
 | 2026-10-26 14:10 | 547f | - | - | ? | results/phase30_mapdirect_loader/547f_dmem12_20261026_141012.txt |
 | 2026-10-26 14:15 | 547g | - | - | ? | results/phase30_mapdirect_loader/547g_high_phys_scan_20261026_141513.txt |
-| 2026-10-26 14:39 | 548a | - | - | ? | results/phase31_sony_leak/548a_sony_leak_hunt_20261026_143900.txt |
 | 2026-10-26 17:05 | 817a | - | - | ? | results/phase17_new_vectors/817a_aio_window_16_20261026_170533.txt |
 | 2026-10-26 17:11 | 817b | - | - | ? | results/phase17_new_vectors/817b_aio_shared_barrier_20261026_171132.txt |
 | 2026-10-26 17:18 | 818a | - | - | ? | results/phase17_new_vectors/818a_aio_orphan_thread_20261026_171823.txt |
@@ -3502,3 +3501,4 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-18 22:33 | p973-got-transfer-limit | 14.00 import-GOT RVA from 14.10 (`wkBase+0x3350850`) hard-faults; base-relative GOT offsets do not transfer, only VP-relative vtable deltas do | [M] single landing KT04SF: control `VP-0x100` read succeeds (`DG-RD-i0-len128`), target `0x80a3a5850` emits TRY with no RD | M | results/p973_fw1400_got_transfer_20261118.txt |
 | 2026-11-18 22:33 | p973-forgeread-bracket-method | forgeRead readability must be bracketed by TRY (pre) + RD (post); `setR`+`chk` gate is a self-inflicted fault | TRY present + RD absent = SIGBUS at requested target; both = readable; no signal numbers captured | I | results/p973_fw1400_got_transfer_20261118.txt |
 | 2026-11-21 10:34 | cve-2026-45256-offline | CVE-2026-45256 thr_kill2 p_cansignal bypass: thr_kill2(481) present and functional, but thr_kill2(1,1,0) returns -1 — permission check enforced, CVE does not apply on 14.10 | DEAD — cross-process null signal refused (rv=-1), p_cansignal check active | M | results/phase15_native_sysent/59b_thr_family_survey_20261019_194932.txt |
+| 2026-11-21 11:12 | sys596-nonzero-args | sys 596 dynlib_do_copy_relocations was called with non-zero shapes in 548a (0/1/2/8193/147, buf+0x200) and 501a (pointer-follow), all before 2026-11-04 triage doc, contradicting 'only ever called with zeros' | PRESENT [M] — 596 reachable, all non-zero shapes return 0 with no write; real-module-handle discriminator (S6) still untested | M | results/phase31_sony_leak/548a_sony_leak_hunt_20261026_143900.txt |

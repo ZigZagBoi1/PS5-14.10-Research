@@ -1784,7 +1784,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-23 18:41 | 392d | - | - | ? | results/phase20_bsd_deep/392d_bsd_safe_20261023_184111.txt |
 | 2026-10-23 18:41 | 67b | - | - | ? | results/phase15_jailbreak/67b_poll_fd_uaf_20261023_184143.txt |
 | 2026-10-23 18:43 | 392e | - | - | ? | results/phase20_bsd_deep/392e_bsd_noscan_20261023_184356.txt |
-| 2026-10-23 18:45 | 392f | - | - | ? | results/phase20_bsd_deep/392f_bsd_last_batch_20261023_184540.txt |
 | 2026-10-23 19:16 | 485a | - | - | ? | results/phase17_new_vectors/485a_camera_death_bisect_20261023_191648.txt |
 | 2026-10-23 19:17 | 484a | - | - | ? | results/phase17_new_vectors/484a_localhost_scan_20261023_191732.txt |
 | 2026-10-23 19:34 | 484b | - | - | ? | results/phase17_new_vectors/484b_localhost_nonblock_20261023_193418.txt |
@@ -3502,3 +3501,4 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-18 22:33 | p973-got-transfer-limit | 14.00 import-GOT RVA from 14.10 (`wkBase+0x3350850`) hard-faults; base-relative GOT offsets do not transfer, only VP-relative vtable deltas do | [M] single landing KT04SF: control `VP-0x100` read succeeds (`DG-RD-i0-len128`), target `0x80a3a5850` emits TRY with no RD | M | results/p973_fw1400_got_transfer_20261118.txt |
 | 2026-11-18 22:33 | p973-forgeread-bracket-method | forgeRead readability must be bracketed by TRY (pre) + RD (post); `setR`+`chk` gate is a self-inflicted fault | TRY present + RD absent = SIGBUS at requested target; both = readable; no signal numbers captured | I | results/p973_fw1400_got_transfer_20261118.txt |
 | 2026-11-21 10:34 | cve-2026-45256-offline | CVE-2026-45256 thr_kill2 p_cansignal bypass: thr_kill2(481) present and functional, but thr_kill2(1,1,0) returns -1 — permission check enforced, CVE does not apply on 14.10 | DEAD — cross-process null signal refused (rv=-1), p_cansignal check active | M | results/phase15_native_sysent/59b_thr_family_survey_20261019_194932.txt |
+| 2026-11-21 10:47 | ptrace-presence | Native ptrace(26) presence on 14.10: PT_TRACE_ME(0,0,0,0) returns -1 with caller alive (canary=OK) — handler is present and reachable, correcting triage doc UNKNOWN/never-swept claim | PRESENT [M] — syscall 26 handler reachable; classic ptrace privesc precondition still blocked (no fork/execve) | M | results/phase20_bsd_deep/392f_bsd_last_batch_20261023_184540.txt |

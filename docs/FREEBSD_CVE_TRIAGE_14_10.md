@@ -106,7 +106,7 @@ These are 11.0.0-era mechanisms with no CVE id in `docs/`. They are listed becau
 | `_umtx_op` ROBUST_LISTS (op 26) | `umtx_robust_lists` is kmalloc'd, linked to `td`, and freed on unregister and on thread exit; a walk concurrent with the free is a small-object UAF | op 26 + two threads | **UNKNOWN** - never issued (`docs/UMTX_454_EVIDENCE.md:52`) |
 | `sosend` / SO_SNDBUF accounting | `setsockopt(SO_SNDBUF)` takes SOCKBUF_LOCK, `sosend_generic()` drops it inside `m_uiotombuf()`, so `sb_cc` can pass `sb_hiwat` | two threads, one resizing, one sending | **UNKNOWN** - identified as window 5 in `docs/EXPLOIT_SURFACE_ANALYSIS_13.60.md`, never raced |
 | `poll`/`select` vs close | fd-set scan against a concurrent close | 2 threads + poll(209) | **UNKNOWN** - 45251 never assessed; `poll` works, `select(0,0,0,0,0)` blocks forever |
-| `ptrace` | native 26 was never swept (only `compat.ptrace` is known to be `nosys`) | a traceable child | **UNKNOWN** - worth one presence call |
+| `ptrace` | native 26 present handler; PT_TRACE_ME(0,0,0,0) returns -1, caller alive | a traceable child | **PRESENT [M]** - handler reachable; classic privesc precondition still blocked (no fork/execve) | `docs/PTRACE_PRESENCE_14_10.md`; capture `392f` |
 | `EVFILT_PROC` NOTE_TRACK | knote re-parenting on process exit | kqueue + a child | **UNKNOWN** - one unexplained console power-off after probe 105a, never attributed (`docs/KQUEUE_PROC_14_10.md`) |
 
 ---

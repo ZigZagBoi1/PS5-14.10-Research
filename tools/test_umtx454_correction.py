@@ -22,6 +22,7 @@ ATTACK = ROOT / "docs" / "ATTACK_SURFACE.md"
 INDEX = ROOT / "docs" / "PROBE_INDEX.md"
 CHANGELOG = ROOT / "CHANGELOG.md"
 CORRECTIONS = ROOT / "docs" / "DEAD_ENDS_REFERENCE.md"
+GUIDE = ROOT / "CLAUDE.md"
 
 PROBE_04 = ROOT / "probes" / "phase1_identity_layout" / "04_kernel_surface.lua"
 PROBE_10 = ROOT / "probes" / "phase2_kernel_objects" / "10_umtx_stress.lua"

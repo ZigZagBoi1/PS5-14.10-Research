@@ -2302,7 +2302,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-25 07:26 | 527a | - | - | ? | results/phase23_cve_2026/527a_ghost_handle_refcount_20261025_072635.txt |
 | 2026-10-25 07:31 | 528a | - | - | ? | results/phase27_phys_memory/528a_map_direct_memory_20261025_073147.txt |
 | 2026-10-25 09:13 | 706a | - | - | ? | results/phase17_new_vectors/706a_sys619_slot_20261025_091322.txt |
-| 2026-10-25 09:13 | 706a | - | - | ? | results/phase17_new_vectors/706a_sys619_slot_20261025_091336.txt |
 | 2026-10-25 09:17 | 528c | - | - | ? | results/phase27_phys_memory/528c_map_srop_20261025_091721.txt |
 | 2026-10-25 09:17 | 528c | - | - | ? | results/phase27_phys_memory/528c_map_srop_20261025_091758.txt |
 | 2026-10-25 09:18 | 528c | - | - | ? | results/phase27_phys_memory/528c_map_srop_20261025_091851.txt |
@@ -3502,3 +3501,4 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-18 22:33 | p973-got-transfer-limit | 14.00 import-GOT RVA from 14.10 (`wkBase+0x3350850`) hard-faults; base-relative GOT offsets do not transfer, only VP-relative vtable deltas do | [M] single landing KT04SF: control `VP-0x100` read succeeds (`DG-RD-i0-len128`), target `0x80a3a5850` emits TRY with no RD | M | results/p973_fw1400_got_transfer_20261118.txt |
 | 2026-11-18 22:33 | p973-forgeread-bracket-method | forgeRead readability must be bracketed by TRY (pre) + RD (post); `setR`+`chk` gate is a self-inflicted fault | TRY present + RD absent = SIGBUS at requested target; both = readable; no signal numbers captured | I | results/p973_fw1400_got_transfer_20261118.txt |
 | 2026-11-21 10:34 | cve-2026-45256-offline | CVE-2026-45256 thr_kill2 p_cansignal bypass: thr_kill2(481) present and functional, but thr_kill2(1,1,0) returns -1 — permission check enforced, CVE does not apply on 14.10 | DEAD — cross-process null signal refused (rv=-1), p_cansignal check active | M | results/phase15_native_sysent/59b_thr_family_survey_20261019_194932.txt |
+| 2026-11-21 11:14 | sys619-706a-already-run | sys 619 probe 706a_sys619_slot.lua was already run on 2026-10-25 (two captures, predate triage doc), contradicting S5 'if unrun, run it': all 619/652 shapes return -1 with buffer unchanged | PRESENT [M] — 706a result exists and can be read; stub-vs-gated still open (timing/arg1 comparison not in 706a) | M | results/phase17_new_vectors/706a_sys619_slot_20261025_091336.txt |

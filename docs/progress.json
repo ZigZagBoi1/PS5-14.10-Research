@@ -254,8 +254,8 @@
   "inventory": {
     "lua_probe_files": 3539,
     "js_probe_files": 81,
-    "html_probe_files": 391,
-    "text_result_files": 4364,
+    "html_probe_files": 392,
+    "text_result_files": 4366,
     "phase_dirs": 60
   },
   "retractions": [
@@ -266,7 +266,7 @@
   ],
   "evidence_hashes": {
     "docs/FINDINGS.md": "cab091292510e1bcdc3a92cad9f9c5bead58e98cdcc47c17bb8177fa13109a29",
-    "docs/PROBE_INDEX.md": "6f70f8a356221074d89972b491e907a35e46f3098a8cd90830d4f4844b86222d",
+    "docs/PROBE_INDEX.md": "1e9de91a557b1aeaa9a67139d924a46fd4b82cf2487067c561a89457f9306129",
     "docs/STRATEGY.md": "84fc765cd00941f1bcba08a9f3e4dd1a8b8ad8a592a9d92aa36dd1842b0b2b0c",
     "docs/ATTACK_SURFACE.md": "295cdf6f98c9d4223c5f55eace245eafb1c336bf3f2546bff44694db1dc43cac",
     "docs/WEBKIT_FINDINGS.md": "2f451a8edfdbe594898780dc2f33dd905881dfa7052b8ddf5960f3d40b222236",

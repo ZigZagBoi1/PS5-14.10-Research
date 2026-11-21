@@ -274,8 +274,11 @@ the rdtsc gadget hunt of 3.3 decides. Without one of those, H3 is DEAD by arithm
   using the read(2)-parked loop shape; do not assume a bare re-pivot loop is safe.
 - 620: docs/ATTACK_SURFACE.md:185 measures free_stack ret 0, while TODO.md:104-110 describes a
   kernel VM self-modification with MODE 5 on (saved_rip-0x80)&~0x3fff - i.e. a possible W^X
-  bypass. Probe 99a sections B/C were written but never run. This is the cheapest route to native
-  exec, and native exec would unlock every technique this memo marks NEEDS-NATIVE-EXEC.
+  bypass. **Correction (see `docs/SYS620_99A_SECTION_B_14_10.md`):** probe 99a Section B **was
+  run** on 2026-10-20 (before this memo): sys 620 returned 0 but the sys 624 VM counter did
+  not move (0xE73 before/after), so no observable VM operation; Section C (mprotect retest)
+  is still unrun and is the outstanding follow-up. Treat sys 620 as reachable-but-unproven,
+  not an unmeasured lead. Native exec would unlock every technique this memo marks NEEDS-NATIVE-EXEC.
 - 625/626: ATTACK_SURFACE.md:190-191 says -1, 327a/796d say 0 with live counters; trust the later
   measurement but keep the argument-shape difference in mind when writing new probes.
 - sysent_raw.bin cannot map handlers to call sites: all 679 sy_call entries sit in RVA

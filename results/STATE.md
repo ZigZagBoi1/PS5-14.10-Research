@@ -15,7 +15,7 @@ were measured; they are measurements, not truths.
 - last_probe: eval-1407a-1408a-1409a-offline
 - active_question: BROWSER PATH EXHAUSTED locally. Upstream now crowdsourcing the 14.10 VP_RVA measurement via data-gather tester rig (probe-modules.html, p691 walk, BASE=VP-0xC6A1B28 assumed). Our blockers unchanged locally: no console, browser path dead. External dependency: tester SUCCESS beacons give 14.10 VP+slots -> RVA confirm/recompute vs 13.60 capture.
 - race_assessment: ALL DEAD: PKTINFO=embedded struct, SNDBUF=mbuf logical overflow, close+setsockopt=fget blocks, 16 CVEs blocked. See docs/KERNEL_RACE_OFFLINE_ASSESSMENT_2026-11-10.md
-- cve_assessment: 16 FreeBSD kernel CVEs (2019-2026) checked; ALL blocked on 14.10 (feature removal, missing prereqs, zone isolation, existing locks). See docs/CVE_KERNEL_RW_ASSESSMENT_2026-11-10.md
+- cve_assessment: 17 FreeBSD kernel CVEs (2019-2026) checked; ALL blocked on 14.10 (feature removal, missing prereqs, zone isolation, existing locks). See docs/CVE_KERNEL_RW_ASSESSMENT_2026-11-10.md; CVE-2026-45256 assessed separately: docs/CVE-2026-45256-PS5-14.10.md
 - cve_2020_7457: SA-20:20 patch adds INP_WLOCK only around ip6_pcbopts (2292 path). PKTINFO already locked in ip6_ctloutput. Sony blocked 2292 entirely. 91d/92c tested PKTINFO race to 11K+ calls = clean.
 - next_action: monitor tester beacons; on first SUCCESS beacon log run: python tools/parse_beacons.py <log> --json
 - queued_probes: 1407a/1408a/1409a assessed DEAD offline 2026-11-17 (SA26_51_54_48_OFFLINE_ASSESSMENT doc); no queued probes remain

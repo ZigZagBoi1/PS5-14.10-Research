@@ -339,7 +339,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-19 19:49 | 112a | - | - | ? | results/phase17_new_vectors/112a_sys605_gpu_rw_flag_or_sectionC_20261019_194921.txt |
 | 2026-10-19 19:49 | 112a | - | - | ? | results/phase17_new_vectors/112a_sys605_gpu_rw_flag_or_sectionD_20261019_194924.txt |
 | 2026-10-19 19:49 | 112a | - | - | ? | results/phase17_new_vectors/112a_sys605_gpu_rw_flag_or_sectionE_20261019_194926.txt |
-| 2026-10-19 19:49 | 59b | - | - | ? | results/phase15_native_sysent/59b_thr_family_survey_20261019_194932.txt |
 | 2026-10-19 19:49 | 79a | - | - | ? | results/phase17_new_vectors/79a_devdsp_pipe2_procctl_20261019_194903.txt |
 | 2026-10-19 19:49 | 86a | - | - | ? | results/phase17_new_vectors/86a_aio_real_handlers_20261019_194953.txt |
 | 2026-10-19 19:50 | 83a | - | - | ? | results/phase17_new_vectors/83a_sys601_deep_retest_20261019_195006.txt |
@@ -3502,3 +3501,4 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-18 00:01 | p818-slot-offsets | FW 14.00 vtable slot VP-relative deltas (s0–s7) | All 8 slot deltas identical to 14.10 (PR #240 boot 5). ICF collapse (s2=s4=s5) preserved. VP-relative offsets independent of base ambiguity. 3 ASLR slides verified. | M | results/p818_fw1400_boundary_scan_20261118.txt |
 | 2026-11-18 22:33 | p973-got-transfer-limit | 14.00 import-GOT RVA from 14.10 (`wkBase+0x3350850`) hard-faults; base-relative GOT offsets do not transfer, only VP-relative vtable deltas do | [M] single landing KT04SF: control `VP-0x100` read succeeds (`DG-RD-i0-len128`), target `0x80a3a5850` emits TRY with no RD | M | results/p973_fw1400_got_transfer_20261118.txt |
 | 2026-11-18 22:33 | p973-forgeread-bracket-method | forgeRead readability must be bracketed by TRY (pre) + RD (post); `setR`+`chk` gate is a self-inflicted fault | TRY present + RD absent = SIGBUS at requested target; both = readable; no signal numbers captured | I | results/p973_fw1400_got_transfer_20261118.txt |
+| 2026-11-21 10:34 | cve-2026-45256-offline | CVE-2026-45256 thr_kill2 p_cansignal bypass: thr_kill2(481) present and functional, but thr_kill2(1,1,0) returns -1 — permission check enforced, CVE does not apply on 14.10 | DEAD — cross-process null signal refused (rv=-1), p_cansignal check active | M | results/phase15_native_sysent/59b_thr_family_survey_20261019_194932.txt |

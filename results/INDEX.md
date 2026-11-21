@@ -1203,7 +1203,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-22 12:20 | 320a | - | - | ? | results/phase17_new_vectors/320a_physhm_prot_20261022_122005.txt |
 | 2026-10-22 12:20 | 320a | - | - | ? | results/phase17_new_vectors/320a_physhm_prot_20261022_122014.txt |
 | 2026-10-22 12:21 | 321a | - | - | ? | results/phase17_new_vectors/321a_physhm_ptr_20261022_122101.txt |
-| 2026-10-22 12:23 | 184a | - | - | ? | results/phase22_cve_hunt/184a_new_cve_reachability_20261022_122318.txt |
 | 2026-10-22 12:23 | 322a | - | - | ? | results/phase17_new_vectors/322a_sys601_commands_20261022_122315.txt |
 | 2026-10-22 12:23 | 323a | - | - | ? | results/phase17_new_vectors/323a_sys601_sweep_20261022_122329.txt |
 | 2026-10-22 12:24 | 324a | - | - | ? | results/phase17_new_vectors/324a_sys601_sweep2_20261022_122438.txt |
@@ -3502,3 +3501,4 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-18 00:01 | p818-slot-offsets | FW 14.00 vtable slot VP-relative deltas (s0–s7) | All 8 slot deltas identical to 14.10 (PR #240 boot 5). ICF collapse (s2=s4=s5) preserved. VP-relative offsets independent of base ambiguity. 3 ASLR slides verified. | M | results/p818_fw1400_boundary_scan_20261118.txt |
 | 2026-11-18 22:33 | p973-got-transfer-limit | 14.00 import-GOT RVA from 14.10 (`wkBase+0x3350850`) hard-faults; base-relative GOT offsets do not transfer, only VP-relative vtable deltas do | [M] single landing KT04SF: control `VP-0x100` read succeeds (`DG-RD-i0-len128`), target `0x80a3a5850` emits TRY with no RD | M | results/p973_fw1400_got_transfer_20261118.txt |
 | 2026-11-18 22:33 | p973-forgeread-bracket-method | forgeRead readability must be bracketed by TRY (pre) + RD (post); `setR`+`chk` gate is a self-inflicted fault | TRY present + RD absent = SIGBUS at requested target; both = readable; no signal numbers captured | I | results/p973_fw1400_got_transfer_20261118.txt |
+| 2026-11-21 10:59 | execve-59-reachability | execve(59) was issued in 184a/93d5/93d8 (all predate 2026-11-04 triage doc), contradicting 'no probe has ever issued 59': slot returned -1 with caller alive, so handler present/reachable; real-binary exec and 7270 overflow still untested | PRESENT [M] — execve(59) reachable, rejects bad/NULL paths without kill; ENOENT-vs-ENOSYS and ELF-loader-runs remain open | M | results/phase22_cve_hunt/184a_new_cve_reachability_20261022_122318.txt |

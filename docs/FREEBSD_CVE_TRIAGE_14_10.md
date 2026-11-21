@@ -101,7 +101,7 @@ These are 11.0.0-era mechanisms with no CVE id in `docs/`. They are listed becau
 
 | Class | Mechanism | Precondition | 14.10 |
 |---|---|---|---|
-| `_umtx_op` ROBUST_LISTS (op 26) | `umtx_robust_lists` is kmalloc'd, linked to `td`, and freed on unregister and on thread exit; a walk concurrent with the free is a small-object UAF | op 26 + two threads | **UNKNOWN** - never issued (`docs/UMTX_454_EVIDENCE.md:52`) |
+| `_umtx_op` ROBUST_LISTS (op 26) | `umtx_robust_lists` is kmalloc'd, linked to `td`, and freed on unregister and on thread exit; a walk concurrent with the free is a small-object UAF | op 26 + two threads | **PRESENT, registration refused [M]** — issued in 110a/541a/1065a (all predate this doc), every shape -1 with caller alive; the "never issued" claim was wrong. One non-zero-list-head shape remains untested | `docs/UMTX_OP26_ROBUST_LISTS_PRESENCE_14_10.md` |
 | `sosend` / SO_SNDBUF accounting | `setsockopt(SO_SNDBUF)` takes SOCKBUF_LOCK, `sosend_generic()` drops it inside `m_uiotombuf()`, so `sb_cc` can pass `sb_hiwat` | two threads, one resizing, one sending | **UNKNOWN** - identified as window 5 in `docs/EXPLOIT_SURFACE_ANALYSIS_13.60.md`, never raced |
 | `poll`/`select` vs close | fd-set scan against a concurrent close | 2 threads + poll(209) | **UNKNOWN** - 45251 never assessed; `poll` works, `select(0,0,0,0,0)` blocks forever |
 | `ptrace` | native 26 was never swept (only `compat.ptrace` is known to be `nosys`) | a traceable child | **UNKNOWN** - worth one presence call |
@@ -148,7 +148,10 @@ Ranking is (payoff x reachability) / cost, with crash risk as a tiebreak. Each s
 **Crash class.** MEDIUM-HIGH. Run it last in a session, after the loader is known to be relaunchable, and record the pre-call pid so a console death is distinguishable from a process death.
 
 ### S4 - `_umtx_op` op 26 ROBUST_LISTS: the last live umtx path  (kmalloc UAF)
-**Why it is new.** umtx was closed twice - op 25 is a confirmed stub, PI ops 32-37 are refused - but **op 26 was never issued** (`docs/UMTX_454_EVIDENCE.md:52`). It is the only umtx operation that allocates and frees kernel memory under user-controlled lifetime: `umtx_robust_lists` is copied in, linked to `td`, freed on unregister, and freed again at thread exit. That is a two-thread UAF on a small kmalloc object, the same shape as the bug Relapse used, reachable with no fork, no pipes and no AIO.
+
+**Correction (see `docs/UMTX_OP26_ROBUST_LISTS_PRESENCE_14_10.md`):** op 26 **was** issued — in 110a (2026-10-19), 541a (2026-10-24) and 1065a (2026-11-03), all before this document. Every shape returned -1 with the caller alive, so the handler is present but no registration succeeded. The "never issued" premise below is void; only the non-zero-list-head shape of the ladder remains untested. The text below is retained as the original rationale.
+
+**Why it was thought new.** umtx was closed twice - op 25 is a confirmed stub, PI ops 32-37 are refused - but op 26 was believed never issued (`docs/UMTX_454_EVIDENCE.md:52`). It is the only umtx operation that allocates and frees kernel memory under user-controlled lifetime: `umtx_robust_lists` is copied in, linked to `td`, freed on unregister, and freed again at thread exit. That is a two-thread UAF on a small kmalloc object, the same shape as the bug Relapse used, reachable with no fork, no pipes and no AIO.
 **Precondition.** 454 (works), a mapped 16-byte buffer, and thr_create(430) for the second thread.
 **Probe (reachability ladder, one process, no race).** (a) `454(26, buf, 0, 0, 0)` with `buf = {rd, rdl}` and `rdl = 1`; expect 0. (b) register a second time on the same thread; expect EEXIST/EBUSY. (c) `454(26, 0, 0, 0, 0)` to unregister; expect 0. (d) repeat (c); expect EINVAL. (e) `rdl = 25` (> 24); expect EINVAL.
 **Vulnerable vs patched.** All five shapes answering -1/ENOSYS = the op is a stub, cut. The upstream errno ladder (0 / EEXIST / 0 / EINVAL / EINVAL) = the object exists, and the race in (b)+(c) against a thread blocked on a robust mutex becomes the experiment.

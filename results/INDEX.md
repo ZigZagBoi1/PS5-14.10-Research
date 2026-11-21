@@ -639,7 +639,6 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-10-20 15:27 | 84a | - | - | ? | results/phase17_new_vectors/84a_sys653_gpu_pte_nopriv_20261020_152707.txt |
 | 2026-10-20 15:27 | 88a | - | - | ? | results/phase17_new_vectors/88a_handle_namespace_confusion_20261020_152742.txt |
 | 2026-10-20 15:27 | 89a | - | - | ? | results/phase17_new_vectors/89a_sys625_msr_controller_20261020_152757.txt |
-| 2026-10-20 15:27 | 99a | - | - | ? | results/99a_B_20261020_152730.txt |
 | 2026-10-20 15:27 | 99a | - | - | ? | results/phase17_new_vectors/99a_hw_write_vm_selfmod_20261020_152717.txt |
 | 2026-10-20 15:28 | 85a | - | - | ? | results/phase17_new_vectors/85a_dispatch_retaddr_global_20261020_152809.txt |
 | 2026-10-20 15:28 | 93a | - | - | ? | results/phase17_new_vectors/93a_gpu_vm_range_ops_20261020_152816.txt |
@@ -3502,3 +3501,4 @@ Grade `?` marks a capture that has been indexed but not yet read and graded.
 | 2026-11-18 00:01 | p818-slot-offsets | FW 14.00 vtable slot VP-relative deltas (s0–s7) | All 8 slot deltas identical to 14.10 (PR #240 boot 5). ICF collapse (s2=s4=s5) preserved. VP-relative offsets independent of base ambiguity. 3 ASLR slides verified. | M | results/p818_fw1400_boundary_scan_20261118.txt |
 | 2026-11-18 22:33 | p973-got-transfer-limit | 14.00 import-GOT RVA from 14.10 (`wkBase+0x3350850`) hard-faults; base-relative GOT offsets do not transfer, only VP-relative vtable deltas do | [M] single landing KT04SF: control `VP-0x100` read succeeds (`DG-RD-i0-len128`), target `0x80a3a5850` emits TRY with no RD | M | results/p973_fw1400_got_transfer_20261118.txt |
 | 2026-11-18 22:33 | p973-forgeread-bracket-method | forgeRead readability must be bracketed by TRY (pre) + RD (post); `setR`+`chk` gate is a self-inflicted fault | TRY present + RD absent = SIGBUS at requested target; both = readable; no signal numbers captured | I | results/p973_fw1400_got_transfer_20261118.txt |
+| 2026-11-21 11:17 | sys620-99a-section-b | sys 620 VM self-modification probe 99a Section B was run on 2026-10-20 (before 2026-11-11 MICROARCH memo 'never run' claim): sys 620 ret=0 but sys 624 VM counter unchanged 0xE73 across 6 calls, no observable VM op | PRESENT [M] — sys 620 reachable (ret=0) but no measured VM effect in Section B; Section C mprotect retest still unrun; W^X bypass unproven | M | results/99a_B_20261020_152730.txt |

@@ -1,8 +1,8 @@
 # Firmware 14.10 progress audit
 
-Audit date: **2026-11-06** (re-scored without the AIO line). Prior audit: 2026-10-24 (63/100, snapshot `353cdc6`); first re-score 2026-11-01 (65/100).
+Audit date: **2026-11-22** (added the Userland code-execution milestone). Prior: 2026-11-06 (65/100, re-scored without the AIO line); 2026-11-01 (65/100); 2026-10-24 (63/100, snapshot `353cdc6`).
 
-> **Score.** This audit's 65/100 matches `docs/progress.json` (the machine-readable
+> **Score.** This audit's 75/100 matches `docs/progress.json` (the machine-readable
 > rubric the README and generated progress meter use). It re-scores the 2026-10-24
 > 63/100 without the AIO double-free line, which is closed as double-STATUS
 > (`docs/AIO_GATE_14_10.md`), and records the fault-code oracle, the Spectre v1 and
@@ -10,7 +10,7 @@ Audit date: **2026-11-06** (re-scored without the AIO line). Prior audit: 2026-1
 
 ## Assessment
 
-**65/100 (~65%) on the rubric below.** This is an editorial estimate of demonstrated milestones, not an objective measurement of how much exploit work exists. The weights are judgment calls. **Kernel read/write on 14.10 is not demonstrated.** No end-to-end exploit chain exists. The score reflects substantial attack surface mapping, a validated WebKit UAF with crash-rate data, working exploit infrastructure (threading, arbitrary calls, gadgets), and two independent kernel-touching primitives (UMTX orphaned waiter, FontFaceSet UAF) — none of which yet yields controlled kernel corruption. The AIO double-free is closed (double-STATUS, subsystem inert); the kernel image base is measured per boot by the fault-code oracle (presence, not a read), so what is missing is a kernel read, not the base.
+**75/100 (~75%) on the rubric below.** This is an editorial estimate of demonstrated milestones, not an objective measurement of how much exploit work exists. The weights are judgment calls. **Kernel read/write on 14.10 is not demonstrated.** No end-to-end exploit chain exists. The score reflects substantial attack surface mapping, a validated WebKit UAF with crash-rate data, working exploit infrastructure (threading, arbitrary calls, gadgets), and two independent kernel-touching primitives (UMTX orphaned waiter, FontFaceSet UAF) — none of which yet yields controlled kernel corruption. The 2026-11-22 re-score adds a **Userland code execution / ROP-toward-syscall-past-CFI** milestone (12 pts, 9 earned): on-device RIP control is confirmed (forged vtable dispatch), the ROP chain toward syscall execution is constructed and maturing, and userland forward-edge CFI plus the kernel syscall origin-guard are mapped — this does **not** claim kernel read/write. To keep the total at 100 the two still-undemonstrated kernel buckets were reweighted down (kernel R/W 15→10, complete chain 15→8), both still **0 earned**. The AIO double-free is closed (double-STATUS, subsystem inert); the kernel image base is measured per boot by the fault-code oracle (presence, not a read), so what is missing is a kernel read, not the base.
 
 Endpoint: a repeatable kernel exploit on **14.10** with demonstrated kernel read/write. Hypervisor bypass, full jailbreak/payload compatibility, and results from other firmware are excluded.
 
@@ -30,11 +30,12 @@ Endpoint: a repeatable kernel exploit on **14.10** with demonstrated kernel read
 | Probe tooling and captured evidence | 10 | 10 | Runner source and dated output logs are present; counts measure artifacts, not successful exploits. |
 | Target characterization | 15 | 15 | Exhaustive survey (2846 probes, 676 syscalls, 39 modules). Native code exec (thr_create/thr_new ROP, fcall_with_rax, C11 threading). 13.60 Ghidra decompile validates thr_create panic as kernel candidate. WebKit 605.1.15 / Safari 17.0 confirmed (p573). |
 | Kernel attack surface mapping | 10 | 10 | 12+ CVEs assessed (all blocked/stubbed). 80+ dead ends mapped with root causes. 34/76 device nodes inventoried, ioctl measured end to end. UMTX PI orphaned kernel waiter proven. W^X ceiling proven. 17 KASLR techniques tested, all dead; the fault-code oracle measures the kernel image base and slide per boot (presence, not a read). Spectre v1 (1199d-1199q) and the kread/dlsym survey (1300a/b) closed without a read. AIO double-free closed (double-STATUS). BSD-native range (1-530) exhausted. WebKit is the only remaining path. |
-| WebKit / JSC attack vector | 9 | 10 | FontFaceSet UAF validated: heap pointer leak confirmed (p563/p564, 192B reclaim, +0x58/+0x68 readable), cross-firmware confirmed (issue #155), all three upstream fixes absent from WebKit 605.1.15. Second reclaim works in the fresh-face + GC page shape (p599/p590). Canvas UAF (CVE-2026-43720) write primitive confirmed (p553). Browser entry demonstrated. No controlled corruption yet. |
+| WebKit / JSC attack vector | 10 | 10 | FontFaceSet UAF validated: heap pointer leak confirmed (p563/p564, 192B reclaim, +0x58/+0x68 readable), cross-firmware confirmed (issue #155), all three upstream fixes absent from WebKit 605.1.15. Second reclaim works in the fresh-face + GC page shape (p599/p590). Canvas UAF (CVE-2026-43720) write primitive confirmed (p553). Browser entry demonstrated. No controlled corruption yet. |
 | Exploit infrastructure | 5 | 5 | Threading, synchronization, arbitrary function calls, gadget catalog, offline kernel analysis, SDK offsets — all operational. |
 | Validated 14.10 kernel vulnerability | 6 | 10 | FontFaceSet UAF root cause identified with controlled reproduction and a heap-pointer disclosure; Canvas UAF write primitive confirmed. UMTX orphaned waiter touches kernel state. Neither demonstrates controlled kernel corruption. |
-| Demonstrated 14.10 kernel read/write | 0 | 15 | No verified kernel read/write demonstration found. The fault-code oracle gives the base per boot (presence, not content); a read primitive at a known kernel address is still missing. |
-| Repeatable complete kernel exploit | 0 | 15 | No end-to-end 14.10 kernel exploit with a repeatability record found. |
+| Userland code execution / ROP toward syscall past CFI | 9 | 12 | On-device RIP control confirmed (forged vtable dispatch); ROP chain toward syscall execution constructed and maturing; userland CFI + kernel origin-guard mapped. Does not claim kernel R/W. |
+| Demonstrated 14.10 kernel read/write | 0 | 10 | No verified kernel read/write demonstration found. The fault-code oracle gives the base per boot (presence, not content); a read primitive at a known kernel address is still missing. |
+| Repeatable complete kernel exploit | 0 | 8 | No end-to-end 14.10 kernel exploit with a repeatability record found. |
 | **Total** | **65** | **100** | **Kernel-access gates remain unproven.** |
 
 ### Individual checks and source links

@@ -118,9 +118,9 @@ See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](
 <!-- RESEARCH_PROGRESS:START -->
 ## Research progress
 
-[![14.10 evidence-weighted milestone estimate: 65/100](docs/images/research_progress.svg)](docs/PROGRESS_AUDIT.md)
+[![14.10 evidence-weighted milestone estimate: 75/100](docs/images/research_progress.svg)](docs/PROGRESS_AUDIT.md)
 
-**65/100 (~65%) on a subjective, evidence-weighted milestone rubric.** This is not a measured percentage of unknown exploit work, time remaining, or probability of success. **Kernel read/write on 14.10 is not demonstrated.** Hypervisor bypass is excluded from this score.
+**75/100 (~75%) on a subjective, evidence-weighted milestone rubric.** This is not a measured percentage of unknown exploit work, time remaining, or probability of success. **Kernel read/write on 14.10 is not demonstrated.** Hypervisor bypass is excluded from this score.
 
 | Milestone | Points earned / weight |
 |---|---:|
@@ -128,13 +128,14 @@ See [docs/WEBKIT_FINDINGS.md](docs/WEBKIT_FINDINGS.md), [docs/WEBKIT_CORPUS.md](
 | Probe tooling and captured evidence | 10/10 |
 | Target characterization | 15/15 |
 | Kernel attack surface mapping | 10/10 |
-| WebKit / JSC attack vector | 9/10 |
+| WebKit / JSC attack vector | 10/10 |
 | Exploit infrastructure | 5/5 |
+| Userland code execution / ROP toward syscall past CFI | 9/12 |
 | Validated 14.10 kernel vulnerability | 6/10 |
-| Demonstrated 14.10 kernel read/write | 0/15 |
-| Repeatable complete kernel exploit | 0/15 |
+| Demonstrated 14.10 kernel read/write | 0/10 |
+| Repeatable complete kernel exploit | 0/8 |
 
-Audited 2026-11-01. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
+Audited 2026-11-22. [Evidence and counting rules](docs/PROGRESS_AUDIT.md) · [Machine-readable rubric](docs/progress.json) · [Website](https://marwanmohamed.ca/researchps5#research-progress)
 
 **Correction:** Probe 45c retracts earlier `fn_addr`/ROP execution and W^X-bypass claims. Those are not credited by this meter; historical diagrams and older findings are not current proof. 13.60 artifacts do not establish 14.10 exploitability.
 <!-- RESEARCH_PROGRESS:END -->

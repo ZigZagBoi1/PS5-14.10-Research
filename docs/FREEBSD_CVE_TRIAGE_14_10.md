@@ -81,7 +81,9 @@ Status vocabulary: **PRESENT** = the syscall/subsystem answers on 14.10; **ABSEN
 | CVE-2026-7270 | `execve` argument parsing precedence overflow | execve(59) reachable | **UNKNOWN** - no probe has ever issued 59 | `docs/CVE-2026-7270-ASSESSMENT.md` |
 | CVE-2026-49414 | ELF ASLR disabled for setuid PIE | setuid exec | **UNKNOWN** - precondition unestablished, same missing probe | `docs/REMAINING_CVE_TRIAGE.md:119` |
 | CVE-2020-25579 [R] | msdosfs `readdir` padding leaks kernel memory | a FAT mount | **ABSENT** - no mount syscall | - |
-| CVE-2026-45251, CVE-2026-45256, CVE-2026-49428 | - | - | **UNKNOWN** - no assessment doc in `docs/` | - |
+| CVE-2026-45251 | poll/close UAF, seldrain absent | poll(209) + close from second thread | **DEAD** — zone isolation blocks reclaim (0/35) | `docs/CVE_2026_45251_POLL_CLOSE_UAF.md` |
+| CVE-2026-45256 | thr_kill2 ignores p_cansignal | thr_kill2(481) to pid=1 | **DEAD** — thr_kill2(1,1,0) returns -1, permission check active | `docs/CVE-2026-45256-PS5-14.10.md` |
+| CVE-2026-49428 | POSIX shm largepage UAF (O_TRUNC) | shm_open + SHM_LARGEPAGE | **DEAD** — shm_open2(571) is nosys | `docs/CVE_SCAN_2026_10.md` |
 
 ### 2.6 Removed families (whole-subsystem cuts)
 | Subsystem | 14.10 | Citation |

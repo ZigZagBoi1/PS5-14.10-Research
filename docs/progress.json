@@ -2,7 +2,7 @@
   "schema_version": 1,
   "audit_date": "2026-11-22",
   "firmware": "14.10",
-  "evidence_revision": "353cdc6",
+  "evidence_revision": "b55a8c00",
   "label": "Evidence-weighted milestone estimate",
   "endpoint": "Repeatable kernel exploit on firmware 14.10; hypervisor bypass excluded",
   "interpretation": "A subjective milestone rubric, not an objective fraction of unknown work, time remaining, probability of success, or vulnerability coverage.",
@@ -34,7 +34,7 @@
       "title": "Probe tooling and captured evidence",
       "weight": 10,
       "earned": 10,
-      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits. 2798 Lua probes, 57 JS probes, 46 HTML probes, 3245 result captures across 53 phases.",
+      "note": "Runner source and dated output logs are present; counts measure artifacts, not successful exploits. 3539 Lua probes, 81 JS probes, 392 HTML probes, 4366 result captures across 60 phases.",
       "evidence": [
         "tools/send_probe.py",
         "docs/PROBE_INDEX.md"
@@ -120,7 +120,7 @@
       "title": "WebKit / JSC attack vector",
       "weight": 10,
       "earned": 10,
-      "note": "Second entry vector via browser engine. 46 HTML probes, 12+ findings documented. Browser entry via guide redirect demonstrated. FontFaceSet::load() UAF heap leak confirmed on 14.10: 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script (p563-html/p564-html). Cross-page bridge (localStorage) and Canvas same-type alias confirmed. All three upstream FontFace UAF fixes (312202, 313577, 322233) committed 2026, absent from WebKit 605.1.15. Upstream achieved RIP control on 14.00 (V59) via fontLoaded vtable dispatch through WeakPtrImpl chain. V88 self-referential forge layout fully designed (single 192B lane). 100% reclaim recipe confirmed on 14.10 (abxanax). 10 physics laws established. Text-base landing mechanism is the remaining absolute-VA blocker (Lane_VA closed same-cycle by the corrected V102 run; ARM-A refused immediate-class landing twice, ARM 5 artifact awaited). Gigacage OFF, IsoHeap OFF on x86_64. [2026-11-22] Controlled WebProcess R/W (OOB read + OOB-window write) and on-device RIP control (forged vtable dispatch) demonstrated; walk reproduced on a 2nd retail 14.10 board (public issue #295).",
+      "note": "Second entry vector via browser engine. 392 HTML probes, 12+ findings documented. Browser entry via guide redirect demonstrated. FontFaceSet::load() UAF heap leak confirmed on 14.10: 192B ArrayBuffer reclaims freed CSSFontFace, engine writes two live heap pointers (+0x58/+0x68) readable by script (p563-html/p564-html). Cross-page bridge (localStorage) and Canvas same-type alias confirmed. All three upstream FontFace UAF fixes (312202, 313577, 322233) committed 2026, absent from WebKit 605.1.15. Upstream achieved RIP control on 14.00 (V59) via fontLoaded vtable dispatch through WeakPtrImpl chain. V88 self-referential forge layout fully designed (single 192B lane). 100% reclaim recipe confirmed on 14.10 (abxanax). 10 physics laws established. Text-base landing mechanism is the remaining absolute-VA blocker (Lane_VA closed same-cycle by the corrected V102 run; ARM-A refused immediate-class landing twice, ARM 5 artifact awaited). Gigacage OFF, IsoHeap OFF on x86_64. [2026-11-22] Controlled WebProcess R/W (OOB read + OOB-window write) and on-device RIP control (forged vtable dispatch) demonstrated; walk reproduced on a 2nd retail 14.10 board (public issue #295).",
       "evidence": [
         "docs/WEBKIT_FINDINGS.md"
       ],
@@ -147,7 +147,7 @@
       "title": "Exploit infrastructure",
       "weight": 5,
       "earned": 5,
-      "note": "thr_new(455) and thr_create(430) both confirmed working. Thread budget measured (25/11/9 per loader). Child threads execute kernel syscalls via fn_addr ROP chains (274c). native.fcall_with_rax confirmed (getpid/socket/close). UMTX parking pattern for thread synchronization. AIO 669 independently verified by second researcher with dmem0 destination. sceKernelAllocateDirectMemory reachable from game sandbox via libkernel GOT wrapper (DEM9N101). 13.60 offline handler decode (22 functions decompiled). SDK v0.45 published 14.10 kernel offsets (allproc, security_flags, rootvnode).",
+      "note": "thr_new(455) and thr_create(430) both confirmed working. Thread budget measured (25/11/9 per loader). Child threads execute kernel syscalls via fn_addr ROP chains (146c). native.fcall_with_rax confirmed (getpid/socket/close). UMTX parking pattern for thread synchronization. AIO 669 independently verified by second researcher with dmem0 destination. sceKernelAllocateDirectMemory reachable from game sandbox via libkernel GOT wrapper (DEM9N101). 13.60 offline handler decode (22 functions decompiled). SDK v0.45 published 14.10 kernel offsets (allproc, security_flags, rootvnode).",
       "evidence": [
         "docs/FINDINGS.md",
         "docs/ATTACK_SURFACE.md"
@@ -203,7 +203,7 @@
       "title": "Validated 14.10 kernel vulnerability",
       "weight": 10,
       "earned": 6,
-      "note": "FontFaceSet::load() UAF is a validated vulnerability on 14.10: heap pointer leak confirmed (p563-html/p564-html, 192B reclaim, +0x58/+0x68 readable), cross-firmware exploitability confirmed on 14.00 and 14.10 (issue #155). All three upstream fixes absent from WebKit 605.1.15. RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch — validates the exploitation path through WebProcess. V88 self-referential forge designed, 100% reclaim working on 14.10. UMTX orphaned waiter touches real kernel wait queue state (274e/274f). AIO double-free closed (70e: double-STATUS not double-free). Neither yet yields controlled kernel corruption on 14.10, hence 6 not 10.",
+      "note": "FontFaceSet::load() UAF is a validated vulnerability on 14.10: heap pointer leak confirmed (p563-html/p564-html, 192B reclaim, +0x58/+0x68 readable), cross-firmware exploitability confirmed on 14.00 and 14.10 (issue #155). All three upstream fixes absent from WebKit 605.1.15. RIP control achieved on 14.00 (V59) via fontLoaded vtable dispatch — validates the exploitation path through WebProcess. V88 self-referential forge designed, 100% reclaim working on 14.10. UMTX orphaned waiter touches real kernel wait queue state (146e/146f). AIO double-free closed (70e: double-STATUS not double-free). Neither yet yields controlled kernel corruption on 14.10, hence 6 not 10.",
       "evidence": [
         "docs/WEBKIT_FINDINGS.md",
         "docs/STRATEGY.md",

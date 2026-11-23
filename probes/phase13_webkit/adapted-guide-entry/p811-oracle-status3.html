@@ -94,13 +94,15 @@ function start(){
           if(c0===false||c41===false||c1000===false){
             bs('ORACLE-ALIVE');
 
-            // Do a boundary scan
+            // Do a boundary scan: largest covered c = the TO word of the u32
+            // pair at the aimed address (CAL38 range semantics; no chk(0) gate),
+            // as fixed for the main-dir probes in the 2026-11-19 polarity repair.
             var lo=0,hi=0x10FFFF,res=-1;
             while(lo<=hi){
               var mid=(lo+hi)>>1;
               var r=chk(mid);
               if(r===null||r==='ERR')break;
-              if(r===false){res=mid;lo=mid+1;}else hi=mid-1;
+              if(r===true){res=mid;lo=mid+1;}else hi=mid-1;
             }
             bs('BOUNDARY-'+res.toString(16));
           } else {

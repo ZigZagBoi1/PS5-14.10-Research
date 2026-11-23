@@ -147,10 +147,13 @@ function phase(){
       /* Test 6: Use boundary() with L1 metadata addresses */
       function boundary(tgt){
         setR(tgt);
+        // chk(c)===true <=> from<=c<=to for the u32 pair at tgt (CAL38 range
+        // semantics). No chk(0) gate, and search the largest COVERED c: the
+        // binary search then returns the TO word, matching the 19-probe
+        // polarity repair in docs/FONTS_CHECK_ORACLE_POLARITY_FIX_2026-11-19.md.
         var c0=chk(0);
-        if(c0!==false)return {b:-1, c0:c0};
         var lo=0,hi=0x10FFFF,res=-1;
-        while(lo<=hi){var mid=(lo+hi)>>1;var r=chk(mid);if(r===null||r==='ERR')break;if(r===false){res=mid;lo=mid+1;}else hi=mid-1;}
+        while(lo<=hi){var mid=(lo+hi)>>1;var r=chk(mid);if(r===null||r==='ERR')break;if(r===true){res=mid;lo=mid+1;}else hi=mid-1;}
         return {b:res, c0:c0};
       }
 

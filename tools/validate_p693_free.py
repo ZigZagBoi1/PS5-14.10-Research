@@ -141,7 +141,9 @@ def analyze(tags):
         c["freelist_link_c78_eq_s2"] = f["c78"] == s2
     if r["vp"] is not None:
         c["vptr_untouched_c88_eq_vp"] = f["c88"] == r["vp"]
-    c["header_h60_in_module_band"] = MODULE_BAND_LO <= f["h60"] < MODULE_BAND_HI
+    band = module_band(r.get("vp"), *r["slots"].values())
+    c["header_h60_in_module_band"] = (
+        band is not None and band[0] <= f["h60"] < band[1])
     c["c80_small_nonzero"] = 0 < f["c80"] < 0x1000
 
     # Geometry: freed addr = sk+0x68; c88 (sk+0x88) is freed+0x20, i.e. past

@@ -1,12 +1,14 @@
 # PS5 14.10 Kernel Exploit Research — AI Handoff Prompt
 
-Historical handoff notes follow. For current scope, read [the ledger guide](docs/RESEARCH_EVIDENCE.md) and the probe index: later 56c/56f record selected existing Lua C redirects, distinct from the unsupported fn_addr/ROP model. Internal dispatch, arbitrary ABI and kernel access remain unverified.
+> **Status: historical.** These notes record the October 2026 Lua/syscall campaign and its corrections; they are not a current task list. Parts of the "hard walls" section are out of date: `fork`/`rfork` remain blocked, but `thr_create(430)`, `thr_new(455)` and C11 threading work (`docs/THREADING_ALIVE_14_10.md`), and the kernel image base is measured per boot by the [fault-code oracle](docs/FAULT_CODE_ORACLE_14_10.md) (presence, not a read). The active vector is the WebKit FontFace UAF, not the Lua syscall surface.
+>
+> Current state lives in [README.md](README.md), [docs/EXPLOITATION_STATUS.md](docs/EXPLOITATION_STATUS.md) and the open issues. `CLAUDE.md` was removed upstream; use [docs/DEAD_ENDS_REFERENCE.md](docs/DEAD_ENDS_REFERENCE.md) and [docs/ATTACK_PRIORITY_REFERENCE.md](docs/ATTACK_PRIORITY_REFERENCE.md) instead. For the ledger rules see [docs/RESEARCH_EVIDENCE.md](docs/RESEARCH_EVIDENCE.md); the probe index is [docs/PROBE_INDEX.md](docs/PROBE_INDEX.md). Later 56c/56f record selected existing Lua C redirects, distinct from the unsupported fn_addr/ROP model; internal dispatch, arbitrary ABI and kernel access remain unverified.
 
 ---
 
 ## ROLE
 
-You are continuing PS5 firmware 14.10 kernel exploit research. The repo is at `https://github.com/ZigZagBoi1/ps5-14.10-research`. Clone it first. Read `CLAUDE.md` thoroughly — it has all environment constraints, probe patterns, and dead ends.
+You are continuing PS5 firmware 14.10 kernel exploit research. The repo is at `https://github.com/ZigZagBoi1/PS5-14.10-Research`. Clone it first. Read `docs/DEAD_ENDS_REFERENCE.md` and `docs/ATTACK_PRIORITY_REFERENCE.md` thoroughly — they carry the environment constraints, probe patterns, and dead ends.
 
 ## WHAT EXISTS
 
@@ -21,12 +23,12 @@ You are continuing PS5 firmware 14.10 kernel exploit research. The repo is at `h
 - Network: RAW socket + IP_HDRINCL
 
 **Hard walls (don't waste time):**
-- No fn_addr/ROP execution established; later selected CClosure results are separate userland evidence
+- Thread ROP execution is confirmed (`thr_create(430)`/`thr_new(455)`, 156c/156d, 271g); the older `fn_addr` model remains unverified
 - W^X enforced (mmap RWX → RW only, mprotect EXEC always fails)
 - XOM on system libs (reading .text crashes process; eboot is RX)
-- No threading (fork/rfork/thr_new all blocked)
+- `fork`/`rfork` are blocked, but `thr_create(430)`/`thr_new(455)` and C11 threading work
 - No kernel pointers found in any test so far
-- KASLR defeat NOT achieved
+- The kernel image base is measured per boot by the fault-code oracle (presence, not a read)
 
 ## CRITICAL CORRECTIONS — READ BEFORE TOUCHING PROBES
 
@@ -100,7 +102,8 @@ Follow-up probes are pre-written:
 These need a `kernel_base` value filled in from the leak. The sysent table is at kernel_base + 0xe6e5c0.
 
 ## KEY REFERENCE FILES
-- `CLAUDE.md` — environment, constraints, probe template, ALL dead ends
+- `docs/DEAD_ENDS_REFERENCE.md` — dead ends and Lua 5.1 constraints
+- `docs/ATTACK_PRIORITY_REFERENCE.md` — current priorities, extracted from the removed `CLAUDE.md`
 - `docs/VERIFIED_HANDLER_ANALYSIS.md` — 8 critical findings from 13.60 handler RE (4 byte-verified, 4 plausible)
 - `docs/WEBKIT_FINDINGS.md` — WebKit entry vector (JSC Bug 317632, heap corruption + OOB read on 14.10)
 - `docs/FINDINGS.md` — detailed technical findings
@@ -110,13 +113,13 @@ These need a `kernel_base` value filled in from the leak. The sysent table is at
 - `tools/analyze_result.py` — auto-analyzer for probe output (if it exists)
 
 ## RULES
-1. **Read CLAUDE.md fully before writing any probe.** It has Lua 5.1 constraints, the make_syscall pattern, uint64 requirements, and 50+ documented dead ends.
+1. **Read `docs/DEAD_ENDS_REFERENCE.md` fully before writing any probe.** It has the Lua 5.1 constraints, the make_syscall pattern, uint64 requirements, and 50+ documented dead ends.
 2. **Verify claims against raw bytes before acting on them.** The overnight batch had syscall mislabeling errors. Cross-check handler numbers against `docs/ps5_13.60_sysent.json`.
 3. **Every address must be re-derived per connection.** Never hardcode addresses. Use dynlib_get_info or tostring(syscall.pipe).
 4. **pcall everything.** XO page reads and bad syscall args kill the process.
 5. **Kernel pointers: h >= 0xFFFF8000 AND h < 0xFFFFFFFF.** Values like 0xFFFFFFFF_00000000 are bitmasks/sentinels, NOT pointers.
 6. **No AI attribution in commits, PRs, or code.** Author: ZigZagBoi1 <marwantech2004@gmail.com>
-7. **Don't repeat dead ends** — the list in CLAUDE.md is extensive. Read it.
+7. **Don't repeat dead ends** — the list in `docs/DEAD_ENDS_REFERENCE.md` is extensive. Read it.
 8. **Be honest about what is verified vs. speculative.** The previous AI session was too optimistic in places.
 
 ## THE HONEST ASSESSMENT

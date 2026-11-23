@@ -13,15 +13,15 @@ Chat is not the record. A finding still lands in this repository as a probe, a c
 ## What We Need
 
 ### High Priority
-- **WebKit FontFace chain review** — The FontFace UAF (CVE-2026-43720) is the only live exploit vector. PRs #300–#304 contain oracle semantics, vptr guard bypass, cross-firmware layout corrections, and an engine-driven free primitive. Reviewing beacon evidence, verifying claims against captures, and catching bugs in probe code is the most impactful work right now.
+- **WebKit FontFace chain review** — The FontFaceSet UAF is the primary live exploit vector. PRs #300–#304 contain oracle semantics, vptr guard bypass, cross-firmware layout corrections, and an engine-driven free primitive. Reviewing beacon evidence, verifying claims against captures, and catching bugs in probe code is the most impactful work right now.
 - **Cross-firmware validation** — The chain is being developed on 14.10 and ported to 14.00. Contributors with either firmware can run data-gather probes and submit beacon captures. VP-relative vtable offsets transfer across firmwares; base-relative offsets do not. More landings strengthen the evidence.
-- **Alternative info leak** — `IPV6_2292PKTOPTIONS` is blocked on 14.10. The Canvas UAF write primitive exists but cannot be aimed without a heap pointer leak. Finding an alternative leak mechanism is the critical-path blocker. Fresh eyes on the WebKit attack surface (`docs/STRATEGY.md`) are welcome.
-- **KASLR / kernel offset discovery** — No kernel base is established on 14.10, and existing offsets only cover 1.00–10.01. This is blocked until the WebKit chain delivers a kernel read primitive, but offline source analysis of FreeBSD 11.0 kernel structures can start now.
+- **Aim the browser primitives** — `IPV6_2292PKTOPTIONS` is blocked on 14.10. The Canvas UAF write primitive exists but cannot be aimed without a target address; the FontFace UAF supplies per-boot heap pointers, so the open problem is turning those primitives into a controlled read/write at a known address. Fresh eyes on the WebKit attack surface (`docs/STRATEGY.md`) are welcome.
+- **Kernel read at a known address** — The kernel image base is measured per boot by the [fault-code oracle](docs/FAULT_CODE_ORACLE_14_10.md), so the base is no longer the blocker. 14.10 symbol offsets remain unknown and no kernel read exists yet; offline source analysis of FreeBSD 11.0 kernel structures can start now.
 
 ### Always Welcome
 - **Beacon evidence review** — Cross-reference beacon logs and JSONL captures against probe code and session docs. Check that claimed results match the raw data. Prior reviews on #303 and #304 include offline test harnesses as examples.
 - **WebKit probe development** — HTML/JS probes run in the PS5's User Guide browser via DNS redirect. See `probes/phase13_webkit/` for examples. Follow the beacon contract (server-timestamped HTTP POST) so results are independently verifiable.
-- **Lua probe development** — Lua probes run via the TCP loader on port 9026. See `CLAUDE.md` for the template and Lua 5.1 constraints. The kernel syscall surface is exhausted, but prepared probes in the index still need on-device runs.
+- **Lua probe development** — Lua probes run via the TCP loader on port 9026. See `docs/DEAD_ENDS_REFERENCE.md` for the Lua 5.1 constraints and dead ends, and `probes/phase14_final_push/` for current probe examples. The kernel syscall surface is exhausted, but prepared probes in the index still need on-device runs.
 - **FreeBSD source analysis** — The PS5 kernel is a fork of FreeBSD 11.0. Offline analysis of kernel structures, allocator internals, and syscall handlers helps even without hardware.
 - **Tooling and documentation** — Better beacon parsers, capture analyzers, result cross-referencing tools. Typo and clarity fixes.
 
@@ -50,7 +50,7 @@ There are two probe paths, targeting different layers of the PS5 stack.
 
 ### Kernel probes (Lua)
 
-Kernel probes run on the remote Lua loader (`tools/send_probe.py`). See the template and Lua 5.1 constraints in `CLAUDE.md`. Key rules:
+Kernel probes run on the remote Lua loader (`tools/send_probe.py`). See `docs/DEAD_ENDS_REFERENCE.md` for the known dead ends and `probes/phase14_final_push/` for probe examples. Key rules:
 
 - **Use `make_syscall(N)`** for tested raw syscall invocation; it bypasses the Lua resolver filter, while kernel authorization still applies
 - **Always use `pcall()`** around risky operations

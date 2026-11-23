@@ -1,12 +1,15 @@
 # TODO — PS5 14.10 Kernel Research
 
-> **For all AI agents:** Pick a task, do it, then remove it from this list and commit.
-> Priority is top-to-bottom. Items marked with a star are the highest-value targets.
+> **Status: historical (last updated 2026-10-31). Do not pick tasks from this file.**
+> The Lua syscall surface was declared exhausted at that date, and the Canvas UAF was
+> believed to be the only live vector. Since then the FontFace UAF became the primary
+> chain and the fault-code oracle began measuring the kernel image base per boot. The
+> live queue is the issue tracker — start with [#305](https://github.com/ZigZagBoi1/PS5-14.10-Research/issues/305)
+> (FontFace oracle / text base) and [#295](https://github.com/ZigZagBoi1/PS5-14.10-Research/issues/295)
+> (second-bench walk), then the open PRs. See [README.md](README.md) and
+> [docs/EXPLOITATION_STATUS.md](docs/EXPLOITATION_STATUS.md) for current state.
 
-> **Last updated:** 2026-10-28. The Lua loader kernel attack surface is **exhausted**
-> (2682 probes, ~400 BSD syscalls, Sony range 532-676, 32M ioctl calls, all /dev nodes,
-> all known CVEs). Zero kernel pointers, zero exploitable memory corruption. **WebKit
-> Canvas UAF (CVE-2026-43720) is the only live vector.** See `docs/EXPLOITATION_STATUS.md`.
+## Historical snapshot (2026-10-31 — do not execute)
 
 ---
 

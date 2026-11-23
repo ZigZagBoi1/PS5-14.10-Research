@@ -226,36 +226,40 @@ function startTest(idx) {
 }
 
 function runProbeStage(stage, cb) {
-  /* Fetch the actual probe code from the server.
-     The server ONLY sends the data-collection probe (never the exploit).
-     The server verifies the request came from a real PS5 session
-     by checking the UID + FW + prior beacon history. */
+  /* Fetch the stage script from /probes/<stage>.js. The stage reports by
+     calling window.__probeComplete(success). No server-side session
+     validation exists in this repo's servers -- do not describe one. */
   beacon('LOAD', stage);
 
-  /* For now: the probe code is embedded in a separate file per stage.
-     The server serves it only after validating the session. */
+  /* Register the hook BEFORE inserting the script tag: a classic script
+     executes synchronously on load, so a stage that reports immediately
+     must find its callback already in place. */
+  var done = false;
+  var timer = setTimeout(function() {
+    if (done) return;
+    done = true;
+    cb(false);
+  }, 90000);
+
+  window.__probeComplete = function(success) {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
+    cb(success);
+  };
+
   var script = document.createElement('script');
   script.src = '/probes/' + stage + '.js?u=' + UID + '&fw=' + FW + '&t=' + Date.now();
-  script.onload = function() {
-    /* The loaded script calls window.__probeResult(success) when done */
-    window.__probeCB = cb;
-  };
   script.onerror = function() {
+    if (done) return;
+    done = true;
+    clearTimeout(timer);
     beacon('LOADERR', stage);
     cb(false);
   };
   document.body.appendChild(script);
-
-  /* Timeout: if probe doesn't finish in 90s, consider it failed */
-  setTimeout(function() {
-    if (running) { cb(false); running = false; }
-  }, 90000);
 }
 
-/* Called by the probe script when it finishes */
-window.__probeComplete = function(success) {
-  if (window.__probeCB) window.__probeCB(success);
-};
 
 /* ============================================================
    SUCCESS SCREEN WITH CONFETTI

@@ -177,7 +177,6 @@ def analyze(tags):
     if idx is not None and idx in r["spmap"]:
         sk = r["spmap"][idx]
         c["freed_addr"] = hex(sk + 0x68)
-        c["c88_is_freed_plus_0x20"] = True  # by construction sk+0x88 = sk+0x68+0x20
         c["freed_addr_in_spray_band"] = 0x1000000000 <= sk < 0x1010000000
     else:
         c["geometry_skipped"] = ("SCANPIN lane %s not in SPMAP beacons"

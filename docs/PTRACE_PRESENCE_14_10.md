@@ -48,7 +48,7 @@ handler and is therefore on the live attack surface. It does **not** establish:
   execve path on 14.10);
 - any privilege escalation or kernel read/write primitive.
 
-`CT_TRACE_ME` is the request that makes the *caller* traceable by its parent; with no
+`PT_TRACE_ME` is the request that makes the *caller* traceable by its parent; with no
 fork/execve path on 14.10, the classic ptrace privesc precondition is not reachable
 from the game process even though the handler is present. Whether any other request
 (`PTRACE_PEEKTEXT/POKETEXT`, attach to an existing pid) is accepted remains untested

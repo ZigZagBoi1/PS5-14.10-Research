@@ -103,7 +103,7 @@ These are 11.0.0-era mechanisms with no CVE id in `docs/`. They are listed becau
 
 | Class | Mechanism | Precondition | 14.10 |
 |---|---|---|---|
-| `_umtx_op` ROBUST_LISTS (op 26) | `umtx_robust_lists` is kmalloc'd, linked to `td`, and freed on unregister and on thread exit; a walk concurrent with the free is a small-object UAF | op 26 + two threads | **PRESENT, registration refused [M]** — issued in 110a/541a/1065a (all predate this doc), every shape -1 with caller alive; the "never issued" claim was wrong. One non-zero-list-head shape remains untested | `docs/UMTX_OP26_ROBUST_LISTS_PRESENCE_14_10.md` |
+| `_umtx_op` ROBUST_LISTS (op 26) | `umtx_robust_lists` is kmalloc'd, linked to `td`, and freed on unregister and on thread exit; a walk concurrent with the free is a small-object UAF | op 26 + two threads | **PRESENT, registration refused [M]** — issued in 110a/541a/1065a (all predate this doc), every shape -1 with caller alive; the "never issued" claim was wrong. One non-zero-list-head shape remains untested (`docs/UMTX_OP26_ROBUST_LISTS_PRESENCE_14_10.md`) |
 | `sosend` / SO_SNDBUF accounting | `setsockopt(SO_SNDBUF)` takes SOCKBUF_LOCK, `sosend_generic()` drops it inside `m_uiotombuf()`, so `sb_cc` can pass `sb_hiwat` | two threads, one resizing, one sending | **UNKNOWN** - identified as window 5 in `docs/EXPLOIT_SURFACE_ANALYSIS_13.60.md`, never raced |
 | `poll`/`select` vs close | fd-set scan against a concurrent close | 2 threads + poll(209) | **UNKNOWN** - 45251 never assessed; `poll` works, `select(0,0,0,0,0)` blocks forever |
 | `ptrace` | native 26 was never swept (only `compat.ptrace` is known to be `nosys`) | a traceable child | **UNKNOWN** - worth one presence call |

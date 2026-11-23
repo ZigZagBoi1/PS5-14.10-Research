@@ -3,8 +3,11 @@
 **Finding:** `docs/FREEBSD_CVE_TRIAGE_14_10.md` S5 says to "read the result of
 `probes/phase17_new_vectors/706a_sys619_slot.lua` first — if unrun, run it."
 The probe **was already run** on 2026-10-25 (two captures, both predating the
-2026-11-04 triage doc). The first attempt hit a script error; the second ran to
-completion and showed all shapes return -1 with the buffer unchanged. The S5
+2026-11-04 triage doc). The first attempt hit a script error; the second ran all
+619/652 shapes (all -1, buffer unchanged) and then stopped at the `[*] sys 4095`
+call header: 4095 is past the table end, and an absent slot terminating the caller
+there is the expected control (per `docs/SYSCALL_ABSENT_VS_LETHAL.md`) — not a full
+run to completion. The S5
 open question (stub vs gated) is not fully closed — 706a did not include the
 timing / arg1-validation discriminator S5 proposes — but the "if unrun, run it"
 instruction is void and its observed results can be read now.

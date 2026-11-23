@@ -18,6 +18,7 @@ CLASSIC_PROBES = (
     "probes/phase13_webkit/p734-history-navigation-timing.html",
     "probes/phase13_webkit/p771-webaudio-buffer-residue.html",
     "probes/phase13_webkit/adapted-guide-entry/p802-deep-api-scan.html",
+    "probes/phase14_rop/tester-hub.html",
 )
 
 SCRIPT_RE = re.compile(

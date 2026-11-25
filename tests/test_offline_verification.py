@@ -94,6 +94,7 @@ class OfflineVerificationCliTests(unittest.TestCase):
             "tools.test_handler_ptrfree",
             "tools.test_jailbreak_dns",
             "tools.test_layout_pages",
+            "tools.test_p691_rip2_slots",
             "tools.test_parse_beacons",
             "tools.test_probe_js_syntax",
             "tools.test_regen_archives",

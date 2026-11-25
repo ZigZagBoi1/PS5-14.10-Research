@@ -21,6 +21,7 @@ beacon text:
 Given the run's BOOT/SPMAP/VT beacons it also checks geometry:
   freed addr  = sk + 0x68  where sk = SPMAP lane address for SKIPJ
   c88 offset  = freed addr + 0x20  (client-0x20 = sk+0x68, so sk+0x88)
+Missing SCANPIN or its SPMAP entry grades INCOMPLETE, never a pass.
 
 Verdicts:
   FREE_SIGNATURE_CONSISTENT  all checks pass -> free happened; the open item
@@ -30,6 +31,7 @@ Verdicts:
                              fields only partially present.
   INCONSISTENT               fields contradict the free signature -> the
                              "arbitrary free" claim fails on this run.
+  INCOMPLETE                 required geometry or vtable evidence is absent.
   NOT_RCW0                   run was not an rcw=0 run.
 
 Usage:
@@ -174,13 +176,17 @@ def analyze(tags):
     # a minimal fastMalloc chunk for the FontFace size class -> must be the
     # planted vptr, not allocator data. Requires the SCANPIN lane in SPMAP.
     idx = r["scanpin_idx"]
-    if idx is not None and idx in r["spmap"]:
+    if idx is None:
+        r["missing"] = "SCANPIN lane is required to grade geometry"
+        return "INCOMPLETE", r
+    if idx in r["spmap"]:
         sk = r["spmap"][idx]
         c["freed_addr"] = hex(sk + 0x68)
         c["freed_addr_in_spray_band"] = 0x1000000000 <= sk < 0x1010000000
     else:
-        c["geometry_skipped"] = ("SCANPIN lane %s not in SPMAP beacons"
-                                 % idx)
+        r["missing"] = ("SPMAP entry for SCANPIN lane %s is required to grade geometry"
+                        % idx)
+        return "INCOMPLETE", r
 
     if all(v is True for k, v in c.items() if isinstance(v, bool)):
         return "FREE_SIGNATURE_CONSISTENT", r

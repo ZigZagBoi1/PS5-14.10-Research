@@ -56,6 +56,18 @@ class AdversarialInputTests(unittest.TestCase):
         self.assertEqual(verdict, "INCOMPLETE")
         self.assertIn("VP", r["missing"])
 
+    def test_missing_scanpin_is_incomplete_not_a_silent_pass(self):
+        tags = [t for t in self._tags() if not v.SCANPIN_RE.search(t)]
+        verdict, r = v.analyze(tags)
+        self.assertEqual(verdict, "INCOMPLETE")
+        self.assertIn("SCANPIN", r["missing"])
+
+    def test_missing_spmap_is_incomplete_not_a_silent_pass(self):
+        tags = [t for t in self._tags() if not v.SPMAP_RE.search(t)]
+        verdict, r = v.analyze(tags)
+        self.assertEqual(verdict, "INCOMPLETE")
+        self.assertIn("SPMAP", r["missing"])
+
     def test_a_corrupted_freelist_link_is_inconsistent(self):
         tags = [t.replace("c70-0x83f4f9750", "c70-0xdeadbeef")
                 for t in self._tags()]

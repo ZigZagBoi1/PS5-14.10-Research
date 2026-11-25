@@ -11,9 +11,20 @@
 
 set -e
 
+is_ipv4() {
+  local ip="$1" octet
+  local -a octets
+  IFS=. read -r -a octets <<< "$ip"
+  [[ ${#octets[@]} -eq 4 ]] || return 1
+  for octet in "${octets[@]}"; do
+    [[ "$octet" =~ ^[0-9]{1,3}$ ]] || return 1
+    (( 10#$octet >= 0 && 10#$octet <= 255 )) || return 1
+  done
+}
+
 HOME_IP="${1:-REPLACE_ME}"
 VPS_IP=$(curl -fsS --max-time 10 https://ifconfig.me)
-if ! [[ "$VPS_IP" =~ ^[0-9]{1,3}(\.[0-9]{1,3}){3}$ ]]; then
+if ! is_ipv4 "$VPS_IP"; then
   echo "Could not determine this VPS's public IPv4 (got: '${VPS_IP:-empty}')." >&2
   echo "Fix connectivity to ifconfig.me or set VPS_IP manually, then re-run." >&2
   exit 1
@@ -84,7 +95,7 @@ NGINXEOF
 echo "    if (\$remote_addr = \"$HOME_IP\") { set \$ps5ok 1; }" | sudo tee -a /etc/nginx/sites-available/ps5research > /dev/null
 
 sudo tee -a /etc/nginx/sites-available/ps5research > /dev/null << 'NGINXEOF'
-    if ($request_uri ~ ^/\.well-known/acme-challenge/) { set $ps5ok 1; }
+    if ($uri ~ ^/\.well-known/acme-challenge/) { set $ps5ok 1; }
     if ($ps5ok = 0) { return 403 "PS5 firmware 14.00+ required."; }
 
     add_header X-Frame-Options "DENY" always;
@@ -100,6 +111,8 @@ sudo tee -a /etc/nginx/sites-available/ps5research > /dev/null << 'NGINXEOF'
         add_header Access-Control-Allow-Origin "*" always;
         return 200 "ok";
     }
+
+    location /probes/ { try_files $uri =404; }
 
     location / { return 403; }
 }

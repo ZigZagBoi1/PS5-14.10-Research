@@ -39,6 +39,7 @@ SAFE_TEST_MODULES = (
     "tools.test_jailbreak_dns",
     "tools.test_layout_pages",
     "tools.test_parse_beacons",
+    "tools.test_p691_rip2_slots",
     "tools.test_probe_js_syntax",
     "tools.test_regen_archives",
     "tools.test_remaining_cve_triage",

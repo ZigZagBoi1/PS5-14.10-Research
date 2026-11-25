@@ -2,7 +2,6 @@
 """Regression tests for the VPS setup script and nginx configuration."""
 
 import re
-import shutil
 import subprocess
 import unittest
 from pathlib import Path
@@ -38,6 +37,26 @@ def ipv4_accepted(value):
     return result.returncode == 0
 
 
+def bash_probe_sane():
+    """Some Windows bash launchers (the WindowsApps WSL shim) pre-expand the
+    `-c` script against an empty outer context, so positional arguments never
+    reach the script. Probe before trusting the local bash with the octet
+    validator; the loopback suites run it for real on Linux runners."""
+    try:
+        result = subprocess.run(
+            ["bash", "-c", 'printf "%s" "$1"', "probe", "CANARY"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    return result.returncode == 0 and result.stdout == "CANARY"
+
+
+HAS_SANE_BASH = bash_probe_sane()
+
+
 class VpsConfigTests(unittest.TestCase):
     def test_generated_config_routes_tester_hub_stage_scripts(self):
         config = generated_nginx_config()
@@ -62,7 +81,7 @@ class VpsConfigTests(unittest.TestCase):
             self.assertNotIn(
                 r"if ($request_uri ~ ^/\.well-known/acme-challenge/)", config)
 
-    @unittest.skipUnless(shutil.which("bash"), "bash not installed")
+    @unittest.skipUnless(HAS_SANE_BASH, "bash unavailable or -c positionals broken (e.g. WindowsApps WSL launcher)")
     def test_ipv4_validator_rejects_out_of_range_octets(self):
         for value in ("0.0.0.0", "255.255.255.255", "192.168.1.1", "8.8.8.8"):
             with self.subTest(value=value):

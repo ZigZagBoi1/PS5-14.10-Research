@@ -122,6 +122,76 @@ class OracleScanTests(unittest.TestCase):
         self.assertEqual(record["verdict"], "NO_TEXT_POINTER")
         self.assertEqual(record["calls_recomputed"], 3)
 
+    def test_fullwidth_echo_promotes_to_fullwidth_confirmed(self):
+        record = self.records([
+            "P3+0=0x1A201", "P3+2=0x10002", "VTAB=0x10001A201", "CALLS=42",
+            "MARK_P3+0=0x0000010001A201",
+            "GEN=1", "FW_P3+0=0x0000010001A201",
+            "GEN=2", "FW_P3+0=0x0000010001A201",
+        ])[0]
+        self.assertEqual(record["verdict"], "FULLWIDTH_CONFIRMED")
+        self.assertEqual(record["calls_recomputed"], 42)
+        self.assertEqual(len(record["fullwidth_reads"]), 2)
+        self.assertTrue(any("MARKER_ECHO_OK" in n for n in record["notes"]))
+
+    def test_echo_mismatch_downgrades_and_keeps_text_ptr_confirmed(self):
+        record = self.records([
+            "P3+0=0x1A201", "P3+2=0x10002", "VTAB=0x10001A201",
+            "MARK_P3+0=0x0000010001A201",
+            "GEN=1", "FW_P3+0=0x0000010001A201",
+            "GEN=2", "FW_P3+0=0x0000010001A202",
+        ])[0]
+        self.assertEqual(record["verdict"], "TEXT_PTR_CONFIRMED")
+        self.assertTrue(any("MARKER_MISMATCH" in n for n in record["notes"]))
+
+    def test_full_width_comparison_never_truncates_to_low_32_bits(self):
+        record = self.records([
+            "P3+0=0x1A201", "P3+2=0x10002", "VTAB=0x10001A201",
+            "MARK_P3+0=0x0000010001A201",
+            "GEN=1", "FW_P3+0=0x0000010001A201",
+            "GEN=2", "FW_P3+0=0x0000020001A201",
+        ])[0]
+        self.assertEqual(record["verdict"], "TEXT_PTR_CONFIRMED")
+        self.assertEqual(record["echo_mask"], "0xffffffffffff")
+        self.assertTrue(any("MARKER_MISMATCH" in n for n in record["notes"]))
+
+    def test_explicit_narrow_echo_mask_is_honored(self):
+        record = self.records([
+            "P3+0=0x1A201", "P3+2=0x10002", "VTAB=0x10001A201",
+            "ECHO_MASK=0xFFFFFFFF",
+            "GEN=1", "FW_P3+0=0x0000010001A201",
+            "GEN=2", "FW_P3+0=0x0000020001A201",
+        ])[0]
+        self.assertEqual(record["verdict"], "FULLWIDTH_CONFIRMED")
+        self.assertEqual(record["echo_mask"], "0xffffffff")
+
+    def test_flip_class_value_downgrades_even_with_text_confirmation(self):
+        record = self.records([
+            "P3+0=0x1A201", "P3+2=0x10002", "VTAB=0x10001A201",
+            "GEN=1", "FW_P3+0=0x80000004",
+            "GEN=2", "FW_P3+0=0x7FFFFFF4",
+        ])[0]
+        self.assertEqual(record["verdict"], "FLIP_CLASS_SUSPECT")
+        self.assertTrue(record["flip_class_suspect"])
+
+    def test_single_generation_cannot_promote(self):
+        record = self.records([
+            "P3+0=0x1A201", "P3+2=0x10002", "VTAB=0x10001A201",
+            "FW_P3+0=0x0000010001A201",
+        ])[0]
+        self.assertEqual(record["verdict"], "TEXT_PTR_CONFIRMED")
+        self.assertTrue(any("NEED_TWO_GENERATIONS" in n for n in record["notes"]))
+
+    def test_malformed_fullwidth_token_fails_closed(self):
+        result = self.run_tool([
+            "P3+0=0x1A201", "P3+2=0x10002", "VTAB=0x10001A201",
+            "FW_P3+0=0xZZ", "GEN=2", "FW_P3+0=0x0000010001A201",
+        ])
+        self.assertEqual(result.returncode, 1)
+        record = json.loads(result.stdout)[0]
+        self.assertEqual(record["verdict"], "INVALID_RUN")
+        self.assertTrue(any("malformed full-width" in e for e in record["validation_errors"]))
+
     def test_missing_uid_filter_fails_closed(self):
         result = self.run_tool(["P3+0=0x1A201"], "--uid", "NOPE00")
         self.assertEqual(result.returncode, 1)

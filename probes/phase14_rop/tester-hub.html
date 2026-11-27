@@ -226,36 +226,44 @@ function startTest(idx) {
 }
 
 function runProbeStage(stage, cb) {
-  /* Fetch the stage script from /probes/<stage>.js. The stage reports by
-     calling window.__probeComplete(success). No server-side session
-     validation exists in this repo's servers -- do not describe one. */
+  /* Fetch the stage script from /probes/<stage>.js. A stage captures
+     window.__probeRunToken during its initial execution and later calls
+     window.__probeComplete(success, capturedToken). The token prevents a late
+     callback from an earlier run from completing the current run. */
   beacon('LOAD', stage);
 
-  /* Register the hook BEFORE inserting the script tag: a classic script
-     executes synchronously on load, so a stage that reports immediately
-     must find its callback already in place. */
   var done = false;
-  var timer = setTimeout(function() {
-    if (done) return;
-    done = true;
-    cb(false);
-  }, 90000);
+  var runToken = stage + '-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
+  window.__probeRunToken = runToken;
 
-  window.__probeComplete = function(success) {
+  function settle(success) {
     if (done) return;
     done = true;
     clearTimeout(timer);
+    if (window.__probeRunToken === runToken) window.__probeRunToken = null;
     cb(success);
-  };
+  }
+
+  function complete(success, token) {
+    if (token !== runToken) return;
+    settle(success);
+  }
+
+  var timer = setTimeout(function() {
+    settle(false);
+  }, 90000);
+
+  window.__probeComplete = complete;
 
   var script = document.createElement('script');
   script.src = '/probes/' + stage + '.js?u=' + UID + '&fw=' + FW + '&t=' + Date.now();
+  script.onload = function() {
+    /* The stage must have captured the token while it executed. */
+    if (window.__probeRunToken === runToken) window.__probeRunToken = null;
+  };
   script.onerror = function() {
-    if (done) return;
-    done = true;
-    clearTimeout(timer);
     beacon('LOADERR', stage);
-    cb(false);
+    settle(false);
   };
   document.body.appendChild(script);
 }

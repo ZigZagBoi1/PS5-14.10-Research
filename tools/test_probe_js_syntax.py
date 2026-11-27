@@ -10,9 +10,10 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
 
-# These probes shipped with parser errors, so their beacons never started.
-# The browser treats a classic <script> as a Script, not a Module: top-level
-# await is rejected and `typeof import` is not a valid expression.
+# Parse-check classic probes, including files that previously failed to load
+# and long-lived launchers such as the tester hub. The browser treats a classic
+# <script> as a Script, not a Module: top-level await is rejected and
+# `typeof import` is not a valid expression.
 CLASSIC_PROBES = (
     "probes/phase13_webkit/p691-walk-forge-fixed.html",
     "probes/phase13_webkit/p731-formdata-construction-timing.html",

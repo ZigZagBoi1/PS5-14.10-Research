@@ -1,8 +1,8 @@
 # fonts.check oracle polarity fix — boundary() word reader repair
 
-Date: 2026-11-19
+Date: 2026-11-19 (corrected 2026-11-27)
 Type: offline probe repair (no console run)
-Scope: 19 probes in probes/phase13_webkit/ carrying the historic `boundary()` bug
+Scope: 19 main probes plus two adapted-guide-entry variants carrying the `boundary()` bug
 Reference: PR #303 session doc (docs/SESSION_2026-11-18.md, §2/CAL38) — hex0x42424242's
 on-device calibration of the `document.fonts.check` oracle. Flagged there as "boundary()
 had inverted polarity since birth; fixed in p693 (still to propagate to p691/p672/p809)".
@@ -10,39 +10,38 @@ This document is the propagation.
 
 ## Oracle semantics (as calibrated on-device in p693 v7, grade [M] there)
 
-`chk(c) === true  <=>  from <= c <= to`, where `from`/`to` are the u32 pair at the
-address the forge-read aims at (a `unicode-range` pair in the reclaimed FontFace lane).
+`document.fonts.check(c) === true  <=>  from <= c <= to`, where `from`/`to` are
+the u32 pair at the address the forge-read aims at (a `unicode-range` pair in the
+reclaimed FontFace lane). The probe helpers use two conventions:
 
-The planted signature `chk(0x1000)T ∧ chk(0xFFF)F ∧ chk(0x2000)T ∧ chk(0x2001)F` is
-exactly the range `[0x1000, 0x2000]` — the two words the probe planted at +0x38/+0x3C.
+- Raw helper: `chk(c) = document.fonts.check(...)`; largest `chk(c)===true` is TO.
+- Negated helper: `chk(c) = document.fonts.check(...)===false`; largest
+  `chk(c)===false` is TO.
 
-## The bug
+The planted signature `check(0x1000)T ∧ check(0xFFF)F ∧ check(0x2000)T ∧
+check(0x2001)F` is exactly the range `[0x1000, 0x2000]` — the two words the probe
+planted at +0x38/+0x3C.
 
-All 19 probes carried this `boundary(tgt)`:
+## The bug (corrected 2026-11-27)
 
-    setR(tgt);
-    if(chk(0)!==true)return -1;          // <- pre-gate
-    var lo=0,hi=0x10FFFF,res=-1;
-    while(lo<=hi){...if(r===true){res=mid;lo=mid+1;}else hi=mid-1;}
-    return res;
-
-Under the range semantics:
-
-1. The loop finds the LARGEST c with chk(c) true = the `to` word. That much is a
-   correct reader of `u32@(aim+4)`.
-2. But the `chk(0)` pre-gate requires `from <= 0`, i.e. `from == 0`. Every planted
-   pair in these probes uses `from = 0x1000` (or an engine high-dword = 1), so the
-   gate fails and `boundary()` returns -1 for essentially every target. The word
-   reader never worked in any probe that used this signature — every
-   `boundary(...) >= 0` gate downstream was dead, and every derived value was -1.
+The 19 main-directory probes use the negated helper, but their `boundary()` loops
+searched for the largest `chk(c)===true` — the largest **uncovered** codepoint,
+normally `0x10FFFF`, not the TO word. The old `chk(0)!==true` pre-gate rejected
+zero-based ranges and passed `from>0` ranges; removing it alone did not repair the
+polarity. The two adapted-guide-entry variants use the raw helper but carried the
+opposite largest-false loop, so they had the mirror-image failure.
 
 ## The fix
 
-Delete the `chk(0)` pre-gate line only. The binary search is left byte-identical:
-it already computes `to` (largest covered c). A comment recording the semantics and
-the reason for the gate removal replaces the deleted line. No other probe logic is
-touched: `boundary()` previously returned -1 everywhere, so no downstream code path
-can regress — paths that never fired now can.
+Remove the `chk(0)` pre-gate and match the search polarity to the helper:
+
+- Main-directory negated helpers search for the largest `chk(c)===false`.
+- Adapted raw helpers search for the largest `chk(c)===true`.
+- The adapted p811 status3 liveness check also tests `chk(0x10FFFF)===false`, so a
+  zero-based range that covers all three sampled points still reaches the scan.
+
+No other probe logic is changed. Historical boundary-derived beacons remain
+no-data; the four-point signature beacons are unaffected.
 
 ## Files changed (19)
 
@@ -64,29 +63,31 @@ p813v2-feng-shui, p814-ur-fengshui, p815-wide-rs, p816-diag, p817-magic-base-dis
   p691-walk-forge-fixed:358 `Number(boundary(cd))-0x1000` where cd aimed at a
   (0x1000,0x2000) pair). p693's smallest-true version returns `from`; adopting it
   here would change what every existing consumer receives. Both are valid readers;
-  the repo's call sites were written against the largest-true semantics.
+  the repo's call sites expect the largest covered codepoint, expressed as
+  largest-true or largest-false according to the helper's polarity.
 
 ## Offline verification (Node harness)
 
 Method per repo convention: functions extracted verbatim from the patched probes and
 driven by a simulated oracle (u32-pair range semantics), old body vs new body.
 
-| Pair (from,to) | old boundary() | new boundary() | Correct `to` |
+| Pair (from,to) | old negated-helper boundary() | corrected boundary() | Correct `to` |
 |---|---|---|---|
-| (0x1000, 0x2000) | -1 (gate fails — the historic bug) | 0x2000 | 0x2000 |
-| (0, 0x5000) | 0x5000 (gate passes; only case that ever worked) | 0x5000 | 0x5000 |
-| (0x3000, 0x1000) empty | -1 | -1 | -1 |
-| (1, 0x2000) engine-ptr-shaped | -1 | 0x2000 | 0x2000 |
-| (0x40, 0x100) | -1 | 0x100 | 0x100 |
+| (0x1000, 0x2000) | 0x10ffff | 0x2000 | 0x2000 |
+| (0, 0x5000) | -1 (pre-gate rejects) | 0x5000 | 0x5000 |
+| (0x3000, 0x1000) empty | 0x10ffff | -1 | -1 |
+| (1, 0x2000) engine-ptr-shaped | 0x10ffff | 0x2000 | 0x2000 |
+| (0x40, 0x100) | 0x10ffff | 0x100 | 0x100 |
 
-All 19 extracted functions: identical results, 5/5 cases each (95 checks total).
+All 19 extracted main-directory functions plus both adapted variants: expected
+results across the five cases (105 checks total). The regression module is
+`tools/test_fonts_oracle_polarity.py`.
 
 Known limitation (pre-existing, shared by old and new code, NOT introduced by this
 fix): the binary search reads `to` exactly only when `to` is reachable by the
 [0, 0x10FFFF] halving sequence. A width-1 pair whose point lies off that sequence
-returns -1; values landing exactly on the search path (e.g. 0x10FFFF) also escape.
-Probe-planted `to` values (0x2000 etc.) and engine high-dwords (small ints) are
-always reachable, so this does not affect any existing call site.
+returns -1. Probe-planted `to` values (0x2000 etc.) and engine high-dwords (small
+ints) are always reachable, so this does not affect any existing call site.
 
 ## Beacon-evidence hygiene
 
@@ -107,9 +108,13 @@ outside the 19-file list (they are not the probe-modules.html exception):
   the inline boundary scan used the same largest-false loop;
   `BOUNDARY-10ffff` on every live-oracle run.
 
-Both now use the calibrated largest-true reader (pre-gate removed where
-present), matching the 2026-11-19 repair. Historic beacons from these two
-files follow the hygiene rule above. The main-directory twins
-(p691-walk-forge-fixed, p811-addrof-read) were already fixed; these
-adapted-entry copies were silently skipped by the 19-file sweep.
+Both adapted variants now use the raw helper's largest-true reader. The p811
+status3 liveness condition also checks the range ceiling, so zero-based ranges
+reach the scan instead of being mislabeled `ORACLE-STILL-DEAD`. Historic beacons
+from these two files follow the hygiene rule above.
+
+The 2026-11-27 follow-up also corrects the main-directory family: all 19 use the
+negated helper, so their `boundary()` loops now search for largest-false (largest
+covered) rather than largest-true (largest uncovered). The earlier statement that
+the main-directory twins were already fixed was incorrect.
 

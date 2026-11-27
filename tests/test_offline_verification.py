@@ -94,6 +94,7 @@ class OfflineVerificationCliTests(unittest.TestCase):
             "tools.test_extract_ioctl_catalog",
             "tools.test_fault_oracle_boundary",
             "tools.test_fontface_abi_contracts",
+            "tools.test_fonts_oracle_polarity",
             "tools.test_handler_claim_audit",
             "tools.test_handler_ptrfree",
             "tools.test_jailbreak_dns",

@@ -15,7 +15,15 @@ HEREDOC_RE = re.compile(
     r"<< 'NGINXEOF'\n(.*?)\nNGINXEOF",
     re.DOTALL,
 )
-IPV4_FUNC_RE = re.compile(r"^is_ipv4\(\) \{\n.*?^\}", re.MULTILINE | re.DOTALL)
+FUNC_RE = re.compile(
+    r"^is_(?:ipv4|public_ipv4)\(\) \{\n.*?^\}", re.MULTILINE | re.DOTALL)
+
+
+def extracted_functions():
+    functions = FUNC_RE.findall(SETUP.read_text(encoding="utf-8"))
+    if not functions:
+        raise AssertionError("missing IP validation functions")
+    return "\n".join(functions)
 
 
 def generated_nginx_config():
@@ -23,11 +31,22 @@ def generated_nginx_config():
 
 
 def ipv4_accepted(value):
-    match = IPV4_FUNC_RE.search(SETUP.read_text(encoding="utf-8"))
-    if match is None:
-        raise AssertionError("missing is_ipv4 function")
     result = subprocess.run(
-        ["bash", "-c", match.group(0) + '\nis_ipv4 "$1"', "test", value],
+        ["bash", "-c", extracted_functions() + '\nis_ipv4 "$1"', "test", value],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    if result.returncode not in (0, 1):
+        raise AssertionError(result.stderr)
+    return result.returncode == 0
+
+
+def public_ipv4_accepted(value):
+    if "is_public_ipv4()" not in extracted_functions():
+        raise AssertionError("missing is_public_ipv4 function")
+    result = subprocess.run(
+        ["bash", "-c", extracted_functions() + '\nis_public_ipv4 "$1"', "test", value],
         capture_output=True,
         text=True,
         check=False,
@@ -87,9 +106,47 @@ class VpsConfigTests(unittest.TestCase):
             with self.subTest(value=value):
                 self.assertTrue(ipv4_accepted(value))
         for value in ("", "256.1.1.1", "999.999.999.999", "1.2.3",
-                      "1.2.3.4.5", "1..2.3", "-1.2.3.4", "1.2.3.a"):
+                      "1.2.3.4.5", "1..2.3", "-1.2.3.4", "1.2.3.a",
+                      "1.2.3.4.", "1.2.3.4\n", "1.2.3.4\n5.6.7.8",
+                      "1.2.3.4\naddress=/manuals.playstation.net/6.6.6.6",
+                      "1.2.3.4\r\n5.6.7.8", "1.2.3.4\t"):
             with self.subTest(value=value):
                 self.assertFalse(ipv4_accepted(value))
+
+    @unittest.skipUnless(HAS_SANE_BASH, "bash unavailable or -c positionals broken (e.g. WindowsApps WSL launcher)")
+    def test_public_ipv4_validator_rejects_non_global_addresses(self):
+        for value in ("8.8.8.8", "1.1.1.1"):
+            with self.subTest(value=value):
+                self.assertTrue(public_ipv4_accepted(value))
+        for value in ("0.0.0.0", "10.0.0.1", "100.64.0.1", "127.0.0.1",
+                      "169.254.1.1", "172.16.0.1", "192.168.1.1",
+                      "198.18.0.1", "224.0.0.1", "255.255.255.255"):
+            with self.subTest(value=value):
+                self.assertFalse(public_ipv4_accepted(value))
+
+    def test_setup_installs_fresh_host_prerequisites(self):
+        script = SETUP.read_text(encoding="utf-8")
+        install = script[script.index("sudo apt install"):].split("\n\n", 1)[0]
+        for package in ("curl", "ssl-cert", "iptables", "netfilter-persistent"):
+            self.assertIn(package, install)
+
+    def test_setup_validates_home_ip_before_system_mutation(self):
+        script = SETUP.read_text(encoding="utf-8")
+        self.assertIn('HOME_IP="${1:-}"', script)
+        self.assertNotIn("REPLACE_ME", script)
+        self.assertLess(script.index('is_ipv4 "$HOME_IP"'),
+                        script.index("sudo apt update"))
+
+    def test_setup_checks_bootstrap_cert_before_dns_mutation(self):
+        script = SETUP.read_text(encoding="utf-8")
+        self.assertIn("ssl-cert-snakeoil.pem", script)
+        self.assertIn("ssl-cert-snakeoil.key", script)
+        self.assertLess(script.index("ssl-cert-snakeoil.key"),
+                        script.index("systemctl stop systemd-resolved"))
+
+    def test_public_ip_lookup_supports_manual_override(self):
+        script = SETUP.read_text(encoding="utf-8")
+        self.assertIn('VPS_IP="${VPS_IP:-', script)
 
 
 if __name__ == "__main__":

@@ -12,33 +12,67 @@
 set -e
 
 is_ipv4() {
-  local ip="$1" octet
-  local -a octets
-  IFS=. read -r -a octets <<< "$ip"
-  [[ ${#octets[@]} -eq 4 ]] || return 1
-  for octet in "${octets[@]}"; do
-    [[ "$octet" =~ ^[0-9]{1,3}$ ]] || return 1
-    (( 10#$octet >= 0 && 10#$octet <= 255 )) || return 1
-  done
+  local ip="$1"
+  [[ "$ip" =~ ^([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})\.([0-9]{1,3})$ ]] || return 1
+  local a=$((10#${BASH_REMATCH[1]}))
+  local b=$((10#${BASH_REMATCH[2]}))
+  local c=$((10#${BASH_REMATCH[3]}))
+  local d=$((10#${BASH_REMATCH[4]}))
+  (( a <= 255 && b <= 255 && c <= 255 && d <= 255 ))
 }
 
-HOME_IP="${1:-REPLACE_ME}"
-VPS_IP=$(curl -fsS --max-time 10 https://ifconfig.me)
-if ! is_ipv4 "$VPS_IP"; then
-  echo "Could not determine this VPS's public IPv4 (got: '${VPS_IP:-empty}')." >&2
-  echo "Fix connectivity to ifconfig.me or set VPS_IP manually, then re-run." >&2
+is_public_ipv4() {
+  is_ipv4 "$1" || return 1
+  python3 - "$1" <<'PY'
+import ipaddress
+import sys
+
+try:
+    address = ipaddress.ip_address(sys.argv[1])
+except ValueError:
+    sys.exit(1)
+sys.exit(0 if address.is_global and not address.is_multicast else 1)
+PY
+}
+
+HOME_IP="${1:-}"
+if ! is_ipv4 "$HOME_IP"; then
+  echo "Usage: bash vps_setup.sh YOUR_HOME_IP" >&2
+  echo "HOME_IP must be a single IPv4 literal." >&2
   exit 1
 fi
 
 echo "=== PS5 Research VPS Setup ==="
-echo "VPS IP: $VPS_IP"
 echo "Home IP (allowed for 13.60 testing): $HOME_IP"
 echo ""
 
-# Install packages
+# Install packages before using curl, Python, TLS bootstrap files, or iptables.
 echo "[1/5] Installing packages..."
 sudo apt update -y
-sudo apt install -y nginx dnsmasq certbot python3-certbot-nginx
+sudo apt install -y curl python3 nginx dnsmasq certbot python3-certbot-nginx \
+  ssl-cert iptables netfilter-persistent
+
+for cert in /etc/ssl/certs/ssl-cert-snakeoil.pem /etc/ssl/private/ssl-cert-snakeoil.key; do
+  if ! sudo test -r "$cert"; then
+    echo "Missing bootstrap TLS file: $cert" >&2
+    exit 1
+  fi
+done
+
+VPS_IP="${VPS_IP:-}"
+if [[ -z "$VPS_IP" ]]; then
+  if ! VPS_IP=$(curl -fsS --max-time 10 https://ifconfig.me); then
+    echo "Could not reach ifconfig.me; set VPS_IP manually and re-run." >&2
+    exit 1
+  fi
+fi
+if ! is_public_ipv4 "$VPS_IP"; then
+  echo "VPS_IP must be one public IPv4 literal (got: '${VPS_IP:-empty}')." >&2
+  echo "Set VPS_IP manually if automatic discovery returns an invalid address." >&2
+  exit 1
+fi
+echo "VPS IP: $VPS_IP"
+echo ""
 
 # Configure dnsmasq
 echo "[2/5] Configuring DNS..."

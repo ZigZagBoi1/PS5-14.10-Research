@@ -77,6 +77,7 @@ class OfflineVerificationCliTests(unittest.TestCase):
         self.assertEqual(modules, tuple(sorted(modules)))
         self.assertEqual(modules, (
             "tests.test_audit_research",
+            "tools.test_analyze_oracle_scan",
             "tools.test_analyze_result",
             "tools.test_beacon_validity",
             "tools.test_browser_runner_capture",

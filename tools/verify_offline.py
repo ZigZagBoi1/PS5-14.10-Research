@@ -19,6 +19,7 @@ import unittest
 ROOT = Path(__file__).resolve().parents[1]
 SAFE_TEST_MODULES = (
     "tests.test_audit_research",
+    "tools.test_analyze_oracle_scan",
     "tools.test_analyze_result",
     "tools.test_beacon_validity",
     "tools.test_browser_runner_capture",

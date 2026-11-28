@@ -93,3 +93,23 @@ always reachable, so this does not affect any existing call site.
 Any historical beacon line whose value was derived from a `boundary()` call in the
 19 probes above should be read as -1/no-data, not as a measurement. The four-point
 chk signature beacons (SELF/VTAB/L1/L2 plants) are unaffected.
+## Residual sweep (2026-11-23)
+
+Two adapted-guide-entry variants carried the same inverted family and were
+outside the 19-file list (they are not the probe-modules.html exception):
+
+- `probes/phase13_webkit/adapted-guide-entry/p691c-oracle-fix.html`:
+  `boundary()` gated on `chk(0)===false` AND searched the largest
+  NON-covered c — under the range semantics that is 0x10FFFF for every
+  reachable pair (or -1 for zero-based pairs), never the TO word. Every
+  `B-*` beacon from this file reads as no-data.
+- `probes/phase13_webkit/adapted-guide-entry/p811-oracle-status3.html`:
+  the inline boundary scan used the same largest-false loop;
+  `BOUNDARY-10ffff` on every live-oracle run.
+
+Both now use the calibrated largest-true reader (pre-gate removed where
+present), matching the 2026-11-19 repair. Historic beacons from these two
+files follow the hygiene rule above. The main-directory twins
+(p691-walk-forge-fixed, p811-addrof-read) were already fixed; these
+adapted-entry copies were silently skipped by the 19-file sweep.
+

@@ -109,6 +109,7 @@ class OfflineVerificationCliTests(unittest.TestCase):
             "tools.test_sys622_prose",
             "tools.test_syscall_labels",
             "tools.test_task_db",
+            "tools.test_tester_hub_loader",
             "tools.test_umtx454_correction",
             "tools.test_v88_forge_geometry",
             "tools.test_validate_p693_free",

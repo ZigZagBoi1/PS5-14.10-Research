@@ -78,11 +78,13 @@ class OfflineVerificationCliTests(unittest.TestCase):
         self.assertEqual(modules, (
             "tests.test_audit_research",
             "tools.test_analyze_result",
+            "tools.test_beacon_validity",
             "tools.test_browser_runner_capture",
             "tools.test_browser_runner_http",
             "tools.test_browser_runner_paths",
             "tools.test_canvas_state_geometry",
             "tools.test_check_lua_syntax",
+            "tools.test_cited_evidence",
             "tools.test_decode_fault_scan",
             "tools.test_deep_result_scanner",
             "tools.test_dns_tools",
@@ -106,6 +108,7 @@ class OfflineVerificationCliTests(unittest.TestCase):
             "tools.test_task_db",
             "tools.test_umtx454_correction",
             "tools.test_v88_forge_geometry",
+            "tools.test_validate_p693_free",
             "tools.test_webkit_false_positive",
         ))
 

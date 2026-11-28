@@ -14,10 +14,14 @@ beacon text:
   c88 = VP                   untouched: lies past the freed chunk's usable
                              region, so the allocator did not reach it
   h60 = module-space ptr     FastMalloc's own chunk header written at ptr-8
+  (S2 = S4 = S5 and the freelist links are graded from the raw WALK-VT
+   qword dump, not from the probe's computed VT beacon fields; a capture
+   without the dump or the WALK VP line grades INCOMPLETE, never a pass.)
 
 Given the run's BOOT/SPMAP/VT beacons it also checks geometry:
   freed addr  = sk + 0x68  where sk = SPMAP lane address for SKIPJ
   c88 offset  = freed addr + 0x20  (client-0x20 = sk+0x68, so sk+0x88)
+Missing SCANPIN or its SPMAP entry grades INCOMPLETE, never a pass.
 
 Verdicts:
   FREE_SIGNATURE_CONSISTENT  all checks pass -> free happened; the open item
@@ -27,6 +31,7 @@ Verdicts:
                              fields only partially present.
   INCONSISTENT               fields contradict the free signature -> the
                              "arbitrary free" claim fails on this run.
+  INCOMPLETE                 required geometry or vtable evidence is absent.
   NOT_RCW0                   run was not an rcw=0 run.
 
 Usage:
@@ -54,6 +59,7 @@ VT2_RE = re.compile(r"P693-VT-s3=(0x[0-9a-f]+),s4=(0x[0-9a-f]+),s5=(0x[0-9a-f]+)
 VT3_RE = re.compile(r"P693-VT-s6=(0x[0-9a-f]+),s7=(0x[0-9a-f]+),s8=(0x[0-9a-f]+)")
 SCANPIN_RE = re.compile(r"P693-VTAB-0x[0-9a-f]+-j(\d+)-SCANPIN")
 VP_RE = re.compile(r"P693-WALK-.*VP=(0x[0-9a-f]+)")
+WALKVT_RE = re.compile(r"P693-WALK-VT=([0-9a-f]+)")
 def module_band(*ptrs):
     """Derive the module band from the run's own VP/slot pointers instead of
     hardcoding 14.10 constants (the tool must work across firmware builds)."""
@@ -82,7 +88,7 @@ def tags_from(path):
 def analyze(tags):
     """tags: ordered iterable of P693-* beacon messages from ONE run."""
     r = {"rcw": None, "scanpin_idx": None, "spmap": {}, "slots": {},
-         "vp": None, "famfr": None, "checks": {}}
+         "vp": None, "walkvt_qwords": None, "famfr": None, "checks": {}}
     for t in tags:
         m = BOOT_RE.search(t)
         if m:
@@ -96,6 +102,14 @@ def analyze(tags):
         m = SPMAP_RE.search(t)
         if m:
             r["spmap"][int(m.group(2))] = int(m.group(1), 16)
+            continue
+        m = WALKVT_RE.search(t)
+        if m:
+            dump = m.group(1)
+            r["walkvt_qwords"] = [
+                int.from_bytes(bytes.fromhex(dump[i:i + 16]), "little")
+                for i in range(0, len(dump) - 15, 16)
+            ]
             continue
         m = VP_RE.search(t)
         if m:
@@ -134,30 +148,47 @@ def analyze(tags):
 
     c = r["checks"]
     c["rc_word_zeroed_c68_eq_0"] = f["c68"] == 0
-    s2, s4, s5 = r["slots"].get("s2"), r["slots"].get("s4"), r["slots"].get("s5")
+    q = r["walkvt_qwords"]
+    if q is None or len(q) < 6:
+        r["missing"] = "WALK-VT qword dump (>=6 qwords) is required to grade"
+        return "INCOMPLETE", r
+    if r["vp"] is None:
+        r["missing"] = "WALK VP is required to grade"
+        return "INCOMPLETE", r
+    # Grade the ICF collapse from the raw vtable dump, not the probe's VT-s3
+    # fields: the probe fills s4/s5 with reference constants (Q4/R5), so the
+    # old s2==s4==s5 comparison read computed values, was False on the only
+    # committed capture, and the old endswith gate excluded it from the
+    # verdict -- a failed check never blocked FREE_SIGNATURE_CONSISTENT.
+    c["icf_collapse_vt_q2_eq_q4_eq_q5"] = q[2] == q[4] == q[5]
+    c["freelist_link_c70_eq_vt_q2"] = f["c70"] == q[2]
+    c["freelist_link_c78_eq_vt_q2"] = f["c78"] == q[2]
+    c["vptr_untouched_c88_eq_vp"] = f["c88"] == r["vp"]
+    s2 = r["slots"].get("s2")
     if s2 is not None:
-        c["icf_collapse_s2_eq_s4_eq_s5"] = (s2 == s4 == s5)
-        c["freelist_link_c70_eq_s2"] = f["c70"] == s2
-        c["freelist_link_c78_eq_s2"] = f["c78"] == s2
-    if r["vp"] is not None:
-        c["vptr_untouched_c88_eq_vp"] = f["c88"] == r["vp"]
-    c["header_h60_in_module_band"] = MODULE_BAND_LO <= f["h60"] < MODULE_BAND_HI
+        c["probe_vt_s2_matches_dump_q2"] = s2 == q[2]
+    band = module_band(r.get("vp"), *r["slots"].values())
+    c["header_h60_in_module_band"] = (
+        band is not None and band[0] <= f["h60"] < band[1])
     c["c80_small_nonzero"] = 0 < f["c80"] < 0x1000
 
     # Geometry: freed addr = sk+0x68; c88 (sk+0x88) is freed+0x20, i.e. past
     # a minimal fastMalloc chunk for the FontFace size class -> must be the
     # planted vptr, not allocator data. Requires the SCANPIN lane in SPMAP.
     idx = r["scanpin_idx"]
-    if idx is not None and idx in r["spmap"]:
+    if idx is None:
+        r["missing"] = "SCANPIN lane is required to grade geometry"
+        return "INCOMPLETE", r
+    if idx in r["spmap"]:
         sk = r["spmap"][idx]
         c["freed_addr"] = hex(sk + 0x68)
-        c["c88_is_freed_plus_0x20"] = True  # by construction sk+0x88 = sk+0x68+0x20
         c["freed_addr_in_spray_band"] = 0x1000000000 <= sk < 0x1010000000
     else:
-        c["geometry_skipped"] = ("SCANPIN lane %s not in SPMAP beacons"
-                                 % idx)
+        r["missing"] = ("SPMAP entry for SCANPIN lane %s is required to grade geometry"
+                        % idx)
+        return "INCOMPLETE", r
 
-    if all(v is True for k, v in c.items() if k.endswith(("0", "p", "2", "i", "d", "e"))):
+    if all(v is True for k, v in c.items() if isinstance(v, bool)):
         return "FREE_SIGNATURE_CONSISTENT", r
     hard_fail = [k for k, v in c.items() if v is False]
     if hard_fail:

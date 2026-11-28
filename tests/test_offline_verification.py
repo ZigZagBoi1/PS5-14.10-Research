@@ -111,6 +111,7 @@ class OfflineVerificationCliTests(unittest.TestCase):
             "tools.test_umtx454_correction",
             "tools.test_v88_forge_geometry",
             "tools.test_validate_p693_free",
+            "tools.test_vps_setup",
             "tools.test_webkit_false_positive",
         ))
 

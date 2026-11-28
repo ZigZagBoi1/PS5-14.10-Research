@@ -78,7 +78,7 @@ Status vocabulary: **PRESENT** = the syscall/subsystem answers on 14.10; **ABSEN
 | CVE-2026-49416 | vt(4) CONS_HISTORY ioctl overflow | ioctl 54 + `/dev/console` | **ABSENT** | `docs/REMAINING_CVE_TRIAGE.md`; `docs/FINDINGS.md:616` |
 | CVE-2026-49419 | jail refcount underflow frees an in-use prison | jail_get/jail_set | **ABSENT** - 338/496/497 sit on the `nosys` slot in the 13.60 dump | `docs/CVE-2026-49419-PS5-14.10.md:4`, `:55` |
 | CVE-2026-49424 | Linuxulator `linux_waitid()` | `linux.ko`/`linux64.ko` | **ABSENT** - loadable module, no load path, wrong era | `docs/CVE-2026-49424-PS5-14.10.md:4`, `:45` |
-| CVE-2026-7270 | `execve` argument parsing precedence overflow | execve(59) reachable | **UNKNOWN** - no probe has ever issued 59 | `docs/CVE-2026-7270-ASSESSMENT.md` |
+| CVE-2026-7270 | `execve` argument parsing precedence overflow | execve(59) reachable | **PRESENT [M]** — syscall 59 issued in 184a/93d5/93d8 (all predate this doc), returns -1 with caller alive; real-binary exec + overflow still untested | `docs/EXECVE_59_REACHABILITY_14_10.md` |
 | CVE-2026-49414 | ELF ASLR disabled for setuid PIE | setuid exec | **UNKNOWN** - precondition unestablished, same missing probe | `docs/REMAINING_CVE_TRIAGE.md:119` |
 | CVE-2020-25579 [R] | msdosfs `readdir` padding leaks kernel memory | a FAT mount | **ABSENT** - no mount syscall | - |
 | CVE-2026-45251 | poll/close UAF, seldrain absent | poll(209) + close from second thread | **DEAD** — zone isolation blocks reclaim (0/35) | `docs/CVE_2026_45251_POLL_CLOSE_UAF.md` |
@@ -172,7 +172,10 @@ Ranking is (payoff x reachability) / cost, with crash risk as a tiebreak. Each s
 **Vulnerable vs patched.** Sentinel changed = the handler wrote through a caller pointer; check whether the write address is taken from the buffer. All shapes 0 with no write = no-op, cut.
 
 ### S7 - execve(59) reachability, to scope 7270 and 49414  (scope only)
-**Probe.** `59("/nonexistent", 0, 0)`: ENOENT means the exec path is live; a kill means the slot is absent. Then `59("/app0/eboot.bin", argv, envp)` with a legal argv: ENOEXEC/EACCES means the ELF loader ran; a kill means it did not.
+
+**Correction (see `docs/EXECVE_59_REACHABILITY_14_10.md`):** syscall 59 **was** issued — in 184a (2026-10-22), 93d5 and 93d8 (2026-11-05), all before this document. Each returned -1 with the caller alive, so the slot is PRESENT [M] (not absent). The `59("/nonexistent", 0, 0)` reachability half is answered; the `59("/app0/eboot.bin", argv, envp)` real-binary half was never run, so the ELF-loader-runs question and CVE-2026-7270's overflow remain untested. "No probe has ever issued 59" is void. The original probe plan below is retained as the outstanding follow-up.
+
+**Original probe plan.** `59("/nonexistent", 0, 0)`: ENOENT means the exec path is live; a kill means the slot is absent. Then `59("/app0/eboot.bin", argv, envp)` with a legal argv: ENOEXEC/EACCES means the ELF loader ran; a kill means it did not.
 **Do not** run an oversized-argument trigger; the repository has no authenticated 14.10 kernel code for the 7270 expression (`docs/CVE-2026-7270-ASSESSMENT.md`). The reachability call is the deliverable.
 
 ---

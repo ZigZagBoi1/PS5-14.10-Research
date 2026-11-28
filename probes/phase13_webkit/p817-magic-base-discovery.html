@@ -159,8 +159,9 @@ function phase(){
         function chk(c){try{return document.fonts.check('1em '+fam,String.fromCodePoint(c))===false;}catch(e){return null;}}
         function boundary(tgt){
           setR(tgt);
-          /* polarity fix: chk(0) pre-gate removed — it returned -1 for every non-empty range with from>0, so the word reader never worked. The loop finds the largest c with chk(c)===true = the TO word of the (from,to) u32 pair at the aimed address (oracle semantics per p693/CAL38). */var lo=0,hi=0x10FFFF,res=-1;
-          while(lo<=hi){var mid=(lo+hi)>>1;var r=chk(mid);if(r===null)break;if(r===true){res=mid;lo=mid+1;}else hi=mid-1;}
+          /* chk() is negated (true = uncovered), so the largest covered c is the
+             largest chk(c)===false = the TO word. No chk(0) pre-gate. */var lo=0,hi=0x10FFFF,res=-1;
+          while(lo<=hi){var mid=(lo+hi)>>1;var r=chk(mid);if(r===null)break;if(r===false){res=mid;lo=mid+1;}else hi=mid-1;}
           return res;
         }
 

@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Parse data-gather tester beacons (probe-modules.html) and recompute VP_RVA.
+"""Parse data-gather tester beacons (probe-modules.html) and validate walks.
+
+Relative slot deltas can identify a layout fingerprint, but this tool does not
+infer an absolute VP_RVA or module base without an independent anchor.
 
 The upstream data-gather rig (probes/phase13_webkit/data-gather/) emits beacon
 lines into the VPS nginx log (/var/log/nginx/ps5_beacons.log), one HTTP GET per
@@ -8,17 +11,19 @@ beacon:
     GET /beacon/MOD-<MESSAGE>?t=<ms>&u=<UID> ...
 
 This tool groups beacons by UID into runs, validates each run, and -- crucially
--- does NOT trust the probe's hardcoded BASE = VP - 0xC6A1B28 (13.60 value).
-Relative deltas provide a layout fingerprint, not independent proof of build
-identity or an absolute module base. Address candidates below depend on the
-reference-layout assumption. Run validity is checked separately; incomplete,
-failed, malformed, or contradictory records cannot produce a successful exit.
+-- does NOT trust the probe's hardcoded BASE = VP - 0xC6A1B28. Relative deltas
+provide a layout fingerprint, not an absolute module base. Issue #295 measured
+the same slot deltas with VP_RVA 0x724DB28, so a fingerprint match cannot select
+between absolute layout families. Run validity is checked separately from
+address inference; incomplete, failed, malformed, or contradictory records
+cannot produce a successful exit.
 
 Usage:
     python tools/parse_beacons.py /var/log/nginx/ps5_beacons.log
     python tools/parse_beacons.py beacons.log --uid AB12CD --json
 
-Exit code: 0 if at least one run validates, 1 otherwise.
+Exit code: 0 if at least one valid run has a recognized reference-relative
+fingerprint, 1 otherwise. A valid but unknown fingerprint remains manual review.
 """
 
 import argparse
@@ -27,8 +32,10 @@ import re
 import sys
 from dataclasses import dataclass, field
 
-# --- 13.60 reference: p691-run3 (2026-11-14, grade M, INDEX.md:3489) ---------
+# --- Reference fingerprint: p691-run3 (2026-11-14, grade M, INDEX.md:3482) --
 # Boot-stable across 5 boots; deltas confirmed by VP_SLOT_DELTAS_CORRECTED.md.
+# Issue #295 later measured the same deltas at VP_RVA 0x724DB28, so these
+# absolute addresses are one observed layout family, not a universal RVA.
 REF = {
     "VP": 0x80C6A1B28,
     "S0": 0x80AF90FB0,
@@ -110,10 +117,9 @@ def analyze_layout(run):
     d["probe_base_matches_assumption"] = (run.base_claimed == base_implied)
 
     # 2. Inter-slot deltas. Under pure ASLR the whole image slides as one
-    #    mapping, so VP-si is slide-invariant and must equal the 13.60 values
-    #    exactly. If every slot instead shifted by the SAME amount relative to
-    #    the reference, the vtable moved as a unit against .text (different
-    #    link) and the true RVA is assumed_rva + shift.
+    #    mapping, so VP-si is slide-invariant. A uniform shift means the
+    #    vtable moved relative to the reference code slots; it remains a
+    #    relative observation, not an absolute RVA.
     #    S8 is 0 in both (past-end), skip it for matching.
     ref_deltas = {k: REF["VP"] - REF[k] for k in SLOT_KEYS[:8]}
     run_deltas = {}
@@ -130,7 +136,7 @@ def analyze_layout(run):
     if run.base_claimed and run.base_claimed + ASSUMED_VP_RVA != run.vp:
         d["warning"] = "probe BASE claim inconsistent with VP; beacon suspect"
     d["slot_deltas"] = {k: hex(v) for k, v in run_deltas.items()}
-    d["delta_shift_vs_1360"] = {k: hex(v) for k, v in shifts.items()}
+    d["delta_shift_vs_reference"] = {k: hex(v) for k, v in shifts.items()}
 
     nonzero_shifts = [v for v in shifts.values() if v != 0]
     if not shifts:
@@ -144,26 +150,26 @@ def analyze_layout(run):
         for a, b in zip(SLOT_KEYS[:8], SLOT_KEYS[1:8])
         if a in run.slots and b in run.slots and REF[a] and REF[b]
     )
-    d["inter_slot_gaps_match_1360"] = gap_consistent
+    d["inter_slot_gaps_match_reference"] = gap_consistent
 
     if not nonzero_shifts and gap_consistent:
-        # Matching relative deltas do not independently anchor an absolute RVA.
-        d["vp_rva_assumed"] = hex(ASSUMED_VP_RVA)
-        d["base_candidate"] = hex(base_implied)
-        return "MATCH_1360_LAYOUT", d
+        # Matching relative deltas validate the walk shape only. They do not
+        # independently anchor an absolute RVA: issue #295 has identical
+        # deltas at VP_RVA 0x724DB28 rather than this family's 0xC6A1B28.
+        d["reference_fingerprint"] = "p691-run3"
+        d["absolute_rva"] = "unresolved"
+        return "MATCH_REFERENCE_DELTAS", d
 
     unique_shifts = set(nonzero_shifts)
     if (len(unique_shifts) == 1 and len(nonzero_shifts) == len(shifts)
             and gap_consistent):
-        # Gaps identical but every slot offset from VP by the same constant:
-        # vtable (.rodata) moved as a unit relative to .text — different link
-        # of the same code, under the reference-layout assumption only.
+        # Gaps identical but every slot offset from VP by the same constant.
+        # This is a relative shift against the reference family, not proof of
+        # an absolute RVA or base without an independent anchor.
         shift = nonzero_shifts[0]
-        true_rva = ASSUMED_VP_RVA + shift
         d["uniform_shift"] = hex(shift)
-        d["vp_rva_candidate"] = hex(true_rva)
-        d["base_candidate"] = hex(run.vp - true_rva)
-        return "UNIFORM_SHIFT_RVA_RECOMPUTED", d
+        d["absolute_rva"] = "unresolved"
+        return "UNIFORM_SHIFT_REFERENCE_DELTAS", d
 
     # 3. Structural fingerprint that survives ANY slide: slot-vs-slot deltas.
     structural = {}
@@ -174,6 +180,7 @@ def analyze_layout(run):
         structural[key + "_ref"] = REF[a] - REF[b]
         structural[key + "_match"] = structural[key] == structural[key + "_ref"]
     d["structural_slot_pairs"] = structural
+    d["absolute_rva"] = "unresolved"
     return "MISMATCH_MANUAL_REVIEW", d
 
 
@@ -208,10 +215,9 @@ def analyze(run):
     details["run_valid"] = not errors
     details["validation_errors"] = sorted(set(errors))
     if errors:
-        for key in ("vp_rva_assumed", "vp_rva_candidate", "base_candidate"):
-            details.pop(key, None)
         return "INVALID_RUN", details
-    details["address_inference"] = "conditional on reference-layout assumption"
+    details["address_inference"] = (
+        "unresolved: relative slot deltas cannot determine absolute module base")
     return layout_verdict, details
 
 
@@ -236,7 +242,8 @@ def main():
         verdict, details = analyze(runs[uid])
         details["verdict"] = verdict
         results.append(details)
-        if verdict in ("MATCH_1360_LAYOUT", "UNIFORM_SHIFT_RVA_RECOMPUTED"):
+        if (details["run_valid"] and verdict in
+                ("MATCH_REFERENCE_DELTAS", "UNIFORM_SHIFT_REFERENCE_DELTAS")):
             ok = True
 
     if args.json:
@@ -252,15 +259,16 @@ def main():
                 print(f"  BASE probe-claimed={r['base_probe_claim']} "
                       f"implied(0xC6A1B28)={r['base_implied_by_assumed_rva']} "
                       f"agree={r['probe_base_matches_assumption']}")
-            if "vp_rva_assumed" in r:
-                print(f"  VP_RVA ASSUMED = {r['vp_rva_assumed']}  base_candidate={r['base_candidate']}")
-            if "vp_rva_candidate" in r:
-                print(f"  uniform shift={r['uniform_shift']} -> "
-                      f"VP_RVA CANDIDATE = {r['vp_rva_candidate']}  base_candidate={r['base_candidate']}")
+            if "reference_fingerprint" in r:
+                print(f"  reference deltas={r['reference_fingerprint']} "
+                      "absolute VP_RVA=unresolved")
+            if "uniform_shift" in r:
+                print(f"  relative shift={r['uniform_shift']} "
+                      "absolute VP_RVA=unresolved")
             if "address_inference" in r:
                 print(f"  {r['address_inference']}")
             if r["verdict"] == "MISMATCH_MANUAL_REVIEW":
-                for k in ("slot_deltas", "delta_shift_vs_1360"):
+                for k in ("slot_deltas", "delta_shift_vs_reference"):
                     print(f"  {k}: {r[k]}")
             print()
     return 0 if ok else 1

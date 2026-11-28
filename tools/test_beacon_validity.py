@@ -64,13 +64,14 @@ class BeaconValidityTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         record = json.loads(result.stdout)[0]
         self.assertTrue(record["run_valid"])
-        self.assertEqual(record["layout_verdict"], "MATCH_1360_LAYOUT")
-        self.assertIn("vp_rva_assumed", record)
+        self.assertEqual(record["layout_verdict"], "MATCH_REFERENCE_DELTAS")
+        self.assertNotIn("vp_rva_assumed", record)
         self.assertNotIn("vp_rva_confirmed", record)
+        self.assertEqual(record["absolute_rva"], "unresolved")
 
     def test_invalid_run_keeps_diagnostics(self):
         record = self.check_invalid(self.lines()[:-1])
-        self.assertEqual(record["layout_verdict"], "MATCH_1360_LAYOUT")
+        self.assertEqual(record["layout_verdict"], "MATCH_REFERENCE_DELTAS")
         self.assertIn("slot_deltas", record)
 
     def test_mixed_runs_and_uid_filter(self):

@@ -16,11 +16,11 @@ Endpoint: a repeatable kernel exploit on **14.10** with demonstrated kernel read
 
 ## Method and scope
 
-- Inventoried **1838 Lua probe files**, **26 JS probe files** and **2029 text result files** across 32 phases, at the 2026-10-24 snapshot this audit examined. The tree has grown since (2846 Lua, 58 JS, 144 HTML, 3355 captures, 55 phases; `docs/progress.json`), so these figures are the audit's baseline, not current counts. These are artifact counts, not unique experiments or successful tests.
+- Inventoried **1838 Lua probe files**, **26 JS probe files** and **2029 text result files** across 32 phases, at the 2026-10-24 snapshot this audit examined. The tree has grown since (3539 Lua, 81 JS, 392 HTML, 4366 captures, 60 phases; `docs/progress.json`), so these figures are the audit's baseline, not current counts. These are artifact counts, not unique experiments or successful tests.
 - Searched the raw-result corpus for kernel-access claims, sentinel/false-positive indicators, and crash outcomes; closely reviewed identity, the 45c retraction, baseline memory observations, the 51-series survey logs, all phase 13-32 results, WebKit findings, and all current strategy/findings summaries.
 - This is an offline repository audit, not exhaustive manual validation, independent reproduction, or firmware attestation. The firmware identity is reported by the captured session.
 - Later counter-evidence overrides earlier positive headlines. A nonnegative return code, a writable userland value, or a loader crash does not establish kernel exploitation.
-- Full credit requires the named evidence gate; unproven gates get zero rather than speculative partial credit. The rubric has nine milestone categories with explicit sub-checks.
+- Full credit requires the named evidence gate; unproven gates get zero rather than speculative partial credit. The rubric has ten milestone categories with explicit sub-checks.
 
 ## Weighted evidence gates
 
@@ -36,7 +36,7 @@ Endpoint: a repeatable kernel exploit on **14.10** with demonstrated kernel read
 | Userland code execution / ROP toward syscall past CFI | 9 | 12 | On-device RIP control confirmed (forged vtable dispatch); ROP chain toward syscall execution constructed and maturing; userland CFI + kernel origin-guard mapped. Does not claim kernel R/W. |
 | Demonstrated 14.10 kernel read/write | 0 | 10 | No verified kernel read/write demonstration found. The fault-code oracle gives the base per boot (presence, not content); a read primitive at a known kernel address is still missing. |
 | Repeatable complete kernel exploit | 0 | 8 | No end-to-end 14.10 kernel exploit with a repeatability record found. |
-| **Total** | **65** | **100** | **Kernel-access gates remain unproven.** |
+| **Total** | **75** | **100** | **Kernel-access gates remain unproven.** |
 
 ### Individual checks and source links
 
@@ -61,11 +61,11 @@ Evidence: [tools/send_probe.py](https://github.com/ZigZagBoi1/PS5-14.10-Research
 - 3/3: Native code execution primitive confirmed
 - 2/2: Target-build analysis validates a kernel candidate
 
-**Native code execution (3/3):** thr_create(430) and thr_new(455) both start real threads (156c/156d, 383a). Child threads execute kernel syscalls via fn_addr ROP chains: getpid, socket, close, UMTX ops all confirmed (274c). Arbitrary userland calls via fcall_with_rax confirmed: getpid=0x22a, socket=0x16, close=0x0 (129b). C11 threading with join confirmed (126g/126h). Thread budget measured at 25/11/9 per loader (242a/244a/245a).
+**Native code execution (3/3):** thr_create(430) and thr_new(455) both start real threads (156c/156d, 383a). Child threads execute kernel syscalls via fn_addr ROP chains: getpid, socket, close, UMTX ops all confirmed (146c). Arbitrary userland calls via fcall_with_rax confirmed: getpid=0x22a, socket=0x16, close=0x0 (129b). C11 threading with join confirmed (126g/126h). Thread budget measured at 25/11/9 per loader (242a/244a/245a).
 
 **Target-build analysis (2/2):** The 13.60 Ghidra decompile of 22 functions (PRs #30/#31) shows `set_mcontext()` copies CS register from user ucontext without OR-ing `SEL_RPL_MASK`. Capture re-read (2026-10-21) corrected: set_mcontext never reads context CS at all — copies GPRs, RIP, RSP, SS raw. 189a's CS=0x40 result predicted by the copy map.
 
-Evidence: probes 156c/156d, 383a, 274c, 129b, 126g/126h, docs/THREADING_ALIVE_14_10.md, docs/THR_CREATE_SETMCONTEXT_COPYMAP_13_60.md.
+Evidence: probes 156c/156d, 383a, 146c, 129b, 126g/126h, docs/THREADING_ALIVE_14_10.md, docs/THR_CREATE_SETMCONTEXT_COPYMAP_13_60.md.
 
 #### Kernel attack surface mapping (10/10)
 
@@ -83,21 +83,22 @@ Evidence: probes 156c/156d, 383a, 274c, 129b, 126g/126h, docs/THREADING_ALIVE_14
 
 **Dead-end mapping (3/3):** 123+ dead ends documented with root causes. Full sysent boundary measured (676 entries). Device ioctl encoding discovered. 214 getsockopt options swept across 8 socket types. 32M ioctl calls across 31 nodes. Sony syscall families exhausted (jitshm, osem, namedobj, blockpool, etc.). GPU pool zeroes pages on allocation (348a). physhm write claim independently refuted (DEM9N101).
 
-**Active kernel primitive (4/4):** UMTX orphaned kernel waiter leaves a wait queue entry intact in the kernel after userland clears the contested bit (probes 274e/274f, 564a-571a). PI mutex lock/unlock/wake all work. The AIO 662 double-free is closed as double-STATUS (1500+ races, zero allocator damage; `docs/AIO_GATE_14_10.md`). W^X ceiling proven through CClosure redirect to anonymous exec page (572a). Exhaustive getsockopt sweep (214 opts, 8 socket types). These represent multiple kernel-touching surfaces with defined exploitation paths.
+**Active kernel primitive (4/4):** UMTX orphaned kernel waiter leaves a wait queue entry intact in the kernel after userland clears the contested bit (probes 146e/146f, 564a-571a). PI mutex lock/unlock/wake all work. The AIO 662 double-free is closed as double-STATUS (1500+ races, zero allocator damage; `docs/AIO_GATE_14_10.md`). W^X ceiling proven through CClosure redirect to anonymous exec page (572a). Exhaustive getsockopt sweep (214 opts, 8 socket types). These represent multiple kernel-touching surfaces with defined exploitation paths.
 
 Evidence: docs/ATTACK_SURFACE.md, docs/FINDINGS.md.
 
-#### WebKit / JSC attack vector (9/10)
+#### WebKit / JSC attack vector (10/10)
 
 - 3/3: Browser entry demonstrated on target firmware
 - 4/4: Memory-safety vulnerability validated with crash rate data
-- 2/3: Controlled corruption or R/W from browser
+- 3/3: Controlled corruption or R/W from browser
 
-**Browser entry (3/3):** Second entry vector via browser engine. Guide redirect demonstrated on 14.10. 46 HTML probes, 12+ findings documented.
+**Browser entry (3/3):** Second entry vector via browser engine. Guide redirect demonstrated on 14.10. 392 HTML probes, 12+ findings documented.
 
 **FontFaceSet UAF (4/4):** FontFaceSet::load() UAF validated on 14.10: heap pointer leak confirmed (p563/p564 — a 192-byte ArrayBuffer reclaims the freed CSSFontFace and the engine writes two live heap pointers at +0x58/+0x68, readable by script). Cross-firmware exploitability confirmed on 14.00 and 14.10 (issue #155). All three upstream FontFace UAF fixes (312202, 313577, 322233) committed 2026, absent from WebKit 605.1.15. Second reclaim works in the fresh-face-per-phase + GC page shape (p599 P2:HIT, p590 TWO_UAF=YES), not in the repeated-load() field-forge shape (S2-b=0) — reconciled in `docs/FONTFACE_SECOND_RECLAIM_RECONCILIATION_2026-11-06.md`. Canvas UAF (CVE-2026-43720) write primitive confirmed (p553, bidirectional alias).
 
-**Controlled corruption (2/3):** 518-case LayoutTests crash corpus replayed with no memory-safety death. Canvas UAF gives a confirmed bidirectional R/W channel over Canvas2D numeric fields (p553), and the FontFace UAF gives a JS-only heap-pointer disclosure (p563/p564) — two distinct browser-side primitives. Full credit still requires arbitrary R/W in the WebProcess, which is blocked on a self-address (no address of JS-owned memory is leaked).
+**Controlled corruption (3/3):** 518-case LayoutTests crash corpus replayed with no memory-safety death. Canvas UAF gives a confirmed bidirectional R/W channel over Canvas2D numeric fields (p553), and the FontFace UAF gives a JS-only heap-pointer disclosure (p563/p564) — two distinct browser-side primitives. Controlled WebProcess R/W (OOB read + OOB-window write) and on-device RIP control (forged vtable dispatch) are demonstrated, with the walk reproduced on a second retail 14.10 board (issue #295). The remaining absolute-VA blocker is the text-base landing mechanism (Lane_VA closed by the corrected V102 run).
+
 
 Evidence: [docs/WEBKIT_FINDINGS.md](https://github.com/ZigZagBoi1/PS5-14.10-Research/blob/master/docs/WEBKIT_FINDINGS.md), docs/FONTFACE_RECLAIM_LEAK_14_10.md, results/phase13_webkit/p553_canvas_uaf_rw_20261104_194910.txt.
 
@@ -109,36 +110,48 @@ Evidence: [docs/WEBKIT_FINDINGS.md](https://github.com/ZigZagBoi1/PS5-14.10-Rese
 
 **Threading (2/2):** thr_new(455) and thr_create(430) both confirmed working. Thread budget measured (25/11/9 per loader). UMTX_OP_WAIT blocks correctly on value match; NWAKE_PRIVATE returns 0; MUTEX_LOCK writes owner TID (56i2, 152k). UMTX parking pattern for thread synchronization operational.
 
-**Gadget infrastructure (2/2):** native.fcall_with_rax confirmed (getpid/socket/close). Child threads execute kernel syscalls via fn_addr ROP chains (274c). CClosure function redirect supports selected existing Lua C targets with output and restore checks (56c/56f). eboot gadget catalog readable (RX .text).
+**Gadget infrastructure (2/2):** native.fcall_with_rax confirmed (getpid/socket/close). Child threads execute kernel syscalls via fn_addr ROP chains (146c). CClosure function redirect supports selected existing Lua C targets with output and restore checks (56c/56f). eboot gadget catalog readable (RX .text).
 
 **Offline analysis (1/1):** 13.60 offline handler decode (22 functions decompiled). SDK v0.45 published 14.10 kernel offsets (allproc, security_flags, rootvnode). sceKernelAllocateDirectMemory reachable from game sandbox via libkernel GOT wrapper (DEM9N101). AIO 669 independently verified by second researcher with dmem0 destination.
 
 Evidence: docs/FINDINGS.md, docs/ATTACK_SURFACE.md.
+#### Userland code execution / ROP toward syscall past CFI (9/12) — NEW 2026-11-22
+
+- 4/4: RIP control demonstrated on device (forged vtable dispatch)
+- 3/5: ROP chain constructed toward syscall execution
+- 2/3: Userland CFI / LLInt constraints mapped for the chain
+
+**RIP control (4/4):** On-device instruction-pointer redirect via forged vtable dispatch confirmed; validates the exploitation path through WebProcess.
+
+**ROP toward syscall (3/5):** The chain toward syscall execution is constructed and maturing against userland forward-edge CFI (clang cfi-vcall/icall) and the kernel syscall origin-guard. Does not claim kernel read/write.
+
+Evidence: docs/WEBKIT_FONTFACE_EXPLOIT_CHAIN_ANALYSIS.md, docs/V88_FORGE_GEOMETRY_RECONCILIATION.md.
+
 
 #### Validated 14.10 kernel vulnerability (6/10)
 
 - 5/5: Vulnerability root cause identified with controlled reproduction on 14.10
 - 1/5: Controlled reproduction establishes kernel-level impact
 
-**Root cause (5/5):** FontFaceSet::load() UAF is a validated vulnerability on 14.10: heap-pointer leak confirmed (p563/p564), root cause identified in WebKit source, two independent researchers confirmed, cross-firmware confirmed (issue #155). Canvas UAF (CVE-2026-43720) write primitive confirmed (p553). UMTX orphaned waiter touches real kernel wait queue state (274e/274f) — thread exit never disowns a PI mutex.
+**Root cause (5/5):** FontFaceSet::load() UAF is a validated vulnerability on 14.10: heap-pointer leak confirmed (p563/p564), root cause identified in WebKit source, two independent researchers confirmed, cross-firmware confirmed (issue #155). Canvas UAF (CVE-2026-43720) write primitive confirmed (p553). UMTX orphaned waiter touches real kernel wait queue state (146e/146f) — thread exit never disowns a PI mutex.
 
 **Kernel impact (1/5):** The FontFace UAF yields a JS-only heap-pointer disclosure and the Canvas UAF a bidirectional R/W channel over Canvas2D fields — demonstrated browser-side primitives, partial credit. Neither has demonstrated controlled kernel memory corruption; the path from "validated disclosure / R/W channel" to "kernel corruption" is not established (blocked on a self-address and a WebKit-to-kernel pivot).
 
 Evidence: docs/WEBKIT_FINDINGS.md, docs/FONTFACE_RECLAIM_LEAK_14_10.md, docs/STRATEGY.md, docs/PROBE_INDEX.md.
 
-#### Demonstrated 14.10 kernel read/write (0/15)
+#### Demonstrated 14.10 kernel read/write (0/10)
 
-- 0/6: Verified arbitrary kernel read on 14.10
-- 0/6: Verified controlled kernel write on 14.10
-- 0/3: Independent evidence distinguishes kernel from userland effects
+- 0/4: Verified arbitrary kernel read on 14.10
+- 0/4: Verified controlled kernel write on 14.10
+- 0/2: Independent evidence distinguishes kernel from userland effects
 
 Evidence: results/45c_execution_reality_check_20261016_192713.txt, docs/FINDINGS.md.
 
-#### Repeatable complete kernel exploit (0/15)
+#### Repeatable complete kernel exploit (0/8)
 
-- 0/7: End-to-end kernel exploit from a fresh session
-- 0/4: Reported multi-run success/failure denominator
-- 0/4: Recovery and cleanup behavior recorded
+- 0/4: End-to-end kernel exploit from a fresh session
+- 0/2: Reported multi-run success/failure denominator
+- 0/2: Recovery and cleanup behavior recorded
 
 Evidence: docs/STRATEGY.md, docs/PROBE_INDEX.md.
 
@@ -169,9 +182,9 @@ Weight redistribution: environment 10, tooling 10, characterization 15, attack s
 7. **physhm refuted independently (DEM9N101):** Second researcher confirmed physhm write claim is false.
 8. **Probe inventory grew:** 664→1838 Lua probes, 701→2029 result captures, reflecting phases 23-32.
 
-## Why 65% and not higher?
+## Why 75% and not higher?
 
-The rubric reserves **30 points** for kernel R/W (15) and a repeatable chain (15). Both are zero. Another 4 points sit in the vulnerability category (kernel-level impact). A single kernel read primitive would move the score sharply; it could also remain blocked indefinitely. 65% reflects that the project has:
+The rubric reserves **18 points** for kernel R/W (10) and a repeatable chain (8). Both are zero. Another 4 points sit in the vulnerability category (kernel-level impact). A single kernel read primitive would move the score sharply; it could also remain blocked indefinitely. 75% reflects that the project has:
 - A complete, evidence-based attack surface map (Lua kernel surface exhausted)
 - The kernel image base measured per boot by the fault-code oracle (presence, not a read)
 - A validated WebKit UAF with a JS-only heap-pointer disclosure, and a Canvas UAF write primitive

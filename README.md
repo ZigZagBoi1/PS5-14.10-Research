@@ -1,6 +1,6 @@
 # PS5 Firmware 14.10 - Kernel Research
 
-Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 3326 probe scripts (2931 Lua, 66 JS, 329 HTML), 3472 result captures, 264 technical documents, 235+ merged PRs, 180+ documented dead ends, 58 research phases.
+Open community kernel exploit research on PlayStation 5 firmware **14.10**. This project attacks the PS5 security stack from two directions: a **Lua 5.1 loader** (TCP 9026, via game save exploit) for direct kernel/syscall research, and a **WebKit browser engine** targeting CVEs absent from the PS5's Safari 17.0 fork. 4012 probe scripts (3539 Lua, 81 JS, 392 HTML), 4366 result captures, 264 technical documents, 235+ merged PRs, 180+ documented dead ends, 60 research phases.
 
 > **Goal:** Userland code execution → kernel R/W → hypervisor bypass. Kernel read/write on 14.10 is **not demonstrated yet**. The Lua loader kernel attack surface is **exhausted** — zero kernel pointers across ~400 syscalls, ~32M ioctl calls, and every known info-leak technique. **WebKit FontFace UAF is the active exploit vector**: arbitrary WebProcess read primitive, KASLR defeat, WebProcess base address, ROP gadgets, and **RIP control confirmed on device** (instruction pointer redirect via forged vtable). ROP chain toward kernel R/W is in progress.
 
@@ -285,7 +285,7 @@ Post-Safari-17.0 regression tests targeting WebKit bugs the PS5 browser engine p
 
 - **AIO double-free** — DEAD (2026-10-25): double-STATUS not double-free, D exclusive lock serializes entry_dispose (probe 70e, 1500+ races, zero corruption)
 - **fd-close/sendmsg race** — 20 iterations clean (534e), no progression
-- **UMTX PI orphaned waiter** — real kernel state touched (274e/274f) but DoS only, no controlled corruption
+- **UMTX PI orphaned waiter** — real kernel state touched (146e/146f) but DoS only, no controlled corruption
 - **Lua loader kernel surface** — EXHAUSTED: zero kernel pointers across ~400 syscalls, ~32M ioctl calls
 
 ---
@@ -350,7 +350,7 @@ graph LR
 ## Repository Structure
 
 ```
-probes/                              # 3326 probe scripts (2931 Lua + 66 JS + 329 HTML) across 58 phases
+probes/                              # 4012 probe scripts (3539 Lua + 81 JS + 392 HTML) across 60 phases
   phase1_identity_layout/            # 01-08: system ID, syscalls, memory layout
   phase2_kernel_objects/             # 09-21: UMTX, nwake, dmem, AIO, kqueue
   phase3_signals_codexec/            # 22-26: signals, sigaltstack, W^X, XOM
